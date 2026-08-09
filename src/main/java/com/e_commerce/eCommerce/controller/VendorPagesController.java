@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class VendorPagesController {
     @GetMapping("/s1/v1/dashboard")
     public String vendorDashBoard(){
-        return "VendorDashBoard";
+        return "VendordashBoard";
     }
     @GetMapping("/s1/on/v1/onBoarding")
     public String getOnBoarding() {
