@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Status | SellerHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+          --bg-primary:#0b0f1a; --bg-card:#161d2e; --bg-input:#1e2740;
+          --border:rgba(255,255,255,0.08);
+          --text-primary:#f0f4ff; --text-secondary:#8b95b0; --text-muted:#4b5578;
+          --accent:#6366f1; --accent-soft:rgba(99,102,241,0.12); --accent-glow:rgba(99,102,241,0.25);
+          --green:#10b981; --green-soft:rgba(16,185,129,0.12);
+          --red:#ef4444; --red-soft:rgba(239,68,68,0.12);
+          --amber:#f59e0b; --amber-soft:rgba(245,158,11,0.12);
+          --radius:16px; --radius-sm:10px;
+          --shadow-lg:0 20px 60px rgba(0,0,0,0.45);
+          --transition:.22s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="light"] {
+          --bg-primary:#f1f5fb; --bg-card:#ffffff; --bg-input:#eef1fa;
+          --border:rgba(0,0,0,0.08); --text-primary:#0f172a; --text-secondary:#475569; --text-muted:#94a3b8;
+          --accent-soft:rgba(99,102,241,0.08); --shadow-lg:0 20px 60px rgba(0,0,0,0.10);
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;
+             display:flex;flex-direction:column;align-items:center;padding:48px 20px;line-height:1.6;}
+        h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+
+        .page{width:100%;max-width:680px;display:flex;flex-direction:column;gap:22px;}
+
+        .brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px;}
+        .brand-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),#8b5cf6);border-radius:9px;
+                    display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;}
+        .brand span{font-weight:700;font-size:15px;letter-spacing:-.2px;}
+
+        /* ── HERO ── */
+        .hero{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+              padding:40px 36px;text-align:center;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;}
+        .hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+                      width:280px;height:280px;border-radius:50%;opacity:.14;filter:blur(10px);}
+        .hero.review::before{background:var(--accent);} .hero.approved::before{background:var(--green);}
+        .hero.rejected::before{background:var(--red);} .hero.action::before{background:var(--amber);}
+
+        .hero-icon{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                   font-size:32px;margin:0 auto 20px;position:relative;z-index:1;}
+        .hero.review .hero-icon{background:var(--accent-soft);color:var(--accent);}
+        .hero.approved .hero-icon{background:var(--green-soft);color:var(--green);}
+        .hero.rejected .hero-icon{background:var(--red-soft);color:var(--red);}
+        .hero.action .hero-icon{background:var(--amber-soft);color:var(--amber);}
+
+        .hero h1{font-size:24px;font-weight:700;letter-spacing:-.4px;position:relative;z-index:1;}
+        .hero p{font-size:14px;color:var(--text-secondary);margin-top:8px;max-width:440px;margin-left:auto;margin-right:auto;position:relative;z-index:1;}
+
+        .app-id-chip{display:inline-flex;align-items:center;gap:8px;background:var(--bg-input);border:1px solid var(--border);
+                     border-radius:99px;padding:7px 16px;font-size:12.5px;color:var(--text-secondary);margin-top:18px;position:relative;z-index:1;}
+        .app-id-chip strong{color:var(--text-primary);font-weight:700;letter-spacing:.3px;}
+        .app-id-chip button{background:none;color:var(--text-muted);font-size:12px;padding:2px 4px;transition:color var(--transition);}
+        .app-id-chip button:hover{color:var(--accent);}
+
+        .hero-actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap;position:relative;z-index:1;}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:10px;font-weight:600;font-size:13.5px;
+            transition:all var(--transition);border:none;cursor:pointer;}
+        .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--accent-glow);}
+        .btn-primary:hover{background:#4f46e5;transform:translateY(-1px);}
+        .btn-ghost{background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border);}
+        .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+        .btn-success{background:var(--green);color:#fff;box-shadow:0 4px 16px rgba(16,185,129,.28);}
+        .btn-success:hover{background:#059669;}
+
+        /* ── STEP TRACKER ── */
+        .tracker-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 32px;}
+        .tracker-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);margin-bottom:22px;}
+        .tracker{display:flex;align-items:flex-start;}
+        .track-step{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;}
+        .track-line{position:absolute;top:15px;left:calc(-50% + 15px);width:calc(100% - 30px);height:2px;background:var(--border);z-index:0;}
+        .track-step:first-child .track-line{display:none;}
+        .track-line.filled{background:var(--accent);}
+        .track-line.filled.done-red{background:var(--red);} .track-line.filled.done-green{background:var(--green);}
+        .track-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                   font-size:13px;font-weight:700;background:var(--bg-input);border:2px solid var(--border);color:var(--text-muted);
+                   position:relative;z-index:1;margin-bottom:10px;transition:all var(--transition);}
+        .track-step.done .track-dot{background:var(--accent);border-color:var(--accent);color:#fff;}
+        .track-step.done.red .track-dot{background:var(--red);border-color:var(--red);}
+        .track-step.done.green .track-dot{background:var(--green);border-color:var(--green);}
+        .track-step.current .track-dot{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);
+                                        box-shadow:0 0 0 4px var(--accent-soft);}
+        .track-label{font-size:12.5px;font-weight:600;color:var(--text-primary);}
+        .track-time{font-size:11px;color:var(--text-muted);margin-top:3px;}
+
+        /* ── DETAILS PANEL ── */
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px;}
+        .panel-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+        .panel-title i{color:var(--accent);font-size:13px;}
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+        .info-grid div{background:var(--bg-input);border-radius:var(--radius-sm);padding:12px 14px;}
+        .info-grid label{display:block;font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;
+                         letter-spacing:.5px;margin-bottom:4px;}
+        .info-grid span{font-size:13.5px;font-weight:600;}
+
+        .reason-list{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+        .reason-row{display:flex;gap:12px;padding:13px 14px;background:var(--red-soft);border:1px solid rgba(239,68,68,.25);
+                   border-radius:var(--radius-sm);}
+        .reason-row i{color:var(--red);font-size:14px;margin-top:2px;flex-shrink:0;}
+        .reason-row .field-name{font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.4px;}
+        .reason-row p{font-size:13px;color:var(--text-primary);margin-top:2px;}
+
+        .deadline-banner{display:flex;align-items:center;gap:10px;background:var(--amber-soft);border:1px solid rgba(245,158,11,.3);
+                         border-radius:var(--radius-sm);padding:12px 16px;font-size:12.5px;color:var(--text-primary);margin-top:16px;}
+        .deadline-banner i{color:var(--amber);}
+        .deadline-banner strong{font-weight:700;}
+
+        .support-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+                    margin-top:4px;padding-top:18px;border-top:1px solid var(--border);}
+        .support-row p{font-size:12.5px;color:var(--text-secondary);}
+        .support-links{display:flex;gap:14px;}
+        .support-links a{font-size:12.5px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:6px;}
+        .support-links a:hover{text-decoration:underline;}
+
+        /* ── LOADING / ERROR ── */
+        .state-screen{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+                     padding:60px 32px;text-align:center;}
+        .spinner{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;
+                 animation:spin .8s linear infinite;margin:0 auto 16px;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        .state-screen h3{font-size:15px;font-weight:600;color:var(--text-secondary);}
+        .state-screen p{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+        .hidden{display:none !important;}
+
+        #toastContainer{position:fixed;bottom:24px;right:24px;z-index:9000;display:flex;flex-direction:column;gap:10px;}
+        .toast{display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--border);
+               border-radius:12px;padding:13px 16px;min-width:280px;max-width:380px;box-shadow:var(--shadow-lg);
+               animation:slideIn .25s ease;}
+        .toast.success{border-left:4px solid var(--green);} .toast.success i{color:var(--green);}
+        .toast.error{border-left:4px solid var(--red);} .toast.error i{color:var(--red);}
+        .toast p{font-size:12.5px;color:var(--text-primary);}
+        @keyframes slideIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+
+        @media (max-width:560px){
+          body{padding:28px 14px;}
+          .hero{padding:32px 22px;} .panel,.tracker-card{padding:22px 20px;}
+          .info-grid{grid-template-columns:1fr;}
+          .track-label{font-size:11px;}
+          .support-row{flex-direction:column;align-items:flex-start;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <div class="brand">
+        <div class="brand-icon"><i class="fa-solid fa-store"></i></div>
+        <span id="storeName">SellerHub</span>
+    </div>
+
+    <!-- Loading state -->
+    <div class="state-screen" id="loadingState">
+        <div class="spinner"></div>
+        <h3>Checking your application status…</h3>
+        <p>This will just take a moment</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="state-screen hidden" id="errorState">
+        <div class="hero-icon" style="background:var(--red-soft);color:var(--red);margin:0 auto 18px;">
+            <i class="fa-solid fa-plug-circle-xmark"></i>
+        </div>
+        <h3>Couldn't load your application status</h3>
+        <p id="errorMessage">Please check your connection and try again.</p>
+        <div class="hero-actions" style="margin-top:20px;">
+            <button class="btn btn-primary" onclick="loadStatus()"><i class="fa-solid fa-rotate-right"></i>Try Again</button>
+        </div>
+    </div>
+
+    <!-- Loaded content -->
+    <div id="statusContent" class="hidden" style="display:flex;flex-direction:column;gap:22px;"></div>
+</div>
+
+<script>
+    const STATUS_API_URL = '/vendor/s1/v1/application-status';
+    const RESUBMIT_API_URL = '/vendor/s1/onboarding/resubmit';
+
+    // ────────────────────────────────────────────────────────────
+    // GET /vendor/s1/v1/application-status
+    // Required: applicationId, status. Everything else is optional.
+    // {
+    //   "success": true,
+    //   "applicationId": "APP-2026-00123",
+    //   "status": "REJECTED",                     UNDER_REVIEW | APPROVED | REJECTED | ACTION_REQUIRED
+    //   "storeName": "KumarShop",
+    //   "businessName": "Kumar Enterprises Pvt Ltd",
+    //   "submittedAt": "2026-07-01T10:15:00Z",
+    //   "reviewedAt": "2026-07-05T14:20:00Z",
+    //   "remarks": "GST number does not match the uploaded certificate.",
+    //   "resubmit": true,                         // true => show the Resubmit button
+    //   "approval": { "activatedAt": "...", "dashboardUrl": "/vendor/dashboard" },
+    //   "supportEmail": "vendor-support@sellerhub.com",
+    //   "supportPhone": "+91-1800-000-0000"
+    // }
+    //
+    // POST /vendor/s1/v1/resubmit   (called when the vendor clicks "Resubmit Application")
+    // Request:  { "applicationId": "APP-2026-00123" }
+    // Response: { "success": true, "message": "You can now edit and resubmit.", "redirectUrl": "/vendor/s1/onboarding" }
+    // ────────────────────────────────────────────────────────────
+
+    const STATUS_META = {
+      UNDER_REVIEW:    { cls:'review',   icon:'fa-hourglass-half',   title:'Your application is under review',
+                          desc:'Our team is verifying your business details. We\u2019ll notify you by email as soon as a decision is made.' },
+      ACTION_REQUIRED: { cls:'action',   icon:'fa-triangle-exclamation', title:'We need a bit more information',
+                          desc:'A few details need your attention before we can continue reviewing your application.' },
+      APPROVED:        { cls:'approved', icon:'fa-circle-check',     title:'Your application has been approved!',
+                          desc:'Congratulations — your seller account is now active. You can start listing products right away.' },
+      REJECTED:        { cls:'rejected', icon:'fa-circle-xmark',     title:'Your application was not approved',
+                          desc:'Some details couldn\u2019t be verified. See the reasons below — most vendors are approved after a quick resubmission.' }
+    };
+
+    const TIMELINE_STEPS = [
+      { key:'SUBMITTED',    label:'Submitted' },
+      { key:'UNDER_REVIEW', label:'Under Review' },
+      { key:'DECISION',     label:'Decision' }
+    ];
+
+    function formatDate(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    async function loadStatus() {
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('errorState').classList.add('hidden');
+      document.getElementById('statusContent').classList.add('hidden');
+
+      try {
+        const res = await fetch(STATUS_API_URL, { method: 'GET', credentials: 'include' });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Application status is unavailable right now.');
+        }
+
+        renderStatus(data);
+        document.getElementById("storeName").innerText=data.businessName;
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('statusContent').classList.remove('hidden');
+      } catch (err) {
+        console.error(err);
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('errorMessage').textContent = err.message || 'Something went wrong. Please try again.';
+        document.getElementById('errorState').classList.remove('hidden');
+      }
+    }
+
+    function renderStatus(data) {
+      const meta = STATUS_META[data.status] || STATUS_META.UNDER_REVIEW;
+      const container = document.getElementById('statusContent');
+      container.innerHTML = `
+        ${renderHero(data, meta)}
+        ${renderTracker(data)}
+        ${renderDetailsPanel(data, meta)}
+      `;
+    }
+
+    function renderHero(data, meta) {
+      const idText = data.applicationId ? `
+        <div class="app-id-chip">
+          Application ID&nbsp;<strong id="appIdText">${data.applicationId}</strong>
+          <button onclick="copyAppId()" title="Copy"><i class="fa-solid fa-copy"></i></button>
+        </div>` : '';
+
+      let actions = '';
+      if (data.status === 'APPROVED') {
+        actions = `<div class="hero-actions">
+          <button class="btn btn-success" onclick="location.href='${(data.approval && data.approval.dashboardUrl) || '/vendor/s1/v1/dashboard'}'">
+            <i class="fa-solid fa-arrow-right"></i>Go to Dashboard
+          </button>
+        </div>`;
+      } else if (data.resubmit === true) {
+        actions = `<div class="hero-actions">
+          <button class="btn btn-primary" id="resubmitBtn" onclick="handleResubmit('${data.applicationId}', this)">
+            <i class="fa-solid fa-rotate-right"></i>Resubmit Application
+          </button>
+        </div>`;
+      }
+
+      return `
+      <div class="hero ${meta.cls}">
+        <div class="hero-icon"><i class="fa-solid ${meta.icon}"></i></div>
+        <h1>${meta.title}</h1>
+        <p>${meta.desc}</p>
+        ${idText}
+        ${actions}
+      </div>`;
+    }
+
+    function renderTracker(data) {
+      const submitted = data.timeline && data.timeline.find(t => t.status === 'SUBMITTED');
+      const review     = data.timeline && data.timeline.find(t => t.status === 'UNDER_REVIEW');
+      const decision    = data.timeline && data.timeline.find(t => t.status === 'APPROVED' || t.status === 'REJECTED');
+
+      const isDecided = data.status === 'APPROVED' || data.status === 'REJECTED';
+      const decisionColor = data.status === 'APPROVED' ? 'green' : data.status === 'REJECTED' ? 'red' : '';
+
+      const steps = [
+        { done:true, current:false, color:'', label:'Submitted', time: formatDate(submitted && submitted.at || data.submittedAt) },
+        { done:true, current: data.status === 'UNDER_REVIEW' || data.status === 'ACTION_REQUIRED', color:'',
+          label:'Under Review', time: formatDate(review && review.at) },
+        { done:isDecided, current:false, color:decisionColor,
+          label: isDecided ? (data.status === 'APPROVED' ? 'Approved' : 'Rejected') : 'Decision',
+          time: formatDate(decision && decision.at || data.reviewedAt) }
+      ];
+
+      const stepsHtml = steps.map((s, i) => `
+        <div class="track-step ${s.done ? 'done' : ''} ${s.current ? 'current' : ''} ${s.color}">
+          ${i > 0 ? `<div class="track-line ${s.done || steps[i-1].done ? 'filled' : ''} ${s.done ? 'done-'+ (s.color||'') : ''}"></div>` : ''}
+          <div class="track-dot">${s.done && !s.current ? '<i class="fa-solid fa-check"></i>' : i + 1}</div>
+          <div class="track-label">${s.label}</div>
+          <div class="track-time">${s.time || (s.current ? 'In progress' : '—')}</div>
+        </div>`).join('');
+
+      return `
+      <div class="tracker-card">
+        <div class="tracker-title">Application Progress</div>
+        <div class="tracker">${stepsHtml}</div>
+      </div>`;
+    }
+
+    function renderDetailsPanel(data, meta) {
+      let remarksBlock = '';
+      if (data.remarks && (data.status === 'REJECTED' || data.status === 'ACTION_REQUIRED')) {
+        remarksBlock = `
+          <div class="panel-title"><i class="fa-solid fa-list-check"></i>Reviewer Remarks</div>
+          <div class="reason-row">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <div><p>${data.remarks}</p></div>
+          </div>
+        `;
+      }
+
+      const idRow = data.applicationId ? `<div><label>Application ID</label><span>${data.applicationId}</span></div>` : '';
+      const storeRow = data.storeName ? `<div><label>Store Name</label><span>${data.storeName}</span></div>` : '';
+      const submittedRow = data.submittedAt ? `<div><label>Submitted On</label><span>${formatDate(data.submittedAt)}</span></div>` : '';
+      const reviewedRow = data.reviewedAt ? `<div><label>Reviewed On</label><span>${formatDate(data.reviewedAt)}</span></div>` : '';
+      const etaRow = (data.status === 'UNDER_REVIEW' && data.estimatedCompletionAt)
+        ? `<div><label>Expected By</label><span>${formatDate(data.estimatedCompletionAt)}</span></div>` : '';
+
+      return `
+      <div class="panel">
+        <div class="panel-title"><i class="fa-solid fa-file-lines"></i>Application Details</div>
+        <div class="info-grid">${idRow}${storeRow}${submittedRow}${reviewedRow}${etaRow}</div>
+
+        ${remarksBlock ? `<div style="margin-top:22px;">${remarksBlock}</div>` : ''}
+
+        <div class="support-row">
+          <p>Need help with your application?</p>
+          <div class="support-links">
+            ${data.supportEmail ? `<a href="mailto:${data.supportEmail}"><i class="fa-solid fa-envelope"></i>${data.supportEmail}</a>` : ''}
+            ${data.supportPhone ? `<a href="tel:${data.supportPhone}"><i class="fa-solid fa-phone"></i>${data.supportPhone}</a>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // Called when the vendor clicks "Resubmit Application" on a rejected /
+    // action-required status. Tells the backend to reopen the application
+    // as an editable draft (per your controller: vendor.status -> ONBOARDING,
+    // onboarding.completed -> false, completionPercentage -> 90, currentStep -> 5),
+    // then sends the vendor back into the onboarding wizard to fix and resubmit.
+   async function handleResubmit(applicationId, btnEl) {
+  const originalHtml = btnEl.innerHTML;
+  btnEl.disabled = true;
+  btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Preparing…';
+
+  try {
+    const res = await fetch(
+      `${RESUBMIT_API_URL}?applicationId=${encodeURIComponent(applicationId)}`,
+      {
+        method: 'POST',
+        credentials: 'include'
+      }
+    );
+    console.log(`${RESUBMIT_API_URL}?applicationId=${encodeURIComponent(applicationId)}`);
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Could not reopen your application for editing.');
+    }
+
+    showToast('success', data.message || 'You can now edit and resubmit your application.');
+
+    setTimeout(() => {
+      window.location.href = data.redirectUrl || '/vendor/s1/onboarding';
+    }, 500);
+
+  } catch (err) {
+
+    console.error(err);
+
+    btnEl.disabled = false;
+    btnEl.innerHTML = originalHtml;
+
+    showToast('error', err.message || 'Something went wrong. Please try again.');
+  }
+}
+
+    function showToast(type, message) {
+      let container = document.getElementById('toastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
+      }
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-xmark'}"></i><p>${message}</p>`;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function copyAppId() {
+      const id = document.getElementById('appIdText').textContent;
+      navigator.clipboard.writeText(id).then(() => {
+        const btn = document.querySelector('.app-id-chip button i');
+        if (btn) { btn.className = 'fa-solid fa-check'; setTimeout(() => btn.className = 'fa-solid fa-copy', 1200); }
+      });
+    }
+
+    window.addEventListener('load', loadStatus);
+</script>
+</body>
+</html>

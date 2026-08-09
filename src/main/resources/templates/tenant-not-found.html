@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenant Not Found</title>
+
+    <link rel="stylesheet" href="/css/tenant-not-found.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    font-family:'Poppins',sans-serif;
+
+    height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    overflow:hidden;
+
+    background:#0f172a;
+}
+
+.background{
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+
+            radial-gradient(circle at top left,#2563eb 0%,transparent 40%),
+
+            radial-gradient(circle at bottom right,#9333ea 0%,transparent 40%),
+
+            #0f172a;
+
+}
+
+.card{
+
+    position:relative;
+
+    width:520px;
+
+    max-width:90%;
+
+    background:rgba(255,255,255,.08);
+
+    backdrop-filter:blur(18px);
+
+    border:1px solid rgba(255,255,255,.12);
+
+    border-radius:24px;
+
+    padding:50px;
+
+    text-align:center;
+
+    color:white;
+
+    box-shadow:0 30px 70px rgba(0,0,0,.45);
+
+}
+
+.icon{
+
+    width:110px;
+
+    height:110px;
+
+    margin:auto;
+
+    border-radius:50%;
+
+    background:#ef4444;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:48px;
+
+    margin-bottom:25px;
+
+    animation:float 3s infinite ease-in-out;
+
+}
+
+h1{
+
+    font-size:38px;
+
+    margin-bottom:15px;
+
+}
+
+p{
+
+    color:#cbd5e1;
+
+    font-size:17px;
+
+    line-height:1.8;
+
+}
+
+.actions{
+
+    margin-top:40px;
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:18px;
+
+    flex-wrap:wrap;
+
+}
+
+.btn{
+
+    padding:14px 28px;
+
+    border-radius:12px;
+
+    text-decoration:none;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+    cursor:pointer;
+
+}
+
+.primary{
+
+    background:#2563eb;
+
+    color:white;
+
+}
+
+.primary:hover{
+
+    background:#1d4ed8;
+
+    transform:translateY(-3px);
+
+}
+
+.secondary{
+
+    border:1px solid rgba(255,255,255,.3);
+
+    color:white;
+
+    background:transparent;
+
+}
+
+.secondary:hover{
+
+    background:rgba(255,255,255,.1);
+
+    transform:translateY(-3px);
+
+}
+
+@keyframes float{
+
+    0%{
+        transform:translateY(0px);
+    }
+
+    50%{
+        transform:translateY(-10px);
+    }
+
+    100%{
+        transform:translateY(0px);
+    }
+
+}
+
+@media(max-width:600px){
+
+    .card{
+
+        padding:35px 25px;
+
+    }
+
+    h1{
+
+        font-size:30px;
+
+    }
+
+    p{
+
+        font-size:15px;
+
+    }
+
+}
+        </style>
+</head>
+<body>
+
+<div class="background"></div>
+
+<div class="card">
+
+    <div class="icon">
+        🏪
+    </div>
+
+    <h1>Tenant Not Found</h1>
+
+    <p>
+        Sorry, the store you are trying to access doesn't exist
+        or may have been removed.
+    </p>
+
+    <div class="actions">
+
+        <a href="/" class="btn primary">
+            Go To Homepage
+        </a>
+
+        <button onclick="history.back()" class="btn secondary">
+            Go Back
+        </button>
+
+    </div>
+
+</div>
+
+</body>
+</html>

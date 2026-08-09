@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vendor Onboarding — SellerHub</title>
+    <style>
+        /* ============================================================
+           DESIGN TOKENS
+           Palette: Deep Navy (#0F172A) · Electric Indigo (#4F46E5) ·
+                    Soft Slate (#64748B) · Ice White (#F8FAFC) ·
+                    Emerald accent (#10B981) · Rose error (#EF4444)
+           Type: Inter (system stack fallback)
+           Signature: Animated progress spine on the left sidebar.
+        ============================================================ */
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --navy:        #0F172A;
+          --navy-mid:    #1E293B;
+          --navy-light:  #334155;
+          --indigo:      #4F46E5;
+          --indigo-lt:   #6366F1;
+          --indigo-pale: #EEF2FF;
+          --slate:       #64748B;
+          --slate-lt:    #94A3B8;
+          --border:      #E2E8F0;
+          --ice:         #F8FAFC;
+          --white:       #FFFFFF;
+          --emerald:     #10B981;
+          --rose:        #EF4444;
+          --amber:       #F59E0B;
+          --text:        #0F172A;
+          --text-muted:  #64748B;
+          --radius:      12px;
+          --radius-sm:   8px;
+          --shadow-sm:   0 1px 3px rgba(0,0,0,.08);
+          --shadow-md:   0 4px 16px rgba(0,0,0,.10);
+          --shadow-lg:   0 12px 40px rgba(0,0,0,.14);
+          --transition:  .2s cubic-bezier(.4,0,.2,1);
+          --sidebar-w:   280px;
+          --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+        }
+
+        [data-theme="dark"] {
+          --navy:        #F8FAFC;
+          --navy-mid:    #1E293B;
+          --navy-light:  #334155;
+          --indigo:      #6366F1;
+          --indigo-lt:   #818CF8;
+          --indigo-pale: #1E1B4B;
+          --slate:       #94A3B8;
+          --slate-lt:    #64748B;
+          --border:      #334155;
+          --ice:         #0F172A;
+          --white:       #1E293B;
+          --text:        #F1F5F9;
+          --text-muted:  #94A3B8;
+          --shadow-sm:   0 1px 3px rgba(0,0,0,.3);
+          --shadow-md:   0 4px 16px rgba(0,0,0,.4);
+          --shadow-lg:   0 12px 40px rgba(0,0,0,.5);
+        }
+
+        html, body { height: 100%; font-family: var(--font); color: var(--text); background: var(--ice); }
+
+        /* ── LAYOUT ── */
+        .shell { display: flex; min-height: 100vh; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+          width: var(--sidebar-w);
+          background: var(--navy-mid);
+          display: flex; flex-direction: column;
+          position: fixed; top: 0; left: 0; height: 100vh;
+          z-index: 100;
+          transition: transform var(--transition);
+        }
+        .sidebar-brand {
+          padding: 28px 24px 20px;
+          border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+        .brand-logo { display: flex; align-items: center; gap: 10px; }
+        .brand-icon {
+          width: 36px; height: 36px; background: var(--indigo);
+          border-radius: 10px; display: flex; align-items: center; justify-content: center;
+          font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -1px;
+        }
+        .brand-name { font-size: 17px; font-weight: 700; color: #fff; }
+        .brand-sub  { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; letter-spacing: .5px; text-transform: uppercase; }
+
+        /* Spine progress */
+        .steps-nav { flex: 1; overflow-y: auto; padding: 24px 0; }
+        .steps-nav::-webkit-scrollbar { width: 4px; }
+        .steps-nav::-webkit-scrollbar-track { background: transparent; }
+        .steps-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 4px; }
+
+        .step-item {
+          display: flex; align-items: flex-start; gap: 14px;
+          padding: 10px 24px; cursor: pointer;
+          position: relative; transition: background var(--transition);
+        }
+        .step-item:hover { background: rgba(255,255,255,.06); }
+        .step-item.active { background: rgba(99,102,241,.18); }
+
+        .step-item:not(:last-child) .step-dot::after {
+          content: ''; position: absolute; left: 35px; top: 42px;
+          width: 2px; height: calc(100% - 12px);
+          background: rgba(255,255,255,.12); z-index: 0;
+        }
+        .step-item.done:not(:last-child) .step-dot::after { background: var(--emerald); }
+
+        .step-dot {
+          width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 11px; font-weight: 700; position: relative; z-index: 1;
+          transition: all var(--transition);
+          border: 2px solid rgba(255,255,255,.2);
+          color: rgba(255,255,255,.45);
+          background: transparent;
+          margin-top: 1px;
+        }
+        .step-item.done   .step-dot { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+        .step-item.active .step-dot {
+          background: var(--indigo); border-color: var(--indigo-lt); color: #fff;
+          box-shadow: 0 0 0 4px rgba(99,102,241,.25);
+        }
+
+        .step-meta { flex: 1; min-width: 0; }
+        .step-label {
+          font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9);
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3;
+        }
+        .step-item:not(.active):not(.done) .step-label { color: rgba(255,255,255,.45); }
+        .step-sub { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 2px; }
+        .step-item.active .step-sub { color: rgba(255,255,255,.5); }
+
+        .sidebar-footer {
+          padding: 16px 24px; border-top: 1px solid rgba(255,255,255,.08);
+          display: flex; align-items: center; justify-content: space-between;
+        }
+        .theme-toggle {
+          background: rgba(255,255,255,.08); border: none; cursor: pointer;
+          width: 34px; height: 34px; border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          color: rgba(255,255,255,.6); font-size: 16px; transition: background var(--transition);
+        }
+        .theme-toggle:hover { background: rgba(255,255,255,.16); }
+        .save-later-btn {
+          font-size: 12px; font-weight: 600; color: rgba(255,255,255,.5);
+          background: none; border: 1px solid rgba(255,255,255,.15);
+          border-radius: 8px; padding: 7px 14px; cursor: pointer;
+          transition: all var(--transition);
+        }
+        .save-later-btn:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); }
+
+        /* ── MAIN ── */
+        .main {
+          margin-left: var(--sidebar-w);
+          flex: 1; display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+          height: 64px; background: var(--white); border-bottom: 1px solid var(--border);
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 32px; position: sticky; top: 0; z-index: 50;
+          box-shadow: var(--shadow-sm);
+        }
+        .topbar-left { display: flex; flex-direction: column; }
+        .topbar-title { font-size: 15px; font-weight: 700; color: var(--text); }
+        .topbar-breadcrumb { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+        .progress-bar-wrap {
+          position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+          background: var(--border);
+        }
+        .progress-bar-fill {
+          height: 100%; background: linear-gradient(90deg, var(--indigo), var(--emerald));
+          border-radius: 0 2px 2px 0; transition: width .5s cubic-bezier(.4,0,.2,1);
+        }
+
+        .sidebar-toggle {
+          display: none; background: none; border: 1px solid var(--border);
+          border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 18px; color: var(--text);
+        }
+
+        /* ── CONTENT AREA ── */
+        .content-wrap {
+          flex: 1; padding: 36px 32px; max-width: 820px; width: 100%; margin: 0 auto;
+        }
+
+        /* ── STEP HEADER ── */
+        .step-header { margin-bottom: 28px; }
+        .step-badge {
+          display: inline-flex; align-items: center; gap: 6px;
+          font-size: 11px; font-weight: 700; color: var(--indigo);
+          background: var(--indigo-pale); border-radius: 20px;
+          padding: 4px 12px; letter-spacing: .5px; text-transform: uppercase;
+          margin-bottom: 10px;
+        }
+        .step-header h2 { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -.5px; }
+        .step-header p  { font-size: 14px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+
+        /* ── CARD ── */
+        .card {
+          background: var(--white); border-radius: var(--radius);
+          border: 1px solid var(--border); padding: 28px;
+          box-shadow: var(--shadow-sm); margin-bottom: 20px;
+        }
+        .card-title {
+          font-size: 13px; font-weight: 700; color: var(--text-muted);
+          text-transform: uppercase; letter-spacing: .8px; margin-bottom: 20px;
+          display: flex; align-items: center; gap: 8px;
+        }
+        .card-title .card-icon { font-size: 15px; }
+
+        /* ── FORM GRID ── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .span-2    { grid-column: span 2; }
+        .span-full { grid-column: 1 / -1; }
+
+        /* ── FORM ELEMENTS ── */
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field label {
+          font-size: 13px; font-weight: 600; color: var(--text);
+          display: flex; align-items: center; gap: 4px;
+        }
+        .field label .req { color: var(--rose); font-size: 11px; }
+        .field input,
+        .field select,
+        .field textarea {
+          height: 42px; padding: 0 14px;
+          border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+          font-size: 14px; font-family: var(--font); color: var(--text);
+          background: var(--white); outline: none;
+          transition: border-color var(--transition), box-shadow var(--transition);
+          width: 100%;
+        }
+        .field textarea { height: 96px; padding: 12px 14px; resize: vertical; line-height: 1.5; }
+        .field select {
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+          background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
+        }
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+        .field input.error,
+        .field select.error,
+        .field textarea.error { border-color: var(--rose); box-shadow: 0 0 0 3px rgba(239,68,68,.10); }
+        .field input.valid { border-color: var(--emerald); }
+        .field-hint  { font-size: 12px; color: var(--text-muted); }
+        .field-error { font-size: 12px; color: var(--rose); display: flex; align-items: center; gap: 4px; }
+        .field-error::before { content: '⚠'; font-size: 11px; }
+
+        /* Input with icon */
+        .input-wrap { position: relative; }
+        .input-wrap input { padding-left: 40px; }
+        .input-icon {
+          position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+          font-size: 15px; color: var(--slate-lt); pointer-events: none;
+        }
+
+        /* Color picker */
+        .color-row { display: flex; align-items: center; gap: 12px; }
+        .color-row input[type="color"] {
+          width: 48px; height: 42px; padding: 4px; border-radius: var(--radius-sm);
+          border: 1.5px solid var(--border); cursor: pointer; background: var(--white);
+        }
+        .color-hex { flex: 1; }
+
+        /* ── REVIEW ── */
+        .review-section { margin-bottom: 20px; }
+        .review-section-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 20px; background: var(--indigo-pale); border-radius: var(--radius-sm);
+          margin-bottom: 2px;
+        }
+        .review-section-title {
+          font-size: 13px; font-weight: 700; color: var(--indigo);
+          display: flex; align-items: center; gap: 8px;
+        }
+        .review-edit-btn {
+          font-size: 12px; font-weight: 600; color: var(--indigo);
+          background: none; border: 1px solid var(--indigo); border-radius: 6px;
+          padding: 5px 12px; cursor: pointer; transition: all var(--transition);
+        }
+        .review-edit-btn:hover { background: var(--indigo); color: #fff; }
+        .review-grid {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+          border: 1px solid var(--border);
+          border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+          overflow: hidden;
+        }
+        .review-item {
+          padding: 13px 20px; border-bottom: 1px solid var(--border);
+          border-right: 1px solid var(--border);
+        }
+        .review-item:nth-child(even) { border-right: none; }
+        .review-item:last-child,
+        .review-item:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+        .review-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+        .review-value { font-size: 14px; font-weight: 500; color: var(--text); margin-top: 3px; word-break: break-word; }
+        .review-value.empty { color: var(--slate-lt); font-style: italic; }
+
+        /* ── ACTIONS ── */
+        .actions-bar {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 24px 0 8px; margin-top: 8px;
+        }
+        .actions-right { display: flex; gap: 10px; }
+        .btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 11px 22px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+          cursor: pointer; border: none; transition: all var(--transition); font-family: var(--font);
+          white-space: nowrap;
+        }
+        .btn-ghost { background: var(--white); color: var(--text); border: 1.5px solid var(--border); }
+        .btn-ghost:hover { border-color: var(--slate); background: var(--ice); }
+        .btn-primary {
+          background: var(--indigo); color: #fff;
+          box-shadow: 0 2px 8px rgba(79,70,229,.3);
+        }
+        .btn-primary:hover { background: var(--indigo-lt); box-shadow: 0 4px 16px rgba(79,70,229,.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-success { background: var(--emerald); color: #fff; box-shadow: 0 2px 8px rgba(16,185,129,.3); }
+        .btn-success:hover { filter: brightness(1.08); }
+
+        /* ── SPINNER ── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── TOAST ── */
+        .toast-container {
+          position: fixed; top: 20px; right: 20px; z-index: 9999;
+          display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        }
+        .toast {
+          display: flex; align-items: flex-start; gap: 12px;
+          background: var(--white); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 14px 16px;
+          box-shadow: var(--shadow-lg); pointer-events: all;
+          min-width: 300px; max-width: 400px;
+          animation: slideIn .3s cubic-bezier(.4,0,.2,1);
+          border-left: 4px solid var(--indigo);
+        }
+        .toast.success { border-left-color: var(--emerald); }
+        .toast.error   { border-left-color: var(--rose); }
+        .toast.warning { border-left-color: var(--amber); }
+        @keyframes slideIn  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+        .toast-icon  { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+        .toast-body  { flex: 1; }
+        .toast-title { font-size: 13px; font-weight: 700; color: var(--text); }
+        .toast-msg   { font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+        .toast-close { background: none; border: none; cursor: pointer; color: var(--slate-lt); font-size: 16px; padding: 0 2px; }
+
+        /* ── LOADING OVERLAY ── */
+        .loading-overlay {
+          position: fixed; inset: 0; background: rgba(15,23,42,.55);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 8888; backdrop-filter: blur(2px);
+          opacity: 0; pointer-events: none; transition: opacity var(--transition);
+        }
+        .loading-overlay.show { opacity: 1; pointer-events: all; }
+        .loading-card {
+          background: var(--white); border-radius: var(--radius);
+          padding: 32px 40px; text-align: center; box-shadow: var(--shadow-lg);
+        }
+        .loading-spinner-lg {
+          width: 44px; height: 44px; border: 4px solid var(--indigo-pale);
+          border-top-color: var(--indigo); border-radius: 50%;
+          animation: spin .8s linear infinite; margin: 0 auto 14px;
+        }
+        .loading-msg { font-size: 14px; font-weight: 600; color: var(--text); }
+        .loading-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        /* ── SUCCESS STATE ── */
+        .success-state { text-align: center; padding: 60px 24px; }
+        .success-anim {
+          width: 80px; height: 80px; background: #F0FDF4; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 20px; font-size: 36px;
+          animation: popIn .5s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes popIn { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .success-state h2 { font-size: 24px; font-weight: 800; color: var(--text); }
+        .success-state p  { font-size: 15px; color: var(--text-muted); margin-top: 8px; max-width: 420px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+        .success-id {
+          display: inline-block; background: var(--ice); border: 1px solid var(--border);
+          border-radius: 8px; padding: 10px 20px; margin-top: 20px;
+          font-size: 13px; color: var(--text-muted);
+        }
+        .success-id strong { color: var(--text); }
+
+        /* Mobile overlay */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+          .sidebar { transform: translateX(-100%); }
+          .sidebar.open { transform: translateX(0); }
+          .overlay.show { display: block; }
+          .main { margin-left: 0; }
+          .topbar { padding: 0 16px; }
+          .sidebar-toggle { display: flex; }
+          .content-wrap { padding: 24px 16px; }
+          .form-grid { grid-template-columns: 1fr; }
+          .span-2, .span-full { grid-column: span 1; }
+          .review-grid { grid-template-columns: 1fr; }
+          .review-item { border-right: none !important; }
+          .actions-bar { flex-wrap: wrap; gap: 10px; }
+          .actions-right { width: 100%; flex-direction: column; }
+          .btn { width: 100%; justify-content: center; }
+        }
+
+        /* ── MEDIA UPLOAD (Logo / Banner) ── */
+        .hidden-file-input { display: none; }
+        .upload-box {
+          position: relative;
+          border: 1.5px dashed var(--border);
+          border-radius: var(--radius-sm);
+          background: var(--ice);
+          min-height: 96px;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          gap: 6px; cursor: pointer; text-align: center; padding: 14px;
+          transition: border-color var(--transition), background var(--transition);
+          overflow: hidden;
+        }
+        .upload-box:hover { border-color: var(--indigo); background: var(--indigo-pale); }
+        .upload-box.has-error { border-color: var(--rose); }
+        .upload-placeholder { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .upload-placeholder .upload-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+        .upload-preview-img {
+          max-width: 100%; max-height: 72px; border-radius: 6px; object-fit: contain;
+          margin-bottom: 4px;
+        }
+        .upload-status { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+        .upload-status.success { color: var(--emerald); }
+        .upload-status.uploading { color: var(--indigo); }
+        .upload-status.error { color: var(--rose); }
+        .upload-spinner {
+          width: 12px; height: 12px; border: 2px solid var(--indigo-pale);
+          border-top-color: var(--indigo); border-radius: 50%;
+          animation: spin .7s linear infinite; display: inline-block;
+        }
+        .upload-keyline {
+          font-size: 10px; color: var(--text-muted); word-break: break-all;
+          max-width: 100%; margin-top: 2px;
+        }
+        .upload-remove {
+          position: absolute; top: 6px; right: 6px;
+          width: 22px; height: 22px; border-radius: 50%;
+          background: rgba(15,23,42,.75); color: #fff; border: none;
+          font-size: 12px; cursor: pointer; line-height: 1;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .upload-remove:hover { background: var(--rose); }
+
+        /* Utility */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-logo">
+            <div class="brand-icon">S</div>
+            <div>
+                <div class="brand-name">SellerHub</div>
+                <div class="brand-sub">Vendor Portal</div>
+            </div>
+        </div>
+    </div>
+    <nav class="steps-nav" id="stepsNav"></nav>
+    <div class="sidebar-footer">
+        <button class="save-later-btn" onclick="saveLater()">💾 Save & Continue Later</button>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+    </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main" id="mainContent">
+    <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+            <button class="sidebar-toggle" onclick="openSidebar()">☰</button>
+            <div class="topbar-left">
+                <div class="topbar-title" id="topbarTitle">Basic Information</div>
+                <div class="topbar-breadcrumb" id="topbarBreadcrumb">Step 1 of 6 — Fill in your vendor profile</div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;" id="progressText">0% complete</span>
+        </div>
+        <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+        </div>
+    </header>
+
+    <div class="content-wrap">
+        <div id="stepContent"></div>
+        <div class="actions-bar" id="actionsBar">
+            <button class="btn btn-ghost" id="prevBtn" onclick="goBack()">← Previous</button>
+            <div class="actions-right">
+                <button class="btn btn-primary" id="nextBtn" onclick="goNext()">Continue →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════ LOADING OVERLAY ══════════ -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-card">
+        <div class="loading-spinner-lg"></div>
+        <div class="loading-msg" id="loadingMsg">Saving your information…</div>
+        <div class="loading-sub" id="loadingSub">Please don't close this window</div>
+    </div>
+</div>
+
+<!-- ══════════ TOAST CONTAINER ══════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // ── CONFIG ─────────────────────────────────────────────────────────
+    const ONBOARD_DETAIL_URL = '/vendor/s1/v1/getOnBoardDetail';
+    const APPLICATION_STATUS_URL = '/vendor/s11/v1/application-status'; // GET -> used by the separate status page only
+    const APPLICATION_STATUS_PAGE_URL = '/vendor/s11/v1/application-status'; // separate page we redirect to once submitted
+    const MEDIA_UPLOAD_BASE_URL = '/vendor/file/upload';
+    const MEDIA_DELETE_URL = '/vendor/file/delete';
+
+    function getToken() {
+      return '';
+    }
+
+    // ── STATE ──────────────────────────────────────────────────────────
+    const state = {
+      currentStep: 0,
+      profileCompleted: false,
+      applicationId: null,
+      formData: {
+        basic:    {},
+        business: {},
+        address:  {},
+        bank:     {},
+        branding: { logoUrl: '', bannerUrl: '', primaryColor: '#4F46E5', tagline: '', description: '' }
+      }
+    };
+
+    // Transient, in-memory only — never sent to the backend. Used to render
+    // an instant local preview of a picked file before/after upload.
+    const mediaPreviewUrls = { logo: '', banner: '' };
+
+    // ── STEP CONFIG (6 steps) ──────────────────────────────────────────
+    const STEPS = [
+      { id: 'basic',    label: 'Basic Information', icon: '👤', sub: 'Personal & store info' },
+      { id: 'business', label: 'Business Details',  icon: '🏢', sub: 'Type, GST, PAN' },
+      { id: 'address',  label: 'Business Address',  icon: '📍', sub: 'Location & region' },
+      { id: 'bank',     label: 'Bank Details',      icon: '🏦', sub: 'Account & IFSC' },
+      { id: 'branding', label: 'Branding',          icon: '🎨', sub: 'Logo, color & tagline' },
+      { id: 'review',   label: 'Review & Submit',   icon: '✅', sub: 'Verify and submit' },
+    ];
+
+    // ── RENDER SIDEBAR NAV ─────────────────────────────────────────────
+    function renderNav() {
+      document.getElementById('stepsNav').innerHTML = STEPS.map((s, i) => {
+        const done   = i < state.currentStep;
+        const active = i === state.currentStep;
+        return `<div class="step-item ${done ? 'done' : ''} ${active ? 'active' : ''}" onclick="jumpToStep(${i})">
+          <div class="step-dot">${done ? '✓' : (i + 1)}</div>
+          <div class="step-meta">
+            <div class="step-label">${s.icon} ${s.label}</div>
+            <div class="step-sub">${s.sub}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── RENDER TOPBAR ──────────────────────────────────────────────────
+    function renderTopbar() {
+      const s   = STEPS[state.currentStep];
+      const pct = Math.round((state.currentStep / (STEPS.length - 1)) * 100);
+      document.getElementById('topbarTitle').textContent     = s.label;
+      document.getElementById('topbarBreadcrumb').textContent = `Step ${state.currentStep + 1} of 6 — ${s.sub}`;
+      document.getElementById('progressBar').style.width     = pct + '%';
+      document.getElementById('progressText').textContent    = pct + '% complete';
+    }
+
+    // ── RENDER ACTION BUTTONS ──────────────────────────────────────────
+    function renderActions() {
+      const isLast  = state.currentStep === STEPS.length - 1;
+      const isFirst = state.currentStep === 0;
+      document.getElementById('prevBtn').classList.toggle('hidden', isFirst);
+      const nextBtn = document.getElementById('nextBtn');
+      nextBtn.textContent = isLast ? '🚀 Submit Application' : 'Continue →';
+      nextBtn.className   = isLast ? 'btn btn-success' : 'btn btn-primary';
+    }
+
+    // ── JUMP TO A PREVIOUS STEP ────────────────────────────────────────
+    function jumpToStep(idx) {
+      if (state.profileCompleted) return;
+      if (idx > state.currentStep) return;
+      state.currentStep = idx;
+      renderAll();
+      closeSidebar();
+    }
+
+    // ── RENDER ALL ─────────────────────────────────────────────────────
+    function renderAll() {
+      if (state.profileCompleted) {
+        redirectToStatusPage();
+        return;
+      }
+      renderNav();
+      renderTopbar();
+      renderActions();
+      renderStepContent();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Sends the vendor to the dedicated application-status page. That page
+    // owns everything status-related (fetching, refreshing, remarks) — this
+    // onboarding form's job ends once the application is complete.
+    function redirectToStatusPage() {
+
+      window.location.href = APPLICATION_STATUS_PAGE_URL ;
+    }
+
+    // ── STEP CONTENT ROUTER ────────────────────────────────────────────
+    function renderStepContent() {
+      const renderers = { basic, business, address, bank, branding, review };
+      document.getElementById('stepContent').innerHTML = renderers[STEPS[state.currentStep].id]();
+      bindEvents(STEPS[state.currentStep].id);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // ALREADY SUBMITTED STATE (profileCompleted === true)
+    // ════════════════════════════════════════════════════════════════
+    // NOTE: The "already submitted" screen, its read-only review view, and the
+    // live status fetch/refresh UI now live entirely on the dedicated
+    // application-status page (see redirectToStatusPage() above). Keeping this
+    // onboarding form focused only on collecting + submitting the application.
+
+    // ════════════════════════════════════════════════════════════════
+    // STEP 1 — BASIC INFORMATION
+    // ════════════════════════════════════════════════════════════════
+    function basic() {
+      const d = state.formData.basic;
+      return `
+      <div class="step-header">
+        <div class="step-badge">Step 1 of 6</div>
+        <h2>Tell us about yourself</h2>
+        <p>This is your personal and store identity on SellerHub. Make sure the email matches your business communications.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon">👤</span> Personal Details</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>First Name <span class="req">*</span></label>
+            <input type="text" id="firstName" placeholder="Rajesh" value="${d.firstName || ''}" autocomplete="given-name"/>
+            <div class="field-error hidden" id="err-firstName"></div>
+          </div>
+          <div class="field">
+            <label>Last Name <span class="req">*</span></label>
+            <input type="text" id="lastName" placeholder="Kumar" value="${d.lastName || ''}" autocomplete="family-name"/>
+            <div class="field-error hidden" id="err-lastName"></div>
+          </div>
+          <div class="field">
+            <label>Business Name <span class="req">*</span></label>
+            <input type="text" id="businessName" placeholder="Kumar Enterprises Pvt Ltd" value="${d.businessName || ''}"/>
+            <div class="field-hint">Legal registered business name</div>
+            <div class="field-error hidden" id="err-businessName"></div>
+          </div>
+          <div class="field">
+            <label>Store Name <span class="req">*</span></label>
+            <input type="text" id="storeName" placeholder="KumarShop" value="${d.storeName || ''}"/>
+            <div class="field-hint">Display name on your storefront</div>
+            <div class="field-error hidden" id="err-storeName"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon">📬</span> Contact Information</div>
+        <div class="form-grid">
+          <div class="field span-2">
+            <label>Business Email <span class="req">*</span></label>
+            <div class="input-wrap">
+              <span class="input-icon">✉</span>
+              <input type="email" id="businessEmail" placeholder="rajesh@kumarenterprises.in" value="${d.businessEmail || ''}" autocomplete="email"/>
+            </div>
+            <div class="field-hint">Used for all vendor communications and login</div>
+            <div class="field-error hidden" id="err-businessEmail"></div>
+          </div>
+          <div class="field span-2">
+            <label>Mobile Number <span class="req">*</span></label>
+            <div class="input-wrap">
+              <span class="input-icon">📱</span>
+              <input type="tel" id="mobile" placeholder="+91 98765 43210" value="${d.mobile || ''}" autocomplete="tel" maxlength="15"/>
+            </div>
+            <div class="field-error hidden" id="err-mobile"></div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // STEP 2 — BUSINESS DETAILS
+    // ════════════════════════════════════════════════════════════════
+    function business() {
+
+      const d = state.formData.business;
+      const types = ['INDIVIDUAL','PROPRIETORSHIP','PARTNERSHIP','LLP','PRIVATE_LIMITED','PUBLIC_LIMITED'];
+      const cats  = ['Electronics','Fashion & Apparel','Home & Kitchen','Books & Stationery','Beauty & Personal Care','Sports & Fitness','Toys & Games','Grocery & Food','Automotive','Health & Wellness','Other'];
+      return `
+      <div class="step-header">
+        <div class="step-badge">Step 2 of 6</div>
+        <h2>Business Details</h2>
+        <p>Help us understand your business structure and verify your tax registrations.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon">🏢</span> Business Classification</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Business Type <span class="req">*</span></label>
+            <select id="businessType">
+              <option value="">Select type…</option>
+              ${types.map(t => `<option value="${t}" ${d.businessType === t ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+            <div class="field-error hidden" id="err-businessType"></div>
+          </div>
+          <div class="field">
+            <label>Business Category <span class="req">*</span></label>
+            <select id="category">
+              <option value="">Select category…</option>
+              ${cats.map(c => `<option value="${c}" ${d.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+            <div class="field-error hidden" id="err-category"></div>
+          </div>
+          <div class="field span-2">
+            <label>Business Description <span class="req">*</span></label>
+            <textarea id="description" placeholder="Briefly describe what your business sells, who your target customers are, and what makes you unique…">${d.description || ''}</textarea>
+            <div class="field-hint">Minimum 50 characters. Appears on your public store profile.</div>
+            <div class="field-error hidden" id="err-description"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon">🔖</span> Tax Registrations</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>GST Number <span class="req">*</span></label>
+            <input type="text" id="gstNumber" placeholder="22AAAAA0000A1Z5" value="${d.gstNumber || ''}" maxlength="15" style="text-transform:uppercase"/>
+            <div class="field-hint">15-digit GSTIN</div>
+            <div class="field-error hidden" id="err-gstNumber"></div>
+          </div>
+          <div class="field">
+            <label>PAN Number <span class="req">*</span></label>
+            <input type="text" id="panNumber" placeholder="AAAAA0000A" value="${d.panNumber || ''}" maxlength="10" style="text-transform:uppercase"/>
+            <div class="field-hint">10-character PAN</div>
+            <div class="field-error hidden" id="err-panNumber"></div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // STEP 3 — BUSINESS ADDRESS
+    // ════════════════════════════════════════════════════════════════
+    function address() {
+      const d = state.formData.address;
+      const stateList = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Chandigarh','Delhi','Jammu and Kashmir','Ladakh','Puducherry'];
+      return `
+      <div class="step-header">
+        <div class="step-badge">Step 3 of 6</div>
+        <h2>Business Address</h2>
+        <p>This address will appear on invoices and is used for logistics and regulatory compliance.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon">📍</span> Registered Address</div>
+        <div class="form-grid">
+          <div class="field span-2">
+            <label>Address Line 1 <span class="req">*</span></label>
+            <input type="text" id="addressLine1" placeholder="Building No., Street Name" value="${d.addressLine1 || ''}" autocomplete="address-line1"/>
+            <div class="field-error hidden" id="err-addressLine1"></div>
+          </div>
+          <div class="field span-2">
+            <label>Address Line 2</label>
+            <input type="text" id="addressLine2" placeholder="Landmark, Area, Colony" value="${d.addressLine2 || ''}" autocomplete="address-line2"/>
+          </div>
+          <div class="field">
+            <label>City <span class="req">*</span></label>
+            <input type="text" id="city" placeholder="Mumbai" value="${d.city || ''}" autocomplete="address-level2"/>
+            <div class="field-error hidden" id="err-city"></div>
+          </div>
+          <div class="field">
+            <label>State <span class="req">*</span></label>
+            <select id="state">
+              <option value="">Select state…</option>
+              ${stateList.map(s => `<option value="${s}" ${d.state === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+            <div class="field-error hidden" id="err-state"></div>
+          </div>
+          <div class="field">
+            <label>Country <span class="req">*</span></label>
+            <select id="country">
+              <option value="India" ${d.country === 'India' ? 'selected' : ''}>🇮🇳 India</option>
+            </select>
+            <div class="field-error hidden" id="err-country"></div>
+          </div>
+          <div class="field">
+            <label>Pincode <span class="req">*</span></label>
+            <input type="text" id="pincode" placeholder="400001" value="${d.pincode || ''}" maxlength="6" pattern="[0-9]{6}"/>
+            <div class="field-error hidden" id="err-pincode"></div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // STEP 4 — BANK DETAILS
+    // ════════════════════════════════════════════════════════════════
+    function bank() {
+      const d = state.formData.bank;
+      return `
+      <div class="step-header">
+        <div class="step-badge">Step 4 of 6</div>
+        <h2>Bank Details</h2>
+        <p>Your settlement payments will be transferred to this account. Ensure the name matches your business PAN.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon">🏦</span> Account Information</div>
+        <div class="form-grid">
+          <div class="field span-2">
+            <label>Account Holder Name <span class="req">*</span></label>
+            <input type="text" id="accountHolderName" placeholder="As printed on passbook" value="${d.accountHolderName || ''}"/>
+            <div class="field-error hidden" id="err-accountHolderName"></div>
+          </div>
+          <div class="field">
+            <label>Bank Name <span class="req">*</span></label>
+            <input type="text" id="bankName" placeholder="State Bank of India" value="${d.bankName || ''}"/>
+            <div class="field-error hidden" id="err-bankName"></div>
+          </div>
+          <div class="field">
+            <label>Branch Name</label>
+            <input type="text" id="branchName" placeholder="Main Branch, Mumbai" value="${d.branchName || ''}"/>
+          </div>
+          <div class="field">
+            <label>Account Number <span class="req">*</span></label>
+            <input type="password" id="accountNumber" placeholder="●●●●●●●●●●●●" value="${d.accountNumber || ''}" autocomplete="off"/>
+            <div class="field-error hidden" id="err-accountNumber"></div>
+          </div>
+          <div class="field">
+            <label>Confirm Account Number <span class="req">*</span></label>
+            <input type="text" id="confirmAccount" placeholder="Re-enter account number" value="${d.confirmAccount || ''}" autocomplete="off"/>
+            <div class="field-error hidden" id="err-confirmAccount"></div>
+          </div>
+          <div class="field span-2">
+            <label>IFSC Code <span class="req">*</span></label>
+            <div class="input-wrap">
+              <span class="input-icon">🔍</span>
+              <input type="text" id="ifscCode" placeholder="SBIN0000001" value="${d.ifscCode || ''}" maxlength="11" style="text-transform:uppercase"/>
+            </div>
+            <div class="field-hint" id="ifscHint">Enter a valid 11-character IFSC code to auto-fill bank details.</div>
+            <div class="field-error hidden" id="err-ifscCode"></div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // STEP 5 — BRANDING (Logo & Banner upload directly to Cloudflare R2
+    // via /api/media/upload/logo & /api/media/upload/banner). Only the
+    // returned objectKey is ever stored in state.formData.branding.*)
+    // ════════════════════════════════════════════════════════════════
+    function uploadBoxContent(kind, objectKey) {
+      const previewUrl = mediaPreviewUrls[kind];
+      if (objectKey) {
+        return `
+          ${previewUrl ? `<img src="${previewUrl}" class="upload-preview-img"/>` : ''}
+          <div class="upload-status success">✓ Uploaded</div>
+          <div class="upload-keyline">${objectKey}</div>
+          <button type="button" class="upload-remove" onclick="event.stopPropagation(); removeMedia('${kind}')" title="Remove">✕</button>`;
+      }
+      return `<div class="upload-placeholder"><span class="upload-icon">📤</span>Click to upload</div>`;
+    }
+
+    function branding() {
+      const d = state.formData.branding;
+      return `
+      <div class="step-header">
+        <div class="step-badge">Step 5 of 6</div>
+        <h2>Brand Identity</h2>
+        <p>Configure your store branding. These settings will appear on your public storefront.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon">🖼</span> Store Assets</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Logo <span class="req">*</span></label>
+            <div class="upload-box" id="logoUploadBox" onclick="document.getElementById('logoFileInput').click()">
+              ${uploadBoxContent('logo', d.logoUrl)}
+            </div>
+            <input type="file" id="logoFileInput" class="hidden-file-input" accept="image/png,image/jpeg,image/webp"
+                   onchange="handleMediaUpload(this, 'logo')"/>
+            <div class="field-hint">PNG / JPG / WEBP, up to 2MB</div>
+            <div class="field-error hidden" id="err-logoUrl"></div>
+          </div>
+          <div class="field">
+            <label>Banner</label>
+            <div class="upload-box" id="bannerUploadBox" onclick="document.getElementById('bannerFileInput').click()">
+              ${uploadBoxContent('banner', d.bannerUrl)}
+            </div>
+            <input type="file" id="bannerFileInput" class="hidden-file-input" accept="image/png,image/jpeg,image/webp"
+                   onchange="handleMediaUpload(this, 'banner')"/>
+            <div class="field-hint">PNG / JPG / WEBP, up to 5MB, recommended 1200×300px</div>
+            <div class="field-error hidden" id="err-bannerUrl"></div>
+          </div>
+          <div class="field">
+            <label>Store Tagline</label>
+            <input type="text" id="tagline" maxlength="100" placeholder="India's Trusted Electronics Store" value="${d.tagline || ''}"/>
+            <div class="field-hint">Short slogan shown under your store name (max 100 chars)</div>
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <div></div>
+          </div>
+          <div class="field span-2">
+            <label>Store Description</label>
+            <textarea id="storeDescription" placeholder="Tell customers about your business, your speciality, and what sets you apart…">${d.description || ''}</textarea>
+            <div class="field-hint">Displayed on your public store profile page</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon">🎨</span> Primary Brand Color</div>
+        <div class="color-row">
+          <input type="color" id="brandColorPicker" value="${d.primaryColor || '#4F46E5'}" oninput="syncColor()"/>
+          <div class="field color-hex">
+            <input type="text" id="brandColorHex" maxlength="7" placeholder="#4F46E5" value="${d.primaryColor || '#4F46E5'}" oninput="syncColorHex()"/>
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Preview</div>
+          <button id="colorPreviewBtn" style="background:${d.primaryColor || '#4F46E5'};color:#fff;padding:10px 24px;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:default;">
+            Your Brand Button
+          </button>
+        </div>
+      </div>`;
+    }
+
+    // ── MEDIA UPLOAD HANDLER (logo / banner) ────────────────────────────
+    // Uploads immediately on file selection. On success, stores ONLY the
+    // objectKey returned by the backend into state.formData.branding —
+    // the same JSON object that gets POSTed when the Branding step is saved.
+    async function handleMediaUpload(inputEl, kind) {
+      const file = inputEl.files && inputEl.files[0];
+      if (!file) return;
+
+      const formField = kind === 'logo' ? 'logoUrl' : 'bannerUrl';
+      const box = document.getElementById(kind + 'UploadBox');
+
+      // Instant local preview while the network request is in flight
+      if (mediaPreviewUrls[kind]) URL.revokeObjectURL(mediaPreviewUrls[kind]);
+      mediaPreviewUrls[kind] = URL.createObjectURL(file);
+
+      box.innerHTML = `
+        <img src="${mediaPreviewUrls[kind]}" class="upload-preview-img"/>
+        <div class="upload-status uploading"><span class="upload-spinner"></span>Uploading…</div>`;
+      box.classList.remove('has-error');
+      clearFieldError(formField);
+
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+
+        const res = await fetch(`${MEDIA_UPLOAD_BASE_URL}/${kind}`, {
+          method: 'POST',
+          credentials: 'include',
+          body: fd
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Upload failed. Please try again.');
+        }
+
+        // ✅ Only the object key is kept — never a public/signed URL.
+        state.formData.branding[formField] = data.objectKey;
+
+        box.innerHTML = uploadBoxContent(kind, data.objectKey);
+        showToast('success', 'Upload complete', data.message || `${kind === 'logo' ? 'Logo' : 'Banner'} uploaded successfully.`);
+      } catch (err) {
+        console.error(err);
+        state.formData.branding[formField] = '';
+        mediaPreviewUrls[kind] = '';
+        box.classList.add('has-error');
+        box.innerHTML = `<div class="upload-placeholder"><span class="upload-icon">📤</span>Click to upload</div>`;
+        showFieldError(formField, err.message || 'Upload failed. Please try again.');
+        showToast('error', 'Upload failed', err.message || 'Could not upload file.');
+      } finally {
+        inputEl.value = '';
+      }
+    }
+
+    // Called when the user clicks "✕" on an already-uploaded logo/banner.
+    // Deletes the object from R2 first — only clears local state/UI once
+    // the backend confirms the delete, so we never lose track of a file
+    // that's still actually sitting in the bucket.
+    async function removeMedia(kind) {
+      const formField = kind === 'logo' ? 'logoUrl' : 'bannerUrl';
+      const objectKey = state.formData.branding[formField];
+      const box = document.getElementById(kind + 'UploadBox');
+      if (!objectKey || !box) return;
+
+      const previousPreviewUrl = mediaPreviewUrls[kind];
+      box.innerHTML = `<div class="upload-status uploading"><span class="upload-spinner"></span>Removing…</div>`;
+
+      try {
+        const res = await fetch(`${MEDIA_DELETE_URL}?objectKey=${encodeURIComponent(objectKey)}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Could not remove file. Please try again.');
+        }
+
+        state.formData.branding[formField] = '';
+        if (previousPreviewUrl) URL.revokeObjectURL(previousPreviewUrl);
+        mediaPreviewUrls[kind] = '';
+        box.innerHTML = `<div class="upload-placeholder"><span class="upload-icon">📤</span>Click to upload</div>`;
+        showToast('success', 'Removed', data.message || 'File removed.');
+      } catch (err) {
+        console.error(err);
+        // Delete failed server-side — the file is still in R2, so keep
+        // showing it as uploaded rather than silently orphaning it.
+        box.innerHTML = uploadBoxContent(kind, objectKey);
+        showToast('error', 'Remove failed', err.message || 'Could not remove file. Please try again.');
+      }
+    }
+
+    function clearFieldError(fieldId) {
+      const err = document.getElementById(`err-${fieldId}`);
+      if (err) { err.classList.add('hidden'); err.textContent = ''; }
+    }
+
+    function showFieldError(fieldId, msg) {
+      const err = document.getElementById(`err-${fieldId}`);
+      if (err) { err.textContent = msg; err.classList.remove('hidden'); }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // STEP 6 — REVIEW & SUBMIT
+    // ════════════════════════════════════════════════════════════════
+    function review() {
+      const { basic: b, business: bs, address: a, bank: bk, branding: br } = state.formData;
+      const val  = v  => v  ? v  : '<span class="review-value empty">Not provided</span>';
+      const mask = v  => v  ? '●●●●' + String(v).slice(-4) : '<span class="review-value empty">Not provided</span>';
+      const color = c => c
+        ? `<span style="display:inline-flex;align-items:center;gap:6px">
+             <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${c};border:1px solid rgba(0,0,0,.1)"></span>${c}
+           </span>`
+        : '<span class="review-value empty">Not set</span>';
+
+      function section(title, icon, stepIdx, fields) {
+        const items = fields.map(([label, value]) =>
+          `<div class="review-item">
+             <div class="review-label">${label}</div>
+             <div class="review-value">${value}</div>
+           </div>`
+        ).join('');
+        return `
+        <div class="review-section">
+          <div class="review-section-header">
+            <div class="review-section-title">${icon} ${title}</div>
+            <button class="review-edit-btn" onclick="jumpToStep(${stepIdx})">✏ Edit</button>
+          </div>
+          <div class="review-grid">${items}</div>
+        </div>`;
+      }
+
+      return `
+      <div class="step-header">
+        <div class="step-badge">Step 6 of 6</div>
+        <h2>Review Your Application</h2>
+        <p>Please review all information carefully before submitting. Use the Edit buttons to correct any section.</p>
+      </div>
+
+      ${section('Basic Information', '👤', 0, [
+        ['First Name',     val(b.firstName)],
+        ['Last Name',      val(b.lastName)],
+        ['Business Name',  val(b.businessName)],
+        ['Store Name',     val(b.storeName)],
+        ['Business Email', val(b.businessEmail)],
+        ['Mobile',         val(b.mobile)],
+      ])}
+
+      ${section('Business Details', '🏢', 1, [
+        ['Business Type', val(bs.businessType)],
+        ['Category',      val(bs.category)],
+        ['GST Number',    val(bs.gstNumber)],
+        ['PAN Number',    val(bs.panNumber)],
+        ['Description',   val(bs.description)],
+        ['', ''],
+      ])}
+
+      ${section('Business Address', '📍', 2, [
+        ['Address Line 1', val(a.addressLine1)],
+        ['Address Line 2', val(a.addressLine2)],
+        ['City',           val(a.city)],
+        ['State',          val(a.state)],
+        ['Country',        val(a.country)],
+        ['Pincode',        val(a.pincode)],
+      ])}
+
+      ${section('Bank Details', '🏦', 3, [
+        ['Account Holder', val(bk.accountHolderName)],
+        ['Bank Name',      val(bk.bankName)],
+        ['Account Number', mask(bk.accountNumber)],
+        ['IFSC Code',      val(bk.ifscCode)],
+        ['Branch Name',    val(bk.branchName)],
+        ['', ''],
+      ])}
+
+      ${section('Branding', '🎨', 4, [
+        ['Logo (object key)',   "https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev/"+val(br.logoUrl)],
+        ['Banner (object key)',  val(br.bannerUrl)],
+        ['Brand Color',  color(br.primaryColor)],
+        ['Tagline',      val(br.tagline)],
+        ['Description',  val(br.description)],
+        ['', ''],
+      ])}
+
+      <div style="background:var(--indigo-pale);border:1px solid #C7D2FE;border-radius:var(--radius);padding:16px 20px;margin-top:8px">
+        <div style="font-size:13px;font-weight:700;color:var(--indigo);margin-bottom:8px">📋 What happens after you submit?</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:2">
+          ① Your onboarding application will be submitted for review.<br/>
+          ② A unique Application ID will be generated and emailed to you.<br/>
+          ③ Our review team will verify your business information.<br/>
+          ④ You can track your application status from your seller dashboard.<br/>
+          ⑤ Once approved, your seller account will be fully activated.
+        </div>
+      </div>`;
+    }
+
+    // ── VALIDATION ─────────────────────────────────────────────────────
+    const validators = {
+      basic() {
+        const errs = {};
+        const f = collectFields(['firstName','lastName','businessName','storeName','businessEmail','mobile']);
+        if (!f.firstName?.trim())    errs.firstName    = 'First name is required';
+        if (!f.lastName?.trim())     errs.lastName     = 'Last name is required';
+        if (!f.businessName?.trim()) errs.businessName = 'Business name is required';
+        if (!f.storeName?.trim())    errs.storeName    = 'Store name is required';
+        if (!f.businessEmail?.trim())     errs.businessEmail = 'Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.businessEmail)) errs.businessEmail = 'Enter a valid email address';
+        if (!f.mobile?.trim()) errs.mobile = 'Mobile number is required';
+        else if (!/^[\+]?[0-9\s\-]{8,15}$/.test(f.mobile)) errs.mobile = 'Enter a valid mobile number';
+        return errs;
+      },
+      business() {
+        const errs = {};
+        const f = collectFields(['businessType','category','description','gstNumber','panNumber']);
+        if (!f.businessType)  errs.businessType = 'Select a business type';
+        if (!f.category)      errs.category     = 'Select a business category';
+        if (!f.description?.trim())  errs.description = 'Description is required';
+        else if (f.description.trim().length < 50) errs.description = 'Description must be at least 50 characters';
+        if (!f.gstNumber?.trim()) errs.gstNumber = 'GST number is required';
+        else if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(f.gstNumber.toUpperCase()))
+          errs.gstNumber = 'Enter a valid 15-character GSTIN';
+        if (!f.panNumber?.trim()) errs.panNumber = 'PAN number is required';
+        else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(f.panNumber.toUpperCase()))
+          errs.panNumber = 'Enter a valid 10-character PAN';
+        return errs;
+      },
+      address() {
+        const errs = {};
+        const f = collectFields(['addressLine1','city','state','country','pincode']);
+        if (!f.addressLine1?.trim()) errs.addressLine1 = 'Address is required';
+        if (!f.city?.trim())   errs.city    = 'City is required';
+        if (!f.state)          errs.state   = 'Select a state';
+        if (!f.country)        errs.country = 'Country is required';
+        if (!f.pincode?.trim()) errs.pincode = 'Pincode is required';
+        else if (!/^[0-9]{6}$/.test(f.pincode)) errs.pincode = 'Enter a valid 6-digit pincode';
+        return errs;
+      },
+      bank() {
+        const errs = {};
+        const f = collectFields(['accountHolderName','bankName','accountNumber','confirmAccount','ifscCode']);
+        if (!f.accountHolderName?.trim()) errs.accountHolderName = 'Account holder name is required';
+        if (!f.bankName?.trim())  errs.bankName  = 'Bank name is required';
+        if (!f.accountNumber?.trim()) errs.accountNumber = 'Account number is required';
+        else if (f.accountNumber.length < 9) errs.accountNumber = 'Account number must be at least 9 digits';
+        if (!f.confirmAccount?.trim()) errs.confirmAccount = 'Please confirm your account number';
+        else if (f.confirmAccount !== f.accountNumber) errs.confirmAccount = 'Account numbers do not match';
+        if (!f.ifscCode?.trim()) errs.ifscCode = 'IFSC code is required';
+        else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(f.ifscCode.toUpperCase()))
+          errs.ifscCode = 'Enter a valid 11-character IFSC code';
+        return errs;
+      },
+      branding() {
+        // logoUrl/bannerUrl are populated by handleMediaUpload directly into
+        // state — there is no text input for them anymore, so we validate
+        // the state object itself rather than reading the DOM.
+        const errs = {};
+        if (!state.formData.branding.logoUrl) errs.logoUrl = 'Please upload a logo';
+        return errs;
+      },
+      review() { return {}; }
+    };
+
+    // ── COLLECT FIELD VALUES FROM DOM ──────────────────────────────────
+    function collectFields(ids) {
+      const out = {};
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) out[id] = el.value;
+      });
+      return out;
+    }
+
+    // ── DISPLAY VALIDATION ERRORS ──────────────────────────────────────
+    function showErrors(errs) {
+      document.querySelectorAll('.field-error').forEach(e => { e.classList.add('hidden'); e.textContent = ''; });
+      document.querySelectorAll('input.error, select.error, textarea.error').forEach(e => e.classList.remove('error'));
+      document.querySelectorAll('.upload-box').forEach(e => e.classList.remove('has-error'));
+      let first = null;
+      Object.entries(errs).forEach(([key, msg]) => {
+        const errEl   = document.getElementById(`err-${key}`);
+        const inputEl = document.getElementById(key);
+        if (errEl)   { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+        if (inputEl) { inputEl.classList.add('error'); if (!first) first = inputEl; }
+        if (key === 'logoUrl' || key === 'bannerUrl') {
+          const box = document.getElementById((key === 'logoUrl' ? 'logo' : 'banner') + 'UploadBox');
+          if (box) { box.classList.add('has-error'); if (!first) first = box; }
+        }
+      });
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ── SAVE CURRENT STEP DATA INTO STATE ─────────────────────────────
+    function saveCurrentStepData() {
+      const id = STEPS[state.currentStep].id;
+      const fieldMap = {
+        basic:    ['firstName','lastName','businessName','storeName','businessEmail','mobile'],
+        business: ['businessType','category','description','gstNumber','panNumber'],
+        address:  ['addressLine1','addressLine2','city','state','country','pincode'],
+        bank:     ['accountHolderName','bankName','accountNumber','confirmAccount','ifscCode','branchName'],
+        // logoUrl / bannerUrl are intentionally excluded: they're written
+        // directly into state by handleMediaUpload as soon as the upload
+        // succeeds, not read from a text input here.
+        branding: ['tagline','brandColorHex'],
+        review:   [],
+      };
+      (fieldMap[id] || []).forEach(f => {
+        const el = document.getElementById(f);
+        if (el) state.formData[id][f] = el.value;
+      });
+      if (id === 'branding') {
+        const descEl = document.getElementById('storeDescription');
+        if (descEl) state.formData.branding.description = descEl.value;
+        state.formData.branding.primaryColor = state.formData.branding.brandColorHex || '#4F46E5';
+        delete state.formData.branding.brandColorHex;
+      }
+    }
+
+    // ── NAVIGATION ─────────────────────────────────────────────────────
+    async function goNext() {
+      if (state.profileCompleted) return;
+      const id = STEPS[state.currentStep].id;
+      saveCurrentStepData();
+      const errs = validators[id]();
+      if (Object.keys(errs).length) { showErrors(errs); return; }
+      if (state.currentStep === STEPS.length - 1) { await submitForm(); return; }
+      await postStepData(id);
+    }
+
+    function goBack() {
+      if (state.profileCompleted) return;
+      saveCurrentStepData();
+      if (state.currentStep > 0) { state.currentStep--; renderAll(); }
+    }
+
+    // ── API CALLS ────────────────────────────────────────────────────
+    const endpointMap = {
+        basic: "/vendor/s1/v1/basic-info",
+        business: "/vendor/s1/v1/business-details",
+        address: "/vendor/s1/v1/address",
+        bank: "/vendor/s1/v1/bank-details",
+        branding: "/vendor/s1/v1/branding"
+    };
+
+    async function postStepData(stepId) {
+        showLoading(`Saving ${STEPS[state.currentStep].label}...`);
+        try {
+            const res = await fetch(endpointMap[stepId], {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(state.formData[stepId])
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                hideLoading();
+                showToast("error", "Save Failed", data.message || "Something went wrong.");
+                return;
+            }
+            hideLoading();
+            showToast("success", "Saved", data.message || "Data saved successfully.");
+            state.currentStep++;
+            renderAll();
+        } catch (err) {
+            hideLoading();
+            console.error(err);
+            showToast("error", "Network Error", "Unable to connect to server.");
+        }
+    }
+
+    async function submitForm() {
+        showLoading("Submitting your application...");
+        try {
+            const res = await fetch("/vendor/s1/v1/submit", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" }
+            });
+            const data = await res.json();
+            hideLoading();
+            if (!res.ok || !data.success) {
+                showToast("error", "Submission Failed", data.message || "Unable to submit application.");
+                return;
+            }
+            showToast("success", "Success", data.message || "Application submitted successfully.");
+            state.profileCompleted = true;
+            state.applicationId = data.applicationId;
+            // Give the toast a moment to be visible, then hand off to the
+            // dedicated status page — this form's job is done.
+            setTimeout(() => redirectToStatusPage(), 1200);
+        } catch (err) {
+            hideLoading();
+            console.error(err);
+            showToast("error", "Network Error", "Unable to connect to server.");
+        }
+    }
+
+    async function saveLater() {
+      if (state.profileCompleted) return;
+      saveCurrentStepData();
+      showLoading('Saving your progress…', 'You can safely close this window after saving');
+      await delay(700);
+      hideLoading();
+      showToast('success', 'Progress saved!', 'You can continue your application anytime.');
+    }
+
+    // ── NULL-SAFE MERGE HELPER ─────────────────────────────────────────
+    function mergeSection(target, incoming) {
+      if (!incoming || typeof incoming !== 'object') return;
+      Object.entries(incoming).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) target[key] = value;
+      });
+    }
+
+    async function loadOnboardingData() {
+      showLoading('Loading your application…', 'Fetching your saved progress');
+      try {
+        const res = await fetch(ONBOARD_DETAIL_URL, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json();
+        console.log(" Final Payload Receive",payload);
+
+        if (payload.success && payload.data) {
+          ["basic","business","address","bank","branding"].forEach(section => {
+            mergeSection(state.formData[section], payload.data[section]);
+          });
+
+          // ── KEY FIX ──────────────────────────────────────────────
+          // profileCompleted (or currentStep >= STEPS.length) means the
+          // vendor already submitted. Flip a single flag and let
+          // renderAll() route to the "already submitted" screen instead
+          // of re-showing the review/submit form.
+          state.profileCompleted = !!payload.profileCompleted || payload.currentStep >= STEPS.length;
+          state.applicationId = payload.applicationId || payload.data.applicationId || null;
+          state.currentStep = state.profileCompleted
+            ? STEPS.length - 1
+            : Math.min(payload.currentStep || 0, STEPS.length - 1);
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("error", "Unable to load onboarding", "Please try again.");
+      } finally {
+        hideLoading();
+        renderAll();
+      }
+    }
+
+    // NOTE: showSuccessState() was removed — a successful submission now
+    // redirects to the dedicated application-status page (see submitForm()).
+
+    // ── COLOR PICKER SYNC ──────────────────────────────────────────────
+    function syncColor() {
+      const picker = document.getElementById('brandColorPicker');
+      const hex    = document.getElementById('brandColorHex');
+      if (picker && hex) { hex.value = picker.value; updateColorPreview(picker.value); }
+    }
+
+    function syncColorHex() {
+      const picker = document.getElementById('brandColorPicker');
+      const hex    = document.getElementById('brandColorHex');
+      if (picker && hex && /^#[0-9A-Fa-f]{6}$/.test(hex.value)) {
+        picker.value = hex.value;
+        updateColorPreview(hex.value);
+      }
+    }
+
+    function updateColorPreview(color) {
+      const btn = document.getElementById('colorPreviewBtn');
+      if (btn) btn.style.background = color;
+    }
+
+    // ── BIND STEP-SPECIFIC EVENTS ──────────────────────────────────────
+    function bindEvents(stepId) {
+      ['gstNumber','panNumber','ifscCode'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', () => { el.value = el.value.toUpperCase(); });
+      });
+
+      const ifscEl = document.getElementById('ifscCode');
+      if (ifscEl) {
+        ifscEl.addEventListener('blur', async () => {
+          const val = ifscEl.value.toUpperCase();
+          if (/^[A-Z]{4}0[A-Z0-9]{6}$/.test(val)) {
+            const hint = document.getElementById('ifscHint');
+            if (hint) { hint.textContent = '✓ Valid IFSC code'; hint.style.color = 'var(--emerald)'; }
+          }
+        });
+      }
+
+      document.querySelectorAll('input, select, textarea').forEach(el => {
+        el.addEventListener('input', () => {
+          el.classList.remove('error');
+          const err = document.getElementById(`err-${el.id}`);
+          if (err) { err.classList.add('hidden'); err.textContent = ''; }
+        });
+      });
+    }
+
+    // ── TOAST ──────────────────────────────────────────────────────────
+    function showToast(type, title, msg) {
+      const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+      const id = 'toast-' + Date.now();
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.id = id;
+      el.innerHTML = `
+        <div class="toast-icon">${icons[type] || 'ℹ️'}</div>
+        <div class="toast-body">
+          <div class="toast-title">${title}</div>
+          ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
+        </div>
+        <button class="toast-close" onclick="dismissToast('${id}')">✕</button>`;
+      document.getElementById('toastContainer').appendChild(el);
+      setTimeout(() => dismissToast(id), 5000);
+    }
+
+    function dismissToast(id) {
+      const el = document.getElementById(id);
+      if (el) { el.style.animation = 'slideOut .3s forwards'; setTimeout(() => el.remove(), 300); }
+    }
+
+    // ── LOADING ────────────────────────────────────────────────────────
+    function showLoading(msg = 'Saving…', sub = "Please don't close this window") {
+      document.getElementById('loadingMsg').textContent = msg;
+      document.getElementById('loadingSub').textContent = sub;
+      document.getElementById('loadingOverlay').classList.add('show');
+    }
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('show');
+    }
+
+    // ── SIDEBAR (MOBILE) ───────────────────────────────────────────────
+    function openSidebar()  {
+      document.getElementById('sidebar').classList.add('open');
+      document.getElementById('overlay').classList.add('show');
+    }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
+    }
+
+    // ── THEME TOGGLE ───────────────────────────────────────────────────
+    function toggleTheme() {
+      const html   = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.querySelector('.theme-toggle').textContent = isDark ? '🌙' : '☀️';
+      localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    }
+
+    // ── UTILS ──────────────────────────────────────────────────────────
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+
+    // ── INIT ───────────────────────────────────────────────────────────
+    (function init() {
+      const saved = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      document.querySelector('.theme-toggle').textContent = saved === 'dark' ? '☀️' : '🌙';
+      loadOnboardingData();
+    })();
+</script>
+</body>
+</html>

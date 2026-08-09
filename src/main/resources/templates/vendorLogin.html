@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SellerHub — Vendor Login</title>
+
+    <!-- ================================================================
+      VENDOR LOGIN PAGE — SellerHub
+      Design: Split-panel layout.
+        LEFT  → Animated live commerce dashboard (the signature element):
+                real-time ticker of vendor stats, floating metric cards,
+                and a subtle animated grid background.
+        RIGHT → Crisp login form with email/password, OTP toggle,
+                remember me, and forgot password flow.
+
+      Palette:
+        Deep Space   #0A0F1E  (left panel base)
+        Indigo       #4F46E5  (primary action)
+        Indigo Light #818CF8
+        Electric     #06B6D4  (accent / live indicator)
+        Emerald      #10B981  (positive metrics)
+        Rose         #F43F5E  (alerts)
+        Ice          #F8FAFC  (right panel bg)
+        Charcoal     #1E293B  (card bg on dark)
+
+      Signature element: The left panel renders a live animated vendor
+      marketplace "pulse" — scrolling order ticker, animated stat cards
+      with counting numbers, and a glowing ring chart — giving the sense
+      of a real platform you're about to enter.
+    ================================================================ -->
+
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+        :root{
+          --space:    #0A0F1E;
+          --space-mid:#111827;
+          --charcoal: #1E293B;
+          --indigo:   #4F46E5;
+          --indigo-lt:#818CF8;
+          --indigo-pale:#EEF2FF;
+          --electric: #06B6D4;
+          --emerald:  #10B981;
+          --rose:     #F43F5E;
+          --amber:    #F59E0B;
+          --ice:      #F8FAFC;
+          --white:    #FFFFFF;
+          --border:   #E2E8F0;
+          --border-dark:rgba(255,255,255,.09);
+          --text:     #0F172A;
+          --muted:    #64748B;
+          --font: -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;
+          --radius:   14px;
+          --radius-sm:8px;
+          --trans:    .22s cubic-bezier(.4,0,.2,1);
+        }
+
+        [data-theme="dark"]{
+          --ice:     #0F172A;
+          --white:   #1E293B;
+          --border:  #334155;
+          --text:    #F1F5F9;
+          --muted:   #94A3B8;
+          --indigo-pale:#1E1B4B;
+        }
+
+        html,body{height:100%;font-family:var(--font);background:var(--ice);color:var(--text);overflow:hidden}
+
+        /* ── SHELL ─────────────────────────────── */
+        .shell{
+          display:flex;height:100vh;overflow:hidden;
+        }
+
+        /* ══════════════════════════════════════
+           LEFT PANEL — Live Commerce Pulse
+        ══════════════════════════════════════ */
+        .left-panel{
+          width:52%;flex-shrink:0;
+          background:var(--space);
+          position:relative;overflow:hidden;
+          display:flex;flex-direction:column;
+          padding:40px 44px;
+        }
+
+        /* Animated grid background */
+        .grid-bg{
+          position:absolute;inset:0;pointer-events:none;
+          background-image:
+            linear-gradient(rgba(79,70,229,.07) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(79,70,229,.07) 1px, transparent 1px);
+          background-size:48px 48px;
+          animation:gridDrift 22s linear infinite;
+        }
+        @keyframes gridDrift{from{background-position:0 0}to{background-position:48px 48px}}
+
+        /* Radial glow blobs */
+        .glow{
+          position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.35;
+        }
+        .glow-1{width:420px;height:420px;background:var(--indigo);top:-80px;left:-100px;animation:pulse1 7s ease-in-out infinite}
+        .glow-2{width:300px;height:300px;background:var(--electric);bottom:-60px;right:-60px;animation:pulse2 9s ease-in-out infinite}
+        .glow-3{width:200px;height:200px;background:var(--emerald);top:55%;left:40%;animation:pulse3 11s ease-in-out infinite;opacity:.18}
+        @keyframes pulse1{0%,100%{transform:scale(1) translate(0,0)}50%{transform:scale(1.15) translate(20px,15px)}}
+        @keyframes pulse2{0%,100%{transform:scale(1)}50%{transform:scale(1.2) translate(-15px,-10px)}}
+        @keyframes pulse3{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+
+        /* Brand */
+        .left-brand{position:relative;z-index:2;display:flex;align-items:center;gap:12px;margin-bottom:48px}
+        .brand-mark{
+          width:42px;height:42px;border-radius:12px;
+          background:linear-gradient(135deg,var(--indigo),var(--electric));
+          display:flex;align-items:center;justify-content:center;
+          font-size:20px;font-weight:900;color:#fff;letter-spacing:-1px;
+          box-shadow:0 0 20px rgba(79,70,229,.5);
+        }
+        .brand-text .name{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
+        .brand-text .tag{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.8px;text-transform:uppercase;margin-top:1px}
+
+        /* Live pill */
+        .live-pill{
+          display:inline-flex;align-items:center;gap:6px;
+          background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);
+          border-radius:20px;padding:5px 12px;margin-bottom:24px;position:relative;z-index:2;width:fit-content;
+        }
+        .live-dot{
+          width:7px;height:7px;border-radius:50%;background:var(--emerald);
+          animation:livePulse 1.4s ease-in-out infinite;
+        }
+        @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+        .live-text{font-size:11px;font-weight:700;color:var(--emerald);letter-spacing:.5px;text-transform:uppercase}
+
+        /* Headline */
+        .left-headline{position:relative;z-index:2;margin-bottom:36px}
+        .left-headline h1{
+          font-size:clamp(26px,2.8vw,38px);font-weight:900;color:#fff;
+          line-height:1.2;letter-spacing:-.8px;
+        }
+        .left-headline h1 .accent{
+          background:linear-gradient(90deg,var(--indigo-lt),var(--electric));
+          -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+        }
+        .left-headline p{
+          font-size:14px;color:rgba(255,255,255,.5);margin-top:10px;line-height:1.65;max-width:360px;
+        }
+
+        /* ── STAT CARDS ROW ── */
+        .stat-row{
+          display:flex;gap:12px;margin-bottom:24px;position:relative;z-index:2;
+        }
+        .stat-card{
+          flex:1;background:rgba(255,255,255,.05);
+          border:1px solid rgba(255,255,255,.09);border-radius:12px;
+          padding:16px 18px;backdrop-filter:blur(8px);
+          transition:border-color var(--trans),transform var(--trans);
+        }
+        .stat-card:hover{border-color:rgba(255,255,255,.18);transform:translateY(-2px)}
+        .stat-card .sc-label{font-size:11px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+        .stat-card .sc-val{font-size:24px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1}
+        .stat-card .sc-val .sc-unit{font-size:14px;font-weight:600;opacity:.6;margin-left:2px}
+        .stat-card .sc-delta{font-size:11px;margin-top:5px;font-weight:700}
+        .stat-card .sc-delta.up{color:var(--emerald)}
+        .stat-card .sc-delta.down{color:var(--rose)}
+        .sc-icon{font-size:18px;margin-bottom:6px}
+
+        /* ── LIVE ORDER TICKER ── */
+        .ticker-wrap{
+          position:relative;z-index:2;
+          background:rgba(255,255,255,.04);
+          border:1px solid rgba(255,255,255,.08);border-radius:12px;
+          overflow:hidden;flex:1;
+        }
+        .ticker-header{
+          display:flex;align-items:center;justify-content:space-between;
+          padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.07);
+        }
+        .ticker-title{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:.5px;text-transform:uppercase}
+        .ticker-badge{
+          font-size:10px;font-weight:700;color:var(--electric);
+          background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.2);
+          border-radius:10px;padding:2px 8px;
+        }
+        .ticker-body{overflow:hidden;position:relative;height:calc(100% - 45px)}
+        .ticker-list{
+          display:flex;flex-direction:column;
+          animation:tickerScroll 18s linear infinite;
+        }
+        .ticker-list:hover{animation-play-state:paused}
+        @keyframes tickerScroll{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+        .ticker-item{
+          display:flex;align-items:center;gap:12px;
+          padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04);
+          transition:background var(--trans);
+        }
+        .ticker-item:hover{background:rgba(255,255,255,.04)}
+        .ticker-avatar{
+          width:30px;height:30px;border-radius:8px;flex-shrink:0;
+          display:flex;align-items:center;justify-content:center;font-size:13px;
+          font-weight:800;color:#fff;
+        }
+        .ticker-info{flex:1;min-width:0}
+        .ticker-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ticker-item-id{font-size:11px;color:rgba(255,255,255,.3);margin-top:1px}
+        .ticker-amount{text-align:right;flex-shrink:0}
+        .ticker-price{font-size:13px;font-weight:700;color:#fff}
+        .ticker-status{font-size:10px;font-weight:700;margin-top:2px}
+        .ticker-status.paid{color:var(--emerald)}
+        .ticker-status.pending{color:var(--amber)}
+        .ticker-status.shipped{color:var(--electric)}
+
+        /* Bottom trust strip */
+        .trust-strip{
+          position:relative;z-index:2;margin-top:20px;
+          display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+        }
+        .trust-item{
+          display:flex;align-items:center;gap:6px;
+          font-size:11px;color:rgba(255,255,255,.35);font-weight:600;
+        }
+        .trust-item .ti-dot{
+          width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);
+        }
+
+        /* ══════════════════════════════════════
+           RIGHT PANEL — Login Form
+        ══════════════════════════════════════ */
+        .right-panel{
+          flex:1;background:var(--white);
+          display:flex;flex-direction:column;
+          align-items:center;justify-content:center;
+          padding:40px 32px;overflow-y:auto;position:relative;
+        }
+
+        /* Theme + help row */
+        .right-topbar{
+          position:absolute;top:24px;right:24px;
+          display:flex;align-items:center;gap:10px;
+        }
+        .icon-btn{
+          width:36px;height:36px;border-radius:9px;border:1px solid var(--border);
+          background:var(--ice);display:flex;align-items:center;justify-content:center;
+          font-size:16px;cursor:pointer;color:var(--muted);
+          transition:all var(--trans);
+        }
+        .icon-btn:hover{background:var(--indigo-pale);color:var(--indigo);border-color:var(--indigo-lt)}
+
+        /* Form card */
+        .form-card{width:100%;max-width:400px}
+
+        .form-eyebrow{
+          display:inline-flex;align-items:center;gap:6px;
+          font-size:11px;font-weight:700;color:var(--indigo);
+          background:var(--indigo-pale);border-radius:20px;padding:4px 12px;
+          letter-spacing:.5px;text-transform:uppercase;margin-bottom:18px;
+        }
+        .form-card h2{
+          font-size:28px;font-weight:900;color:var(--text);
+          letter-spacing:-.6px;margin-bottom:6px;line-height:1.2;
+        }
+        .form-card .subtitle{
+          font-size:14px;color:var(--muted);margin-bottom:30px;line-height:1.5;
+        }
+        .form-card .subtitle a{
+          color:var(--indigo);font-weight:600;text-decoration:none;
+        }
+        .form-card .subtitle a:hover{text-decoration:underline}
+
+        /* Tab switcher: Email / OTP */
+        .auth-tabs{
+          display:flex;gap:4px;background:var(--ice);border-radius:10px;
+          padding:4px;margin-bottom:24px;border:1px solid var(--border);
+        }
+        .auth-tab{
+          flex:1;text-align:center;padding:9px 0;border-radius:7px;
+          font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);
+          border:none;background:transparent;transition:all var(--trans);
+        }
+        .auth-tab.active{
+          background:var(--white);color:var(--indigo);
+          box-shadow:0 1px 6px rgba(0,0,0,.08);
+        }
+
+        /* Fields */
+        .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+        .field label{
+          font-size:13px;font-weight:600;color:var(--text);
+          display:flex;justify-content:space-between;align-items:center;
+        }
+        .label-link{
+          font-size:12px;font-weight:600;color:var(--indigo);
+          cursor:pointer;background:none;border:none;padding:0;
+          transition:opacity var(--trans);
+        }
+        .label-link:hover{opacity:.75}
+
+        .input-wrap{position:relative}
+        .input-wrap input{
+          width:100%;height:46px;padding:0 44px 0 44px;
+          border:1.5px solid var(--border);border-radius:var(--radius-sm);
+          font-size:14px;font-family:var(--font);color:var(--text);
+          background:var(--white);outline:none;
+          transition:border-color var(--trans),box-shadow var(--trans);
+        }
+        .input-wrap input:focus{
+          border-color:var(--indigo);
+          box-shadow:0 0 0 3.5px rgba(79,70,229,.12);
+        }
+        .input-wrap input.error{
+          border-color:var(--rose);
+          box-shadow:0 0 0 3px rgba(244,63,94,.1);
+        }
+        .input-wrap input.valid{border-color:var(--emerald)}
+        .input-icon-left,.input-icon-right{
+          position:absolute;top:50%;transform:translateY(-50%);
+          font-size:17px;color:var(--muted);pointer-events:none;
+        }
+        .input-icon-left{left:14px}
+        .input-icon-right{right:14px;cursor:pointer;pointer-events:all;font-size:15px}
+        .input-icon-right:hover{color:var(--indigo)}
+
+        .field-error{
+          font-size:12px;color:var(--rose);
+          display:flex;align-items:center;gap:4px;
+        }
+        .field-error::before{content:'⚠';font-size:11px}
+        .hidden{display:none!important}
+
+        /* Remember row */
+        .remember-row{
+          display:flex;align-items:center;justify-content:space-between;
+          margin-bottom:20px;
+        }
+        .checkbox-wrap{display:flex;align-items:center;gap:8px;cursor:pointer}
+        .checkbox-wrap input[type=checkbox]{
+          width:16px;height:16px;accent-color:var(--indigo);cursor:pointer;
+        }
+        .checkbox-wrap span{font-size:13px;font-weight:500;color:var(--muted)}
+
+        /* OTP input group */
+        .otp-group{
+          display:flex;gap:10px;justify-content:space-between;margin-bottom:16px;
+        }
+        .otp-group input{
+          width:52px;height:56px;text-align:center;
+          font-size:22px;font-weight:800;letter-spacing:0;
+          border:1.5px solid var(--border);border-radius:10px;
+          color:var(--text);background:var(--white);outline:none;
+          transition:all var(--trans);
+        }
+        .otp-group input:focus{
+          border-color:var(--indigo);
+          box-shadow:0 0 0 3px rgba(79,70,229,.12);
+          transform:scale(1.05);
+        }
+        .otp-group input.filled{border-color:var(--indigo);background:var(--indigo-pale);color:var(--indigo)}
+        .otp-group input.error{border-color:var(--rose)}
+
+        .otp-timer{
+          text-align:center;font-size:13px;color:var(--muted);margin-bottom:16px;
+        }
+        .otp-timer .resend-btn{
+          color:var(--indigo);font-weight:600;cursor:pointer;background:none;border:none;
+          font-size:13px;padding:0;transition:opacity var(--trans);
+        }
+        .otp-timer .resend-btn:disabled{color:var(--muted);cursor:default}
+
+        /* Submit button */
+        .submit-btn{
+          width:100%;height:48px;border-radius:10px;border:none;
+          background:linear-gradient(135deg,var(--indigo) 0%,#6366F1 100%);
+          color:#fff;font-size:15px;font-weight:700;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;gap:8px;
+          font-family:var(--font);letter-spacing:.1px;
+          box-shadow:0 4px 20px rgba(79,70,229,.38);
+          transition:all var(--trans);position:relative;overflow:hidden;margin-bottom:16px;
+        }
+        .submit-btn::before{
+          content:'';position:absolute;inset:0;
+          background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);
+          opacity:0;transition:opacity var(--trans);
+        }
+        .submit-btn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(79,70,229,.5)}
+        .submit-btn:hover::before{opacity:1}
+        .submit-btn:active{transform:translateY(0)}
+        .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+        /* Spinner */
+        .spinner{
+          width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);
+          border-top-color:#fff;border-radius:50%;
+          animation:spin .65s linear infinite;
+        }
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* Divider */
+        .divider{
+          display:flex;align-items:center;gap:12px;margin-bottom:16px;
+        }
+        .divider hr{flex:1;border:none;border-top:1px solid var(--border)}
+        .divider span{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap}
+
+        /* Social buttons */
+        .social-row{display:flex;gap:10px;margin-bottom:24px}
+        .social-btn{
+          flex:1;height:44px;border-radius:9px;border:1.5px solid var(--border);
+          background:var(--white);font-size:13px;font-weight:600;color:var(--text);
+          cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+          transition:all var(--trans);font-family:var(--font);
+        }
+        .social-btn:hover{border-color:var(--muted);background:var(--ice);transform:translateY(-1px)}
+        .social-icon{font-size:17px}
+
+        /* Register link */
+        .register-link{
+          text-align:center;font-size:13px;color:var(--muted);
+        }
+        .register-link a{
+          color:var(--indigo);font-weight:700;text-decoration:none;
+        }
+        .register-link a:hover{text-decoration:underline}
+
+        /* Success state */
+        .success-wrap{text-align:center;padding:12px 0}
+        .success-icon-wrap{
+          width:72px;height:72px;background:linear-gradient(135deg,#D1FAE5,#A7F3D0);
+          border-radius:50%;display:flex;align-items:center;justify-content:center;
+          margin:0 auto 18px;font-size:32px;
+          animation:popIn .5s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes popIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+        .success-wrap h3{font-size:22px;font-weight:900;color:var(--text);letter-spacing:-.4px}
+        .success-wrap p{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.5}
+        .success-wrap .redirect-note{
+          margin-top:16px;font-size:12px;color:var(--muted);
+          display:flex;align-items:center;justify-content:center;gap:6px;
+        }
+        .redirect-bar{
+          height:3px;background:var(--border);border-radius:2px;margin-top:14px;overflow:hidden;
+        }
+        .redirect-fill{
+          height:100%;background:linear-gradient(90deg,var(--indigo),var(--electric));
+          width:0%;border-radius:2px;transition:width 3s linear;
+        }
+
+        /* Forgot password panel */
+        .panel-slide{
+          position:absolute;inset:0;
+          background:var(--white);
+          display:flex;flex-direction:column;
+          align-items:center;justify-content:center;
+          padding:40px 32px;
+          transform:translateX(100%);
+          transition:transform .35s cubic-bezier(.4,0,.2,1);
+          z-index:10;
+        }
+        .panel-slide.open{transform:translateX(0)}
+
+        /* Toast */
+        .toast-host{
+          position:fixed;top:20px;right:20px;z-index:999;
+          display:flex;flex-direction:column;gap:8px;pointer-events:none;
+        }
+        .toast{
+          display:flex;align-items:flex-start;gap:10px;
+          background:var(--white);border:1px solid var(--border);
+          border-radius:12px;padding:13px 15px;
+          box-shadow:0 8px 32px rgba(0,0,0,.12);
+          pointer-events:all;min-width:280px;
+          animation:toastIn .3s cubic-bezier(.4,0,.2,1);
+          border-left:4px solid var(--indigo);
+        }
+        .toast.success{border-left-color:var(--emerald)}
+        .toast.error{border-left-color:var(--rose)}
+        @keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+        .toast-icon{font-size:17px;flex-shrink:0;margin-top:1px}
+        .toast-body{flex:1}
+        .toast-title{font-size:13px;font-weight:700;color:var(--text)}
+        .toast-msg{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+        .toast-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px}
+
+        /* Responsive */
+        @media(max-width:860px){
+          .left-panel{display:none}
+          .right-panel{padding:32px 20px}
+          html,body{overflow:auto}
+        }
+        @media(max-width:480px){
+          .form-card{max-width:100%}
+          .otp-group input{width:44px;height:50px;font-size:18px}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     LEFT PANEL — Live Commerce Pulse
+════════════════════════════════════════════════ -->
+<div class="shell">
+    <div class="left-panel">
+        <div class="grid-bg"></div>
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+
+        <!-- Brand -->
+        <div class="left-brand">
+            <div class="brand-mark">S</div>
+            <div class="brand-text">
+                <div class="name">SellerHub</div>
+                <div class="tag">Vendor Portal</div>
+            </div>
+        </div>
+
+        <!-- Live Indicator -->
+        <div class="live-pill">
+            <div class="live-dot"></div>
+            <span class="live-text">Live marketplace activity</span>
+        </div>
+
+        <!-- Headline -->
+        <div class="left-headline">
+            <h1>Your store.<br/><span class="accent">Always open.</span></h1>
+            <p>Join 48,000+ vendors already selling on SellerHub. Manage orders, track revenue, and grow your brand — all in one place.</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stat-row">
+            <div class="stat-card">
+                <div class="sc-icon">📦</div>
+                <div class="sc-label">Orders Today</div>
+                <div class="sc-val" id="statOrders">2,418</div>
+                <div class="sc-delta up">↑ 12.4% vs yesterday</div>
+            </div>
+            <div class="stat-card">
+                <div class="sc-icon">💰</div>
+                <div class="sc-label">Revenue Today</div>
+                <div class="sc-val">₹<span id="statRevenue">8.2</span><span class="sc-unit">L</span></div>
+                <div class="sc-delta up">↑ 7.1% vs yesterday</div>
+            </div>
+            <div class="stat-card">
+                <div class="sc-icon">🏪</div>
+                <div class="sc-label">Active Vendors</div>
+                <div class="sc-val" id="statVendors">48,291</div>
+                <div class="sc-delta up">↑ 3 new today</div>
+            </div>
+        </div>
+
+        <!-- Live Order Ticker -->
+        <div class="ticker-wrap">
+            <div class="ticker-header">
+                <span class="ticker-title">Live Order Feed</span>
+                <span class="ticker-badge">Updating now</span>
+            </div>
+            <div class="ticker-body">
+                <div class="ticker-list" id="tickerList"></div>
+            </div>
+        </div>
+
+        <!-- Trust -->
+        <div class="trust-strip">
+            <div class="trust-item"><div class="ti-dot"></div>256-bit encryption</div>
+            <div class="trust-item"><div class="ti-dot"></div>PCI-DSS compliant</div>
+            <div class="trust-item"><div class="ti-dot"></div>SOC 2 certified</div>
+            <div class="trust-item"><div class="ti-dot"></div>99.98% uptime</div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         RIGHT PANEL — Login Form
+    ════════════════════════════════════════════════ -->
+    <div class="right-panel" id="rightPanel">
+        <!-- Top actions -->
+        <div class="right-topbar">
+            <button class="icon-btn" onclick="toggleTheme()" title="Toggle dark mode" id="themeBtn">🌙</button>
+            <button class="icon-btn" title="Help">❓</button>
+        </div>
+
+        <!-- ── LOGIN FORM ── -->
+        <div class="form-card" id="loginCard">
+            <div class="form-eyebrow">🔐 Vendor Access</div>
+            <h2>Welcome back</h2>
+            <p class="subtitle">Sign in to your vendor dashboard. New here? <a href="#" onclick="openRegister();return false">Create an account →</a></p>
+
+            <!-- Auth mode tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabEmail" onclick="switchTab('email')">📧 Email & Password</button>
+                <button class="auth-tab" id="tabOtp" onclick="switchTab('otp')">📱 OTP Login</button>
+            </div>
+
+            <!-- EMAIL FORM -->
+            <div id="emailForm">
+                <div class="field">
+                    <label for="email">Business Email</label>
+                    <div class="input-wrap">
+                        <span class="input-icon-left">✉</span>
+                        <input type="email" id="email" placeholder="you@business.com" autocomplete="email"
+                               oninput="clearError('email')" onblur="validateEmailField()"/>
+                        <span class="input-icon-right hidden" id="emailValid">✓</span>
+                    </div>
+                    <div class="field-error hidden" id="err-email"></div>
+                </div>
+
+                <div class="field">
+                    <label for="password">
+                        Password
+                        <button class="label-link" onclick="openForgot()">Forgot password?</button>
+                    </label>
+                    <div class="input-wrap">
+                        <span class="input-icon-left">🔒</span>
+                        <input type="password" id="password" placeholder="Enter your password"
+                               autocomplete="current-password" oninput="clearError('password')"
+                               onkeydown="if(event.key==='Enter')doLogin()"/>
+                        <span class="input-icon-right" id="pwToggle" onclick="togglePassword()" title="Show password">👁</span>
+                    </div>
+                    <div class="field-error hidden" id="err-password"></div>
+                </div>
+
+                <div class="remember-row">
+                    <label class="checkbox-wrap">
+                        <input type="checkbox" id="rememberMe" checked/>
+                        <span>Keep me signed in</span>
+                    </label>
+                </div>
+
+                <button class="submit-btn" id="loginBtn" onclick="doLogin()">
+                    <span id="loginBtnText">Sign In</span>
+                </button>
+            </div>
+
+            <!-- OTP FORM -->
+            <div id="otpForm" class="hidden">
+                <div id="otpStep1">
+                    <div class="field">
+                        <label for="otpMobile">Mobile Number</label>
+                        <div class="input-wrap">
+                            <span class="input-icon-left">📱</span>
+                            <input type="tel" id="otpMobile" placeholder="+91 98765 43210" maxlength="15"
+                                   oninput="clearError('otpMobile')" onkeydown="if(event.key==='Enter')sendOtp()"/>
+                        </div>
+                        <div class="field-error hidden" id="err-otpMobile"></div>
+                    </div>
+                    <button class="submit-btn" id="sendOtpBtn" onclick="sendOtp()">
+                        <span id="sendOtpText">Send OTP</span>
+                    </button>
+                </div>
+
+                <div id="otpStep2" class="hidden">
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;text-align:center">
+                        Enter the 6-digit code sent to <strong id="otpSentTo" style="color:var(--text)"></strong>
+                    </p>
+                    <div class="otp-group" id="otpInputs">
+                        <input type="text" maxlength="1" inputmode="numeric" onkeydown="otpKey(event,0)" oninput="otpInput(event,0)"/>
+                        <input type="text" maxlength="1" inputmode="numeric" onkeydown="otpKey(event,1)" oninput="otpInput(event,1)"/>
+                        <input type="text" maxlength="1" inputmode="numeric" onkeydown="otpKey(event,2)" oninput="otpInput(event,2)"/>
+                        <input type="text" maxlength="1" inputmode="numeric" onkeydown="otpKey(event,3)" oninput="otpInput(event,3)"/>
+                        <input type="text" maxlength="1" inputmode="numeric" onkeydown="otpKey(event,4)" oninput="otpInput(event,4)"/>
+                        <input type="text" maxlength="1" inputmode="numeric" onkeydown="otpKey(event,5)" oninput="otpInput(event,5)"/>
+                    </div>
+                    <div class="field-error hidden text-center" id="err-otp" style="justify-content:center"></div>
+                    <div class="otp-timer" id="otpTimerWrap">
+                        Resend code in <strong id="otpTimer">30s</strong>
+                    </div>
+                    <div class="otp-timer hidden" id="otpResendWrap">
+                        Didn't get the code? <button class="resend-btn" onclick="resendOtp()">Resend OTP</button>
+                    </div>
+                    <button class="submit-btn" id="verifyOtpBtn" onclick="verifyOtp()">
+                        <span id="verifyOtpText">Verify & Sign In</span>
+                    </button>
+                    <div style="text-align:center;margin-top:4px">
+                        <button class="label-link" onclick="resetOtpFlow()" style="font-size:13px;color:var(--muted)">← Change number</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider + Socials -->
+            <div class="divider"><hr/><span>or continue with</span><hr/></div>
+            <div class="social-row">
+                <button class="social-btn" onclick="socialLogin('google')">
+        <span class="social-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        </span>
+                    Google
+                </button>
+                <button class="social-btn" onclick="socialLogin('microsoft')">
+        <span class="social-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#F25022" d="M1 1h10v10H1z"/><path fill="#7FBA00" d="M13 1h10v10H13z"/><path fill="#00A4EF" d="M1 13h10v10H1z"/><path fill="#FFB900" d="M13 13h10v10H13z"/></svg>
+        </span>
+                    Microsoft
+                </button>
+            </div>
+
+            <div class="register-link">
+                Don't have an account? <a href="#" onclick="openRegister();return false">Register as a Vendor</a>
+            </div>
+        </div>
+
+        <!-- ── FORGOT PASSWORD PANEL ── -->
+        <div class="panel-slide" id="forgotPanel">
+            <div class="form-card">
+                <div class="form-eyebrow">🔑 Account Recovery</div>
+                <h2>Reset password</h2>
+                <p class="subtitle">Enter your registered email. We'll send a secure reset link.</p>
+
+                <div id="forgotStep1">
+                    <div class="field">
+                        <label for="forgotEmail">Business Email</label>
+                        <div class="input-wrap">
+                            <span class="input-icon-left">✉</span>
+                            <input type="email" id="forgotEmail" placeholder="you@business.com"
+                                   oninput="clearError('forgotEmail')" onkeydown="if(event.key==='Enter')sendResetLink()"/>
+                        </div>
+                        <div class="field-error hidden" id="err-forgotEmail"></div>
+                    </div>
+                    <button class="submit-btn" id="resetBtn" onclick="sendResetLink()">
+                        <span id="resetBtnText">Send Reset Link</span>
+                    </button>
+                    <div style="text-align:center;margin-top:10px">
+                        <button class="label-link" onclick="closeForgot()" style="font-size:13px;color:var(--muted)">← Back to Sign In</button>
+                    </div>
+                </div>
+
+                <div id="forgotStep2" class="hidden">
+                    <div style="text-align:center;padding:12px 0">
+                        <div class="success-icon-wrap">📬</div>
+                        <h3 style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">Check your inbox</h3>
+                        <p style="font-size:13px;color:var(--muted);line-height:1.6">
+                            We've sent a password reset link to<br/>
+                            <strong id="resetSentTo" style="color:var(--text)"></strong>
+                        </p>
+                        <p style="font-size:12px;color:var(--muted);margin-top:12px">Didn't receive it? Check your spam folder or
+                            <button class="label-link" onclick="retryReset()" style="font-size:12px">resend the link</button>.
+                        </p>
+                        <button class="submit-btn" onclick="closeForgot()" style="margin-top:24px">← Back to Sign In</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- end shell -->
+
+<!-- Toast host -->
+<div class="toast-host" id="toastHost"></div>
+
+<!-- ================================================================
+   JAVASCRIPT
+================================================================ -->
+<script>
+
+    async function doLogin() {
+
+    if (S.loading) return;
+
+    clearError('email');
+    clearError('password');
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    // Validation
+    if (!email) {
+        setError('email', 'Email is required');
+        return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError('email', 'Enter a valid email');
+        return;
+    }
+
+    if (!password) {
+        setError('password', 'Password is required');
+        return;
+    }
+
+    if (password.length < 6) {
+        setError('password', 'Password must be at least 6 characters');
+        return;
+    }
+
+    setLoading('loginBtn', 'loginBtnText', true);
+
+    try {
+
+        const response = await fetch('/api/v1/auth/vendor/login', {
+
+            method: 'POST',
+
+            credentials: 'include',
+
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+
+        });
+
+        const data = await response.json();
+
+        console.log(data);
+
+        if (response.ok && data.success) {
+
+            showToast(
+                'success',
+                'Success',
+                data.message
+            );
+
+            setTimeout(() => {
+
+                window.location.href = data.redirectUrl;
+
+            }, 400);
+
+            return;
+        }
+
+        if (response.status === 401) {
+
+            setError(
+                'password',
+                data.message || 'Invalid email or password'
+            );
+
+            return;
+        }
+
+        if (response.status === 403) {
+
+            showToast(
+                'error',
+                'Access Denied',
+                data.message
+            );
+
+            return;
+        }
+
+        if (response.status === 404) {
+
+            showToast(
+                'error',
+                'Not Found',
+                data.message
+            );
+
+            return;
+        }
+
+        showToast(
+            'error',
+            'Login Failed',
+            data.message || 'Something went wrong'
+        );
+
+    }
+    catch (err) {
+
+        console.error(err);
+
+        showToast(
+            'error',
+            'Server Error',
+            'Unable to connect to server.'
+        );
+
+    }
+    finally {
+
+        setLoading(
+            'loginBtn',
+            'loginBtnText',
+            false,
+            'Sign In'
+        );
+
+    }
+
+}
+    /* ================================================================
+      API CONTRACT — Full Documentation
+      Base URL: /api/vendor/auth
+      All requests require Content-Type: application/json unless noted.
+      Auth-protected endpoints require: Authorization: Bearer <token>
+
+      ── 1. POST /api/vendor/auth/login ──────────────────────────────
+      PURPOSE: Authenticate vendor with email + password
+      REQUEST:
+      {
+        "email": "vendor@business.com",
+        "password": "SecurePass@123",
+        "rememberMe": true          // true → 30-day token, false → session token
+      }
+      RESPONSE 200:
+      {
+        "success": true,
+        "message": "Login successful",
+        "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+        "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2...",
+        "expiresIn": 3600,          // seconds
+        "vendor": {
+          "id": "VND-4892",
+          "firstName": "Rajesh",
+          "lastName": "Kumar",
+          "email": "rajesh@kumarenterprises.in",
+          "storeName": "KumarShop",
+          "storeLogoUrl": "https://cdn.sellerhub.in/logos/vnd4892.png",
+          "onboardingCompleted": true,
+          "onboardingStep": 7       // present if onboardingCompleted=false
+        }
+      }
+      RESPONSE 401 (wrong credentials):
+      { "success": false, "message": "Invalid email or password.", "code": "INVALID_CREDENTIALS" }
+
+      RESPONSE 403 (account suspended):
+      { "success": false, "message": "Your account has been suspended. Contact support.", "code": "ACCOUNT_SUSPENDED" }
+
+      RESPONSE 403 (unverified):
+      { "success": false, "message": "Email not verified. Check your inbox.", "code": "EMAIL_UNVERIFIED" }
+
+      RESPONSE 429 (rate limited):
+      { "success": false, "message": "Too many attempts. Try again in 15 minutes.", "code": "RATE_LIMITED", "retryAfter": 900 }
+
+      LOADING STATE: Show spinner on button, disable form
+      ERROR HANDLING: Show inline error under relevant field or generic toast
+      POST-LOGIN REDIRECT:
+        - onboardingCompleted=true  → /vendor/dashboard
+        - onboardingCompleted=false → /vendor/onboarding?step={onboardingStep}
+
+      ── 2. POST /api/vendor/auth/send-otp ───────────────────────────
+      PURPOSE: Send OTP to vendor's registered mobile for passwordless login
+      REQUEST:
+      { "mobile": "+919876543210" }
+      RESPONSE 200:
+      { "success": true, "message": "OTP sent.", "expiresIn": 30, "maskedMobile": "+91 ●●●●● 43210" }
+      RESPONSE 404:
+      { "success": false, "message": "No vendor account found with this number.", "code": "VENDOR_NOT_FOUND" }
+      RESPONSE 429:
+      { "success": false, "message": "OTP already sent. Retry in 30 seconds.", "retryAfter": 30, "code": "OTP_THROTTLED" }
+
+      ── 3. POST /api/vendor/auth/verify-otp ─────────────────────────
+      PURPOSE: Verify OTP and return auth token
+      REQUEST:
+      { "mobile": "+919876543210", "otp": "483920" }
+      RESPONSE 200: (same structure as /login response 200)
+      RESPONSE 400:
+      { "success": false, "message": "Incorrect OTP. 2 attempts remaining.", "code": "INVALID_OTP", "attemptsLeft": 2 }
+      RESPONSE 410:
+      { "success": false, "message": "OTP has expired. Request a new one.", "code": "OTP_EXPIRED" }
+      RESPONSE 423:
+      { "success": false, "message": "Account locked after too many failed attempts. Try in 10 minutes.", "code": "OTP_LOCKED" }
+
+      ── 4. POST /api/vendor/auth/forgot-password ────────────────────
+      PURPOSE: Trigger password reset email
+      REQUEST:
+      { "email": "vendor@business.com" }
+      RESPONSE 200:
+      { "success": true, "message": "Reset link sent to your email.", "expiresIn": 1800 }
+      NOTE: Always return 200 even if email doesn't exist (security — avoid user enumeration)
+
+      ── 5. POST /api/vendor/auth/reset-password ─────────────────────
+      PURPOSE: Set a new password using the token from email link
+      REQUEST:
+      { "token": "eyJhbGciOiJIUzI...", "newPassword": "NewSecurePass@456", "confirmPassword": "NewSecurePass@456" }
+      RESPONSE 200:
+      { "success": true, "message": "Password updated. You may now sign in." }
+      RESPONSE 400:
+      { "success": false, "message": "Token is invalid or has expired.", "code": "INVALID_RESET_TOKEN" }
+
+      ── 6. POST /api/vendor/auth/social ─────────────────────────────
+      PURPOSE: OAuth login (Google, Microsoft)
+      REQUEST:
+      { "provider": "google", "idToken": "eyJhbGciOiJSUzI1..." }   // token from OAuth popup
+      RESPONSE 200: (same structure as /login response — new vendor gets redirected to onboarding)
+      RESPONSE 400:
+      { "success": false, "message": "Could not verify token.", "code": "OAUTH_ERROR" }
+
+      ── 7. POST /api/vendor/auth/refresh-token ──────────────────────
+      PURPOSE: Refresh expired access token silently
+      REQUEST:
+      { "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2..." }
+      RESPONSE 200:
+      { "success": true, "accessToken": "new_token", "expiresIn": 3600 }
+      RESPONSE 401:
+      { "success": false, "message": "Refresh token expired. Please log in again.", "code": "REFRESH_EXPIRED" }
+
+      ── 8. POST /api/vendor/auth/logout ─────────────────────────────
+      PURPOSE: Invalidate token server-side
+      HEADERS: Authorization: Bearer <token>
+      REQUEST: {}
+      RESPONSE 200:
+      { "success": true, "message": "Logged out successfully." }
+
+      ── ERROR CODES REFERENCE ────────────────────────────────────────
+      INVALID_CREDENTIALS   → Wrong email/password
+      ACCOUNT_SUSPENDED     → Admin action required
+      EMAIL_UNVERIFIED      → Resend verification email
+      RATE_LIMITED          → Enforce lockout timer on frontend
+      VENDOR_NOT_FOUND      → No account with given mobile/email
+      OTP_THROTTLED         → Show countdown before allowing resend
+      INVALID_OTP           → Show attempts remaining
+      OTP_EXPIRED           → Prompt resend
+      OTP_LOCKED            → Show cooldown timer
+      INVALID_RESET_TOKEN   → Show "request new link" prompt
+      OAUTH_ERROR           → Show generic OAuth failure toast
+
+      ── TOKEN STORAGE RECOMMENDATION ─────────────────────────────────
+      rememberMe=true  → localStorage  (persists across sessions)
+      rememberMe=false → sessionStorage (clears on tab close)
+      refreshToken     → httpOnly cookie (handled by Spring Boot, no JS access needed)
+
+      ── REDIRECT MATRIX ──────────────────────────────────────────────
+      After successful login:
+      onboardingCompleted=true  → /vendor/dashboard
+      onboardingCompleted=false → /vendor/onboarding?step=<onboardingStep>
+    ================================================================ */
+
+    // ── STATE ──────────────────────────────────────────────────────
+    const S = {
+      tab:       'email',
+      loading:   false,
+      otpSentTo: '',
+      otpTimer:  null,
+      theme:     localStorage.getItem('vh-theme') || 'light',
+    };
+
+    // ── TICKER DATA ────────────────────────────────────────────────
+    const TICKER_ORDERS = [
+      { name:'Priya Sharma',   id:'#SH-48291', amount:'₹2,840', status:'paid',    color:'#4F46E5', emoji:'P'  },
+      { name:'Vikram Mehta',   id:'#SH-48290', amount:'₹1,190', status:'shipped',  color:'#0EA5E9', emoji:'V'  },
+      { name:'Anjali Singh',   id:'#SH-48289', amount:'₹4,520', status:'paid',    color:'#8B5CF6', emoji:'A'  },
+      { name:'Rohan Gupta',    id:'#SH-48288', amount:'₹670',  status:'pending',  color:'#F59E0B', emoji:'R'  },
+      { name:'Meera Iyer',     id:'#SH-48287', amount:'₹3,210', status:'paid',    color:'#10B981', emoji:'M'  },
+      { name:'Suresh Pillai',  id:'#SH-48286', amount:'₹880',  status:'shipped',  color:'#06B6D4', emoji:'S'  },
+      { name:'Deepak Nair',    id:'#SH-48285', amount:'₹1,750', status:'paid',    color:'#EF4444', emoji:'D'  },
+      { name:'Kavya Reddy',    id:'#SH-48284', amount:'₹5,090', status:'paid',    color:'#F97316', emoji:'K'  },
+      { name:'Arjun Patel',    id:'#SH-48283', amount:'₹940',  status:'pending',  color:'#A855F7', emoji:'A'  },
+      { name:'Sneha Kulkarni', id:'#SH-48282', amount:'₹2,340', status:'shipped', color:'#14B8A6', emoji:'S'  },
+    ];
+
+    function buildTicker() {
+      const list = document.getElementById('tickerList');
+      // Double the list so seamless looping works
+      const items = [...TICKER_ORDERS, ...TICKER_ORDERS];
+      list.innerHTML = items.map(o => `
+        <div class="ticker-item">
+          <div class="ticker-avatar" style="background:${o.color}">${o.emoji}</div>
+          <div class="ticker-info">
+            <div class="ticker-name">${o.name}</div>
+            <div class="ticker-item-id">${o.id}</div>
+          </div>
+          <div class="ticker-amount">
+            <div class="ticker-price">${o.amount}</div>
+            <div class="ticker-status ${o.status}">${o.status.toUpperCase()}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    // Animate stat counters
+    function animateCounter(el, end, prefix='', suffix='') {
+      const duration = 1800;
+      const start = 0;
+      const step = timestamp => {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        el.textContent = prefix + Math.floor(eased * end).toLocaleString('en-IN') + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      let startTime = null;
+      requestAnimationFrame(step);
+    }
+
+    // ── THEME ──────────────────────────────────────────────────────
+    function toggleTheme() {
+      S.theme = S.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', S.theme);
+      document.getElementById('themeBtn').textContent = S.theme === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('vh-theme', S.theme);
+    }
+
+    // ── TAB SWITCH ─────────────────────────────────────────────────
+    function switchTab(tab) {
+      S.tab = tab;
+      document.getElementById('tabEmail').classList.toggle('active', tab==='email');
+      document.getElementById('tabOtp').classList.toggle('active', tab==='otp');
+      document.getElementById('emailForm').classList.toggle('hidden', tab!=='email');
+      document.getElementById('otpForm').classList.toggle('hidden', tab!=='otp');
+    }
+
+    // ── PASSWORD TOGGLE ────────────────────────────────────────────
+    function togglePassword() {
+      const inp = document.getElementById('password');
+      const tog = document.getElementById('pwToggle');
+      if (inp.type === 'password') { inp.type='text'; tog.textContent='🙈'; }
+      else { inp.type='password'; tog.textContent='👁'; }
+    }
+
+    // ── VALIDATION HELPERS ─────────────────────────────────────────
+    function setError(id, msg) {
+      const el = document.getElementById('err-'+id);
+      const inp = document.getElementById(id);
+      if (el) { el.textContent=msg; el.classList.remove('hidden'); }
+      if (inp) inp.classList.add('error');
+    }
+    function clearError(id) {
+      const el = document.getElementById('err-'+id);
+      const inp = document.getElementById(id);
+      if (el) { el.textContent=''; el.classList.add('hidden'); }
+      if (inp) inp.classList.remove('error');
+    }
+    function validateEmailField() {
+      const val = document.getElementById('email').value.trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      const badge = document.getElementById('emailValid');
+      badge.classList.toggle('hidden', !valid);
+      if (val && !valid) setError('email','Enter a valid email address');
+    }
+
+    // ── LOADING ────────────────────────────────────────────────────
+    function setLoading(btnId, textId, isLoading, text='') {
+      const btn  = document.getElementById(btnId);
+      const span = document.getElementById(textId);
+      S.loading = isLoading;
+      btn.disabled = isLoading;
+      if (isLoading) {
+        btn.innerHTML = '<div class="spinner"></div>';
+      } else {
+        btn.innerHTML = `<span id="${textId}">${text}</span>`;
+      }
+    }
+
+    // ── EMAIL LOGIN ────────────────────────────────────────────────
+
+
+    // ── SEND OTP ───────────────────────────────────────────────────
+    async function sendOtp() {
+      if (S.loading) return;
+      clearError('otpMobile');
+
+      const mobile = document.getElementById('otpMobile').value.trim();
+      if (!mobile) { setError('otpMobile','Mobile number is required'); return; }
+      if (!/^[\+]?[0-9\s\-]{8,15}$/.test(mobile)) { setError('otpMobile','Enter a valid mobile number'); return; }
+
+      setLoading('sendOtpBtn','sendOtpText',true);
+
+      /* ── REPLACE WITH REAL API ───────────────────────────────────
+      const res = await fetch('/api/vendor/auth/send-otp', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ mobile })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setLoading('sendOtpBtn','sendOtpText',false,'Send OTP');
+        switch(data.code) {
+          case 'VENDOR_NOT_FOUND':
+            setError('otpMobile','No account found with this number');
+            break;
+          case 'OTP_THROTTLED':
+            showToast('warning','OTP already sent', `Retry in ${data.retryAfter}s`);
+            startOtpTimer(data.retryAfter);
+            break;
+          default:
+            showToast('error','Failed to send OTP', data.message);
+        }
+        return;
+      }
+      ── END REAL API ─────────────────────────────────────────────── */
+
+      await delay(900); // mock network
+      setLoading('sendOtpBtn','sendOtpText',false,'Send OTP');
+
+      S.otpSentTo = mobile;
+      document.getElementById('otpSentTo').textContent = mobile;
+      document.getElementById('otpStep1').classList.add('hidden');
+      document.getElementById('otpStep2').classList.remove('hidden');
+      document.getElementById('otpInputs').querySelectorAll('input')[0].focus();
+      startOtpTimer(30);
+      showToast('success','OTP sent!','Check your mobile for the 6-digit code');
+    }
+
+    // ── OTP INPUT HANDLING ─────────────────────────────────────────
+    function otpInput(e, idx) {
+      const inputs = document.getElementById('otpInputs').querySelectorAll('input');
+      const val = e.target.value.replace(/\D/g,'');
+      e.target.value = val ? val[val.length-1] : '';
+      if (val && idx < 5) inputs[idx+1].focus();
+      e.target.classList.toggle('filled', !!e.target.value);
+
+      // Auto-verify when all 6 filled
+      const all = [...inputs].every(i => i.value);
+      if (all) setTimeout(verifyOtp, 200);
+    }
+    function otpKey(e, idx) {
+      const inputs = document.getElementById('otpInputs').querySelectorAll('input');
+      if (e.key==='Backspace' && !e.target.value && idx>0) { inputs[idx-1].focus(); inputs[idx-1].value=''; inputs[idx-1].classList.remove('filled'); }
+      if (e.key==='ArrowLeft' && idx>0) inputs[idx-1].focus();
+      if (e.key==='ArrowRight' && idx<5) inputs[idx+1].focus();
+    }
+
+    // ── OTP TIMER ─────────────────────────────────────────────────
+    function startOtpTimer(secs) {
+      clearInterval(S.otpTimer);
+      let remaining = secs;
+      document.getElementById('otpTimerWrap').classList.remove('hidden');
+      document.getElementById('otpResendWrap').classList.add('hidden');
+      document.getElementById('otpTimer').textContent = remaining + 's';
+
+      S.otpTimer = setInterval(() => {
+        remaining--;
+        const el = document.getElementById('otpTimer');
+        if (el) el.textContent = remaining + 's';
+        if (remaining <= 0) {
+          clearInterval(S.otpTimer);
+          document.getElementById('otpTimerWrap').classList.add('hidden');
+          document.getElementById('otpResendWrap').classList.remove('hidden');
+        }
+      }, 1000);
+    }
+
+    // ── RESEND OTP ─────────────────────────────────────────────────
+    async function resendOtp() {
+      /* REAL: re-call /api/vendor/auth/send-otp */
+      showToast('info','OTP resent','A new code has been sent to your mobile');
+      startOtpTimer(30);
+      document.getElementById('otpInputs').querySelectorAll('input').forEach(i => { i.value=''; i.classList.remove('filled','error'); });
+    }
+
+    // ── VERIFY OTP ─────────────────────────────────────────────────
+    async function verifyOtp() {
+      if (S.loading) return;
+      clearError('otp');
+      const inputs = document.getElementById('otpInputs').querySelectorAll('input');
+      const otp = [...inputs].map(i=>i.value).join('');
+      if (otp.length < 6) { setError('otp','Enter the complete 6-digit code'); return; }
+
+      inputs.forEach(i => { i.disabled=true; });
+      document.getElementById('verifyOtpBtn').innerHTML='<div class="spinner"></div>';
+      document.getElementById('verifyOtpBtn').disabled=true;
+      S.loading=true;
+
+      /* ── REPLACE WITH REAL API ───────────────────────────────────
+      const res = await fetch('/api/vendor/auth/verify-otp', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ mobile: S.otpSentTo, otp })
+      });
+      const data = await res.json();
+      if (data.success) {
+        sessionStorage.setItem('vh_token', data.accessToken);
+        window.location.href = data.vendor.onboardingCompleted ? '/vendor/dashboard' : `/vendor/onboarding?step=${data.vendor.onboardingStep}`;
+        return;
+      }
+      switch(data.code) {
+        case 'INVALID_OTP':
+          inputs.forEach(i=>{i.classList.add('error');i.disabled=false});
+          setError('otp', `Incorrect OTP. ${data.attemptsLeft} attempt(s) remaining`);
+          break;
+        case 'OTP_EXPIRED':
+          setError('otp','OTP expired. Request a new one.');
+          break;
+        case 'OTP_LOCKED':
+          setError('otp','Too many attempts. Wait 10 minutes.');
+          break;
+      }
+      ── END REAL API ─────────────────────────────────────────────── */
+
+      await delay(1200);
+      S.loading=false;
+      inputs.forEach(i=>i.disabled=false);
+
+      if (otp === '000000') { // demo: wrong otp
+        inputs.forEach(i=>i.classList.add('error'));
+        document.getElementById('verifyOtpBtn').innerHTML='<span id="verifyOtpText">Verify & Sign In</span>';
+        document.getElementById('verifyOtpBtn').disabled=false;
+        setError('otp','Incorrect OTP. 2 attempts remaining');
+        return;
+      }
+
+      document.getElementById('verifyOtpBtn').innerHTML='<span id="verifyOtpText">Verify & Sign In</span>';
+      document.getElementById('verifyOtpBtn').disabled=false;
+      showLoginSuccess('Vendor User','Your Store');
+    }
+
+    // ── RESET OTP FLOW ─────────────────────────────────────────────
+    function resetOtpFlow() {
+      clearInterval(S.otpTimer);
+      document.getElementById('otpStep1').classList.remove('hidden');
+      document.getElementById('otpStep2').classList.add('hidden');
+      document.getElementById('otpMobile').value='';
+      document.getElementById('otpInputs').querySelectorAll('input').forEach(i=>{i.value='';i.classList.remove('filled','error');});
+    }
+
+    // ── FORGOT PASSWORD ────────────────────────────────────────────
+    function openForgot() {
+      document.getElementById('forgotPanel').classList.add('open');
+      document.getElementById('forgotEmail').focus();
+    }
+    function closeForgot() {
+      document.getElementById('forgotPanel').classList.remove('open');
+      document.getElementById('forgotStep1').classList.remove('hidden');
+      document.getElementById('forgotStep2').classList.add('hidden');
+      document.getElementById('forgotEmail').value='';
+      clearError('forgotEmail');
+    }
+
+    async function sendResetLink() {
+      clearError('forgotEmail');
+      const email = document.getElementById('forgotEmail').value.trim();
+      if (!email) { setError('forgotEmail','Email is required'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('forgotEmail','Enter a valid email'); return; }
+
+      document.getElementById('resetBtn').innerHTML='<div class="spinner"></div>';
+      document.getElementById('resetBtn').disabled=true;
+
+      /* ── REAL: POST /api/vendor/auth/forgot-password ─────────────
+      await fetch('/api/vendor/auth/forgot-password', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email })
+      });
+      // Always show success (don't reveal if email exists — security)
+      ── END REAL ── */
+
+      await delay(1000);
+      document.getElementById('resetBtn').innerHTML='<span id="resetBtnText">Send Reset Link</span>';
+      document.getElementById('resetBtn').disabled=false;
+      document.getElementById('resetSentTo').textContent=email;
+      document.getElementById('forgotStep1').classList.add('hidden');
+      document.getElementById('forgotStep2').classList.remove('hidden');
+    }
+    function retryReset() { document.getElementById('forgotStep1').classList.remove('hidden'); document.getElementById('forgotStep2').classList.add('hidden'); }
+
+    // ── SOCIAL LOGIN ────────────────────────────────────────────────
+    async function socialLogin(provider) {
+      showToast('info','Opening '+provider,'Redirecting to '+provider+' sign-in…');
+      /* ── REAL IMPLEMENTATION ────────────────────────────────────
+      // 1. Open OAuth popup (use your OAuth library, e.g. firebase, auth0, or Google Identity Services)
+      // 2. Get idToken from popup response
+      // 3. Send to backend:
+      //    POST /api/vendor/auth/social
+      //    Body: { provider: 'google', idToken: '<id_token>' }
+      // 4. Handle response same as /login
+      ── END REAL ── */
+    }
+
+    // ── REGISTER ───────────────────────────────────────────────────
+    function openRegister() {
+      /* Redirect to your registration / onboarding page */
+      showToast('info','Registration','Redirecting to vendor registration…');
+      // window.location.href = '/vendor/register';
+    }
+
+    // ── LOGIN SUCCESS UI ───────────────────────────────────────────
+    function showLoginSuccess(name, store) {
+      const card = document.getElementById('loginCard');
+      card.innerHTML = `
+        <div class="success-wrap">
+          <div class="success-icon-wrap">✅</div>
+          <h3>Welcome back, ${name.split(' ')[0]}!</h3>
+          <p>Signed in to <strong>${store}</strong>.<br/>Taking you to your dashboard…</p>
+          <div class="redirect-note">
+            <span>Redirecting</span>
+            <div class="spinner" style="width:14px;height:14px;border-color:rgba(79,70,229,.2);border-top-color:var(--indigo)"></div>
+          </div>
+          <div class="redirect-bar"><div class="redirect-fill" id="redirectFill"></div></div>
+        </div>`;
+      showToast('success','Sign in successful',`Welcome back, ${name}!`);
+      setTimeout(() => { document.getElementById('redirectFill').style.width='100%'; }, 50);
+      setTimeout(() => {
+        // window.location.href = '/vendor/dashboard';
+        showToast('info','Demo mode','Real app would redirect to /vendor/dashboard');
+      }, 3200);
+    }
+
+    // ── TOAST ──────────────────────────────────────────────────────
+    function showToast(type, title, msg='') {
+      const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+      const id = 'toast-'+Date.now();
+      const el = document.createElement('div');
+      el.className=`toast ${type}`; el.id=id;
+      el.innerHTML=`
+        <div class="toast-icon">${icons[type]||'ℹ️'}</div>
+        <div class="toast-body">
+          <div class="toast-title">${title}</div>
+          ${msg?`<div class="toast-msg">${msg}</div>`:''}
+        </div>
+        <button class="toast-close" onclick="dismissToast('${id}')">✕</button>`;
+      document.getElementById('toastHost').appendChild(el);
+      setTimeout(()=>dismissToast(id), 4500);
+    }
+    function dismissToast(id) {
+      const el = document.getElementById(id);
+      if (el) { el.style.animation='none'; el.style.opacity='0'; el.style.transform='translateX(110%)'; el.style.transition='all .25s'; setTimeout(()=>el.remove(),260); }
+    }
+
+    // ── UTILS ──────────────────────────────────────────────────────
+    const delay = ms => new Promise(r=>setTimeout(r,ms));
+
+    // ── INIT ───────────────────────────────────────────────────────
+    (function init() {
+      // Theme
+      document.documentElement.setAttribute('data-theme', S.theme);
+      document.getElementById('themeBtn').textContent = S.theme==='dark' ? '☀️' : '🌙';
+
+      // Build ticker
+      buildTicker();
+
+      // Animate stat counters after 400ms
+      setTimeout(() => {
+        const ordEl = document.getElementById('statOrders');
+        const revEl = document.getElementById('statRevenue');
+        const venEl = document.getElementById('statVendors');
+        if (ordEl) animateCounter(ordEl, 2418);
+        if (venEl) animateCounter(venEl, 48291);
+        if (revEl) {
+          let start=null;
+          const step = ts => {
+            if (!start) start=ts;
+            const p = Math.min((ts-start)/1800,1);
+            const e = 1-Math.pow(1-p,4);
+            revEl.textContent = (e*8.2).toFixed(1);
+            if (p<1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      }, 400);
+
+      // Focus email on load
+      setTimeout(() => document.getElementById('email')?.focus(), 600);
+    })();
+</script>
+</body>
+</html>

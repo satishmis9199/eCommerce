@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Banner</title>
+    <style>
+        :root {
+          --indigo: #4f46e5;
+          --indigo-dark: #4338ca;
+          --border: #cbd5e1;
+          --border-light: #e2e8f0;
+          --text: #0f172a;
+          --text-muted: #64748b;
+          --text-faint: #94a3b8;
+          --bg-soft: #f8fafc;
+          --red: #dc2626;
+          --red-bg: #fef2f2;
+          --red-border: #fecaca;
+          --green: #059669;
+          --green-bg: #ecfdf5;
+          --green-border: #a7f3d0;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+          margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          color: var(--text);
+          background: #fff;
+        }
+
+        .wrap {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 32px 24px 64px;
+        }
+
+        header.page-head {
+          margin-bottom: 24px;
+        }
+        header.page-head h1 {
+          font-size: 20px;
+          font-weight: 600;
+          margin: 0 0 4px;
+          letter-spacing: -0.01em;
+        }
+        header.page-head p {
+          font-size: 14px;
+          color: var(--text-muted);
+          margin: 0;
+        }
+
+        .banner-msg {
+          display: none;
+          align-items: center;
+          gap: 8px;
+          border-radius: 10px;
+          padding: 12px 16px;
+          font-size: 14px;
+          margin-bottom: 20px;
+          border: 1px solid;
+        }
+        .banner-msg.success {
+          background: var(--green-bg);
+          border-color: var(--green-border);
+          color: var(--green);
+        }
+        .banner-msg.error {
+          background: var(--red-bg);
+          border-color: var(--red-border);
+          color: var(--red);
+        }
+        .banner-msg.show { display: flex; }
+
+        form {
+          display: grid;
+          grid-template-columns: 3fr 2fr;
+          gap: 32px;
+        }
+        @media (max-width: 860px) {
+          form { grid-template-columns: 1fr; }
+        }
+
+        .field { margin-bottom: 20px; }
+        .field label {
+          display: block;
+          font-size: 13px;
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 6px;
+        }
+        .field label .req { color: var(--red); }
+        .field label .hint {
+          font-weight: 400;
+          color: var(--text-faint);
+          font-size: 12px;
+        }
+
+        .row-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="datetime-local"],
+        textarea,
+        select {
+          width: 100%;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          padding: 9px 12px;
+          font-size: 14px;
+          font-family: inherit;
+          color: var(--text);
+          background: #fff;
+          outline: none;
+          transition: border-color .15s, box-shadow .15s;
+        }
+        input:focus, textarea:focus, select:focus {
+          border-color: var(--indigo);
+          box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+        }
+        input.err, textarea.err { border-color: var(--red); }
+        textarea { resize: vertical; min-height: 56px; }
+
+        .counter {
+          display: flex;
+          justify-content: flex-end;
+          font-size: 11px;
+          color: var(--text-faint);
+          margin-top: 4px;
+        }
+        .err-text {
+          font-size: 12px;
+          color: var(--red);
+          margin-top: 4px;
+        }
+
+        .card {
+          border: 1px solid var(--border-light);
+          border-radius: 12px;
+          padding: 16px;
+          margin-bottom: 20px;
+        }
+        .card-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          margin-bottom: 14px;
+        }
+        .card-title .opt {
+          font-weight: 400;
+          font-size: 12px;
+          color: var(--text-faint);
+        }
+        .card .field:last-child { margin-bottom: 0; }
+
+        /* dropzone */
+        .dropzone {
+          position: relative;
+          border: 2px dashed var(--border);
+          border-radius: 12px;
+          background: var(--bg-soft);
+          padding: 28px 16px;
+          text-align: center;
+          cursor: pointer;
+          transition: background .15s, border-color .15s;
+        }
+        .dropzone:hover { background: #f1f5f9; }
+        .dropzone.drag { border-color: var(--indigo); background: #eef2ff; }
+        .dropzone.err { border-color: var(--red-border); background: var(--red-bg); }
+        .dropzone input[type="file"] { display: none; }
+        .dz-icon { font-size: 22px; margin-bottom: 6px; }
+        .dz-text { font-size: 14px; color: #374151; margin: 0 0 2px; }
+        .dz-text b { color: var(--indigo); font-weight: 500; }
+        .dz-sub { font-size: 12px; color: var(--text-faint); margin: 0; }
+
+        .dz-preview { position: relative; width: 100%; }
+        .dz-preview img {
+          width: 100%;
+          aspect-ratio: 21/9;
+          object-fit: cover;
+          border-radius: 8px;
+          display: block;
+          background: #e2e8f0;
+        }
+        .dz-remove {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: rgba(0,0,0,0.6);
+          border: none;
+          color: #fff;
+          border-radius: 999px;
+          width: 24px;
+          height: 24px;
+          cursor: pointer;
+          font-size: 13px;
+          line-height: 1;
+        }
+        .dz-remove:hover { background: rgba(0,0,0,0.8); }
+        .dz-uploading {
+          position: absolute;
+          inset: 0;
+          background: rgba(0,0,0,0.4);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          font-size: 13px;
+        }
+        .dz-caption { font-size: 12px; color: var(--text-muted); margin-top: 8px; text-align: center; }
+
+        /* toggle */
+        .toggle-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border: 1px solid var(--border-light);
+          border-radius: 12px;
+          padding: 14px 16px;
+          margin-bottom: 20px;
+        }
+        .toggle-row .t-title { font-size: 14px; font-weight: 500; margin: 0 0 2px; }
+        .toggle-row .t-sub { font-size: 12px; color: var(--text-faint); margin: 0; max-width: 380px; }
+        .switch {
+          position: relative;
+          width: 42px;
+          height: 24px;
+          border-radius: 999px;
+          background: var(--border);
+          border: none;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background .15s;
+        }
+        .switch.on { background: var(--indigo); }
+        .switch .knob {
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #fff;
+          transition: transform .15s;
+        }
+        .switch.on .knob { transform: translateX(18px); }
+
+        .actions { display: flex; gap: 12px; align-items: center; }
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: var(--indigo);
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          padding: 11px 18px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background .15s;
+        }
+        .btn-primary:hover { background: var(--indigo-dark); }
+        .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-ghost {
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          font-size: 14px;
+          font-weight: 500;
+          padding: 11px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+        .btn-ghost:hover { background: var(--bg-soft); }
+
+        .spinner {
+          width: 14px; height: 14px;
+          border: 2px solid rgba(255,255,255,0.4);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin .7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* preview column */
+        .preview-head {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          margin-bottom: 12px;
+        }
+        .preview-box {
+          position: relative;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #0f172a;
+          aspect-ratio: 21/9;
+          border: 1px solid var(--border-light);
+        }
+        .preview-box img.bg {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: .65;
+        }
+        .preview-box .gradient-fallback {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, #1e293b, #0f172a);
+        }
+        .preview-content {
+          position: relative;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: 20px 24px;
+        }
+        .preview-eyebrow {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+          color: #a5b4fc;
+          font-weight: 600;
+          margin-bottom: 4px;
+        }
+        .preview-title {
+          color: #fff;
+          font-size: 18px;
+          font-weight: 600;
+          line-height: 1.3;
+          margin: 0;
+        }
+        .preview-subtitle {
+          color: #e2e8f0;
+          font-size: 12px;
+          margin: 4px 0 0;
+          max-width: 300px;
+        }
+        .preview-cta {
+          margin-top: 12px;
+          display: inline-flex;
+          width: fit-content;
+          background: #fff;
+          color: #0f172a;
+          font-size: 12px;
+          font-weight: 500;
+          padding: 7px 14px;
+          border-radius: 6px;
+        }
+        .preview-draft {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: rgba(15,23,42,0.85);
+          color: #e2e8f0;
+          font-size: 10px;
+          font-weight: 500;
+          padding: 2px 8px;
+          border-radius: 999px;
+        }
+        .preview-meta {
+          margin-top: 16px;
+          font-size: 12px;
+          color: var(--text-muted);
+        }
+        .preview-meta div {
+          display: flex;
+          justify-content: space-between;
+          padding: 4px 0;
+        }
+        .preview-meta b { color: #334155; font-weight: 500; }
+
+        .icon { display: inline-block; width: 16px; height: 16px; vertical-align: -3px; opacity: .55; }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    <header class="page-head">
+        <h1>Add banner</h1>
+        <p>Create a homepage banner. It goes live immediately unless you schedule it or turn it off below.</p>
+    </header>
+
+    <div id="bannerMsg" class="banner-msg"></div>
+
+    <form id="bannerForm" novalidate>
+        <!-- LEFT COLUMN -->
+        <div>
+            <!-- Image -->
+            <div class="field">
+                <label>Banner image <span class="req">*</span></label>
+                <div id="dropzone" class="dropzone">
+                    <input id="fileInput" type="file" accept="image/*" />
+                    <div id="dzEmpty">
+                        <div class="dz-icon">🖼️</div>
+                        <p class="dz-text"><b>Click to upload</b> or drag and drop</p>
+                        <p class="dz-sub">Recommended 2100×900px, JPG or PNG</p>
+                    </div>
+                    <div id="dzPreviewWrap" class="dz-preview" style="display:none;">
+                        <img id="dzPreviewImg" alt="Banner preview" />
+                        <button type="button" id="dzRemove" class="dz-remove">✕</button>
+                        <div id="dzUploading" class="dz-uploading" style="display:none;">Uploading…</div>
+                    </div>
+                </div>
+                <div id="dzCaption" class="dz-caption" style="display:none;">Click to replace</div>
+                <div id="imageErr" class="err-text" style="display:none;"></div>
+            </div>
+
+            <!-- Eyebrow + order -->
+            <div class="row-2">
+                <div class="field">
+                    <label>Eyebrow</label>
+                    <input type="text" id="eyebrow" maxlength="100" placeholder="e.g. Monsoon Sale" />
+                </div>
+                <div class="field">
+                    <label>Display order</label>
+                    <input type="number" id="displayOrder" value="0" />
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div class="field">
+                <label>Title <span class="req">*</span></label>
+                <input type="text" id="title" maxlength="150" placeholder="Flat 40% off on festive wear" />
+                <div style="display:flex; justify-content:space-between;">
+                    <div id="titleErr" class="err-text" style="display:none;"></div>
+                    <div class="counter"><span id="titleCount">0</span>/150</div>
+                </div>
+            </div>
+
+            <!-- Subtitle -->
+            <div class="field">
+                <label>Subtitle</label>
+                <textarea id="subtitle" maxlength="250" rows="2" placeholder="Shop the new collection before stocks run out"></textarea>
+                <div class="counter"><span id="subtitleCount">0</span>/250</div>
+            </div>
+
+            <!-- CTA -->
+            <div class="card">
+                <div class="card-title">🔗 Call to action <span class="opt">(optional)</span></div>
+                <div class="row-2">
+                    <div class="field">
+                        <label>Button label</label>
+                        <input type="text" id="ctaLabel" maxlength="60" placeholder="Shop now" />
+                    </div>
+                    <div class="field">
+                        <label>Links to</label>
+                        <select id="ctaLinkType">
+                            <option value="CATEGORY_PAGE">Category page</option>
+                            <option value="PRODUCT_PAGE">Product page</option>
+                            <option value="OFFER_PAGE">Offer page</option>
+                            <option value="CUSTOM_INTERNAL_ROUTE">Internal route</option>
+                            <option value="EXTERNAL_URL">External URL</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Destination</label>
+                    <input type="text" id="ctaLink" placeholder="e.g. 482 (category id)" />
+                    <div id="ctaLinkErr" class="err-text" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Schedule -->
+            <div class="card">
+                <div class="card-title">🕒 Schedule <span class="opt">(optional — leave blank to start now / run indefinitely)</span></div>
+                <div class="row-2">
+                    <div class="field">
+                        <label>Start date</label>
+                        <input type="datetime-local" id="startDate" />
+                    </div>
+                    <div class="field">
+                        <label>End date</label>
+                        <input type="datetime-local" id="endDate" />
+                        <div id="endDateErr" class="err-text" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active toggle -->
+            <div class="toggle-row">
+                <div>
+                    <p class="t-title">Active</p>
+                    <p class="t-sub">Inactive banners are saved as drafts and never shown to shoppers.</p>
+                </div>
+                <button type="button" id="activeSwitch" class="switch on" aria-checked="true" role="switch">
+                    <span class="knob"></span>
+                </button>
+            </div>
+
+            <div class="actions">
+                <button type="submit" id="submitBtn" class="btn-primary">
+                    <span id="submitSpinner" class="spinner" style="display:none;"></span>
+                    <span id="submitLabel">Save banner</span>
+                </button>
+                <button type="button" id="cancelBtn" class="btn-ghost">Cancel</button>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: preview -->
+        <div>
+            <div style="position:sticky; top:24px;">
+                <div class="preview-head">👁️ Live preview</div>
+                <div class="preview-box">
+                    <div id="previewGradient" class="gradient-fallback"></div>
+                    <img id="previewImg" class="bg" style="display:none;" alt="" />
+                    <div class="preview-content">
+                        <div id="previewEyebrow" class="preview-eyebrow" style="display:none;"></div>
+                        <h3 id="previewTitle" class="preview-title">Your banner title</h3>
+                        <p id="previewSubtitle" class="preview-subtitle" style="display:none;"></p>
+                        <span id="previewCta" class="preview-cta" style="display:none;"></span>
+                    </div>
+                    <div id="previewDraft" class="preview-draft" style="display:none;">Draft</div>
+                </div>
+                <div class="preview-meta">
+                    <div><span>Order</span><b id="metaOrder">0</b></div>
+                    <div><span>Starts</span><b id="metaStart">Immediately</b></div>
+                    <div><span>Ends</span><b id="metaEnd">No end date</b></div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function () {
+      // ---- config: wire these up to your real API ----
+      const UPLOAD_ENDPOINT = "/api/vendor/uploads";  // returns { url: "..." }
+      const SAVE_ENDPOINT = "/api/vendor/banners";    // POST
+
+      const $ = (id) => document.getElementById(id);
+
+      const els = {
+        dropzone: $("dropzone"),
+        fileInput: $("fileInput"),
+        dzEmpty: $("dzEmpty"),
+        dzPreviewWrap: $("dzPreviewWrap"),
+        dzPreviewImg: $("dzPreviewImg"),
+        dzRemove: $("dzRemove"),
+        dzUploading: $("dzUploading"),
+        dzCaption: $("dzCaption"),
+        imageErr: $("imageErr"),
+        eyebrow: $("eyebrow"),
+        displayOrder: $("displayOrder"),
+        title: $("title"),
+        titleErr: $("titleErr"),
+        titleCount: $("titleCount"),
+        subtitle: $("subtitle"),
+        subtitleCount: $("subtitleCount"),
+        ctaLabel: $("ctaLabel"),
+        ctaLinkType: $("ctaLinkType"),
+        ctaLink: $("ctaLink"),
+        ctaLinkErr: $("ctaLinkErr"),
+        startDate: $("startDate"),
+        endDate: $("endDate"),
+        endDateErr: $("endDateErr"),
+        activeSwitch: $("activeSwitch"),
+        submitBtn: $("submitBtn"),
+        submitSpinner: $("submitSpinner"),
+        submitLabel: $("submitLabel"),
+        cancelBtn: $("cancelBtn"),
+        bannerMsg: $("bannerMsg"),
+        form: $("bannerForm"),
+        // preview
+        previewGradient: $("previewGradient"),
+        previewImg: $("previewImg"),
+        previewEyebrow: $("previewEyebrow"),
+        previewTitle: $("previewTitle"),
+        previewSubtitle: $("previewSubtitle"),
+        previewCta: $("previewCta"),
+        previewDraft: $("previewDraft"),
+        metaOrder: $("metaOrder"),
+        metaStart: $("metaStart"),
+        metaEnd: $("metaEnd"),
+      };
+
+      const ctaPlaceholders = {
+        CATEGORY_PAGE: "e.g. 482 (category id)",
+        PRODUCT_PAGE: "e.g. 10293 (product id)",
+        OFFER_PAGE: "e.g. 77 (offer id)",
+        CUSTOM_INTERNAL_ROUTE: "/pages/monsoon-sale",
+        EXTERNAL_URL: "https://example.com/sale",
+      };
+
+      let state = {
+        imageFile: null,
+        imageObjectUrl: null,
+        uploadedUrl: null,
+        uploading: false,
+        active: true,
+      };
+
+      // ---------- image upload ----------
+      els.dropzone.addEventListener("click", () => els.fileInput.click());
+      els.fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
+
+      ["dragover"].forEach((evt) =>
+        els.dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          els.dropzone.classList.add("drag");
+        })
+      );
+      ["dragleave", "drop"].forEach((evt) =>
+        els.dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          els.dropzone.classList.remove("drag");
+        })
+      );
+      els.dropzone.addEventListener("drop", (e) => {
+        const file = e.dataTransfer.files[0];
+        handleFile(file);
+      });
+
+      els.dzRemove.addEventListener("click", (e) => {
+        e.stopPropagation();
+        resetImage();
+      });
+
+      function resetImage() {
+        state.imageFile = null;
+        state.imageObjectUrl = null;
+        state.uploadedUrl = null;
+        els.dzEmpty.style.display = "";
+        els.dzPreviewWrap.style.display = "none";
+        els.dzCaption.style.display = "none";
+        els.dropzone.classList.remove("err");
+        els.imageErr.style.display = "none";
+        updatePreview();
+      }
+
+      function handleFile(file) {
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          showFieldError(els.imageErr, els.dropzone, "Please choose an image file.");
+          return;
+        }
+        clearFieldError(els.imageErr, els.dropzone);
+
+        state.imageFile = file;
+        state.imageObjectUrl = URL.createObjectURL(file);
+
+        els.dzEmpty.style.display = "none";
+        els.dzPreviewWrap.style.display = "block";
+        els.dzCaption.style.display = "block";
+        els.dzPreviewImg.src = state.imageObjectUrl;
+        els.dzUploading.style.display = "flex";
+        state.uploading = true;
+
+        uploadImage(file)
+          .then((url) => {
+            state.uploadedUrl = url;
+          })
+          .catch(() => {
+            showFieldError(els.imageErr, els.dropzone, "Upload failed. Try again.");
+            state.uploadedUrl = null;
+          })
+          .finally(() => {
+            state.uploading = false;
+            els.dzUploading.style.display = "none";
+            updatePreview();
+          });
+
+        updatePreview();
+      }
+
+      // Replace this with a real fetch() call to your Upload API.
+      async function uploadImage(file) {
+        // Example real implementation:
+        // const fd = new FormData();
+        // fd.append("file", file);
+        // const res = await fetch(UPLOAD_ENDPOINT, { method: "POST", body: fd });
+        // if (!res.ok) throw new Error("upload failed");
+        // const data = await res.json();
+        // return data.url;
+
+        await new Promise((r) => setTimeout(r, 500)); // simulated delay
+        return state.imageObjectUrl; // placeholder
+      }
+
+      // ---------- counters ----------
+      els.title.addEventListener("input", () => {
+        els.titleCount.textContent = els.title.value.length;
+        clearFieldError(els.titleErr, els.title);
+        updatePreview();
+      });
+      els.subtitle.addEventListener("input", () => {
+        els.subtitleCount.textContent = els.subtitle.value.length;
+        updatePreview();
+      });
+      els.eyebrow.addEventListener("input", updatePreview);
+      els.displayOrder.addEventListener("input", updatePreview);
+      els.ctaLabel.addEventListener("input", updatePreview);
+      els.startDate.addEventListener("input", updatePreview);
+      els.endDate.addEventListener("input", () => {
+        clearFieldError(els.endDateErr, els.endDate);
+        updatePreview();
+      });
+      els.ctaLinkType.addEventListener("change", () => {
+        els.ctaLink.placeholder = ctaPlaceholders[els.ctaLinkType.value];
+        clearFieldError(els.ctaLinkErr, els.ctaLink);
+      });
+      els.ctaLink.addEventListener("input", () => clearFieldError(els.ctaLinkErr, els.ctaLink));
+
+      // ---------- active toggle ----------
+      els.activeSwitch.addEventListener("click", () => {
+        state.active = !state.active;
+        els.activeSwitch.classList.toggle("on", state.active);
+        els.activeSwitch.setAttribute("aria-checked", String(state.active));
+        updatePreview();
+      });
+
+      // ---------- live preview ----------
+      function updatePreview() {
+        if (state.imageObjectUrl) {
+          els.previewImg.src = state.imageObjectUrl;
+          els.previewImg.style.display = "block";
+          els.previewGradient.style.display = "none";
+        } else {
+          els.previewImg.style.display = "none";
+          els.previewGradient.style.display = "block";
+        }
+
+        const eyebrow = els.eyebrow.value.trim();
+        if (eyebrow) {
+          els.previewEyebrow.textContent = eyebrow;
+          els.previewEyebrow.style.display = "block";
+        } else {
+          els.previewEyebrow.style.display = "none";
+        }
+
+        els.previewTitle.textContent = els.title.value.trim() || "Your banner title";
+
+        const subtitle = els.subtitle.value.trim();
+        if (subtitle) {
+          els.previewSubtitle.textContent = subtitle;
+          els.previewSubtitle.style.display = "block";
+        } else {
+          els.previewSubtitle.style.display = "none";
+        }
+
+        const ctaLabel = els.ctaLabel.value.trim();
+        if (ctaLabel) {
+          els.previewCta.textContent = ctaLabel;
+          els.previewCta.style.display = "inline-flex";
+        } else {
+          els.previewCta.style.display = "none";
+        }
+
+        els.previewDraft.style.display = state.active ? "none" : "block";
+
+        els.metaOrder.textContent = els.displayOrder.value || "0";
+        els.metaStart.textContent = els.startDate.value
+          ? new Date(els.startDate.value).toLocaleString()
+          : "Immediately";
+        els.metaEnd.textContent = els.endDate.value
+          ? new Date(els.endDate.value).toLocaleString()
+          : "No end date";
+      }
+
+      // ---------- validation helpers ----------
+      function showFieldError(errEl, inputEl, msg) {
+        errEl.textContent = msg;
+        errEl.style.display = "block";
+        inputEl.classList.add("err");
+      }
+      function clearFieldError(errEl, inputEl) {
+        errEl.style.display = "none";
+        inputEl.classList.remove("err");
+      }
+
+      function validate() {
+        let ok = true;
+
+        if (!els.title.value.trim()) {
+          showFieldError(els.titleErr, els.title, "Title is required.");
+          ok = false;
+        }
+
+        if (!state.uploadedUrl) {
+          showFieldError(els.imageErr, els.dropzone, "Upload a banner image first.");
+          ok = false;
+        }
+
+        const ctaLabel = els.ctaLabel.value.trim();
+        const ctaLink = els.ctaLink.value.trim();
+        if (ctaLabel && !ctaLink) {
+          showFieldError(els.ctaLinkErr, els.ctaLink, "Add a destination for this CTA, or clear the CTA label.");
+          ok = false;
+        }
+        if (els.ctaLinkType.value === "EXTERNAL_URL" && ctaLink && !/^https:\/\//i.test(ctaLink)) {
+          showFieldError(els.ctaLinkErr, els.ctaLink, "External URLs must start with https://");
+          ok = false;
+        }
+
+        if (els.startDate.value && els.endDate.value) {
+          if (new Date(els.endDate.value) <= new Date(els.startDate.value)) {
+            showFieldError(els.endDateErr, els.endDate, "End date must be after the start date.");
+            ok = false;
+          }
+        }
+
+        return ok;
+      }
+
+      function showBannerMsg(type, text) {
+        els.bannerMsg.className = "banner-msg show " + type;
+        els.bannerMsg.textContent = (type === "success" ? "✓ " : "⚠ ") + text;
+      }
+
+      // ---------- submit ----------
+      els.form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        els.bannerMsg.className = "banner-msg";
+        if (!validate()) return;
+
+        const payload = {
+          eyebrow: els.eyebrow.value.trim() || null,
+          title: els.title.value.trim(),
+          subtitle: els.subtitle.value.trim() || null,
+          ctaLabel: els.ctaLabel.value.trim() || null,
+          ctaLink: els.ctaLink.value.trim() || null,
+          ctaLinkType: els.ctaLabel.value.trim() ? els.ctaLinkType.value : null,
+          imageUrl: state.uploadedUrl,
+          displayOrder: Number(els.displayOrder.value) || 0,
+          active: state.active,
+          // Not yet persisted server-side — add startDate/endDate columns
+          // to the Banner entity + a migration before this does anything.
+          startDate: els.startDate.value || null,
+          endDate: els.endDate.value || null,
+        };
+
+        els.submitBtn.disabled = true;
+        els.submitSpinner.style.display = "inline-block";
+        els.submitLabel.textContent = "Saving…";
+
+        try {
+          await saveBanner(payload);
+          showBannerMsg("success", "Banner created.");
+          els.form.reset();
+          resetImage();
+          state.active = true;
+          els.activeSwitch.classList.add("on");
+          els.activeSwitch.setAttribute("aria-checked", "true");
+          els.titleCount.textContent = "0";
+          els.subtitleCount.textContent = "0";
+          updatePreview();
+        } catch (err) {
+          showBannerMsg("error", "Couldn't save the banner. Please try again.");
+        } finally {
+          els.submitBtn.disabled = false;
+          els.submitSpinner.style.display = "none";
+          els.submitLabel.textContent = "Save banner";
+        }
+      });
+
+      // Replace this with a real fetch() call to your banner API.
+      async function saveBanner(payload) {
+        // Example real implementation:
+        // const res = await fetch(SAVE_ENDPOINT, {
+        //   method: "POST",
+        //   headers: { "Content-Type": "application/json" },
+        //   body: JSON.stringify(payload),
+        // });
+        // if (!res.ok) throw new Error("save failed");
+        // return res.json();
+
+        console.log("Submitting banner:", payload);
+        await new Promise((r) => setTimeout(r, 600));
+      }
+
+      els.cancelBtn.addEventListener("click", () => {
+        els.form.reset();
+        resetImage();
+        state.active = true;
+        els.activeSwitch.classList.add("on");
+        updatePreview();
+      });
+
+      updatePreview();
+    })();
+</script>
+</body>
+</html>

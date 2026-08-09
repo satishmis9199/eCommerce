@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  ENTERPRISE INVOICE TEMPLATE
+  Stack        : Spring Boot + Thymeleaf + OpenHTMLToPDF
+  Purpose      : Multi-Tenant Construction Materials E-Commerce SaaS Invoice
+  Backing Bean : InvoiceResponseDTO invoice  (added to model as "invoice")
+  Notes        :
+    - No JavaScript. No external CSS/fonts/CDNs. Fully offline-safe.
+    - Layout uses tables/blocks (NOT flexbox/grid) because OpenHTMLToPDF
+      has inconsistent support for modern CSS layout modules. Tables and
+      floats render 100% reliably in OpenHTMLToPDF.
+    - All monetary/number formatting is expected to be done in the DTO
+      or via Thymeleaf's #numbers utility (examples included below).
+    - Expected DTO shape is documented at the bottom of this file as a
+      comment block for backend reference.
+  ============================================================================
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="'Invoice - ' + ${invoice.invoiceNumber}">Invoice</title>
+
+    <style>
+        /* ====================================================================
+           PAGE SETUP — A4 PRINT OPTIMIZATION
+           ==================================================================== */
+        @page {
+            size: A4;
+            margin: 16mm 14mm 18mm 14mm;
+        }
+
+        /* ====================================================================
+           RESET
+           ==================================================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.5;
+            color: #26292e;
+            background-color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        img {
+            display: block;
+        }
+
+        /* ====================================================================
+           TYPOGRAPHY HELPERS
+           ==================================================================== */
+        .text-muted    { color: #767c88; }
+        .text-strong   { color: #14161a; font-weight: 700; }
+        .text-right    { text-align: right; }
+        .text-center   { text-align: center; }
+        .text-left     { text-align: left; }
+        .uppercase     { text-transform: uppercase; letter-spacing: 0.4px; }
+        .nowrap        { white-space: nowrap; }
+
+        .section-label {
+            font-size: 8pt;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: #0f5fa8;
+            padding-bottom: 6px;
+            border-bottom: 1.5px solid #0f5fa8;
+            margin-bottom: 8px;
+        }
+
+        /* ====================================================================
+           DOCUMENT WRAPPER
+           ==================================================================== */
+        .invoice-wrapper {
+            width: 100%;
+        }
+
+        /* ====================================================================
+           HEADER — COMPANY IDENTITY + INVOICE META
+           ==================================================================== */
+        .header-table {
+            width: 100%;
+            margin-bottom: 18px;
+        }
+
+        .header-table td {
+            vertical-align: top;
+        }
+
+        .company-logo {
+            max-height: 46px;
+            max-width: 170px;
+            margin-bottom: 10px;
+        }
+
+        .company-name {
+            font-size: 16pt;
+            font-weight: 800;
+            color: #14161a;
+            letter-spacing: 0.2px;
+            margin-bottom: 3px;
+            padding-bottom: 6px;
+            border-bottom: 2.5px solid #0f5fa8;
+            display: inline-block;
+        }
+
+        .company-meta-line {
+            font-size: 8.3pt;
+            color: #5a5f6b;
+            line-height: 1.55;
+        }
+
+        .invoice-meta-block {
+            text-align: right;
+        }
+
+        .invoice-title {
+            font-size: 21pt;
+            font-weight: 800;
+            color: #0f5fa8;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .invoice-meta-row {
+            font-size: 8.6pt;
+            padding: 1.5px 0;
+        }
+
+        .invoice-meta-key {
+            color: #767c88;
+            padding-right: 10px;
+        }
+
+        .invoice-meta-value {
+            font-weight: 700;
+            color: #14161a;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            font-size: 7.6pt;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 10px;
+            border: 1px solid #cfd3da;
+            color: #40454f;
+        }
+
+        .badge-success {
+            border-color: #b7dfc4;
+            color: #1e7d3c;
+            background-color: #f0faf3;
+        }
+
+        .badge-warning {
+            border-color: #f0dca3;
+            color: #8a6300;
+            background-color: #fdf8ea;
+        }
+
+        .badge-danger {
+            border-color: #f0b8b8;
+            color: #a52222;
+            background-color: #fdf1f1;
+        }
+
+        .badge-neutral {
+            border-color: #b9d7ec;
+            color: #0f5fa8;
+            background-color: #eaf3fb;
+        }
+
+        /* Divider */
+        .divider {
+            border-top: 2.5px solid #0f5fa8;
+            margin: 14px 0 16px 0;
+        }
+
+        .divider-thin {
+            border-top: 1px solid #e2e4e8;
+            margin: 14px 0;
+        }
+
+        /* ====================================================================
+           BILL TO / SHIP TO / ORDER DETAILS — 3 COLUMN INFO BLOCK
+           ==================================================================== */
+        .info-table {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .info-table td {
+            vertical-align: top;
+            width: 33.33%;
+            padding-right: 16px;
+        }
+
+        .info-table td:last-child {
+            padding-right: 0;
+        }
+
+        .info-name {
+            font-size: 10pt;
+            font-weight: 700;
+            color: #14161a;
+            margin-bottom: 4px;
+        }
+
+        .info-line {
+            font-size: 8.6pt;
+            color: #4b5058;
+            line-height: 1.55;
+        }
+
+        .info-line .label {
+            color: #8a8f99;
+        }
+
+        /* ====================================================================
+           PRODUCT TABLE
+           ==================================================================== */
+        .items-section {
+            margin-bottom: 14px;
+        }
+
+        .items-table {
+            width: 100%;
+            font-size: 8.5pt;
+        }
+
+        .items-table thead th {
+            background-color: #0f5fa8;
+            color: #ffffff;
+            font-size: 7.6pt;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 9px 7px;
+            border: 1px solid #0f5fa8;
+        }
+
+        .items-table tbody td {
+            padding: 7px 7px;
+            border: 1px solid #e2e4e8;
+            vertical-align: top;
+            color: #2c2f36;
+        }
+
+        .items-table tbody tr {
+            page-break-inside: avoid;
+        }
+
+        .items-table tbody tr:nth-child(even) {
+            background-color: #f5f9fc;
+        }
+
+        .product-thumb {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #e2e4e8;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .product-name {
+            font-weight: 700;
+            color: #14161a;
+        }
+
+        .product-desc {
+            color: #767c88;
+            font-size: 7.9pt;
+            margin-top: 2px;
+        }
+
+        .hsn-code {
+            color: #767c88;
+            font-size: 7.7pt;
+        }
+
+        /* ====================================================================
+           SUMMARY / TOTALS
+           ==================================================================== */
+        .summary-wrapper {
+            width: 100%;
+            margin-top: 6px;
+            margin-bottom: 16px;
+        }
+
+        .summary-wrapper td.summary-spacer {
+            width: 58%;
+        }
+
+        .summary-box {
+            width: 42%;
+            background-color: #f8fafc;
+            border: 1px solid #e2e4e8;
+            border-radius: 5px;
+            padding: 12px 14px;
+        }
+
+        .summary-box table {
+            width: 100%;
+        }
+
+        .summary-box td {
+            padding: 4.5px 0;
+            font-size: 8.8pt;
+        }
+
+        .summary-box .summary-label {
+            color: #5a5f6b;
+        }
+
+        .summary-box .summary-value {
+            text-align: right;
+            font-weight: 600;
+            color: #14161a;
+        }
+
+        .summary-box .summary-divider td {
+            padding: 0;
+            border-top: 1px solid #e2e4e8;
+        }
+
+        .grand-total-row td {
+            padding-top: 9px;
+            padding-bottom: 9px;
+            font-size: 12pt;
+            font-weight: 800;
+            color: #0f5fa8;
+            border-top: 2px solid #0f5fa8;
+            border-bottom: 2px solid #0f5fa8;
+        }
+
+        .amount-due-row td {
+            font-size: 9.6pt;
+            font-weight: 800;
+            color: #a52222;
+        }
+
+        .amount-paid-row td {
+            font-size: 9.2pt;
+            font-weight: 700;
+            color: #1e7d3c;
+        }
+
+        /* ====================================================================
+           PAYMENT INFORMATION
+           ==================================================================== */
+        .payment-info-table {
+            width: 100%;
+            margin-bottom: 16px;
+            border: 1px solid #e2e4e8;
+            border-radius: 5px;
+            background-color: #fafbfc;
+        }
+
+        .payment-info-table td {
+            padding: 11px 14px;
+            vertical-align: top;
+            width: 33.33%;
+            border-right: 1px solid #e2e4e8;
+        }
+
+        .payment-info-table td:last-child {
+            border-right: none;
+        }
+
+        .payment-info-label {
+            font-size: 7.6pt;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: #8a8f99;
+            margin-bottom: 3px;
+        }
+
+        .payment-info-value {
+            font-size: 9pt;
+            font-weight: 700;
+            color: #0f5fa8;
+        }
+
+        /* ====================================================================
+           FOOTER — TERMS, SIGNATURE, THANK YOU
+           ==================================================================== */
+        .footer-section {
+            margin-top: 10px;
+            page-break-inside: avoid;
+        }
+
+        .terms-table {
+            width: 100%;
+            margin-bottom: 22px;
+        }
+
+        .terms-table td {
+            vertical-align: top;
+            width: 50%;
+            padding-right: 20px;
+        }
+
+        .terms-table td:last-child {
+            padding-right: 0;
+        }
+
+        .terms-heading {
+            font-size: 8pt;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: #14161a;
+            margin-bottom: 5px;
+        }
+
+        .terms-text {
+            font-size: 7.8pt;
+            color: #5a5f6b;
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        .signature-table {
+            width: 100%;
+            margin-top: 26px;
+        }
+
+        .signature-table td {
+            width: 50%;
+            vertical-align: bottom;
+        }
+
+        .signature-line {
+            border-top: 1px solid #767c88;
+            width: 65%;
+            padding-top: 6px;
+            font-size: 8pt;
+            color: #5a5f6b;
+        }
+
+        .signatory-name {
+            font-weight: 700;
+            color: #14161a;
+            font-size: 9pt;
+        }
+
+        .thank-you-bar {
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e4e8;
+            text-align: center;
+        }
+
+        .thank-you-text {
+            font-size: 10pt;
+            font-weight: 700;
+            color: #0f5fa8;
+            letter-spacing: 0.3px;
+        }
+
+        .generated-meta {
+            margin-top: 6px;
+            font-size: 7.3pt;
+            color: #a3a8b0;
+            text-align: center;
+        }
+
+        .system-footer {
+            margin-top: 4px;
+            font-size: 7.3pt;
+            color: #c2c5cb;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+<div class="invoice-wrapper">
+
+    <!-- ==================================================================
+         SECTION 1: HEADER — COMPANY IDENTITY + INVOICE META
+         ================================================================== -->
+    <table class="header-table">
+        <tr>
+            <!-- Left: Company Identity -->
+            <td style="width: 55%;">
+                <img th:if="${invoice.company.logoUrl != null and !invoice.company.logoUrl.isEmpty()}"
+                     th:src="${invoice.company.logoUrl}"
+                     class="company-logo"
+                     alt="Company Logo" />
+
+                <div class="company-name" th:text="${invoice.company.companyName}">Company Name</div>
+
+                <div class="company-meta-line"
+                     th:if="${invoice.company.gstin != null}"
+                     th:text="'GSTIN: ' + ${invoice.company.gstin}">GSTIN</div>
+
+                <div class="company-meta-line"
+                     th:text="${invoice.company.addressLine1}">Address Line 1</div>
+
+                <div class="company-meta-line"
+                     th:if="${invoice.company.addressLine2 != null and !invoice.company.addressLine2.isEmpty()}"
+                     th:text="${invoice.company.addressLine2}">Address Line 2</div>
+
+                <div class="company-meta-line"
+                     th:text="${invoice.company.city + ', ' + invoice.company.state + ' - ' + invoice.company.pincode}">
+                    City, State - Pincode
+                </div>
+
+                <div class="company-meta-line">
+                    <span th:if="${invoice.company.phone != null}" th:text="'Phone: ' + ${invoice.company.phone}">Phone</span>
+                    <span th:if="${invoice.company.email != null}" th:text="' | Email: ' + ${invoice.company.email}">Email</span>
+                </div>
+
+                <div class="company-meta-line"
+                     th:if="${invoice.company.website != null and !invoice.company.website.isEmpty()}"
+                     th:text="${invoice.company.website}">Website</div>
+            </td>
+
+            <!-- Right: Invoice Meta -->
+            <td class="invoice-meta-block" style="width: 45%;">
+                <div class="invoice-title">Tax Invoice</div>
+
+                <table style="width: 100%;">
+                    <tr class="invoice-meta-row">
+                        <td class="invoice-meta-key text-right">Invoice No.</td>
+                        <td class="invoice-meta-value" th:text="${invoice.invoiceNumber}">INV-0000</td>
+                    </tr>
+                    <tr class="invoice-meta-row">
+                        <td class="invoice-meta-key text-right">Invoice Date</td>
+                        <td class="invoice-meta-value"
+                            th:text="${#temporals.format(invoice.invoiceDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                    </tr>
+                    <tr class="invoice-meta-row">
+                        <td class="invoice-meta-key text-right">Order No.</td>
+                        <td class="invoice-meta-value" th:text="${invoice.orderNumber}">ORD-0000</td>
+                    </tr>
+                    <tr class="invoice-meta-row">
+                        <td class="invoice-meta-key text-right">Payment Status</td>
+                        <td class="invoice-meta-value">
+                            <span class="badge"
+                                  th:classappend="${invoice.paymentStatus == 'PAID'} ? 'badge-success' : (${invoice.paymentStatus == 'PENDING'} ? 'badge-warning' : 'badge-danger')"
+                                  th:text="${invoice.paymentStatus}">PAID</span>
+                        </td>
+                    </tr>
+                    <tr class="invoice-meta-row">
+                        <td class="invoice-meta-key text-right">Order Status</td>
+                        <td class="invoice-meta-value">
+                            <span class="badge badge-neutral" th:text="${invoice.orderStatus}">DELIVERED</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="divider"></div>
+
+    <!-- ==================================================================
+         SECTION 2: BILL TO / SHIP TO / ORDER DETAILS
+         ================================================================== -->
+    <table class="info-table">
+        <tr>
+            <!-- Bill To -->
+            <td>
+                <div class="section-label">Bill To</div>
+                <div class="info-name" th:text="${invoice.customer.name}">Customer Name</div>
+                <div class="info-line" th:if="${invoice.customer.phone != null}">
+                    <span class="label">Phone: </span><span th:text="${invoice.customer.phone}">+91 00000 00000</span>
+                </div>
+                <div class="info-line" th:if="${invoice.customer.email != null}">
+                    <span class="label">Email: </span><span th:text="${invoice.customer.email}">customer@email.com</span>
+                </div>
+                <div class="info-line" th:text="${invoice.billingAddress.line1}">Billing Address Line 1</div>
+                <div class="info-line"
+                     th:if="${invoice.billingAddress.line2 != null and !invoice.billingAddress.line2.isEmpty()}"
+                     th:text="${invoice.billingAddress.line2}">Billing Address Line 2</div>
+                <div class="info-line"
+                     th:text="${invoice.billingAddress.city + ', ' + invoice.billingAddress.state + ' - ' + invoice.billingAddress.pincode}">
+                    City, State - Pincode
+                </div>
+            </td>
+
+            <!-- Ship To -->
+            <td>
+                <div class="section-label">Ship To</div>
+                <div class="info-name" th:text="${invoice.customer.name}">Customer Name</div>
+                <div class="info-line" th:text="${invoice.shippingAddress.line1}">Shipping Address Line 1</div>
+                <div class="info-line"
+                     th:if="${invoice.shippingAddress.line2 != null and !invoice.shippingAddress.line2.isEmpty()}"
+                     th:text="${invoice.shippingAddress.line2}">Shipping Address Line 2</div>
+                <div class="info-line"
+                     th:text="${invoice.shippingAddress.city + ', ' + invoice.shippingAddress.state + ' - ' + invoice.shippingAddress.pincode}">
+                    City, State - Pincode
+                </div>
+                <div class="info-line" th:if="${invoice.shippingAddress.landmark != null and !invoice.shippingAddress.landmark.isEmpty()}">
+                    <span class="label">Landmark: </span><span th:text="${invoice.shippingAddress.landmark}">Landmark</span>
+                </div>
+            </td>
+
+            <!-- Order Details -->
+            <td>
+                <div class="section-label">Order Details</div>
+                <div class="info-line">
+                    <span class="label">Order Date: </span>
+                    <span th:text="${#temporals.format(invoice.orderDate, 'dd MMM yyyy')}">01 Jan 2026</span>
+                </div>
+                <div class="info-line">
+                    <span class="label">Payment Method: </span>
+                    <span th:text="${invoice.paymentMethod}">UPI</span>
+                </div>
+                <div class="info-line" th:if="${invoice.transactionId != null and !invoice.transactionId.isEmpty()}">
+                    <span class="label">Transaction ID: </span>
+                    <span th:text="${invoice.transactionId}">TXN000000</span>
+                </div>
+                <div class="info-line" th:if="${invoice.deliveryDate != null}">
+                    <span class="label">Delivery Date: </span>
+                    <span th:text="${#temporals.format(invoice.deliveryDate, 'dd MMM yyyy')}">05 Jan 2026</span>
+                </div>
+                <div class="info-line" th:if="${invoice.vendor != null and invoice.vendor.name != null}">
+                    <span class="label">Vendor: </span>
+                    <span th:text="${invoice.vendor.name}">Vendor Name</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ==================================================================
+         SECTION 3: PRODUCT / ITEMS TABLE
+         ================================================================== -->
+    <div class="items-section">
+        <table class="items-table">
+            <thead>
+            <tr>
+                <th style="width: 3%;">#</th>
+                <th style="width: 8%;">Image</th>
+                <th style="width: 19%;">Product</th>
+                <th style="width: 8%;">HSN</th>
+                <th style="width: 6%;" class="text-right">Qty</th>
+                <th style="width: 6%;">Unit</th>
+                <th style="width: 9%;" class="text-right">MRP</th>
+                <th style="width: 9%;" class="text-right">Discount</th>
+                <th style="width: 9%;" class="text-right">Price</th>
+                <th style="width: 7%;" class="text-right">Tax</th>
+                <th style="width: 11%;" class="text-right">Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Iterate over invoice line items dynamically -->
+            <!-- Iterate over invoice line items dynamically -->
+            <tr th:each="item, iterStat : ${invoice.items}">
+                <td class="text-center" th:text="${iterStat.count}">1</td>
+
+                <td>
+                    <img th:if="${item.imageUrl != null and !item.imageUrl.isEmpty()}"
+                         th:src="${item.imageUrl}"
+                         class="product-thumb"
+                         alt="Product" />
+                </td>
+
+                <td>
+                    <div class="product-name" th:text="${item.productName}">Product Name</div>
+
+                    <div class="product-desc"
+                         th:if="${item.description != null and !item.description.isEmpty()}"
+                         th:text="${item.description}">
+                        Product Description
+                    </div>
+                </td>
+
+                <td class="hsn-code"
+                    th:text="${item.hsnCode != null ? item.hsnCode : '-'}">
+                    0000
+                </td>
+
+                <td class="text-right" th:text="${item.quantity}">1</td>
+
+                <td th:text="${item.unit}">Bag</td>
+
+                <td class="text-right"
+                    th:text="${item.mrp}">
+                    0.00
+                </td>
+
+                <td class="text-right"
+                    th:text="${item.discountAmount}">
+                    0.00
+                </td>
+
+                <td class="text-right"
+                    th:text="${item.sellingPrice}">
+                    0.00
+                </td>
+
+                <td class="text-right"
+                    th:text="${item.taxAmount}">
+                    0.00
+                </td>
+
+                <td class="text-right text-strong"
+                    th:text="${item.totalAmount}">
+                    0.00
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================================================================
+         SECTION 4: SUMMARY / TOTALS
+         ================================================================== -->
+    <table class="summary-wrapper">
+        <tr>
+            <td class="summary-spacer"></td>
+            <td class="summary-box">
+                <table>
+                    <tr>
+                        <td class="summary-label">Subtotal</td>
+                        <td class="summary-value"
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.subtotal, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    </tr>
+                    <tr th:if="${invoice.summary.totalDiscount != null and invoice.summary.totalDiscount > 0}">
+                        <td class="summary-label">Discount</td>
+                        <td class="summary-value"
+                            th:text="'- ' + ${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.totalDiscount, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    </tr>
+                    <tr th:if="${invoice.summary.shippingCharge != null}">
+                        <td class="summary-label">Shipping Charge</td>
+                        <td class="summary-value"
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.shippingCharge, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    </tr>
+                    <tr th:if="${invoice.summary.platformCharge != null}">
+                        <td class="summary-label">Platform Charge</td>
+                        <td class="summary-value"
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.platformCharge, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    </tr>
+                    <tr th:if="${invoice.summary.totalTax != null}">
+                        <td class="summary-label">Tax (GST)</td>
+                        <td class="summary-value"
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.totalTax, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    </tr>
+
+                    <tr class="summary-divider"><td colspan="2"></td></tr>
+
+                    <tr class="grand-total-row">
+                        <td>Grand Total</td>
+                        <td class="text-right"
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.grandTotal, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    </tr>
+
+                    <tr class="amount-paid-row">
+                        <td class="summary-label">Amount Paid</td>
+                        <td class="summary-value"
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.amountPaid, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    </tr>
+
+                    <tr class="amount-due-row" th:if="${invoice.summary.amountDue != null and invoice.summary.amountDue > 0}">
+                        <td>Amount Due</td>
+                        <td class="text-right"
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.amountDue, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ==================================================================
+         SECTION 5: PAYMENT INFORMATION
+         ================================================================== -->
+    <table class="payment-info-table">
+        <tr>
+            <td>
+                <div class="payment-info-label">Payment Method</div>
+                <div class="payment-info-value" th:text="${invoice.paymentMethod}">UPI</div>
+            </td>
+            <td>
+                <div class="payment-info-label">Payment Status</div>
+                <div class="payment-info-value" th:text="${invoice.paymentStatus}">PAID</div>
+            </td>
+            <td>
+                <div class="payment-info-label">Reference Number</div>
+                <div class="payment-info-value"
+                     th:text="${invoice.referenceNumber != null ? invoice.referenceNumber : '-'}">REF000000</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ==================================================================
+         SECTION 6: FOOTER — TERMS, SIGNATURE, THANK YOU
+         ================================================================== -->
+    <div class="footer-section">
+
+        <table class="terms-table">
+            <tr>
+                <td>
+                    <div class="terms-heading">Terms &amp; Conditions</div>
+                    <div class="terms-text" th:utext="${invoice.termsAndConditions}">
+                        Terms and conditions text.
+                    </div>
+                </td>
+                <td>
+                    <div class="terms-heading">Return Policy</div>
+                    <div class="terms-text" th:utext="${invoice.returnPolicy}">
+                        Return policy text.
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="signature-table">
+            <tr>
+                <td></td>
+                <td class="text-right">
+                    <div style="display: inline-block; text-align: left;">
+                        <div class="signature-line">
+                            <div class="signatory-name" th:text="${invoice.company.companyName}">Company Name</div>
+                            <div>Authorized Signatory</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="thank-you-bar">
+            <div class="thank-you-text"
+                 th:text="${invoice.thankYouMessage != null ? invoice.thankYouMessage : 'Thank you for your business!'}">
+                Thank you for your business!
+            </div>
+            <div class="generated-meta"
+                 th:text="'Generated on ' + ${#temporals.format(invoice.generatedAt, 'dd MMM yyyy, hh:mm a')}">
+                Generated on 01 Jan 2026, 10:00 AM
+            </div>
+            <div class="system-footer" th:text="${invoice.company.companyName} + ' — This is a system-generated invoice.'">
+                Company Name — This is a system-generated invoice.
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>
+
+<!--
+  ============================================================================
+  EXPECTED InvoiceResponseDTO SHAPE (backend reference — remove in production)
+  ============================================================================
+  InvoiceResponseDTO {
+      String invoiceNumber;
+      LocalDate invoiceDate;
+      String orderNumber;
+      LocalDate orderDate;
+      LocalDate deliveryDate;
+      String paymentStatus;        // PAID | PENDING | FAILED
+      String orderStatus;          // DELIVERED | SHIPPED | PROCESSING ...
+      String paymentMethod;
+      String transactionId;
+      String referenceNumber;
+      String currencySymbol;       // e.g. "₹"
+      String thankYouMessage;
+      String termsAndConditions;   // HTML-safe string
+      String returnPolicy;         // HTML-safe string
+      LocalDateTime generatedAt;
+
+      CompanyDTO company {
+          String companyName;
+          String logoUrl;
+          String gstin;
+          String addressLine1;
+          String addressLine2;
+          String city;
+          String state;
+          String pincode;
+          String phone;
+          String email;
+          String website;
+      }
+
+      CustomerDTO customer {
+          String name;
+          String phone;
+          String email;
+      }
+
+      AddressDTO billingAddress / shippingAddress {
+          String line1;
+          String line2;
+          String city;
+          String state;
+          String pincode;
+          String landmark;
+      }
+
+      VendorDTO vendor {
+          String name;
+      }
+
+      List<InvoiceItemDTO> items {
+          String productName;
+          String description;
+          String imageUrl;
+          String hsnCode;
+          Integer quantity;
+          String unit;
+          BigDecimal mrp;
+          BigDecimal discountAmount;
+          BigDecimal sellingPrice;
+          BigDecimal taxAmount;
+          BigDecimal totalAmount;
+      }
+
+      SummaryDTO summary {
+          BigDecimal subtotal;
+          BigDecimal totalDiscount;
+          BigDecimal shippingCharge;
+          BigDecimal platformCharge;
+          BigDecimal totalTax;
+          BigDecimal grandTotal;
+          BigDecimal amountPaid;
+          BigDecimal amountDue;
+      }
+  }
+  ============================================================================
+-->

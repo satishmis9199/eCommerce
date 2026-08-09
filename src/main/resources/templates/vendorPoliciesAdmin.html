@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policies — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+          --ink:#14161F;
+          --ink-soft:#3A3D4D;
+          --muted:#68708A;
+          --muted-2:#9AA1B7;
+          --paper:#F4F5F8;
+          --surface:#FFFFFF;
+          --border:#E4E6EE;
+          --border-soft:#EDEEF4;
+          --primary:#4F46E5;
+          --primary-dark:#4038C7;
+          --primary-light:#EEEDFC;
+          --draft:#B7791F;
+          --draft-bg:#FBF3E2;
+          --published:#15803D;
+          --published-bg:#E8F7ED;
+          --archived:#6B7280;
+          --archived-bg:#F0F1F4;
+          --danger:#DC2626;
+          --danger-bg:#FDECEC;
+          --radius-sm:8px;
+          --radius-md:12px;
+          --radius-lg:18px;
+          --shadow-sm:0 1px 2px rgba(20,22,31,.05);
+          --shadow-md:0 10px 30px rgba(20,22,31,.08), 0 2px 8px rgba(20,22,31,.04);
+          --font-display:'Space Grotesk','Inter',sans-serif;
+          --font-body:'Inter',-apple-system,sans-serif;
+          --font-mono:'JetBrains Mono',monospace;
+        }
+        *,*::before,*::after{box-sizing:border-box;}
+        body{margin:0;font-family:var(--font-body);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;}
+        h1,h2,h3{font-family:var(--font-display);margin:0;letter-spacing:-.01em;}
+        button{font-family:inherit;cursor:pointer;}
+        input,textarea,select{font-family:inherit;}
+        ::selection{background:var(--primary-light);}
+
+        /* ---------- Shell ---------- */
+        .shell{display:grid;grid-template-columns:300px 1fr;min-height:100vh;}
+        @media (max-width:900px){.shell{grid-template-columns:1fr;}}
+
+        /* ---------- Sidebar ---------- */
+        .sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+        .sidebar-head{padding:26px 22px 18px;border-bottom:1px solid var(--border-soft);}
+        .sidebar-head .eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+        .sidebar-head h1{font-size:19px;}
+        .sidebar-head p{font-size:12.5px;color:var(--muted);margin:6px 0 0;}
+
+        /* Signature element: completion ring — encodes real info (how many of
+           the 10 required policy types are actually published) rather than
+           decorating for its own sake. */
+        .progress-block{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--border-soft);}
+        .progress-ring{position:relative;width:52px;height:52px;flex-shrink:0;}
+        .progress-ring svg{transform:rotate(-90deg);}
+        .progress-ring circle{fill:none;stroke-width:5;}
+        .progress-ring .track{stroke:var(--border);}
+        .progress-ring .fill{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset .5s ease;}
+        .progress-ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:13px;}
+        .progress-label{font-size:12.5px;color:var(--muted);}
+        .progress-label b{color:var(--ink);font-weight:700;}
+
+        .policy-nav{flex:1;padding:10px;}
+        .policy-item{
+          display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;background:transparent;
+          padding:11px 12px;border-radius:10px;margin-bottom:2px;transition:background .12s;
+        }
+        .policy-item:hover{background:var(--paper);}
+        .policy-item.active{background:var(--primary-light);}
+        .policy-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--muted-2);}
+        .policy-dot.draft{background:var(--draft);}
+        .policy-dot.published{background:var(--published);}
+        .policy-dot.archived{background:var(--archived);}
+        .policy-item-text{flex:1;min-width:0;}
+        .policy-item-name{font-size:13.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .policy-item.active .policy-item-name{color:var(--primary-dark);}
+        .policy-item-status{font-size:11px;color:var(--muted-2);margin-top:1px;}
+
+        /* ---------- Main ---------- */
+        .main{padding:34px 40px 60px;max-width:900px;}
+        @media (max-width:640px){.main{padding:24px 18px 50px;}}
+        .main-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:26px;flex-wrap:wrap;}
+        .main-head .type-label{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+        .main-head h2{font-size:25px;}
+        .main-head .type-hint{font-size:13px;color:var(--muted);margin-top:6px;max-width:520px;}
+        .status-chip{
+          display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;font-size:12px;font-weight:700;
+          text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;
+        }
+        .status-chip.draft{background:var(--draft-bg);color:var(--draft);}
+        .status-chip.published{background:var(--published-bg);color:var(--published);}
+        .status-chip.archived{background:var(--archived-bg);color:var(--archived);}
+        .status-chip.new{background:var(--border-soft);color:var(--muted);}
+
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+        .field-group{padding:26px;}
+        .field{margin-bottom:20px;}
+        .field:last-child{margin-bottom:0;}
+        .field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;}
+        .field .field-hint{font-size:12px;color:var(--muted-2);margin-top:6px;}
+        .field input[type=text]{
+          width:100%;height:46px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 15px;
+          font-size:14.5px;outline:none;transition:border-color .15s, box-shadow .15s;background:var(--surface);
+        }
+        .field input[type=text]:focus{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-light);}
+        .status-select-row{display:flex;gap:10px;flex-wrap:wrap;}
+        .status-option{
+          flex:1;min-width:130px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;
+          cursor:pointer;transition:all .15s;
+        }
+        .status-option:hover{border-color:var(--primary);}
+        .status-option.selected{border-color:var(--primary);background:var(--primary-light);}
+        .status-option .so-title{font-size:13.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px;}
+        .status-option .so-dot{width:8px;height:8px;border-radius:50%;}
+        .status-option .so-desc{font-size:11.5px;color:var(--muted);margin-top:3px;}
+
+        /* Editor */
+        .editor-toolbar{
+          display:flex;gap:4px;padding:8px;border:1.5px solid var(--border);border-bottom:none;
+          border-radius:var(--radius-sm) var(--radius-sm) 0 0;background:var(--paper);flex-wrap:wrap;
+        }
+        .editor-toolbar button{
+          width:32px;height:32px;border:none;background:transparent;border-radius:7px;color:var(--ink-soft);
+          display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;transition:background .12s;
+        }
+        .editor-toolbar button:hover{background:var(--surface);box-shadow:var(--shadow-sm);}
+        .editor-toolbar button.active{background:var(--primary-light);color:var(--primary-dark);}
+        .editor-toolbar .sep{width:1px;background:var(--border);margin:4px 4px;}
+        .editor-body{
+          min-height:280px;max-height:520px;overflow-y:auto;border:1.5px solid var(--border);border-top:none;
+          border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:18px 20px;font-size:14.5px;line-height:1.7;
+          outline:none;transition:border-color .15s, box-shadow .15s;background:var(--surface);color:var(--ink-soft);
+        }
+        .editor-body:focus{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-light);}
+        .editor-body[data-empty="true"]:before{content:attr(data-placeholder);color:var(--muted-2);pointer-events:none;}
+        .editor-body p{margin:0 0 12px;}
+        .editor-body ul,.editor-body ol{margin:0 0 12px;padding-left:22px;}
+        .editor-body h3{font-size:16px;margin:0 0 10px;}
+        .word-count{font-size:11.5px;color:var(--muted-2);margin-top:8px;text-align:right;}
+
+        .action-bar{
+          display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 26px;
+          border-top:1px solid var(--border-soft);flex-wrap:wrap;
+        }
+        .meta-line{font-size:12px;color:var(--muted-2);}
+        .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+        .btn{border:none;border-radius:999px;font-weight:700;font-size:13.5px;padding:11px 22px;transition:all .12s;}
+        .btn:active{transform:scale(.97);}
+        .btn:disabled{opacity:.55;cursor:not-allowed;}
+        .btn-primary{background:var(--primary);color:#fff;}
+        .btn-primary:hover:not(:disabled){background:var(--primary-dark);}
+        .btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--ink-soft);}
+        .btn-ghost:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+        .btn-danger-text{background:transparent;border:none;color:var(--danger);font-weight:700;font-size:13px;padding:8px 6px;}
+        .btn-danger-text:hover{text-decoration:underline;}
+
+        .empty-hint{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--primary-light);border-radius:var(--radius-sm);font-size:13px;color:var(--primary-dark);margin-bottom:22px;}
+
+        /* Toasts */
+        .toast-stack{position:fixed;bottom:22px;right:22px;z-index:400;display:flex;flex-direction:column;gap:9px;max-width:320px;}
+        .toast{background:var(--ink);color:#fff;padding:12px 15px;border-radius:10px;box-shadow:var(--shadow-md);font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;animation:toastIn .22s ease;}
+        .toast.success{background:var(--published);}
+        .toast.error{background:var(--danger);}
+        @keyframes toastIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+        .toast.leaving{animation:toastOut .18s ease forwards;}
+        @keyframes toastOut{to{opacity:0;transform:translateY(8px);}}
+
+        /* Confirm dialog */
+        .confirm-overlay{position:fixed;inset:0;background:rgba(20,22,31,.45);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .15s;padding:20px;}
+        .confirm-overlay.open{opacity:1;pointer-events:auto;}
+        .confirm-box{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);max-width:380px;width:100%;padding:26px;}
+        .confirm-box h3{font-size:17px;margin-bottom:8px;}
+        .confirm-box p{font-size:13.5px;color:var(--muted);margin:0 0 20px;line-height:1.55;}
+        .confirm-actions{display:flex;gap:10px;justify-content:flex-end;}
+
+        .skeleton{background:linear-gradient(90deg,#ECECE8 25%,#F5F5F2 37%,#ECECE8 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-radius:8px;}
+        @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
+    </style>
+</head>
+<body>
+
+<div class="shell">
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+        <div class="sidebar-head">
+            <div class="eyebrow">Vendor Admin</div>
+            <h1>Store Policies</h1>
+            <p>Manage the legal &amp; informational pages shown on your storefront.</p>
+        </div>
+
+        <div class="progress-block">
+            <div class="progress-ring">
+                <svg width="52" height="52" viewBox="0 0 52 52">
+                    <circle class="track" cx="26" cy="26" r="21"></circle>
+                    <circle class="fill" id="progressFill" cx="26" cy="26" r="21" stroke-dasharray="131.9" stroke-dashoffset="131.9"></circle>
+                </svg>
+                <div class="num" id="progressNum">0/10</div>
+            </div>
+            <div class="progress-label"><b id="publishedCount">0</b> of 10 policies published</div>
+        </div>
+
+        <nav class="policy-nav" id="policyNav"></nav>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <main class="main" id="main">
+        <div class="skeleton" style="height:400px;"></div>
+    </main>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+        <h3 id="confirmTitle">Delete this policy?</h3>
+        <p id="confirmDesc">This will remove it from the storefront immediately. This can't be undone.</p>
+        <div class="confirm-actions">
+            <button class="btn btn-ghost" id="confirmCancelBtn">Cancel</button>
+            <button class="btn" id="confirmOkBtn" style="background:var(--danger);color:#fff;">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================================================================
+       CONFIG — point these at your real backend. Matches VendorPolicyController.
+       ========================================================================= */
+    const API_BASE = "/admin/u1/v1/policies";
+    const API = {
+      list:            () => `${API_BASE}`,
+      getByType:       (type) => `${API_BASE}/${type}`,
+      saveOrUpdate:    () => `${API_BASE}`,
+      deleteByType:    (type) => `${API_BASE}/${type}`,
+    };
+
+    /* Policy types, in the order they should appear in the sidebar, with
+       human-readable labels and short hints so the admin knows what each
+       page is for without guessing. Order mirrors your PolicyType enum. */
+    const POLICY_TYPES = [
+      { type:"ABOUT_US",             label:"About Us",              hint:"Tell shoppers who you are and what makes your store different." },
+      { type:"CONTACT_US",           label:"Contact Us",            hint:"How customers can reach your support team." },
+      { type:"PRIVACY_POLICY",       label:"Privacy Policy",        hint:"How you collect, use and protect customer data." },
+      { type:"TERMS_AND_CONDITIONS", label:"Terms & Conditions",    hint:"The rules customers agree to when using your store." },
+      { type:"RETURN_POLICY",        label:"Return Policy",         hint:"What can be returned, and within what window." },
+      { type:"REFUND_POLICY",        label:"Refund Policy",         hint:"How and when refunds are processed." },
+      { type:"SHIPPING_POLICY",      label:"Shipping Policy",       hint:"Delivery timelines, charges and coverage areas." },
+      { type:"CANCELLATION_POLICY",  label:"Cancellation Policy",   hint:"Rules for cancelling an order before it ships." },
+      { type:"WARRANTY_POLICY",      label:"Warranty Policy",       hint:"What's covered, for how long, and how to claim it." },
+      { type:"EXCHANGE_POLICY",      label:"Exchange Policy",       hint:"How product exchanges work, if you offer them." },
+    ];
+
+    const REQUEST_TIMEOUT_MS = 8000;
+
+    /* =========================================================================
+       STATE
+       ========================================================================= */
+    const State = {
+      policiesByType: {},   // type -> policy object from backend (or undefined if never created)
+      activeType: POLICY_TYPES[0].type,
+      dirty: false,
+    };
+
+    /* =========================================================================
+       API LAYER — same pattern as the storefront: credentials included,
+       timeout-guarded, JSON in/out.
+       ========================================================================= */
+    async function apiRequest(url, options = {}, { silentError = false } = {}) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      try {
+        const res = await fetch(url, {
+          credentials: "include",
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          ...options,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok || body.success === false) throw new Error(body.message || `Request failed (${res.status})`);
+        return body;
+      } catch (err) {
+        clearTimeout(timeoutId);
+        const message = err.name === "AbortError" ? "Request timed out. Please try again." : err.message;
+        if (!silentError) toast(message || "Something went wrong.", "error");
+        throw new Error(message);
+      }
+    }
+
+    /* =========================================================================
+       UTIL
+       ========================================================================= */
+    function escapeHtml(str){
+      const d = document.createElement("div");
+      d.textContent = str ?? "";
+      return d.innerHTML;
+    }
+    function toast(message, type="default"){
+      const stack = document.getElementById("toastStack");
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.textContent = message;
+      stack.appendChild(el);
+      setTimeout(()=>{ el.classList.add("leaving"); setTimeout(()=>el.remove(), 200); }, 3000);
+    }
+    function fmtDate(iso){
+      if (!iso) return "";
+      const d = new Date(iso);
+      if (isNaN(d)) return "";
+      return d.toLocaleString("en-IN", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    }
+    function policyMeta(type){
+      return POLICY_TYPES.find(p => p.type === type);
+    }
+
+    /* =========================================================================
+       SIDEBAR
+       ========================================================================= */
+    function renderSidebar(){
+      const nav = document.getElementById("policyNav");
+      nav.innerHTML = POLICY_TYPES.map(p => {
+        const policy = State.policiesByType[p.type];
+        const status = policy ? policy.status.toLowerCase() : null;
+        const dotClass = status || "";
+        const statusLabel = policy ? capitalize(policy.status) : "Not created";
+        return `
+          <button class="policy-item ${p.type===State.activeType?'active':''}" data-type="${p.type}">
+            <span class="policy-dot ${dotClass}"></span>
+            <span class="policy-item-text">
+              <div class="policy-item-name">${escapeHtml(p.label)}</div>
+              <div class="policy-item-status">${escapeHtml(statusLabel)}</div>
+            </span>
+          </button>`;
+      }).join("");
+
+      nav.querySelectorAll("[data-type]").forEach(btn=>{
+        btn.addEventListener("click", ()=> switchType(btn.dataset.type));
+      });
+
+      updateProgress();
+    }
+    function capitalize(s){ return s ? s.charAt(0) + s.slice(1).toLowerCase() : ""; }
+
+    function updateProgress(){
+      const publishedCount = Object.values(State.policiesByType).filter(p => p && p.status === "PUBLISHED").length;
+      document.getElementById("publishedCount").textContent = publishedCount;
+      document.getElementById("progressNum").textContent = `${publishedCount}/10`;
+      const circumference = 2 * Math.PI * 21;
+      const offset = circumference - (publishedCount / 10) * circumference;
+      document.getElementById("progressFill").style.strokeDashoffset = offset;
+    }
+
+    /* =========================================================================
+       MAIN PANEL — form for the active policy type
+       ========================================================================= */
+    function switchType(type){
+      if (State.dirty){
+        const proceed = confirm("You have unsaved changes. Discard them and switch policy?");
+        if (!proceed) return;
+      }
+      State.activeType = type;
+      State.dirty = false;
+      renderSidebar();
+      renderMain();
+    }
+
+    function renderMain(){
+      const meta = policyMeta(State.activeType);
+      const policy = State.policiesByType[State.activeType];
+      const isNew = !policy;
+      const status = policy ? policy.status : "new";
+
+      const main = document.getElementById("main");
+      main.innerHTML = `
+        <div class="main-head">
+          <div>
+            <div class="type-label">${escapeHtml(meta.type.replace(/_/g," "))}</div>
+            <h2>${escapeHtml(meta.label)}</h2>
+            <p class="type-hint">${escapeHtml(meta.hint)}</p>
+          </div>
+          <span class="status-chip ${status.toLowerCase()}">${isNew ? "Not created" : capitalize(status)}</span>
+        </div>
+
+        ${isNew ? `<div class="empty-hint">This policy hasn't been created yet. Fill in the details below and save to publish it — or keep it as a draft.</div>` : ""}
+
+        <div class="card">
+          <div class="field-group">
+            <div class="field">
+              <label for="policyTitle">Title</label>
+              <input type="text" id="policyTitle" placeholder="e.g. ${escapeHtml(meta.label)}" value="${escapeHtml(policy?.title || meta.label)}">
+            </div>
+
+            <div class="field">
+              <label>Status</label>
+              <div class="status-select-row" id="statusSelectRow">
+                ${statusOptionHtml("DRAFT", "Draft", "Only visible to you — not shown on the storefront yet.", status)}
+                ${statusOptionHtml("PUBLISHED", "Published", "Live on your storefront for customers to read.", status)}
+                ${statusOptionHtml("ARCHIVED", "Archived", "Hidden from the storefront, kept for your records.", status)}
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="policyEditorBody">Content</label>
+              <div class="editor-toolbar" id="editorToolbar">
+                <button type="button" data-cmd="bold" title="Bold"><b>B</b></button>
+                <button type="button" data-cmd="italic" title="Italic"><i>I</i></button>
+                <button type="button" data-cmd="underline" title="Underline"><u>U</u></button>
+                <div class="sep"></div>
+                <button type="button" data-cmd="formatBlock" data-value="H3" title="Heading">H</button>
+                <button type="button" data-cmd="formatBlock" data-value="P" title="Paragraph">¶</button>
+                <div class="sep"></div>
+                <button type="button" data-cmd="insertUnorderedList" title="Bulleted list">•—</button>
+                <button type="button" data-cmd="insertOrderedList" title="Numbered list">1.</button>
+                <div class="sep"></div>
+                <button type="button" data-cmd="removeFormat" title="Clear formatting">Tx</button>
+              </div>
+              <div class="editor-body" id="policyEditorBody" contenteditable="true" data-placeholder="Write the ${escapeHtml(meta.label.toLowerCase())} content here…"></div>
+              <div class="word-count" id="wordCount">0 words</div>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <div>
+              ${!isNew ? `<button class="btn-danger-text" id="deleteBtn">Delete policy</button>` : `<span class="meta-line">Not saved yet</span>`}
+            </div>
+            <div class="btn-row">
+              ${!isNew ? `<span class="meta-line" style="align-self:center;">Last updated ${fmtDate(policy.updatedAt)}</span>` : ""}
+              <button class="btn btn-primary" id="saveBtn">Save changes</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Populate the editor body (contenteditable can't take value= like an input)
+      const editor = document.getElementById("policyEditorBody");
+      editor.innerHTML = policy?.content || "";
+      updateEditorEmptyState();
+      updateWordCount();
+
+      // Track selected status locally until save
+      State.selectedStatus = status === "new" ? "DRAFT" : status;
+
+      wireMainEvents();
+    }
+
+    function statusOptionHtml(value, label, desc, currentStatus){
+      const selected = (currentStatus === value) || (currentStatus === "new" && value === "DRAFT");
+      const dotClass = value.toLowerCase();
+      return `
+        <div class="status-option ${selected?'selected':''}" data-status="${value}">
+          <div class="so-title"><span class="so-dot ${dotClass}" style="background:var(--${dotClass});"></span>${escapeHtml(label)}</div>
+          <div class="so-desc">${escapeHtml(desc)}</div>
+        </div>`;
+    }
+
+    function wireMainEvents(){
+      const titleInput = document.getElementById("policyTitle");
+      const editor = document.getElementById("policyEditorBody");
+      const toolbar = document.getElementById("editorToolbar");
+      const statusRow = document.getElementById("statusSelectRow");
+      const saveBtn = document.getElementById("saveBtn");
+      const deleteBtn = document.getElementById("deleteBtn");
+
+      [titleInput, editor].forEach(el=>{
+        el.addEventListener("input", ()=>{ State.dirty = true; if (el === editor){ updateEditorEmptyState(); updateWordCount(); } });
+      });
+
+      toolbar.querySelectorAll("[data-cmd]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          editor.focus();
+          document.execCommand(btn.dataset.cmd, false, btn.dataset.value || null);
+          State.dirty = true;
+          updateWordCount();
+        });
+      });
+
+      statusRow.querySelectorAll("[data-status]").forEach(opt=>{
+        opt.addEventListener("click", ()=>{
+          statusRow.querySelectorAll(".status-option").forEach(o=>o.classList.remove("selected"));
+          opt.classList.add("selected");
+          State.selectedStatus = opt.dataset.status;
+          State.dirty = true;
+        });
+      });
+
+      saveBtn.addEventListener("click", handleSave);
+      if (deleteBtn) deleteBtn.addEventListener("click", handleDeleteClick);
+    }
+
+    function updateEditorEmptyState(){
+      const editor = document.getElementById("policyEditorBody");
+      const isEmpty = editor.textContent.trim().length === 0;
+      editor.dataset.empty = isEmpty ? "true" : "false";
+    }
+    function updateWordCount(){
+      const editor = document.getElementById("policyEditorBody");
+      const words = editor.textContent.trim().split(/\s+/).filter(Boolean).length;
+      document.getElementById("wordCount").textContent = `${words} word${words===1?"":"s"}`;
+    }
+
+    /* =========================================================================
+       SAVE (create-or-update — backend upserts on tenantId+vendorId+policyType)
+       ========================================================================= */
+    async function handleSave(){
+      const title = document.getElementById("policyTitle").value.trim();
+      const content = document.getElementById("policyEditorBody").innerHTML.trim();
+
+      if (!title){ toast("Please add a title.", "error"); return; }
+      if (!document.getElementById("policyEditorBody").textContent.trim()){ toast("Please add some content before saving.", "error"); return; }
+
+      const saveBtn = document.getElementById("saveBtn");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
+
+      try{
+        const payload = {
+          policyType: State.activeType,
+          title,
+          content,
+          status: State.selectedStatus,
+        };
+        const response = await apiRequest(API.saveOrUpdate(), { method:"POST", body: JSON.stringify(payload) });
+
+        const saved = response.data;
+        State.policiesByType[State.activeType] = saved;
+        State.dirty = false;
+
+        renderSidebar();
+        renderMain();
+        toast(response.message || "Policy saved", "success");
+
+      }catch(e){
+        // apiRequest already surfaced the toast
+      }finally{
+        if (document.body.contains(saveBtn)){ saveBtn.disabled = false; saveBtn.textContent = "Save changes"; }
+      }
+    }
+
+    /* =========================================================================
+       DELETE (with confirm dialog)
+       ========================================================================= */
+    let pendingDeleteType = null;
+
+    function handleDeleteClick(){
+      pendingDeleteType = State.activeType;
+      const meta = policyMeta(pendingDeleteType);
+      document.getElementById("confirmTitle").textContent = `Delete "${meta.label}"?`;
+      document.getElementById("confirmDesc").textContent = "This removes it from your storefront immediately. This can't be undone.";
+      document.getElementById("confirmOverlay").classList.add("open");
+    }
+    document.getElementById("confirmCancelBtn").addEventListener("click", ()=>{
+      pendingDeleteType = null;
+      document.getElementById("confirmOverlay").classList.remove("open");
+    });
+    document.getElementById("confirmOkBtn").addEventListener("click", async ()=>{
+      if (!pendingDeleteType) return;
+      const type = pendingDeleteType;
+      const btn = document.getElementById("confirmOkBtn");
+      btn.disabled = true;
+      btn.textContent = "Deleting…";
+      try{
+        const response = await apiRequest(API.deleteByType(type), { method:"DELETE" });
+        delete State.policiesByType[type];
+        State.dirty = false;
+        document.getElementById("confirmOverlay").classList.remove("open");
+        renderSidebar();
+        renderMain();
+        toast(response.message || "Policy deleted", "success");
+      }catch(e){
+        // toast already shown
+      }finally{
+        btn.disabled = false;
+        btn.textContent = "Delete";
+        pendingDeleteType = null;
+      }
+    });
+    document.getElementById("confirmOverlay").addEventListener("click", (e)=>{
+      if (e.target.id === "confirmOverlay"){
+        pendingDeleteType = null;
+        document.getElementById("confirmOverlay").classList.remove("open");
+      }
+    });
+
+    /* =========================================================================
+       INIT — load every policy that exists for this vendor, render sidebar,
+       then show the first type's panel.
+       ========================================================================= */
+    async function init(){
+      try{
+        const response = await apiRequest(API.list(), { method:"GET" }, { silentError:true });
+        const list = response.data || [];
+        (Array.isArray(list) ? list : []).forEach(p => { State.policiesByType[p.policyType] = p; });
+      }catch(e){
+        // No policies yet, or backend unreachable — sidebar just shows everything as "Not created".
+      }
+      renderSidebar();
+      renderMain();
+    }
+
+    init();
+</script>
+</body>
+</html>

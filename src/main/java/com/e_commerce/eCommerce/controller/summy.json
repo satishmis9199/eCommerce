@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "message": "Flash sale fetched successfully",
+  "data": {
+    "startedAt": 1754140800000,
+    "endsAt": 1754151600000,
+    "products": [
+      {
+        "productId": "p_1001",
+        "name": "OPC 53 Grade Cement (50kg bag)",
+        "brand": "UltraTech",
+        "vendorId": "v_4417",
+        "vendorName": "Kumar Bricks",
+        "businessName": "Kumar Bricks",
+        "image": "products/cement.jpg",
+        "images": ["products/cement1.jpg", "products/cement2.jpg"],
+        "rating": 4.7,
+        "reviewCount": 1342,
+        "price": 349,
+        "oldPrice": 449,
+        "discountPercent": 22,
+        "stockLevel": "in_stock",
+        "deliveryEta": "Next day"
+      }
+    ]
+  }
+}

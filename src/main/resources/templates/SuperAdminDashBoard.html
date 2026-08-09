@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyStore | Super Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+          --bg-primary:   #0b0f1a;
+          --bg-secondary: #111827;
+          --bg-card:      #161d2e;
+          --bg-card-hover:#1a2236;
+          --bg-input:     #1e2740;
+          --border:       rgba(255,255,255,0.07);
+          --border-focus: rgba(99,102,241,0.6);
+          --text-primary:   #f0f4ff;
+          --text-secondary: #8b95b0;
+          --text-muted:     #4b5578;
+          --accent:       #6366f1;
+          --accent-glow:  rgba(99,102,241,0.25);
+          --accent-soft:  rgba(99,102,241,0.12);
+          --blue:     #3b82f6;
+          --green:    #10b981;
+          --orange:   #f59e0b;
+          --red:      #ef4444;
+          --purple:   #8b5cf6;
+          --cyan:     #06b6d4;
+          --pink:     #ec4899;
+          --blue-soft:   rgba(59,130,246,0.12);
+          --green-soft:  rgba(16,185,129,0.12);
+          --orange-soft: rgba(245,158,11,0.12);
+          --red-soft:    rgba(239,68,68,0.12);
+          --purple-soft: rgba(139,92,246,0.12);
+          --cyan-soft:   rgba(6,182,212,0.12);
+          --sidebar-w: 260px;
+          --topbar-h:  70px;
+          --radius:    12px;
+          --radius-lg: 18px;
+          --radius-xl: 24px;
+          --shadow:    0 4px 24px rgba(0,0,0,0.4);
+          --shadow-lg: 0 8px 40px rgba(0,0,0,0.6);
+          --transition: 0.22s cubic-bezier(.4,0,.2,1);
+        }
+        #approveModalOverlay,
+        #vendorActionModalOverlay {
+            display:none;
+        }
+
+        #approveModalOverlay.open,
+        #vendorActionModalOverlay.open {
+            display:flex;
+        }
+        [data-theme="light"] {
+          --bg-primary:   #f1f5fb;
+          --bg-secondary: #e8edf6;
+          --bg-card:      #ffffff;
+          --bg-card-hover:#f8faff;
+          --bg-input:     #eef1fa;
+          --border:       rgba(0,0,0,0.08);
+          --text-primary:   #0f172a;
+          --text-secondary: #475569;
+          --text-muted:     #94a3b8;
+          --accent-soft:  rgba(99,102,241,0.08);
+          --shadow:    0 4px 24px rgba(0,0,0,0.08);
+          --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+          font-family: 'Inter', sans-serif;
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          font-size: 14px;
+          line-height: 1.6;
+          overflow-x: hidden;
+        }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+        img { display: block; max-width: 100%; border-radius: 50%; }
+        button { cursor: pointer; border: none; font-family: inherit; }
+        input, select { font-family: inherit; }
+        canvas { max-width: 100%; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        .dashboard { display: flex; min-height: 100vh; }
+        .sidebar {
+          width: var(--sidebar-w);
+          background: var(--bg-card);
+          border-right: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          position: fixed;
+          top: 0; left: 0; bottom: 0;
+          z-index: 200;
+          transition: transform var(--transition), width var(--transition);
+          overflow: hidden;
+        }
+        .sidebar.collapsed { width: 72px; }
+        .sidebar.collapsed .sidebar__menu span,
+        .sidebar.collapsed .logo__text,
+        .sidebar.collapsed .sidebar__footer span { display: none; }
+        .sidebar.collapsed .sidebar__menu li a { justify-content: center; padding: 14px; }
+        .sidebar.collapsed .logo { justify-content: center; }
+        .sidebar__header { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+        .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo__icon {
+          width: 40px; height: 40px;
+          background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+          border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          color: #fff; font-size: 18px; flex-shrink: 0;
+          box-shadow: 0 0 18px var(--accent-glow);
+        }
+        .logo__text h2 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+        .logo__text span { font-size: 11px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+        .sidebar__menu { flex: 1; padding: 12px 12px; overflow-y: auto; overflow-x: hidden; }
+        .sidebar__menu ul { display: flex; flex-direction: column; gap: 2px; }
+        .sidebar__menu li a {
+          display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px;
+          color: var(--text-secondary); font-weight: 500; font-size: 13.5px; transition: all var(--transition);
+          white-space: nowrap; position: relative;
+        }
+        .sidebar__menu li a i { width: 20px; text-align: center; font-size: 15px; flex-shrink: 0; transition: color var(--transition); }
+        .sidebar__menu li a:hover { background: var(--accent-soft); color: var(--text-primary); }
+        .sidebar__menu li.active a { background: linear-gradient(135deg, var(--accent-soft), rgba(139,92,246,0.1)); color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+        .sidebar__menu li.active a i { color: var(--accent); }
+        .sidebar__menu .badge-pill { margin-left: auto; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; min-width: 20px; text-align: center; }
+        .menu-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); padding: 14px 14px 6px; }
+        .sidebar__footer { padding: 16px 12px; border-top: 1px solid var(--border); }
+        .logout-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; background: rgba(239,68,68,0.08); color: var(--red); font-weight: 600; font-size: 13.5px; transition: all var(--transition); white-space: nowrap; justify-content: center; }
+        .logout-btn:hover { background: rgba(239,68,68,0.18); }
+        .content { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-height: 100vh; transition: margin-left var(--transition); }
+        .content.expanded { margin-left: 72px; }
+        .topbar { height: var(--topbar-h); background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 100; gap: 16px; }
+        .topbar__left { display: flex; align-items: center; gap: 16px; flex: 1; }
+        .menu-toggle-btn { width: 38px; height: 38px; background: var(--bg-input); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 16px; transition: all var(--transition); flex-shrink: 0; }
+        .menu-toggle-btn:hover { background: var(--accent-soft); color: var(--accent); }
+        .search-box { display: flex; align-items: center; gap: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; max-width: 400px; flex: 1; transition: border-color var(--transition); }
+        .search-box:focus-within { border-color: var(--border-focus); }
+        .search-box i { color: var(--text-muted); font-size: 14px; }
+        .search-box input { background: none; border: none; outline: none; color: var(--text-primary); font-size: 13.5px; width: 100%; }
+        .search-box input::placeholder { color: var(--text-muted); }
+        .topbar__right { display: flex; align-items: center; gap: 8px; }
+        .icon-btn { position: relative; width: 38px; height: 38px; background: var(--bg-input); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 15px; transition: all var(--transition); }
+        .icon-btn:hover { background: var(--accent-soft); color: var(--accent); }
+        .icon-btn .badge { position: absolute; top: -4px; right: -4px; background: var(--red); color: #fff; font-size: 9px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid var(--bg-card); }
+        .profile-btn { display: flex; align-items: center; gap: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 7px 12px; cursor: pointer; transition: all var(--transition); position: relative; }
+        .profile-btn:hover { border-color: var(--accent); }
+        .profile-btn img { width: 32px; height: 32px; object-fit: cover; background: linear-gradient(135deg,var(--accent),#8b5cf6); flex-shrink: 0; }
+        .profile-btn .profile-info { line-height: 1.3; text-align: left; }
+        .profile-btn h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .profile-btn span { font-size: 11px; color: var(--text-muted); }
+        .profile-btn i { font-size: 11px; color: var(--text-muted); }
+        .dashboard-body { flex: 1; padding: 28px; display: flex; flex-direction: column; gap: 28px; }
+        .section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .section-header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-primary); }
+        .section-header p { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
+        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .breadcrumb span:last-child { color: var(--text-secondary); }
+        .breadcrumb i { font-size: 10px; }
+        .primary-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: var(--accent); color: #fff; border-radius: 10px; font-weight: 600; font-size: 13px; transition: all var(--transition); box-shadow: 0 4px 14px var(--accent-glow); }
+        .primary-btn:hover { background: #4f46e5; box-shadow: 0 6px 20px var(--accent-glow); transform: translateY(-1px); }
+        .secondary-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; font-weight: 600; font-size: 13px; transition: all var(--transition); }
+        .secondary-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .danger-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: var(--red); color: #fff; border-radius: 10px; font-weight: 600; font-size: 13px; transition: all var(--transition); }
+        .danger-btn:hover { background: #dc2626; }
+        .success-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: var(--green); color: #fff; border-radius: 10px; font-weight: 600; font-size: 13px; transition: all var(--transition); }
+        .success-btn:hover { background: #059669; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+        .dashboard-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; transition: all var(--transition); cursor: default; position: relative; overflow: hidden; }
+        .dashboard-card::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity var(--transition); border-radius: inherit; }
+        .dashboard-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .dashboard-card:hover::before { opacity: 1; }
+        .dashboard-card.blue { border-top: 3px solid var(--blue); }
+        .dashboard-card.blue::before { background: var(--blue-soft); }
+        .dashboard-card.green { border-top: 3px solid var(--green); }
+        .dashboard-card.green::before { background: var(--green-soft); }
+        .dashboard-card.orange { border-top: 3px solid var(--orange); }
+        .dashboard-card.orange::before { background: var(--orange-soft); }
+        .dashboard-card.red { border-top: 3px solid var(--red); }
+        .dashboard-card.red::before { background: var(--red-soft); }
+        .dashboard-card.purple { border-top: 3px solid var(--purple); }
+        .dashboard-card.purple::before { background: var(--purple-soft); }
+        .dashboard-card.cyan { border-top: 3px solid var(--cyan); }
+        .dashboard-card.cyan::before { background: var(--cyan-soft); }
+        .dashboard-card.pink { border-top: 3px solid var(--pink); }
+        .dashboard-card.pink::before { background: rgba(236,72,153,0.1); }
+        .dashboard-card.accent { border-top: 3px solid var(--accent); }
+        .dashboard-card.accent::before { background: var(--accent-soft); }
+        .card-left { flex: 1; position: relative; z-index: 1; }
+        .card-left > span { font-size: 12px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 8px; }
+        .card-left h2 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -1px; color: var(--text-primary); line-height: 1; margin-bottom: 10px; }
+        .card-left small { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+        .card-left small i { font-size: 11px; }
+        .card-left small.up { color: var(--green); }
+        .card-left small.down { color: var(--red); }
+        .card-left .sparkline { margin-top: 12px; height: 36px; opacity: 0.7; }
+        .card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; position: relative; z-index: 1; }
+        .blue .card-icon   { background: var(--blue-soft);   color: var(--blue); }
+        .green .card-icon  { background: var(--green-soft);  color: var(--green); }
+        .orange .card-icon { background: var(--orange-soft); color: var(--orange); }
+        .red .card-icon    { background: var(--red-soft);    color: var(--red); }
+        .purple .card-icon { background: var(--purple-soft); color: var(--purple); }
+        .cyan .card-icon   { background: var(--cyan-soft);   color: var(--cyan); }
+        .pink .card-icon   { background: rgba(236,72,153,0.1); color: var(--pink); }
+        .accent .card-icon { background: var(--accent-soft); color: var(--accent); }
+        .analytics-section { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .analytics-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+        .analytics-card.large { grid-column: 1; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .card-header h3 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .card-header p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .card-header select { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 12px; padding: 6px 10px; outline: none; cursor: pointer; }
+        .chart-tabs { display: flex; gap: 4px; background: var(--bg-input); border-radius: 8px; padding: 3px; }
+        .chart-tab { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--text-muted); background: none; transition: all var(--transition); }
+        .chart-tab.active { background: var(--bg-card); color: var(--text-primary); }
+        .chart-tab:hover:not(.active) { color: var(--text-primary); }
+        .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .platform-health { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .health-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+        .health-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+        .health-card h3::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .health-card ul { display: flex; flex-direction: column; gap: 12px; }
+        .health-card li { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-radius: 8px; font-size: 13px; gap: 12px; }
+        .health-card li span { color: var(--text-secondary); font-weight: 500; }
+        .health-card li strong { font-weight: 600; font-size: 12px; }
+        .health-card li strong.success { color: var(--green); }
+        .health-card li strong.warning { color: var(--orange); }
+        .health-card li strong.danger { color: var(--red); }
+        .health-bar { flex: 1; height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-left: 8px; }
+        .health-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--orange), var(--red)); }
+        .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .quick-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: var(--bg-input); border-radius: 10px; color: var(--text-secondary); font-size: 12px; font-weight: 600; transition: all var(--transition); border: 1px solid var(--border); }
+        .quick-btn i { font-size: 20px; color: var(--accent); }
+        .quick-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); transform: translateY(-2px); }
+        .dashboard-content-grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+        .table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+        .table-card .card-header { padding: 20px 24px 0; flex-direction: column; align-items: flex-start; margin-bottom: 0; }
+        .table-card .card-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .table-card .card-header p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .table-actions { display: flex; gap: 10px; align-items: center; padding: 16px 24px; flex-wrap: wrap; }
+        .table-actions input { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-primary); outline: none; flex: 1; min-width: 160px; transition: border-color var(--transition); }
+        .table-actions input::placeholder { color: var(--text-muted); }
+        .table-actions input:focus { border-color: var(--border-focus); }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead tr { border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); background: var(--bg-input); }
+        thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; white-space: nowrap; }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--bg-input); }
+        tbody td { padding: 14px 16px; color: var(--text-secondary); vertical-align: middle; }
+        .user-cell { display: flex; align-items: center; gap: 10px; }
+        .user-cell img { width: 36px; height: 36px; object-fit: cover; background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 10px; flex-shrink: 0; }
+        .user-cell h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .user-cell span { font-size: 11px; color: var(--text-muted); }
+        .plan { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 99px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .plan.enterprise { background: var(--purple-soft); color: var(--purple); }
+        .plan.business   { background: var(--blue-soft);   color: var(--blue); }
+        .plan.starter    { background: var(--green-soft);  color: var(--green); }
+        .plan.free       { background: var(--bg-input);    color: var(--text-muted); }
+        .status { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px; display: inline-flex; align-items: center; gap: 5px; }
+        .status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+        .status.active  { background: var(--green-soft);  color: var(--green); }
+        .status.active::before  { background: var(--green); }
+        .status.pending { background: var(--orange-soft); color: var(--orange); }
+        .status.pending::before { background: var(--orange); }
+        .status.suspended { background: var(--red-soft);  color: var(--red); }
+        .status.suspended::before { background: var(--red); }
+        .status.blocked { background: rgba(239,68,68,0.08); color: var(--red); }
+        .status.blocked::before { background: var(--red); }
+        .action-btn { padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border); margin-right: 4px; transition: all var(--transition); }
+        .action-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+        .action-btn.danger:hover { background: var(--red-soft); color: var(--red); border-color: var(--red); }
+        .action-btn.success:hover { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+        .right-panel { display: flex; flex-direction: column; gap: 16px; }
+        .panel-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+        .panel-card .card-header { padding: 18px 20px 0; margin-bottom: 0; }
+        .notification-list { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .notification-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-radius: 10px; transition: background var(--transition); cursor: pointer; }
+        .notification-item:hover { background: var(--bg-input); }
+        .notification-item > i { width: 36px; height: 36px; background: var(--accent-soft); color: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .notification-item h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .notification-item p  { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .notification-item small { font-size: 11px; color: var(--text-muted); }
+        .timeline { padding: 8px 12px 12px; display: flex; flex-direction: column; }
+        .timeline-item { display: flex; gap: 14px; padding: 12px 0; position: relative; }
+        .timeline-item:not(:last-child)::after { content: ''; position: absolute; left: 7px; top: 32px; bottom: 0; width: 2px; background: var(--border); }
+        .dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; border: 3px solid var(--bg-card); box-shadow: 0 0 0 1px var(--border); }
+        .dot.success { background: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+        .dot.warning { background: var(--orange); box-shadow: 0 0 0 3px var(--orange-soft); }
+        .dot.danger  { background: var(--red); box-shadow: 0 0 0 3px var(--red-soft); }
+        .dot.info    { background: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+        .timeline-item h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .timeline-item p  { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .timeline-item small { font-size: 11px; color: var(--text-muted); }
+        .top-vendors { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .vendor-rank { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; transition: background var(--transition); cursor: pointer; }
+        .vendor-rank:hover { background: var(--bg-input); }
+        .vendor-rank img { width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 10px; flex-shrink: 0; }
+        .vendor-rank div { flex: 1; }
+        .vendor-rank h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .vendor-rank span { font-size: 11px; color: var(--text-secondary); }
+        .rank-badge { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-muted); }
+        .rank-badge.gold   { color: #f59e0b; }
+        .rank-badge.silver { color: #94a3b8; }
+        .rank-badge.bronze { color: #b45309; }
+        .notification-drawer { position: fixed; top: 0; right: -400px; bottom: 0; width: 380px; background: var(--bg-card); border-left: 1px solid var(--border); z-index: 400; transition: right var(--transition); display: flex; flex-direction: column; box-shadow: var(--shadow-lg); }
+        .notification-drawer.open { right: 0; }
+        .drawer-header { padding: 20px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .drawer-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; }
+        .drawer-header .close-btn { width: 34px; height: 34px; background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 15px; transition: all var(--transition); }
+        .drawer-header .close-btn:hover { background: var(--red-soft); color: var(--red); }
+        .drawer-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+        .notification-card { display: flex; gap: 12px; padding: 14px; border-radius: 10px; border: 1px solid transparent; transition: all var(--transition); cursor: pointer; }
+        .notification-card.unread { background: var(--accent-soft); border-color: rgba(99,102,241,0.2); }
+        .notification-card:not(.unread):hover { background: var(--bg-input); }
+        .notification-card > i { width: 38px; height: 38px; background: var(--bg-input); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--accent); flex-shrink: 0; }
+        .notification-card h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .notification-card p  { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+        .notification-card small { font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px; }
+        .profile-dropdown { position: absolute; top: calc(var(--topbar-h) + 8px); right: 28px; width: 260px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); z-index: 300; overflow: hidden; opacity: 0; transform: translateY(-8px) scale(0.97); pointer-events: none; transition: all var(--transition); }
+        .profile-dropdown.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+        .dropdown-header { padding: 18px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--accent-soft); }
+        .dropdown-header img { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 12px; flex-shrink: 0; }
+        .dropdown-header h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+        .dropdown-header span { font-size: 12px; color: var(--text-secondary); }
+        .dropdown-menu { padding: 8px; }
+        .dropdown-menu li { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all var(--transition); }
+        .dropdown-menu li i { width: 16px; text-align: center; font-size: 13px; color: var(--text-muted); }
+        .dropdown-menu li:hover { background: var(--bg-input); color: var(--text-primary); }
+        .dropdown-menu li.logout { color: var(--red); margin-top: 4px; border-top: 1px solid var(--border); padding-top: 12px; }
+        .dropdown-menu li.logout i { color: var(--red); }
+        .dropdown-menu li.logout:hover { background: var(--red-soft); }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 350; opacity: 0; pointer-events: none; transition: opacity var(--transition); backdrop-filter: blur(2px); }
+        .overlay.show { opacity: 1; pointer-events: all; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity var(--transition); backdrop-filter: blur(4px); }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal{ background:var(--bg-card); border:1px solid var(--border); border-radius:22px; width:100%; max-width:480px; display:flex; flex-direction:column; max-height:92vh; overflow:hidden; box-shadow:var(--shadow-lg); transform:translateY(20px) scale(.97); transition:.25s; }
+        .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+        .modal.large{ max-width:760px; }
+        .modal-header{ flex-shrink:0; padding:22px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); }
+        .modal-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+        .modal-header h2 i { color: var(--accent); }
+        .modal-close-btn { width: 34px; height: 34px; background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 15px; flex-shrink: 0; transition: all var(--transition); }
+        .modal-close-btn:hover { background: var(--red-soft); color: var(--red); }
+        .modal-body { padding: 24px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; overflow-y:auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+        .section-title { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700; color:var(--text-primary); margin: 18px 0 10px; }
+        .vendor-profile { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--accent-soft); border-radius: var(--radius); margin-bottom: 20px; }
+        .vendor-profile img { width: 60px; height: 60px; background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 16px; flex-shrink: 0; }
+        .vendor-profile h2 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .vendor-profile p { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+        .vendor-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .vendor-info-grid > div { background: var(--bg-input); border-radius: var(--radius); padding: 14px; }
+        .vendor-info-grid label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .vendor-info-grid span { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .vendor-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+        .vendor-stat { background: var(--bg-input); border-radius: var(--radius); padding: 14px; text-align: center; }
+        .vendor-stat .num { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); }
+        .vendor-stat .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        #loader { position: fixed; inset: 0; background: var(--bg-primary); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s, pointer-events 0s 0.5s; }
+        #loader.hidden { opacity: 0; pointer-events: none; }
+        .loader-content { text-align: center; }
+        .spinner { width: 52px; height: 52px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 18px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-content h3 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; color: var(--text-secondary); font-weight: 500; }
+        #toastContainer { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { display: flex; align-items: center; gap: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; min-width: 300px; max-width: 400px; box-shadow: var(--shadow-lg); pointer-events: all; animation: slideIn 0.3s cubic-bezier(.4,0,.2,1); position: relative; overflow: hidden; }
+        .toast::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; animation: toastProgress 3s linear forwards; }
+        .toast.success { border-left: 4px solid var(--green); }
+        .toast.success::after { background: var(--green); }
+        .toast.success i { color: var(--green); }
+        .toast.error { border-left: 4px solid var(--red); }
+        .toast.error::after { background: var(--red); }
+        .toast.error i { color: var(--red); }
+        .toast.warning { border-left: 4px solid var(--orange); }
+        .toast.warning::after { background: var(--orange); }
+        .toast.warning i { color: var(--orange); }
+        .toast.info { border-left: 4px solid var(--blue); }
+        .toast.info::after { background: var(--blue); }
+        .toast.info i { color: var(--blue); }
+        .toast > i { font-size: 18px; flex-shrink: 0; }
+        .toast-body { flex: 1; }
+        .toast-body h4 { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .toast-body p  { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .toast-close { background: none; color: var(--text-muted); font-size: 14px; padding: 2px; transition: color var(--transition); }
+        .toast-close:hover { color: var(--text-primary); }
+        .toast.hide { animation: slideOut 0.3s cubic-bezier(.4,0,.2,1) forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+        @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+        .search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 600; display: flex; align-items: flex-start; justify-content: center; padding: 100px 20px 40px; opacity: 0; pointer-events: none; transition: opacity var(--transition); backdrop-filter: blur(8px); }
+        .search-overlay.open { opacity: 1; pointer-events: all; }
+        .search-modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 100%; max-width: 600px; box-shadow: var(--shadow-lg); overflow: hidden; transform: translateY(-16px); transition: transform var(--transition); }
+        .search-overlay.open .search-modal { transform: translateY(0); }
+        .search-input { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+        .search-input i { font-size: 18px; color: var(--accent); }
+        .search-input input { background: none; border: none; outline: none; font-size: 16px; color: var(--text-primary); width: 100%; }
+        .search-input input::placeholder { color: var(--text-muted); }
+        .search-results { max-height: 360px; overflow-y: auto; padding: 8px; }
+        .search-result-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; cursor: pointer; transition: background var(--transition); }
+        .search-result-item:hover { background: var(--bg-input); }
+        .search-result-item i { width: 36px; height: 36px; background: var(--accent-soft); color: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .search-result-item h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .search-result-item span { font-size: 12px; color: var(--text-muted); }
+        .search-shortcut { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 16px; font-size: 12px; color: var(--text-muted); }
+        .shortcut-key { display: inline-flex; align-items: center; gap: 4px; }
+        .shortcut-key kbd { background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; padding: 2px 6px; font-size: 11px; font-family: inherit; color: var(--text-secondary); }
+        .dashboard-footer { padding: 18px 28px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text-muted); background: var(--bg-card); }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; }
+        .stat-mini { background: var(--bg-input); border-radius: var(--radius); padding: 14px; display: flex; align-items: center; gap: 12px; }
+        .stat-mini .icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .stat-mini .num { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .stat-mini .lbl { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+        @media (max-width: 1200px) { .analytics-section { grid-template-columns: 1fr; } .analytics-card.large { grid-column: 1; } }
+        @media (max-width: 1024px) { .dashboard-content-grid { grid-template-columns: 1fr; } .platform-health { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+          :root { --sidebar-w: 0px; }
+          .sidebar { transform: translateX(-260px); width: 260px; }
+          .sidebar.mobile-open { transform: translateX(0); }
+          .content { margin-left: 0; }
+          .content.expanded { margin-left: 0; }
+          .topbar { padding: 0 16px; }
+          .dashboard-body { padding: 16px; gap: 16px; }
+          .card-grid { grid-template-columns: 1fr 1fr; }
+          .section-header { flex-direction: column; }
+          .header-actions { width: 100%; }
+          .search-box { display: none; }
+        }
+        @media (max-width: 480px) { .card-grid { grid-template-columns: 1fr; } .vendor-info-grid { grid-template-columns: 1fr; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 0.4s ease both; }
+        .fade-up-1 { animation-delay: 0.05s; }
+        .fade-up-2 { animation-delay: 0.1s; }
+        .fade-up-3 { animation-delay: 0.15s; }
+        .fade-up-4 { animation-delay: 0.2s; }
+        .fade-up-5 { animation-delay: 0.25s; }
+    </style>
+</head>
+<body>
+
+<div id="loader">
+    <div class="loader-content">
+        <div class="spinner"></div>
+        <h3>Loading Dashboard...</h3>
+    </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="dashboard">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar__header">
+            <div class="logo">
+                <div class="logo__icon"><i class="fa-solid fa-store"></i></div>
+                <div class="logo__text">
+                    <h2>MyStore</h2>
+                    <span>Enterprise</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar__menu">
+            <p class="menu-label">Main</p>
+            <ul>
+                <li class="active"><a href="#"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-shop"></i><span>Vendors</span><span class="badge-pill">27</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-users"></i><span>Customers</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-box"></i><span>Orders</span><span class="badge-pill">5</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-credit-card"></i><span>Revenue</span></a></li>
+            </ul>
+            <p class="menu-label">Platform</p>
+            <ul>
+                <li><a href="#"><i class="fa-solid fa-chart-column"></i><span>Analytics</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-ticket"></i><span>Support</span><span class="badge-pill">41</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-shield-halved"></i><span>Security</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="sidebar__footer">
+            <button class="logout-btn" onclick="logout()">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content" id="mainContent">
+
+        <header class="topbar">
+            <div class="topbar__left">
+                <button class="menu-toggle-btn" id="menuToggleBtn"><i class="fa-solid fa-bars"></i></button>
+                <div class="search-box" id="searchTrigger">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" placeholder="Search vendors, orders... (⌘K)" readonly style="cursor:pointer">
+                </div>
+            </div>
+            <div class="topbar__right">
+                <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i></button>
+                <button class="icon-btn" id="notifBtn" title="Notifications">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="badge">12</span>
+                </button>
+                <button class="icon-btn" title="Messages">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span class="badge">5</span>
+                </button>
+                <button class="profile-btn" id="profileBtn">
+                    <img src="https://ui-avatars.com/api/?name=Super+Admin&background=6366f1&color=fff&size=64" alt="Admin">
+                    <div class="profile-info">
+                        <h4>Super Admin</h4>
+                        <span>Platform Owner</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+            </div>
+        </header>
+
+        <section class="dashboard-body">
+
+            <section class="dashboard-overview fade-up">
+                <div class="section-header">
+                    <div>
+                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Dashboard</span></div>
+                        <h1>Platform Dashboard</h1>
+                        <p>Welcome back, Super Admin 👋 — Here's what's happening today.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="primary-btn" onclick="openModal('createVendorModal')"><i class="fa-solid fa-plus"></i>Create Vendor</button>
+                        <button class="secondary-btn" onclick="showToast('success','Export','Report generated and downloading...')"><i class="fa-solid fa-download"></i>Export Report</button>
+                    </div>
+                </div>
+
+                <div class="card-grid" style="margin-top:24px;">
+                    <div class="dashboard-card blue fade-up fade-up-1">
+                        <div class="card-left">
+                            <span>Total Vendors</span>
+                            <h2 id="kpi-vendors">1,284</h2>
+                            <small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+14% This Month</small>
+                        </div>
+                        <div class="card-icon"><i class="fa-solid fa-store"></i></div>
+                    </div>
+                    <div class="dashboard-card green fade-up fade-up-2">
+                        <div class="card-left">
+                            <span>Monthly Revenue</span>
+                            <h2 id="kpi-revenue">₹48.7L</h2>
+                            <small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+22% vs Last Month</small>
+                        </div>
+                        <div class="card-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                    </div>
+                    <div class="dashboard-card orange fade-up fade-up-3">
+                        <div class="card-left">
+                            <span>Total Customers</span>
+                            <h2 id="kpi-customers">96,845</h2>
+                            <small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+9% This Month</small>
+                        </div>
+                        <div class="card-icon"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                    <div class="dashboard-card red fade-up fade-up-4">
+                        <div class="card-left">
+                            <span>Today's Orders</span>
+                            <h2 id="kpi-orders">2,381</h2>
+                            <small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+11% vs Yesterday</small>
+                        </div>
+                        <div class="card-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                    </div>
+                    <div class="dashboard-card purple fade-up fade-up-5">
+                        <div class="card-left">
+                            <span>Pending Approvals</span>
+                            <h2>27</h2>
+                            <small><i class="fa-solid fa-clock"></i>Needs Review</small>
+                        </div>
+                        <div class="card-icon"><i class="fa-solid fa-user-check"></i></div>
+                    </div>
+                    <div class="dashboard-card cyan fade-up fade-up-5">
+                        <div class="card-left">
+                            <span>Support Tickets</span>
+                            <h2>41</h2>
+                            <small style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i>5 Critical</small>
+                        </div>
+                        <div class="card-icon"><i class="fa-solid fa-headset"></i></div>
+                    </div>
+                    <div class="dashboard-card pink fade-up fade-up-5">
+                        <div class="card-left">
+                            <span>Avg. Order Value</span>
+                            <h2>₹1,240</h2>
+                            <small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+3% This Week</small>
+                        </div>
+                        <div class="card-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+                    </div>
+                    <div class="dashboard-card accent fade-up fade-up-5">
+                        <div class="card-left">
+                            <span>Platform GMV</span>
+                            <h2>₹8.2Cr</h2>
+                            <small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+18% YTD</small>
+                        </div>
+                        <div class="card-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="analytics-section fade-up">
+                <div class="analytics-card large">
+                    <div class="card-header">
+                        <div>
+                            <h3>Revenue Overview</h3>
+                            <p>Gross merchandise value across all vendors</p>
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                            <div class="chart-legend">
+                                <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Revenue</div>
+                                <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Orders</div>
+                            </div>
+                            <select id="revenuePeriod" onchange="updateRevenueChart()">
+                                <option value="7">Last 7 Days</option>
+                                <option value="30">Last Month</option>
+                                <option value="12" selected>Last Year</option>
+                            </select>
+                        </div>
+                    </div>
+                    <canvas id="revenueChart" height="120"></canvas>
+                </div>
+
+                <div class="analytics-card">
+                    <div class="card-header"><div><h3>Vendor Growth</h3><p>Monthly registrations</p></div></div>
+                    <canvas id="vendorChart" height="240"></canvas>
+                </div>
+            </section>
+
+            <section class="platform-health fade-up">
+                <div class="health-card">
+                    <h3>Platform Health</h3>
+                    <ul>
+                        <li><span><i class="fa-solid fa-server" style="margin-right:8px;color:var(--text-muted)"></i>Application Server</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Online</strong></li>
+                        <li><span><i class="fa-solid fa-database" style="margin-right:8px;color:var(--text-muted)"></i>Database (PostgreSQL)</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Healthy</strong></li>
+                        <li><span><i class="fa-solid fa-memory" style="margin-right:8px;color:var(--text-muted)"></i>Redis Cache</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Connected</strong></li>
+                        <li><span><i class="fa-brands fa-kafka" style="margin-right:8px;color:var(--text-muted)"></i>Kafka Broker</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Running</strong></li>
+                        <li><span><i class="fa-solid fa-hard-drive" style="margin-right:8px;color:var(--text-muted)"></i>Storage</span>
+                            <div style="display:flex;align-items:center;gap:10px;flex:1;justify-content:flex-end;">
+                                <strong class="warning">72%</strong>
+                                <div class="health-bar" style="width:80px"><div class="health-bar-fill" style="width:72%"></div></div>
+                            </div>
+                        </li>
+                        <li><span><i class="fa-solid fa-shield" style="margin-right:8px;color:var(--text-muted)"></i>SSL Certificate</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Valid</strong></li>
+                    </ul>
+                </div>
+
+                <div class="health-card">
+                    <h3>Quick Actions</h3>
+                    <div class="quick-grid">
+                        <button class="quick-btn" onclick="openModal('createVendorModal')"><i class="fa-solid fa-user-plus"></i>New Vendor</button>
+                        <button class="quick-btn" onclick="showToast('info','Reports','Generating report...')"><i class="fa-solid fa-file-export"></i>Reports</button>
+                        <button class="quick-btn" onclick="showToast('info','Broadcast','Opening broadcast panel...')"><i class="fa-solid fa-envelope"></i>Broadcast</button>
+                        <button class="quick-btn" onclick="showToast('warning','Security','Scanning for threats...')"><i class="fa-solid fa-shield-halved"></i>Security</button>
+                        <button class="quick-btn" onclick="showToast('info','Plans','Loading subscription plans...')"><i class="fa-solid fa-credit-card"></i>Plans</button>
+                        <button class="quick-btn" onclick="showToast('info','Settings','Opening settings...')"><i class="fa-solid fa-gear"></i>Settings</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-content-grid fade-up">
+
+                <div class="table-card">
+                    <div class="card-header">
+                        <div>
+                            <h2>Recent Vendor Registrations</h2>
+                            <p>Latest stores awaiting approval and management</p>
+                        </div>
+                    </div>
+                    <div class="table-actions">
+                        <input type="text" id="vendorSearch" placeholder="Search vendors..." oninput="filterVendors(this.value)">
+                        <button class="secondary-btn" onclick="showToast('info','Filter','Opening filter options...')"><i class="fa-solid fa-filter"></i>Filters</button>
+                        <select id="statusFilter" onchange="filterByStatus(this.value)" style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:12px;padding:8px 10px;outline:none;">
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="pending">Pending</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Vendor</th><th>Business</th><th>Plan</th><th>Status</th><th>Revenue</th><th>Orders</th><th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="vendorTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+
+                    <div class="panel-card">
+                        <div class="card-header">
+                            <h3>Notifications</h3>
+                            <button class="secondary-btn" style="padding:5px 10px;font-size:11px;" onclick="showToast('info','Notifications','All marked as read')">Mark all read</button>
+                        </div>
+                        <div class="notification-list">
+                            <div class="notification-item">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <div><h4>New Vendor Registered</h4><p>Grocery Mart submitted KYC documents.</p><small>2 min ago</small></div>
+                            </div>
+                            <div class="notification-item">
+                                <i class="fa-solid fa-credit-card"></i>
+                                <div><h4>Subscription Renewed</h4><p>Hasan Mobile World renewed Enterprise Plan.</p><small>18 min ago</small></div>
+                            </div>
+                            <div class="notification-item">
+                                <i class="fa-solid fa-circle-exclamation" style="color:var(--red)"></i>
+                                <div><h4>Security Alert</h4><p>Multiple failed login attempts detected.</p><small>1 hour ago</small></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="card-header"><h3>Recent Activities</h3></div>
+                        <div class="timeline">
+                            <div class="timeline-item"><div class="dot success"></div><div><h4>Vendor Approved</h4><p>Hasan Mobile World approved by admin.</p><small>5 min ago</small></div></div>
+                            <div class="timeline-item"><div class="dot warning"></div><div><h4>Plan Expired</h4><p>Grocery Hub subscription expired.</p><small>30 min ago</small></div></div>
+                            <div class="timeline-item"><div class="dot danger"></div><div><h4>Vendor Blocked</h4><p>Fraud detected by AI engine.</p><small>2 hours ago</small></div></div>
+                            <div class="timeline-item"><div class="dot info"></div><div><h4>Report Generated</h4><p>Monthly revenue report exported.</p><small>3 hours ago</small></div></div>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="card-header"><h3>Top Performing Vendors</h3></div>
+                        <div class="top-vendors">
+                            <div class="vendor-rank" onclick="openModal('vendorModal')">
+                                <img src="https://ui-avatars.com/api/?name=HM&background=6366f1&color=fff&size=64">
+                                <div><h4>Hasan Mobile World</h4><span>₹42.6L Revenue · 4,821 Orders</span></div>
+                                <strong class="rank-badge gold">#1</strong>
+                            </div>
+                            <div class="vendor-rank">
+                                <img src="https://ui-avatars.com/api/?name=SE&background=3b82f6&color=fff&size=64">
+                                <div><h4>Smart Electronics</h4><span>₹28.1L Revenue · 3,241 Orders</span></div>
+                                <strong class="rank-badge silver">#2</strong>
+                            </div>
+                            <div class="vendor-rank">
+                                <img src="https://ui-avatars.com/api/?name=FG&background=10b981&color=fff&size=64">
+                                <div><h4>Fresh Grocery</h4><span>₹17.4L Revenue · 2,108 Orders</span></div>
+                                <strong class="rank-badge bronze">#3</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </section>
+
+        <footer class="dashboard-footer">
+            <div>© 2026 MyStore Enterprise Platform — All rights reserved.</div>
+            <div style="display:flex;gap:16px;align-items:center;">
+                <span>v2.0.0</span>
+                <span style="color:var(--green);display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle" style="font-size:8px"></i>All Systems Operational</span>
+            </div>
+        </footer>
+    </main>
+</div>
+
+<aside class="notification-drawer" id="notificationDrawer">
+    <div class="drawer-header">
+        <h2>Notifications <span style="font-size:12px;font-weight:400;color:var(--text-muted);">12 unread</span></h2>
+        <button class="close-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body">
+        <div class="notification-card unread">
+            <i class="fa-solid fa-circle-check"></i>
+            <div><h4>Vendor Approved</h4><p>Hasan Mobile World has been approved successfully.</p><small>2 Minutes Ago</small></div>
+        </div>
+        <div class="notification-card unread">
+            <i class="fa-solid fa-wallet"></i>
+            <div><h4>Payment Received</h4><p>Enterprise Subscription renewed. ₹24,999 credited.</p><small>18 Minutes Ago</small></div>
+        </div>
+        <div class="notification-card">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div><h4>Security Alert</h4><p>5 failed login attempts detected from IP 192.168.x.x</p><small>1 Hour Ago</small></div>
+        </div>
+        <div class="notification-card">
+            <i class="fa-solid fa-user-plus"></i>
+            <div><h4>New Vendor Signup</h4><p>TechZone Store submitted registration form.</p><small>3 Hours Ago</small></div>
+        </div>
+    </div>
+</aside>
+
+<div class="profile-dropdown" id="profileDropdown">
+    <div class="dropdown-header">
+        <img src="https://ui-avatars.com/api/?name=Super+Admin&background=6366f1&color=fff&size=64">
+        <div><h3>Super Admin</h3><span>admin@mystore.com</span></div>
+    </div>
+    <ul class="dropdown-menu">
+        <li onclick="showToast('info','Profile','Opening profile...')"><i class="fa-solid fa-user"></i>Profile</li>
+        <li onclick="showToast('info','Security','Opening security settings...')"><i class="fa-solid fa-lock"></i>Security</li>
+        <li onclick="showToast('info','Password','Opening change password...')"><i class="fa-solid fa-key"></i>Change Password</li>
+        <li onclick="openDrawer()"><i class="fa-solid fa-bell"></i>Notifications</li>
+        <li onclick="showToast('info','Settings','Opening settings...')"><i class="fa-solid fa-gear"></i>Settings</li>
+        <li class="logout" onclick="showToast('info','Logout','Signing out...')"><i class="fa-solid fa-right-from-bracket"></i>Logout</li>
+    </ul>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-circle-question"></i>Confirm Action</h2>
+            <button class="modal-close-btn" onclick="closeModal('confirmModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body"><p id="confirmMessage">Are you sure you want to perform this action? This cannot be undone.</p></div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('confirmModal')">Cancel</button>
+            <button class="danger-btn" id="confirmActionBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="vendorModal">
+    <div class="modal large">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-store"></i>Vendor Details</h2>
+            <button class="modal-close-btn" onclick="closeModal('vendorModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="vendor-profile">
+                <img id="vendorAvatar" src="https://ui-avatars.com/api/?name=S&background=6366f1&color=fff&size=128">
+                <div>
+                    <h2 id="modalVendorName">Vendor Name</h2>
+                    <p id="modalBusinessName">Business Name</p>
+                    <span id="modalStatus" class="status pending">Pending</span>
+                </div>
+            </div>
+
+            <h3 class="section-title">Basic Information</h3>
+            <div class="vendor-info-grid">
+                <div><label>Vendor ID</label><span id="vendorId"></span></div>
+                <div><label>Full Name</label><span id="fullName"></span></div>
+                <div><label>Email</label><span id="email"></span></div>
+                <div><label>Mobile Number</label><span id="mobileNumber"></span></div>
+                <div><label>Status</label><span id="status"></span></div>
+                <div><label>Registration Date</label><span id="registrationDate"></span></div>
+            </div>
+
+            <h3 class="section-title">Business Information</h3>
+            <div class="vendor-info-grid">
+                <div><label>Business Name</label><span id="businessName"></span></div>
+                <div><label>Store Name</label><span id="storeName"></span></div>
+                <div><label>Business Type</label><span id="businessType"></span></div>
+                <div><label>Business Category</label><span id="businessCategory"></span></div>
+                <div style="grid-column:1 / -1"><label>Business Description</label><span id="businessDescription"></span></div>
+                <div><label>GST Number</label><span id="gstNumber"></span></div>
+                <div><label>PAN Number</label><span id="panNumber"></span></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('vendorModal')">Close</button>
+            <button class="danger-btn" id="rejectVendorBtn">Reject</button>
+            <button class="primary-btn" id="approveVendorBtn">
+                Approve
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="createVendorModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-user-plus"></i>Create New Vendor</h2>
+            <button class="modal-close-btn" onclick="closeModal('createVendorModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div style="display:grid;gap:14px;">
+                <div>
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Business Name *</label>
+                    <input id="bussinessname" type="text" placeholder="e.g. Hasan Mobile World" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">First name *</label>
+                    <input id="firstName" type="text" placeholder="Owner name" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Last Name *</label>
+                    <input id="lastName" type="text" placeholder="e.g. Mishra" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Vendor Email *</label>
+                    <input id="vendorEmail" type="text" placeholder="@myStore.com" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                </div>
+                <div>
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Owner Email *</label>
+                    <input id="email1" type="email" placeholder="owner@business.com" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div>
+                        <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Phone</label>
+                        <input id="mobile" type="tel" placeholder="+91 XXXXX XXXXX" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">SubDomain *</label>
+                        <input id="subDomain" type="text" placeholder="e.g. satish." style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Plan</label>
+                        <select id="plan" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;">
+                            <option>STARTER</option>
+                            <option>Business</option>
+                            <option>Enterprise</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('createVendorModal')">Cancel</button>
+            <button class="primary-btn" onclick="createVendor()"><i class="fa-solid fa-plus"></i>Create Vendor</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     UNIFIED APPROVE / REJECT MODAL
+     Both actions use this ONE modal + ONE remarks textarea + ONE API.
+============================================================ -->
+<div class="modal-overlay" id="vendorActionModalOverlay">
+    <div class="modal">
+
+        <div class="modal-header">
+            <h2 id="vendorActionModalTitle">
+                <i class="fa-solid fa-circle-check"></i>
+                Approve Vendor
+            </h2>
+
+            <button class="modal-close-btn" onclick="closeVendorActionModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+
+            <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">
+                Remarks <span style="color:#ef4444;">*</span>
+            </label>
+
+            <textarea
+                    id="vendorActionRemarks"
+                    rows="5"
+                    style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px;color:var(--text-primary);outline:none;resize:vertical;"
+                    placeholder="Enter remarks..."></textarea>
+
+            <!-- Allow Resubmit -->
+            <div id="resubmitOption"
+                 style="display:none;margin-top:18px;padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);">
+
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+
+                    <input
+                            type="checkbox"
+                            id="allowResubmit"
+                            style="width:18px;height:18px;cursor:pointer;">
+
+                    <span style="font-size:14px;font-weight:600;color:var(--text-primary);">
+                        Allow Vendor to Resubmit Application
+                    </span>
+
+                </label>
+
+                <p style="margin:8px 0 0 28px;font-size:12px;color:var(--text-muted);line-height:1.5;">
+                    If enabled, the vendor can update the rejected application and submit it again after addressing your remarks.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeVendorActionModal()">
+                Cancel
+            </button>
+
+            <button class="primary-btn"
+                    id="vendorActionConfirmBtn"
+                    onclick="submitVendorAction()">
+                Approve
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div class="search-overlay" id="searchOverlay">
+    <div class="search-modal">
+        <div class="search-input">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="globalSearch" placeholder="Search vendors, customers, orders, subscriptions..." oninput="globalSearchFn(this.value)">
+        </div>
+        <div class="search-results" id="searchResults">
+            <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:28px;margin-bottom:10px;display:block;opacity:0.3"></i>
+                Start typing to search...
+            </div>
+        </div>
+        <div class="search-shortcut">
+            <span class="shortcut-key"><kbd>↵</kbd> to select</span>
+            <span class="shortcut-key"><kbd>Esc</kbd> to close</span>
+            <span class="shortcut-key"><kbd>⌘K</kbd> to open</span>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+    /* ============================================================
+       MOCK API DATA (used until backend endpoints are wired up)
+    ============================================================ */
+    const API = {
+      revenueData: {
+        "7": {
+          labels: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+          revenue: [5.2, 6.1, 4.8, 7.3, 8.0, 9.4, 7.8],
+          orders:  [420, 460, 390, 510, 560, 610, 540]
+        },
+        "30": {
+          labels: Array.from({length:30}, (_,i)=>`Day ${i+1}`),
+          revenue: Array.from({length:30}, ()=> +(4 + Math.random()*8).toFixed(1)),
+          orders:  Array.from({length:30}, ()=> Math.floor(300 + Math.random()*400))
+        },
+        "12": {
+          labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+          revenue: [28, 32, 30, 35, 38, 41, 39, 44, 47, 45, 48.7, 52],
+          orders:  [1800, 1950, 1890, 2100, 2250, 2400, 2300, 2550, 2700, 2650, 2381, 2900]
+        }
+      },
+      vendorGrowth: {
+        labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+        data: [42, 58, 65, 71, 80, 95, 88, 102, 118, 110, 126, 140]
+      }
+    };
+
+    const searchData = [
+      { title: "Hasan Mobile World", sub: "Vendor · Enterprise Plan", icon: "fa-store" },
+      { title: "Smart Electronics", sub: "Vendor · Business Plan", icon: "fa-store" },
+      { title: "Fresh Grocery", sub: "Vendor · Starter Plan", icon: "fa-store" },
+      { title: "Grocery Mart", sub: "Vendor · Pending Approval", icon: "fa-store" },
+      { title: "Order #ORD-58231", sub: "Order · ₹2,450 · Processing", icon: "fa-box" },
+      { title: "Order #ORD-58194", sub: "Order · ₹1,120 · Delivered", icon: "fa-box" },
+      { title: "Revenue Report - June", sub: "Report · Generated 3 hours ago", icon: "fa-file-lines" },
+      { title: "Priya Sharma", sub: "Customer · 12 Orders", icon: "fa-user" },
+      { title: "Security Alert", sub: "Notification · 1 hour ago", icon: "fa-shield-halved" },
+      { title: "Enterprise Plan", sub: "Subscription Plan · ₹24,999/mo", icon: "fa-credit-card" }
+    ];
+
+    let allVendors = [];
+
+    async function loadVendors() {
+        try {
+            const response = await fetch("/s1/v1/super/admin/getAllVendor", {
+                method: "GET",
+                credentials: "include"
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            allVendors = data.map(v => ({
+                id: v.vendorId,
+                name: v.vendorName,
+                email: v.vendorEmail,
+                business: v.businessName,
+                plan: v.subscriptionPlan.toLowerCase(),
+                status: v.status.toLowerCase(),
+                revenue: `₹${Number(v.totalRevenue).toLocaleString("en-IN")}`,
+                orders: v.totalOrders,
+                avatar: v.vendorName.split(" ").map(word => word.charAt(0)).join("").substring(0, 2)
+            }));
+
+            renderVendors(allVendors);
+
+        } catch (e) {
+            console.warn("Vendor API not reachable, using demo data instead:", e.message);
+            allVendors = getDemoVendors();
+            renderVendors(allVendors);
+        }
+    }
+
+    function getDemoVendors() {
+      return [
+        { id:1, name:"Hasan Mishra", email:"hasan@mystore.com", business:"Hasan Mobile World", plan:"enterprise", status:"active", revenue:"₹42,60,000", orders:4821, avatar:"HM" },
+        { id:2, name:"Ritu Verma", email:"ritu@smartelec.com", business:"Smart Electronics", plan:"business", status:"active", revenue:"₹28,10,000", orders:3241, avatar:"SE" },
+        { id:3, name:"Fahad Khan", email:"fahad@freshgrocery.com", business:"Fresh Grocery", plan:"starter", status:"active", revenue:"₹17,40,000", orders:2108, avatar:"FG" },
+        { id:4, name:"Grocery Mart Owner", email:"contact@grocerymart.com", business:"Grocery Mart", plan:"starter", status:"pending", revenue:"₹0", orders:0, avatar:"GM" },
+        { id:5, name:"TechZone Owner", email:"info@techzone.com", business:"TechZone Store", plan:"business", status:"pending", revenue:"₹0", orders:0, avatar:"TZ" },
+        { id:6, name:"Suspicious Store", email:"unknown@fraud.com", business:"QuickCash Deals", plan:"free", status:"suspended", revenue:"₹8,200", orders:12, avatar:"QD" }
+      ];
+    }
+
+    function renderVendors(vendors) {
+      const tbody = document.getElementById('vendorTableBody');
+      if (!vendors.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">No vendors found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = vendors.map(v => `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <img src="https://ui-avatars.com/api/?name=${v.avatar}&background=6366f1&color=fff&size=64">
+              <div><h4>${v.name}</h4><span>${v.email}</span></div>
+            </div>
+          </td>
+          <td>${v.business}</td>
+          <td><span class="plan ${v.plan}">${v.plan.charAt(0).toUpperCase()+v.plan.slice(1)}</span></td>
+          <td><span class="status ${v.status}">${v.status.charAt(0).toUpperCase()+v.status.slice(1)}</span></td>
+          <td style="font-weight:600;color:var(--text-primary)">${v.revenue}</td>
+          <td>${v.orders.toLocaleString()}</td>
+          <td>
+            <button class="action-btn" onclick="viewVendor(${v.id})">View</button>
+            ${v.status === 'pending'
+              ? `<button class="action-btn success" onclick="openVendorActionModal(${v.id},'APPROVE')">Approve</button>
+                 <button class="action-btn danger" onclick="openVendorActionModal(${v.id},'REJECT')">Reject</button>`
+              : v.status === 'active'
+              ? `<button class="action-btn danger" onclick="confirmAction('Suspend ${v.name}?', () => suspendVendor(${v.id}))">Suspend</button>`
+              : `<button class="action-btn" onclick="showToast('info','Info','Account under review')">Review</button>`
+            }
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function viewVendor(id) {
+        try {
+            const response = await fetch(`/s1/v1/super/admin/vendor/${id}`, {
+                method: "GET",
+                credentials: "include"
+            });
+
+            if (!response.ok) {
+                throw new Error("Unable to load vendor details.");
+            }
+
+            const vendor = await response.json();
+            populateVendorModal(vendor);
+            openModal("vendorModal");
+
+        } catch (e) {
+            console.warn("Vendor detail API not reachable, using demo data instead:", e.message);
+            const local = allVendors.find(v => v.id === id);
+            const demoDetail = {
+                vendorId: id,
+                fullName: local ? local.name : "Unknown Vendor",
+                businessName: local ? local.business : "Unknown Business",
+                status: local ? local.status.toUpperCase() : "PENDING",
+                email: local ? local.email : "unknown@example.com",
+                mobileNumber: "+91 98765 43210",
+                registrationDate: new Date().toISOString(),
+                storeName: local ? local.business : "Unknown Store",
+                businessType: "Retail",
+                businessCategory: "General Merchandise",
+                businessDescription: "Demo business description — connect the backend API to show real data here.",
+                gstNumber: "22AAAAA0000A1Z5",
+                panNumber: "AAAAA0000A"
+            };
+            populateVendorModal(demoDetail);
+            openModal("vendorModal");
+        }
+    }
+
+    function populateVendorModal(vendor) {
+        document.getElementById("vendorAvatar").src =
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(vendor.fullName)}&background=6366f1&color=fff&size=128`;
+        document.getElementById("modalVendorName").innerText = vendor.fullName;
+        document.getElementById("modalBusinessName").innerText = vendor.businessName;
+
+        const status = document.getElementById("modalStatus");
+        status.innerText = vendor.status;
+        status.className = "status " + vendor.status.toLowerCase();
+
+        document.getElementById("vendorId").innerText = vendor.vendorId;
+        document.getElementById("fullName").innerText = vendor.fullName;
+        document.getElementById("email").innerText = vendor.email;
+        document.getElementById("mobileNumber").innerText = vendor.mobileNumber;
+        document.getElementById("status").innerText = vendor.status;
+        document.getElementById("registrationDate").innerText = new Date(vendor.registrationDate).toLocaleString();
+
+        document.getElementById("businessName").innerText = vendor.businessName;
+        document.getElementById("storeName").innerText = vendor.storeName;
+        document.getElementById("businessType").innerText = vendor.businessType;
+        document.getElementById("businessCategory").innerText = vendor.businessCategory;
+        document.getElementById("businessDescription").innerText = vendor.businessDescription;
+        document.getElementById("gstNumber").innerText = vendor.gstNumber;
+        document.getElementById("panNumber").innerText = vendor.panNumber;
+
+        const approveBtn = document.getElementById("approveVendorBtn");
+        const rejectBtn = document.getElementById("rejectVendorBtn");
+
+        if (vendor.status === "PENDING" || vendor.status === "pending") {
+            approveBtn.style.display = "inline-flex";
+            rejectBtn.style.display = "inline-flex";
+            // Both buttons route through the SAME unified remarks modal + SAME API.
+            approveBtn.onclick = () => { closeModal("vendorModal"); openVendorActionModal(vendor.vendorId, 'APPROVE'); };
+            rejectBtn.onclick  = () => { closeModal("vendorModal"); openVendorActionModal(vendor.vendorId, 'REJECT'); };
+        } else {
+            approveBtn.style.display = "none";
+            rejectBtn.style.display = "none";
+        }
+    }
+
+    function filterVendors(q) {
+      const filtered = allVendors.filter(v =>
+        v.name.toLowerCase().includes(q.toLowerCase()) ||
+        v.business.toLowerCase().includes(q.toLowerCase()) ||
+        v.email.toLowerCase().includes(q.toLowerCase())
+      );
+      renderVendors(filtered);
+    }
+
+    function filterByStatus(status) {
+      if (status === 'all') { renderVendors(allVendors); return; }
+      renderVendors(allVendors.filter(v => v.status === status));
+    }
+
+    function suspendVendor(id) {
+      const v = allVendors.find(x => x.id === id);
+      if (v) { v.status = 'suspended'; renderVendors(allVendors); showToast('warning','Suspended',`${v.business} has been suspended.`); }
+    }
+
+    /* ============================================================
+       VENDOR APPROVE / REJECT — SINGLE UNIFIED FLOW
+       - ONE modal (#vendorActionModalOverlay)
+       - ONE remarks field (mandatory for BOTH actions)
+       - ONE API endpoint, differentiated only by the "action" field
+    ============================================================ */
+    let currentActionVendorId = null;
+    let currentActionType = null; // 'APPROVE' | 'REJECT'
+
+    function openVendorActionModal(vendorId, actionType) {
+
+    currentActionVendorId = vendorId;
+    currentActionType = actionType;
+
+    const titleEl = document.getElementById('vendorActionModalTitle');
+    const confirmBtn = document.getElementById('vendorActionConfirmBtn');
+    const remarksBox = document.getElementById('vendorActionRemarks');
+
+    const resubmitOption = document.getElementById('resubmitOption');
+    const allowResubmit = document.getElementById('allowResubmit');
+
+    remarksBox.value = '';
+    allowResubmit.checked = false;
+
+    if (actionType === 'APPROVE') {
+
+        titleEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>Approve Vendor';
+        confirmBtn.textContent = 'Approve';
+        confirmBtn.className = 'primary-btn';
+
+        // Hide resubmit option
+        resubmitOption.style.display = 'none';
+
+    } else {
+
+        titleEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>Reject Vendor';
+        confirmBtn.textContent = 'Reject';
+        confirmBtn.className = 'danger-btn';
+
+        // Show resubmit option
+        resubmitOption.style.display = 'block';
+    }
+
+    openModal('vendorActionModalOverlay');
+
+    setTimeout(() => remarksBox.focus(), 100);
+}
+
+    function closeVendorActionModal() {
+        closeModal('vendorActionModalOverlay');
+        currentActionVendorId = null;
+        currentActionType = null;
+    }
+
+   async function submitVendorAction() {
+
+    const remarks = document.getElementById('vendorActionRemarks').value.trim();
+    const allowResubmit = document.getElementById('allowResubmit')?.checked || false;
+
+    if (!remarks) {
+        showToast('warning', 'Remarks Required', 'Please enter remarks before proceeding.');
+        return;
+    }
+
+    if (!currentActionVendorId || !currentActionType) {
+        showToast('error', 'Error', 'No vendor selected.');
+        return;
+    }
+
+    const vendorId = currentActionVendorId;
+    const actionType = currentActionType; // APPROVE | REJECT
+
+    try {
+
+        showLoading(actionType === 'APPROVE'
+            ? 'Approving Vendor...'
+            : 'Rejecting Vendor...');
+
+        const response = await fetch('/vendor/s1/v1/super/admin/vendor/onboarding/decision', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                applicationId: vendorId,
+                action: actionType,
+                remarks: remarks,
+                allowResubmit: actionType === 'REJECT' ? allowResubmit : false
+            })
+        });
+
+        const result = await response.json();
+
+        hideLoading();
+
+        if (response.ok && result.success) {
+
+            closeVendorActionModal();
+
+            if (actionType === 'APPROVE') {
+
+                updateVendorStatusLocally(vendorId, 'active');
+
+                showToast(
+                    'success',
+                    'Vendor Approved!',
+                    result.message || 'Vendor approved successfully.'
+                );
+
+            } else {
+
+                removeVendorLocally(vendorId);
+
+                showToast(
+                    'error',
+                    'Vendor Rejected',
+                    result.message || 'Vendor rejected successfully.'
+                );
+            }
+
+        } else {
+
+            showToast(
+                'error',
+                actionType === 'APPROVE' ? 'Approval Failed' : 'Rejection Failed',
+                result.message || 'Something went wrong.'
+            );
+        }
+
+    } catch (e) {
+
+        hideLoading();
+
+        console.warn('Vendor action API not reachable:', e);
+
+        closeVendorActionModal();
+
+        if (actionType === 'APPROVE') {
+
+            updateVendorStatusLocally(vendorId, 'active');
+
+            showToast(
+                'success',
+                'Vendor Approved',
+                'Approved (demo mode — backend not connected).'
+            );
+
+        } else {
+
+            removeVendorLocally(vendorId);
+
+            showToast(
+                'error',
+                'Vendor Rejected',
+                'Rejected (demo mode — backend not connected).'
+            );
+        }
+    }
+}
+
+    function updateVendorStatusLocally(id, status) {
+        const v = allVendors.find(x => x.id === id);
+        if (v) { v.status = status; renderVendors(allVendors); }
+    }
+
+    function removeVendorLocally(id) {
+        allVendors = allVendors.filter(x => x.id !== id);
+        renderVendors(allVendors);
+    }
+
+    /* Simple loading overlay helpers, reusing the existing #loader element */
+    function showLoading(title = 'Loading...') {
+        const loader = document.getElementById('loader');
+        loader.querySelector('h3').textContent = title;
+        loader.classList.remove('hidden');
+    }
+    function hideLoading() {
+        document.getElementById('loader').classList.add('hidden');
+    }
+
+    async function createVendor() {
+        const vendor = {
+            businessName: document.getElementById("bussinessname").value,
+            firstName: document.getElementById("firstName").value,
+            lastName: document.getElementById("lastName").value,
+            email: document.getElementById("email1").value,
+            phone: document.getElementById("mobile").value,
+            vendorEmail: document.getElementById("vendorEmail").value,
+            subDomain: document.getElementById("subDomain").value,
+            plan: document.getElementById("plan").value
+        };
+
+        if (!vendor.businessName || !vendor.firstName || !vendor.lastName || !vendor.vendorEmail || !vendor.subDomain) {
+            showToast('warning', 'Missing Fields', 'Please fill in all required fields marked with *.');
+            return;
+        }
+
+        try {
+            const response = await fetch("/s1/v1/super/admin/createVendors", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(vendor)
+            });
+            console.log(JSON.stringify(vendor));
+
+            const result = await response.json();
+
+            if (response.ok) {
+                closeModal("createVendorModal");
+                showToast("success", "Vendor Created", result.message || "New vendor account created successfully.");
+                loadVendors();
+            } else {
+                showToast("error", "Failed", result.message || "Unable to create vendor.");
+            }
+
+        } catch (error) {
+            console.warn("Create vendor API not reachable, adding to local demo list instead:", error.message);
+            const newId = allVendors.length ? Math.max(...allVendors.map(v=>v.id)) + 1 : 1;
+            allVendors.unshift({
+                id: newId,
+                name: `${vendor.firstName} ${vendor.lastName}`,
+                email: vendor.vendorEmail,
+                business: vendor.businessName,
+                plan: vendor.plan.toLowerCase(),
+                status: 'pending',
+                revenue: '₹0',
+                orders: 0,
+                avatar: (vendor.firstName.charAt(0) + vendor.lastName.charAt(0)).toUpperCase()
+            });
+            renderVendors(allVendors);
+            closeModal("createVendorModal");
+            showToast("success", "Vendor Created", `${vendor.businessName} added (demo mode — backend not connected).`);
+        }
+    }
+
+    /* ============================================================
+       CHARTS
+    ============================================================ */
+    let revenueChart, vendorChart;
+    const chartDefaults = {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor:'#1e2740', titleColor:'#f0f4ff', bodyColor:'#8b95b0', borderColor:'rgba(255,255,255,0.07)', borderWidth:1, padding:12, cornerRadius:8 } },
+      scales: {
+        x: { grid: { color:'rgba(255,255,255,0.04)', drawBorder:false }, ticks: { color:'#4b5578', font:{ size:11 } } },
+        y: { grid: { color:'rgba(255,255,255,0.04)', drawBorder:false }, ticks: { color:'#4b5578', font:{ size:11 } } }
+      }
+    };
+
+    function buildRevenueChart(period='12') {
+      const d = API.revenueData[period];
+      const ctx = document.getElementById('revenueChart').getContext('2d');
+      const grad1 = ctx.createLinearGradient(0,0,0,300);
+      grad1.addColorStop(0,'rgba(99,102,241,0.3)'); grad1.addColorStop(1,'rgba(99,102,241,0)');
+      const grad2 = ctx.createLinearGradient(0,0,0,300);
+      grad2.addColorStop(0,'rgba(16,185,129,0.2)'); grad2.addColorStop(1,'rgba(16,185,129,0)');
+      if(revenueChart) revenueChart.destroy();
+      revenueChart = new Chart(ctx, {
+        type:'line',
+        data:{
+          labels:d.labels,
+          datasets:[
+            { label:'Revenue (L)', data:d.revenue, borderColor:'#6366f1', backgroundColor:grad1, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#6366f1', tension:0.4, fill:true },
+            { label:'Orders (×10)', data:d.orders.map(x=>x/10), borderColor:'#10b981', backgroundColor:grad2, borderWidth:2, pointRadius:3, pointBackgroundColor:'#10b981', tension:0.4, fill:true }
+          ]
+        },
+        options:{...chartDefaults}
+      });
+    }
+
+    function buildVendorChart() {
+      const d = API.vendorGrowth;
+      const ctx = document.getElementById('vendorChart').getContext('2d');
+      const grad = ctx.createLinearGradient(0,0,0,300);
+      grad.addColorStop(0,'rgba(99,102,241,0.8)'); grad.addColorStop(1,'rgba(139,92,246,0.5)');
+      if(vendorChart) vendorChart.destroy();
+      vendorChart = new Chart(ctx, {
+        type:'bar',
+        data:{
+          labels:d.labels,
+          datasets:[{ label:'Vendors', data:d.data, backgroundColor:grad, borderRadius:6, borderSkipped:false }]
+        },
+        options:{...chartDefaults}
+      });
+    }
+
+    function updateRevenueChart() {
+      const period = document.getElementById('revenuePeriod').value;
+      buildRevenueChart(period);
+    }
+
+    /* ============================================================
+       THEME TOGGLE
+    ============================================================ */
+    let isDark = true;
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+      isDark = !isDark;
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      document.getElementById('themeToggleBtn').innerHTML = isDark
+        ? '<i class="fa-solid fa-moon"></i>'
+        : '<i class="fa-solid fa-sun"></i>';
+      showToast('info','Theme', isDark ? 'Dark mode enabled' : 'Light mode enabled');
+    });
+
+    /* ============================================================
+       SIDEBAR TOGGLE
+    ============================================================ */
+    let sidebarCollapsed = false;
+    let mobileSidebarOpen = false;
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const isMobile = () => window.innerWidth <= 768;
+
+    document.getElementById('menuToggleBtn').addEventListener('click', () => {
+      if (isMobile()) {
+        mobileSidebarOpen = !mobileSidebarOpen;
+        sidebar.classList.toggle('mobile-open', mobileSidebarOpen);
+        document.getElementById('overlay').classList.toggle('show', mobileSidebarOpen);
+      } else {
+        sidebarCollapsed = !sidebarCollapsed;
+        sidebar.classList.toggle('collapsed', sidebarCollapsed);
+        mainContent.classList.toggle('expanded', sidebarCollapsed);
+      }
+    });
+
+    /* ============================================================
+       PROFILE DROPDOWN
+    ============================================================ */
+    const profileDropdown = document.getElementById('profileDropdown');
+    document.getElementById('profileBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', () => profileDropdown.classList.remove('open'));
+
+    /* ============================================================
+       NOTIFICATION DRAWER
+    ============================================================ */
+    function openDrawer() {
+      document.getElementById('notificationDrawer').classList.add('open');
+      document.getElementById('overlay').classList.add('show');
+    }
+    document.getElementById('notifBtn').addEventListener('click', openDrawer);
+    document.getElementById('closeDrawerBtn').addEventListener('click', () => {
+      document.getElementById('notificationDrawer').classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
+    });
+
+    /* ============================================================
+       OVERLAY DISMISS
+    ============================================================ */
+    document.getElementById('overlay').addEventListener('click', () => {
+      document.getElementById('notificationDrawer').classList.remove('open');
+      sidebar.classList.remove('mobile-open');
+      mobileSidebarOpen = false;
+      document.getElementById('overlay').classList.remove('show');
+    });
+
+    async function logout() {
+        try {
+            const response = await fetch('/api/super/admin/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast('success', 'Logged Out', 'Session ended. Redirecting...');
+                setTimeout(() => { window.location.href = '/login'; }, 1500);
+            } else {
+                showToast('error', 'Logout Failed', data.message || 'Unable to logout.');
+            }
+        } catch (error) {
+            console.warn("Logout API not reachable (demo mode):", error.message);
+            showToast('success', 'Logged Out', 'Session ended (demo mode).');
+        }
+    }
+
+    /* ============================================================
+       MODALS
+    ============================================================ */
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function confirmAction(msg, fn) {
+      document.getElementById('confirmMessage').textContent = msg;
+      const btn = document.getElementById('confirmActionBtn');
+      btn.onclick = () => { fn(); closeModal('confirmModal'); };
+      openModal('confirmModal');
+    }
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+      m.addEventListener('click', (e) => { if(e.target === m) m.classList.remove('open'); });
+    });
+
+    /* ============================================================
+       GLOBAL SEARCH
+    ============================================================ */
+    const searchOverlay = document.getElementById('searchOverlay');
+    const globalSearchInput = document.getElementById('globalSearch');
+
+    function openSearch() { searchOverlay.classList.add('open'); setTimeout(()=>globalSearchInput.focus(),100); }
+    function closeSearch() {
+      searchOverlay.classList.remove('open');
+      globalSearchInput.value='';
+      document.getElementById('searchResults').innerHTML='<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;"><i class="fa-solid fa-magnifying-glass" style="font-size:28px;margin-bottom:10px;display:block;opacity:0.3"></i>Start typing to search...</div>';
+    }
+
+    document.getElementById('searchTrigger').addEventListener('click', openSearch);
+    searchOverlay.addEventListener('click', (e) => { if(e.target === searchOverlay) closeSearch(); });
+
+    function globalSearchFn(q) {
+      const resultsEl = document.getElementById('searchResults');
+      if (!q) {
+        resultsEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;"><i class="fa-solid fa-magnifying-glass" style="font-size:28px;margin-bottom:10px;display:block;opacity:0.3"></i>Start typing to search...</div>';
+        return;
+      }
+      const matches = searchData.filter(x => x.title.toLowerCase().includes(q.toLowerCase()) || x.sub.toLowerCase().includes(q.toLowerCase()));
+      resultsEl.innerHTML = matches.length
+        ? matches.map(x=>`<div class="search-result-item"><i class="fa-solid ${x.icon}"></i><div><h4>${x.title}</h4><span>${x.sub}</span></div></div>`).join('')
+        : `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No results for "<strong>${q}</strong>"</div>`;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+      if (e.key === 'Escape') {
+        closeSearch();
+        document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));
+      }
+    });
+
+    /* ============================================================
+       TOAST NOTIFICATIONS
+    ============================================================ */
+    const icons = { success:'fa-circle-check', error:'fa-circle-xmark', warning:'fa-triangle-exclamation', info:'fa-circle-info' };
+    function showToast(type='info', title='', message='') {
+      const container = document.getElementById('toastContainer');
+      const id = 'toast-'+Date.now();
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.id = id;
+      el.innerHTML = `
+        <i class="fa-solid ${icons[type]}"></i>
+        <div class="toast-body"><h4>${title}</h4>${message?`<p>${message}</p>`:''}</div>
+        <button class="toast-close" onclick="dismissToast('${id}')"><i class="fa-solid fa-xmark"></i></button>
+      `;
+      container.appendChild(el);
+      setTimeout(()=>dismissToast(id), 3500);
+    }
+    function dismissToast(id) {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.classList.add('hide');
+      setTimeout(()=>el.remove(), 350);
+    }
+
+    /* ============================================================
+       KPI counter animation
+    ============================================================ */
+    function animateCounter(el, target, prefix='', suffix='') {
+      const raw = target.replace(/[^\d.]/g,'');
+      const num = parseFloat(raw);
+      if(isNaN(num)) return;
+      let start = 0; const dur = 1200; const step = 16;
+      const timer = setInterval(()=>{
+        start += (num / (dur / step));
+        if(start >= num) { start = num; clearInterval(timer); }
+        el.textContent = prefix + (Number.isInteger(num) ? Math.floor(start).toLocaleString() : start.toFixed(1)) + suffix;
+      }, step);
+    }
+
+    /* ============================================================
+       INIT
+    ============================================================ */
+    window.addEventListener('load', () => {
+      loadVendors();
+      buildRevenueChart('12');
+      buildVendorChart();
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+        showToast('success', 'Dashboard Ready', 'All systems operational.');
+      }, 900);
+
+      setTimeout(()=>{
+        animateCounter(document.getElementById('kpi-vendors'), '1284', '', '');
+        animateCounter(document.getElementById('kpi-customers'), '96845', '', '');
+        animateCounter(document.getElementById('kpi-orders'), '2381', '', '');
+      }, 1000);
+    });
+</script>
+</body>
+</html>

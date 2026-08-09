@@ -1,0 +1,13 @@
+package com.e_commerce.eCommerce.entity;
+
+public enum SubscriptionPlan {
+    FREE,
+    STARTER,
+
+    PROFESSIONAL,
+
+    BUSINESS,
+
+    ENTERPRISE
+
+}
