@@ -2419,7 +2419,7 @@ async function openQuickView(productOrId) {
             : productOrId?.productId;
 
     if (!pid) {
-<!--        console.error("Quick View: Product ID missing", productOrId);-->
+        console.error("Quick View: Product ID missing", productOrId);
 
         showToast(
             "error",
@@ -3190,7 +3190,7 @@ async function handleAddToCart(productId) {
       toast(response.message || "Added to cart", "success");
 
     } catch (error) {
-      console.error(error);
+<!--      console.error(error);-->
       toast(error.message || "Unable to add product to cart", "error");
     }
   });
