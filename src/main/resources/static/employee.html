@@ -4985,10 +4985,17 @@ async function loadFlashSale(){
 
   // success:true — data:[] is a valid, non-error response. Flows straight
   // through as an empty products array so init() hides the section.
-  const products = Array.isArray(res?.data) ? res.data : [];
+  // API shape is { data: { products, startedAt, endsAt } } — products and
+  // the countdown timestamps are nested INSIDE data, not siblings of it,
+  // and data itself is an object, not a bare array. Also tolerate a bare
+  // array in res.data (older/mock shape) for backward compatibility.
+  const dataObj = res?.data && !Array.isArray(res.data) ? res.data : null;
+  const products = dataObj
+    ? (Array.isArray(dataObj.products) ? dataObj.products : [])
+    : (Array.isArray(res?.data) ? res.data : []);
   return {
-    endsAt: res?.endsAt ?? null,
-    startedAt: res?.startedAt ?? null,
+    endsAt: dataObj?.endsAt ?? res?.endsAt ?? null,
+    startedAt: dataObj?.startedAt ?? res?.startedAt ?? null,
     products: products.map(p => ({
       ...p,
       image: getImageUrl(p.image),
