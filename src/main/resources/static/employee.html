@@ -263,6 +263,90 @@
         .section-link{font-size:14px;font-weight:600;color:var(--brand-primary);white-space:nowrap;display:flex;align-items:center;gap:4px;}
         .section-link:hover{text-decoration:underline;}
 
+        /* ---------- Shop Not Ready — full-screen notice ----------
+           Shown only when Best Sellers, Recommended For You, and New
+           Arrivals all come back with zero products. There is no dummy
+           data behind this. It's a fixed, full-viewport overlay that sits
+           above everything else on the page (including the header) and
+           is NOT dismissible — there is no close button anywhere in it,
+           by design, and the page underneath is locked from scrolling
+           while it's up. */
+        .shop-not-ready-overlay{
+          position:fixed;inset:0;z-index:3000;
+          background:
+            radial-gradient(560px 420px at 50% -8%, var(--brand-primary-light) 0%, transparent 65%),
+            var(--paper);
+          display:flex;align-items:center;justify-content:center;
+          padding:max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+          overflow-y:auto;
+        }
+        .shop-not-ready-card{
+          position:relative;
+          max-width:440px;width:100%;text-align:center;
+          max-height:100%;overflow-y:auto;
+          margin:auto;
+          background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+          padding:48px 36px 40px;box-shadow:var(--shadow-lg);
+          animation:snrRise .55s cubic-bezier(.2,.8,.2,1) both;
+        }
+        @keyframes snrRise{
+          from{opacity:0;transform:translateY(14px) scale(.98);}
+          to{opacity:1;transform:translateY(0) scale(1);}
+        }
+        .snr-icon{
+          position:relative;
+          width:76px;height:76px;border-radius:50%;margin:0 auto 22px;
+          background:var(--brand-primary-light);color:var(--brand-primary);
+          display:flex;align-items:center;justify-content:center;
+          animation:snrFloat 3.2s ease-in-out infinite;
+        }
+        .snr-icon::before{
+          content:'';position:absolute;inset:-8px;border-radius:50%;
+          border:1.5px dashed var(--brand-primary);opacity:.35;
+          animation:snrSpin 14s linear infinite;
+        }
+        .snr-icon svg{width:34px;height:34px;position:relative;z-index:1;}
+        @keyframes snrFloat{
+          0%,100%{transform:translateY(0);}
+          50%{transform:translateY(-6px);}
+        }
+        @keyframes snrSpin{to{transform:rotate(360deg);}}
+        .snr-eyebrow{
+          font-family:var(--font-mono);font-size:11.5px;font-weight:700;
+          letter-spacing:.12em;text-transform:uppercase;color:var(--brand-primary);
+          margin-bottom:10px;
+        }
+        .shop-not-ready-card h3{font-size:21px;font-weight:700;margin-bottom:10px;line-height:1.3;}
+        .shop-not-ready-card p{font-size:14px;color:var(--muted);margin:0 auto;max-width:320px;line-height:1.65;}
+        .snr-progress{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:26px;}
+        .snr-progress span{
+          width:6px;height:6px;border-radius:50%;background:var(--brand-primary);
+          opacity:.3;animation:snrDot 1.4s ease-in-out infinite;
+        }
+        .snr-progress span:nth-child(2){animation-delay:.16s;}
+        .snr-progress span:nth-child(3){animation-delay:.32s;}
+        @keyframes snrDot{0%,100%{opacity:.3;transform:scale(1);}40%{opacity:1;transform:scale(1.4);}}
+        @media (max-width:640px){
+          .shop-not-ready-card{padding:38px 24px 32px;border-radius:var(--radius-md);}
+          .snr-icon{width:64px;height:64px;margin-bottom:18px;}
+          .snr-icon svg{width:28px;height:28px;}
+          .shop-not-ready-card h3{font-size:18.5px;}
+          .shop-not-ready-card p{font-size:13.5px;max-width:270px;}
+        }
+        @media (max-width:380px){
+          .shop-not-ready-overlay{padding:16px;}
+          .shop-not-ready-card{padding:32px 18px 28px;}
+        }
+        @media (max-height:640px){
+          .shop-not-ready-card{padding:26px 24px 22px;}
+          .snr-icon{width:52px;height:52px;margin-bottom:12px;}
+          .snr-icon svg{width:24px;height:24px;}
+          .snr-eyebrow{margin-bottom:6px;}
+          .shop-not-ready-card h3{font-size:17px;margin-bottom:6px;}
+          .shop-not-ready-card p{font-size:13px;line-height:1.5;}
+          .snr-progress{margin-top:16px;}
+        }
+
         /* ---------- Rails ---------- */
         .rail{display:flex;gap:18px;overflow-x:auto;padding:4px 4px 14px;scroll-snap-type:x proximity;scrollbar-width:thin;}
         .rail::-webkit-scrollbar{height:6px;}
@@ -658,6 +742,178 @@
           .countdown{margin-left:0;}
         }
 
+        /* =====================================================================
+           MOBILE NAVIGATION — hamburger button + off-canvas drawer.
+           Categories live in .nav-categories on desktop (hidden ≤980px by
+           the rule above); on mobile they're mirrored into this drawer so
+           they're never simply unreachable.
+        ===================================================================== */
+        .hamburger-btn{
+          display:none;
+          width:40px;height:40px;border-radius:50%;border:none;background:transparent;
+          align-items:center;justify-content:center;color:var(--ink-soft);flex-shrink:0;
+          transition:background .15s;
+        }
+        .hamburger-btn:hover{background:var(--paper);}
+        .mobile-nav-overlay{
+          position:fixed;inset:0;background:rgba(20,22,31,.55);backdrop-filter:blur(2px);
+          z-index:400;opacity:0;pointer-events:none;transition:opacity .2s;
+        }
+        .mobile-nav-overlay.open{opacity:1;pointer-events:auto;}
+        .mobile-nav-drawer{
+          position:fixed;top:0;left:0;bottom:0;z-index:401;
+          width:min(320px, 84vw);background:var(--surface);
+          box-shadow:var(--shadow-lg);
+          display:flex;flex-direction:column;
+          transform:translateX(-100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);
+          padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+        }
+        .mobile-nav-drawer.open{transform:translateX(0);}
+        .mobile-nav-head{
+          display:flex;align-items:center;justify-content:space-between;gap:10px;
+          padding:16px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+        }
+        .mobile-nav-list{display:flex;flex-direction:column;padding:8px;overflow-y:auto;flex:1;}
+        .mobile-nav-list a{
+          padding:13px 12px;font-size:15px;font-weight:500;color:var(--ink-soft);
+          border-radius:10px;transition:background .12s;
+        }
+        .mobile-nav-list a:hover,.mobile-nav-list a:active{background:var(--paper);color:var(--brand-primary);}
+        .mobile-nav-foot{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0;}
+
+        /* =====================================================================
+           COMPREHENSIVE RESPONSIVE OVERHAUL — tuned for phones/tablets of
+           every size (≤980px down to ≤360px), on top of the component-level
+           breakpoints already defined above.
+        ===================================================================== */
+        @media (max-width:980px){
+          .container{padding:0 18px;}
+          .hamburger-btn{display:flex;}
+          .header-row{
+            height:auto;min-height:var(--header-h);
+            flex-wrap:wrap;gap:10px 12px;padding:10px 0;
+          }
+          .brand{order:2;font-size:17px;gap:8px;}
+          .brand-logo{width:32px;height:32px;font-size:14px;}
+          .header-icons{order:3;margin-left:auto;}
+          .search-wrap{order:4;flex-basis:100%;max-width:none;}
+          .nav-categories{display:none;}
+          .icon-btn{width:38px;height:38px;}
+          #loginNavBtn{padding:8px 14px;font-size:13px;}
+          .section{padding:34px 0;}
+          .section-title{font-size:21px;}
+        }
+
+        @media (max-width:768px){
+          .rail-card{width:200px;}
+          .product-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+          .cat-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;}
+          .cat-icon{width:44px;height:44px;font-size:19px;}
+          .review-grid{grid-template-columns:1fr;}
+          .contact-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
+        }
+
+        @media (max-width:640px){
+          .container{padding:0 16px;}
+          .hero{margin-top:10px;border-radius:var(--radius-md);}
+          .hero-title{font-size:24px;}
+          .hero-sub{font-size:13.5px;margin-bottom:18px;}
+          .hero-eyebrow{font-size:11.5px;margin-bottom:8px;}
+          .hero-dots{left:24px;bottom:14px;}
+          .section{padding:28px 0;}
+          .section-head{margin-bottom:16px;flex-wrap:wrap;}
+          .section-title{font-size:19px;}
+          .rail{gap:12px;}
+          .rail-card{width:150px;}
+          .pcard-body{padding:10px 11px 12px;}
+          .pcard-name{font-size:13px;min-height:34px;}
+          .price-now{font-size:14px;}
+          .pcard-actions{padding:0 11px 11px;}
+          .pcard-actions .btn{padding:8px 6px;font-size:11.5px;}
+          .cat-grid{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;}
+          .cat-tile{padding:12px 6px;gap:6px;}
+          .cat-icon{width:38px;height:38px;font-size:16px;}
+          .cat-tile span{font-size:11.5px;}
+          .footer-grid{grid-template-columns:1fr 1fr;gap:24px;padding:36px 0 24px;}
+          .footer-bottom{flex-direction:column;text-align:center;}
+          .about-grid img{height:180px;}
+          .newsletter{padding:26px 22px;border-radius:var(--radius-md);}
+          .newsletter h3{font-size:20px;}
+          .newsletter-form{width:100%;max-width:none;min-width:0;}
+          .listing-shell{gap:16px;padding:16px 0 40px;}
+          .filter-nav{padding:6px;}
+          .account-shell{padding:20px 0 40px;gap:16px;}
+          .account-panel{padding:18px;}
+          .cart-shell,.checkout-shell{padding:16px 0 40px;gap:16px;}
+          .cart-line img,.checkout-line-item img{width:60px;height:60px;}
+          .checkout-card{padding:16px;}
+          .checkout-steps{gap:6px;}
+          .checkout-step{font-size:11.5px;}
+          .checkout-step-sep{width:12px;}
+          .order-success-shell{margin:36px auto;padding:0 16px 40px;}
+
+          /* Modals — every modal on this page (login, auth, quick view,
+             track order, reason, review) needs its inner padding trimmed
+             on small screens or content gets squeezed unreadably. */
+          .overlay{padding:0;align-items:flex-end;}
+          .modal{
+            max-width:none;width:100%;max-height:92vh;
+            border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+          }
+          .modal-wide{max-width:none;}
+          .modal-medium{max-width:none;}
+          .track-modal{padding:22px 18px;}
+          .reason-modal{padding:24px 18px;}
+          .review-modal{padding:24px 18px;}
+          .auth-modal{padding:26px 20px;}
+          .login-popup{padding:28px 20px 22px;}
+          .qv-body{grid-template-columns:1fr;}
+          .qv-media{padding:18px;}
+          .qv-info{padding:20px 18px;}
+          .modal-close{top:12px;right:12px;}
+
+          .toast-stack{
+            left:12px;right:12px;bottom:12px;max-width:none;
+            padding-bottom:env(safe-area-inset-bottom);
+          }
+          .demo-bar{left:8px;bottom:8px;padding:6px 6px 6px 12px;font-size:11.5px;}
+        }
+
+        @media (max-width:480px){
+          .footer-grid{grid-template-columns:1fr;}
+          .product-grid{grid-template-columns:repeat(2,1fr);}
+          .cat-grid{grid-template-columns:repeat(4,1fr);}
+          .rail-card{width:130px;}
+          .flash-title{font-size:17px;}
+          .cd-box{min-width:38px;padding:5px 6px;}
+          .cd-num{font-size:15px;}
+          .brand span:not(.brand-logo){max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        }
+
+        @media (max-width:380px){
+          .container{padding:0 12px;}
+          .header-icons{gap:2px;}
+          .icon-btn{width:34px;height:34px;}
+          #loginNavBtn{padding:7px 10px;font-size:12px;}
+          .hero-slide{height:280px;padding:0 16px;}
+          .hero-title{font-size:20px;}
+          .hero-arrow{display:none;}
+          .cat-grid{grid-template-columns:repeat(3,1fr);}
+          .product-grid{grid-template-columns:1fr 1fr;gap:8px;}
+          .rail-card{width:118px;}
+          .pcard-name{font-size:12.5px;min-height:32px;}
+          .mobile-nav-drawer{width:88vw;}
+        }
+
+        /* Touch-friendly tap targets across all pointer:coarse devices,
+           regardless of viewport width (covers landscape phones/tablets
+           where width alone wouldn't trigger the breakpoints above). */
+        @media (pointer:coarse){
+          .icon-btn,.hamburger-btn,.modal-close,.qty-stepper button{min-width:38px;min-height:38px;}
+          .qa-btn{width:36px;height:36px;}
+          a,button,.cat-tile,.sugg-item{-webkit-tap-highlight-color:rgba(79,70,229,.12);}
+        }
+
     </style>
 </head>
 <body>
@@ -668,12 +924,38 @@
     <div class="page-loader-text">Loading store…</div>
 </div>
 
+<!-- ================= SHOP NOT READY (full-screen, non-dismissible) ================= -->
+<!-- Shown only when Best Sellers, Recommended For You, and New Arrivals
+     all come back empty. No dummy/mock data is ever substituted for
+     those three sections — this full-screen overlay is what shows
+     instead. There is no close button anywhere in it, by design. -->
+<div class="shop-not-ready-overlay" id="shopNotReadySection" style="display:none;">
+    <div class="shop-not-ready-card">
+        <div class="snr-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 8h12l-1 12.5a1.5 1.5 0 0 1-1.5 1.5h-7a1.5 1.5 0 0 1-1.5-1.5L6 8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M9.5 11.5v3M14.5 11.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div class="snr-eyebrow">Stocking Up</div>
+        <h3>The shop's still filling its shelves</h3>
+        <p>We're adding products and getting everything ready. Please check back shortly — it'll be worth the wait.</p>
+        <div class="snr-progress"><span></span><span></span><span></span></div>
+    </div>
+</div>
+
+
 <!-- ================= ANNOUNCEMENT BAR ================= -->
 <div class="announce-bar" id="announceBar">Loading announcements…</div>
 
 <!-- ================= HEADER ================= -->
 <header class="site-header">
     <div class="container header-row">
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileNavDrawer">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+
         <a href="#home" class="brand" id="brandBlock">
             <span class="brand-logo skeleton" id="brandLogo" style="width:38px;height:38px;"></span>
             <span id="brandName">&nbsp;</span>
@@ -709,6 +991,22 @@
         </div>
     </div>
 </header>
+
+<!-- ================= MOBILE NAV DRAWER ================= -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<div class="mobile-nav-drawer" id="mobileNavDrawer" aria-hidden="true">
+    <div class="mobile-nav-head">
+        <a href="#home" class="brand" style="font-size:17px;">
+            <span class="brand-logo" id="mobileBrandLogo" style="width:32px;height:32px;font-size:14px;"></span>
+            <span id="mobileBrandName">Menu</span>
+        </a>
+        <button class="modal-close" id="mobileNavClose" aria-label="Close menu" style="position:static;">✕</button>
+    </div>
+    <nav class="mobile-nav-list" id="mobileNavList" aria-label="Category navigation (mobile)"></nav>
+    <div class="mobile-nav-foot">
+        <button class="btn btn-primary btn-block" id="mobileLoginBtn">Login</button>
+    </div>
+</div>
 
 <main id="homeView">
     <div class="container">
@@ -1364,6 +1662,81 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
     }
 
     /* ---------------------------------------------------------------------
+       OPTIONAL HOMEPAGE SECTIONS (Flash Sale, Featured Products, ...)
+       These sections don't always have anything to show, and that's a
+       normal, valid state — not an API error. Each one keeps calling its
+       own separate existing endpoint (no shared/combined API), but they
+       all interpret the response the same way:
+
+         { success:true,  data:[] }    -> nothing to show right now.
+                                           NOT an error, NOT a fallback.
+                                           Caller hides the section.
+         { success:true,  data:[...] } -> render products, show section.
+         { success:false, ... }        -> a real API failure. Falls back
+                                           to bundled mock data, same as
+                                           every other rail on this page,
+                                           so the section still renders
+                                           something instead of an error
+                                           state.
+         (thrown/timeout)              -> treated the same as
+                                           success:false above.
+
+       There's no hasFlashSale/showFlashSale flag stored anywhere —
+       visibility is derived at render time from whether products.length
+       is > 0, straight off whatever this returns.
+    --------------------------------------------------------------------- */
+    async function loadOptionalSection(endpoint, mockCall){
+      let res;
+      try{
+        res = await apiRequest(endpoint, {}, { silentError:true });
+      }catch(e){
+        return { products: await mockCall() }; // real API failure -> fallback
+      }
+
+      if (res && res.success === false) {
+        return { products: await mockCall() }; // explicit API failure -> fallback
+      }
+
+      // success:true (or a raw array from a legacy/mock source) — an empty
+      // array here is a valid response and must NOT trigger the mock
+      // fallback or any error handling.
+      const data = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      return { products: data };
+    }
+
+    /* ---------------------------------------------------------------------
+       CORE CATALOG SECTIONS (Best Sellers, Recommended For You, New
+       Arrivals) — unlike Flash Sale / Featured, these three never fall
+       back to bundled mock/dummy data, on empty data OR on API failure.
+       Empty just means empty; the section hides. If all three end up
+       empty together, init() shows the single "shop is not ready" notice
+       instead — see shopNotReadySection.
+    --------------------------------------------------------------------- */
+    async function loadNoMockSection(endpoint){
+      let res;
+      try{
+        res = await apiRequest(endpoint, {}, { silentError:true });
+      }catch(e){
+        return { products: [] }; // no dummy fallback — treat as empty
+      }
+
+      if (res && res.success === false) {
+        return { products: [] }; // no dummy fallback — treat as empty
+      }
+
+      const data = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      return { products: data };
+    }
+
+    // Shows/hides an optional homepage section by id. Visibility is always
+    // computed from the data itself (products.length), never from a
+    // separately-tracked flag.
+    function showSection(elId, visible){
+      const el = document.getElementById(elId);
+      if (el) el.style.display = visible ? "" : "none";
+    }
+
+    /* ---------------------------------------------------------------------
        3. AUTH STATE
        isAuthenticated + AppState.user are the single source of truth,
        refreshed from the server (via /auth/me, which reads the cookie).
@@ -1719,6 +2092,9 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
         document.getElementById("brandName").textContent =
             vendor.storeName || "";
 
+        const mobileBrandNameEl = document.getElementById("mobileBrandName");
+        if (mobileBrandNameEl) mobileBrandNameEl.textContent = vendor.storeName || "Menu";
+
         document.getElementById("footerBrandName").textContent =
             vendor.storeName || "";
 
@@ -1739,7 +2115,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
         // ==========================
         const logoUrl = getImageUrl(vendor.logoUrl);
 
-        ["brandLogo", "footerLogo"].forEach(id => {
+        ["brandLogo", "footerLogo", "mobileBrandLogo"].forEach(id => {
 
             const el = document.getElementById(id);
 
@@ -1870,6 +2246,16 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
                 ${escapeHtml(c.categoryName)}
             </a>`
         ).join("");
+
+    const mobileNavListEl = document.getElementById("mobileNavList");
+    if (mobileNavListEl) {
+        mobileNavListEl.innerHTML = categories
+            .map(c =>
+                `<a href="#" data-listing="category-${c.id}" data-mobile-nav-link>
+                    ${escapeHtml(c.categoryName)}
+                </a>`
+            ).join("");
+    }
 
     document.getElementById("footerShopLinks").innerHTML = categories
         .slice(0, 5)
@@ -3249,7 +3635,41 @@ async function removeCartItem(itemId){
       hideAllViews();
       document.getElementById("homeView").style.display="block";
     }
-    document.querySelector(".brand").addEventListener("click", (e)=>{ e.preventDefault(); showHomeView(); window.scrollTo({top:0,behavior:"smooth"}); });
+    document.querySelectorAll(".brand").forEach(el=>{
+      el.addEventListener("click", (e)=>{ e.preventDefault(); showHomeView(); closeMobileNav(); window.scrollTo({top:0,behavior:"smooth"}); });
+    });
+
+    /* ---------------------------------------------------------------------
+       11b. MOBILE NAV DRAWER — hamburger-triggered off-canvas menu that
+       carries the category list (hidden by CSS on small screens from the
+       desktop nav) plus a login shortcut, so mobile users always have a
+       way to reach categories/login without the desktop header row.
+    --------------------------------------------------------------------- */
+    function openMobileNav(){
+      document.getElementById("mobileNavOverlay").classList.add("open");
+      document.getElementById("mobileNavDrawer").classList.add("open");
+      document.getElementById("mobileNavDrawer").setAttribute("aria-hidden","false");
+      document.getElementById("hamburgerBtn").setAttribute("aria-expanded","true");
+      document.body.style.overflow = "hidden";
+    }
+    function closeMobileNav(){
+      document.getElementById("mobileNavOverlay").classList.remove("open");
+      document.getElementById("mobileNavDrawer").classList.remove("open");
+      document.getElementById("mobileNavDrawer").setAttribute("aria-hidden","true");
+      document.getElementById("hamburgerBtn").setAttribute("aria-expanded","false");
+      document.body.style.overflow = "";
+    }
+    document.getElementById("hamburgerBtn").addEventListener("click", openMobileNav);
+    document.getElementById("mobileNavClose").addEventListener("click", closeMobileNav);
+    document.getElementById("mobileNavOverlay").addEventListener("click", closeMobileNav);
+    document.getElementById("mobileNavList").addEventListener("click", (e)=>{
+      if (e.target.closest("[data-mobile-nav-link]")) closeMobileNav();
+    });
+    document.getElementById("mobileLoginBtn").addEventListener("click", ()=>{
+      closeMobileNav();
+      document.getElementById("profileBtn").click();
+    });
+    document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeMobileNav(); });
 
     /* ---------------------------------------------------------------------
        12. AUTH MODAL — login / register with client-side validation
@@ -3387,6 +3807,7 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
        the visitor is signed in — the JS layer can't inspect the cookie. */
     async function updateAuthUI() {
       const btn = document.getElementById("loginNavBtn");
+      const mobileBtn = document.getElementById("mobileLoginBtn");
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
       try {
@@ -3399,12 +3820,14 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
         AppState.user = res.user || res;
         btn.textContent = "Account";
         btn.onclick = () => navigateAccount("profile");
+        if (mobileBtn) mobileBtn.textContent = "My Account";
       } catch (e) {
         clearTimeout(timeoutId);
         isAuthenticated = false;
         AppState.user = null;
         btn.textContent = "Login";
         btn.onclick = () => openAuthModal("login");
+        if (mobileBtn) mobileBtn.textContent = "Login";
       }
       // Wishlist state depends on auth state — refresh it every time
       // auth is (re)checked, so the heart icons are correct on load,
@@ -4542,6 +4965,38 @@ async function loadCustomerReviews(){
     }));
   }, mockReviews);
 }
+
+/* Flash Sale uses its own separate existing API (unchanged). No dummy/
+   mock data is ever shown for it — on empty data OR on API failure it
+   just resolves to zero products and init() hides the section. It's
+   kept separate from loadNoMockSection() only because the countdown
+   needs endsAt/startedAt alongside the product list. */
+async function loadFlashSale(){
+  let res;
+  try{
+    res = await apiRequest(API_ENDPOINTS.flashSale, {}, { silentError:true });
+  }catch(e){
+    return { endsAt:null, startedAt:null, products: [] }; // no dummy fallback — treat as empty
+  }
+
+  if (res && res.success === false) {
+    return { endsAt:null, startedAt:null, products: [] }; // no dummy fallback — treat as empty
+  }
+
+  // success:true — data:[] is a valid, non-error response. Flows straight
+  // through as an empty products array so init() hides the section.
+  const products = Array.isArray(res?.data) ? res.data : [];
+  return {
+    endsAt: res?.endsAt ?? null,
+    startedAt: res?.startedAt ?? null,
+    products: products.map(p => ({
+      ...p,
+      image: getImageUrl(p.image),
+      images: Array.isArray(p.images) ? p.images.map(getImageUrl) : [],
+    })),
+  };
+}
+
 function renderReturnSection(track){
   const statusClass = track.returnStatus === "REJECTED" ? "rejected"
                      : track.returnStatus === "COMPLETED" ? "completed"
@@ -4603,31 +5058,25 @@ function renderReturnSection(track){
         const [
           , // updateAuthUI() result unused directly — it sets isAuthenticated/AppState.user itself
           vendor, categoriesRaw, banners, reviews,
-          featuredRaw, bestSellers, recommended, newArrivals, flash,
+          featuredData, bestSellersData, recommendedData, newArrivalsData, flash,
         ] = await Promise.all([
           updateAuthUI(),
           withFallback(()=>apiRequest(API_ENDPOINTS.storeInfo, {}, { silentError:true }), mockVendorDetails),
           withFallback(()=>apiRequest(API_ENDPOINTS.categories, {}, { silentError:true }), mockCategories),
           withFallback(()=>apiRequest(API_ENDPOINTS.banners, {}, { silentError:true }), mockBanners),
-loadCustomerReviews(),
-          withFallback(()=>apiRequest(API_ENDPOINTS.featured, {}, { silentError:true }), mockFeatured),
-          withFallback(()=>apiRequest(API_ENDPOINTS.bestSellers, {}, { silentError:true }), mockBestSellers),
-          withFallback(()=>apiRequest(API_ENDPOINTS.recommended, {}, { silentError:true }), mockRecommended),
-          withFallback(()=>apiRequest(API_ENDPOINTS.newArrivals, {}, { silentError:true }), mockNewArrivals),
-
-         withFallback(async ()=>{
-  const res = await apiRequest(API_ENDPOINTS.flashSale, {}, { silentError:true });
-  const data = res && res.data ? res.data : res;
-  if (!data || !Array.isArray(data.products) || !data.products.length) throw new Error("empty flash sale");
-  // image/images relative paths (e.g. "products/cement.jpg") ko full R2 URL me convert karo
-  data.products = data.products.map(p => ({
-    ...p,
-    image: getImageUrl(p.image),
-    images: Array.isArray(p.images) ? p.images.map(getImageUrl) : []
-  }));
-  return data;
-}, mockFlashSale),
-
+          loadCustomerReviews(),
+          // Optional section: { success:true, data:[] } is a valid "nothing
+          // to show" response, not an error — see loadOptionalSection().
+          loadOptionalSection(API_ENDPOINTS.featured, mockFeatured),
+          // Core catalog sections: no dummy/mock data, ever — empty or
+          // failed just means empty. See loadNoMockSection().
+          loadNoMockSection(API_ENDPOINTS.bestSellers),
+          loadNoMockSection(API_ENDPOINTS.recommended),
+          loadNoMockSection(API_ENDPOINTS.newArrivals),
+          // Optional section, still its own separate existing Flash Sale
+          // API. No dummy/mock data — empty or failed just means empty,
+          // same rule as the three above. See loadFlashSale().
+          loadFlashSale(),
 
           loadCart(), // cart badge should reflect real state on load too, not just after a login/add-to-cart action
         ]);
@@ -4644,13 +5093,45 @@ loadCustomerReviews(),
         renderHero(toArray(banners));
         renderReviews(reviews);
 
-        renderRail("featuredRail", toArray(featuredRaw));
-        renderRail("bestSellersRail", toArray(bestSellers));
-        renderRail("recommendedRail", toArray(recommended));
-        renderRail("newArrivalsRail", toArray(newArrivals));
-        renderRail("flashSaleRail", flash.products);
-       const flashWindowMs = flash.endsAt - (flash.startedAt || (Date.now() - 1000));
-startFlashCountdown(flash.endsAt, flashWindowMs);
+        // Featured Products — optional section. Empty data just means
+        // "hide the section", not an error; nothing else on the page
+        // changes because of it.
+        const hasFeatured = featuredData.products.length > 0;
+        showSection("featuredSection", hasFeatured);
+        if (hasFeatured) renderRail("featuredRail", featuredData.products);
+
+        // Best Sellers / Recommended For You / New Arrivals — core catalog
+        // sections, no dummy data. Each hides individually when empty.
+        const hasBestSellers = bestSellersData.products.length > 0;
+        const hasRecommended = recommendedData.products.length > 0;
+        const hasNewArrivals = newArrivalsData.products.length > 0;
+        showSection("bestSellersSection", hasBestSellers);
+        showSection("recommendedSection", hasRecommended);
+        showSection("newArrivalsSection", hasNewArrivals);
+        if (hasBestSellers) renderRail("bestSellersRail", bestSellersData.products);
+        if (hasRecommended) renderRail("recommendedRail", recommendedData.products);
+        if (hasNewArrivals) renderRail("newArrivalsRail", newArrivalsData.products);
+
+        // If all three of the above come back empty together, the catalog
+        // itself has nothing yet — show the single, full-screen,
+        // non-dismissible "shop is not ready" notice over the whole page
+        // instead of three blank gaps. Scroll is locked while it's up
+        // since there's nothing behind it worth scrolling to.
+        const shopNotReady = !hasBestSellers && !hasRecommended && !hasNewArrivals;
+        showSection("shopNotReadySection", shopNotReady);
+        document.body.style.overflow = shopNotReady ? "hidden" : "";
+
+        // Flash Sale — optional section, same rule: no products means
+        // hide the section (and skip the countdown), not an error state.
+        const hasFlashSale = flash.products.length > 0;
+        showSection("flashSaleSection", hasFlashSale);
+        if (hasFlashSale) {
+          renderRail("flashSaleRail", flash.products);
+          if (flash.endsAt) {
+            const flashWindowMs = flash.endsAt - (flash.startedAt || (Date.now() - 1000));
+            startFlashCountdown(flash.endsAt, flashWindowMs);
+          }
+        }
       } finally {
         // ALWAYS hide the loader, even if something above throws
         // unexpectedly — a broken section should never leave the whole
@@ -4666,4 +5147,4 @@ startFlashCountdown(flash.endsAt, flashWindowMs);
     init();
 </script>
 </body>
-</html>
+</html>gits

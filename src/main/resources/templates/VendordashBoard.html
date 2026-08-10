@@ -5079,60 +5079,109 @@ async function saveProduct() {
 
 async function editProduct(id) {
     try {
-        const response = await fetch(`${PRODUCT_API}/${id}`, { credentials: 'include' });
+        // EDIT CLICK -> backend se product details fetch
+        const response = await fetch(
+            `/vendor/s11/v1/products/${id}`,
+            {
+                method: 'GET',
+                credentials: 'include'
+            }
+        );
 
         if (!response.ok) {
             throw new Error("Failed to fetch product");
         }
 
         const result = await response.json();
-        const product = result.data || result.product;
+
+        console.log("Edit Product Response:", result);
+
+        // ApiResponse ka data
+        const product = result.data;
 
         if (!product) {
             showToast('error', 'Products', 'Product not found.');
             return;
         }
 
+        // Editing ID save
         editingProductId = id;
         uploadedProductImageUrl = null;
 
-        document.getElementById('productModalTitle').textContent = 'Edit Product';
+        // Modal title
+        document.getElementById('productModalTitle').textContent =
+            'Edit Product';
+
         document.getElementById('saveProductBtn').innerHTML =
             '<i class="fa-solid fa-check"></i>&nbsp; Save Changes';
 
-        document.getElementById('prodName').value = product.productName || '';
-        document.getElementById('prodMrp').value = product.mrp ?? '';
-        document.getElementById('prodSellingPrice').value = product.sellingPrice ?? '';
-        document.getElementById('prodStock').value = product.stockQuantity ?? '';
-        document.getElementById('prodUnit').value = product.unit || '';
-        document.getElementById('prodStatus').value = product.status || 'ACTIVE';
-        document.getElementById('prodDesc').value = product.description || '';
-        document.getElementById('prodFeatured').checked = !!product.featured;
+        // Backend se aaye data ko fields mein fill karo
+        document.getElementById('prodName').value =
+            product.productName || '';
 
+        document.getElementById('prodMrp').value =
+            product.mrp ?? '';
+
+        document.getElementById('prodSellingPrice').value =
+            product.sellingPrice ?? '';
+
+        document.getElementById('prodStock').value =
+            product.stockQuantity ?? '';
+
+        document.getElementById('prodUnit').value =
+            product.unit || '';
+
+        document.getElementById('prodStatus').value =
+            product.status || 'ACTIVE';
+
+        document.getElementById('prodDesc').value =
+            product.description || '';
+
+        document.getElementById('prodFeatured').checked =
+            !!product.featured;
+
+        // Image
         document.getElementById('productImage').value = '';
-        document.getElementById('productImagePreview').src = product.productImage
-            ? (product.productImage.startsWith('http')
-                ? product.productImage
-                : FILE_BASE_URL + product.productImage)
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(product.productName)}&background=6366f1&color=fff`;
 
+        document.getElementById('productImagePreview').src =
+            product.productImage
+                ? (
+                    product.productImage.startsWith('http')
+                        ? product.productImage
+                        : FILE_BASE_URL + product.productImage
+                )
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    product.productName || 'Product'
+                )}&background=6366f1&color=fff`;
+
+        // Categories
         if (!categoryList.length) {
             await loadCategories();
         }
 
         populateProductCategoryDropdown(product.categoryId);
 
+        // Specifications
         productSpecValues = {};
-        renderDynamicSpecFields(product.categoryId, product.specifications || []);
 
+        renderDynamicSpecFields(
+            product.categoryId,
+            product.specifications || []
+        );
+
+        // Sab data fill hone ke baad modal open
         openModal('addProductModal');
 
     } catch (err) {
-        console.error(err);
-        showToast('error', 'Products', 'Unable to load latest product details.');
+        console.error('Edit Product Error:', err);
+
+        showToast(
+            'error',
+            'Products',
+            'Unable to load latest product details.'
+        );
     }
 }
-
 async function deleteProduct(id) {
     const product = productList.find(item => item.id === id);
     const confirmMsg = product ? `Remove ${product.productName} from catalog?` : 'Remove this product?';
