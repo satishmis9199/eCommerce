@@ -114,6 +114,72 @@
           white-space:nowrap;
         }
         .announce-bar strong{color:var(--amber);}
+        .announce-bar .announce-text{
+          display:inline-block;
+          opacity:1;
+          transition:opacity .35s ease;
+        }
+        .announce-bar .announce-text.announce-fade{opacity:0;}
+
+        /* ---------- Testing Phase Popup ---------- */
+        .testing-popup{
+          position:fixed;inset:0;
+          z-index:3000;
+          display:flex;align-items:center;justify-content:center;
+          padding:20px;
+          background:rgba(20,22,31,.6);
+          backdrop-filter:blur(3px);
+          opacity:0;pointer-events:none;
+          transition:opacity .25s ease;
+        }
+        .testing-popup.open{opacity:1;pointer-events:auto;}
+        .testing-popup-card{
+          position:relative;
+          display:flex;align-items:flex-start;gap:14px;
+          background:linear-gradient(135deg,#FFF7E8,#FFFFFF);
+          border:1.5px solid var(--amber);
+          box-shadow:var(--shadow-lg), 0 0 0 4px rgba(245,165,36,.12);
+          border-radius:var(--radius-lg);
+          padding:28px 44px 26px 24px;
+          width:100%;max-width:460px;
+          transform:scale(.94);
+          transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+        }
+        .testing-popup.open .testing-popup-card{transform:scale(1);}
+        .testing-popup-icon{font-size:32px;line-height:1;flex-shrink:0;}
+        .testing-popup-title{
+          font-family:var(--font-display);font-weight:700;font-size:16px;
+          color:var(--amber-dark);text-transform:uppercase;letter-spacing:.04em;
+          margin-bottom:6px;
+        }
+        .testing-popup-text{font-size:14px;color:var(--ink-soft);line-height:1.55;}
+        .testing-popup-text strong{color:var(--ink);}
+        .testing-popup-close{
+          position:absolute;top:14px;right:14px;
+          width:28px;height:28px;border:none;border-radius:50%;
+          background:rgba(20,22,31,.06);color:var(--ink-soft);
+          display:flex;align-items:center;justify-content:center;font-size:13px;
+        }
+        .testing-popup-close:hover{background:rgba(20,22,31,.12);}
+        .testing-popup-timer{
+          position:absolute;bottom:12px;right:16px;
+          font-size:12px;font-weight:700;color:var(--amber-dark);
+        }
+        .testing-popup-progress{
+          position:absolute;left:24px;right:24px;bottom:0;
+          height:3px;border-radius:0 0 var(--radius-lg) var(--radius-lg);
+          background:rgba(245,165,36,.18);overflow:hidden;
+        }
+        .testing-popup-progress span{
+          display:block;height:100%;width:100%;background:var(--amber);
+          transform-origin:left;transform:scaleX(1);
+        }
+        .testing-popup-progress span.ticking{
+          transition:transform 5s linear;transform:scaleX(0);
+        }
+        @media (max-width:520px){
+          .testing-popup-card{padding:24px 38px 24px 18px;}
+        }
 
         /* ---------- Header ---------- */
         .site-header{
@@ -924,6 +990,23 @@
     <div class="page-loader-text">Loading store…</div>
 </div>
 
+<!-- ================= TESTING PHASE POPUP (temporary, hardcoded) =================
+     Shows for a few seconds on every page load with a live countdown.
+     TODO: once backend has a real notice API, drive this (and the
+     announcement bar) from that instead of the hardcoded text below. -->
+<div class="testing-popup" id="testingPhasePopup" role="alert">
+    <div class="testing-popup-card">
+        <div class="testing-popup-icon">🚧</div>
+        <div class="testing-popup-body">
+            <div class="testing-popup-title">Testing Phase</div>
+            <div class="testing-popup-text">This store is currently in <strong>testing phase</strong> — orders are not being accepted yet. We'll be live very soon!</div>
+        </div>
+        <button class="testing-popup-close" id="testingPopupClose" aria-label="Close">✕</button>
+        <div class="testing-popup-timer mono" id="testingPopupTimer">5s</div>
+        <div class="testing-popup-progress"><span id="testingPopupProgressBar"></span></div>
+    </div>
+</div>
+
 <!-- ================= SHOP NOT READY (full-screen, non-dismissible) ================= -->
 <!-- Shown only when Best Sellers, Recommended For You, and New Arrivals
      all come back empty. No dummy/mock data is ever substituted for
@@ -1605,6 +1688,77 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
     // below is aborted after REQUEST_TIMEOUT_MS so withFallback() always
     // gets a result (real data or the mock fallback) within a few seconds.
     const REQUEST_TIMEOUT_MS = 5000;
+
+    /* ---------------------------------------------------------------------
+       TESTING-PHASE ANNOUNCEMENT NOTICE (temporary, hardcoded)
+       Store is currently in testing — not accepting live orders yet.
+       This rotates a few hardcoded messages in the announcement bar.
+       TODO: once backend adds a real notice/announcement API, replace
+       ANNOUNCE_MESSAGES + startAnnouncementRotation() below with a fetch
+       from that endpoint (same pattern as withFallback() used elsewhere).
+    --------------------------------------------------------------------- */
+    const ANNOUNCE_MESSAGES = [
+      `🚧 We're currently in <strong>testing phase</strong> — orders are not being accepted yet`,
+      `🎉 Launching <strong>very soon</strong> — thanks for your patience!`,
+      `Free shipping on orders over <strong>₹999</strong> · Easy 7-day returns`,
+    ];
+    const ANNOUNCE_ROTATE_MS = 4000;
+
+    function startAnnouncementRotation(el, messages = ANNOUNCE_MESSAGES, intervalMs = ANNOUNCE_ROTATE_MS){
+      if (!el || !messages.length) return;
+      let i = 0;
+      const span = document.createElement("span");
+      span.className = "announce-text";
+      span.innerHTML = messages[0];
+      el.innerHTML = "";
+      el.appendChild(span);
+      if (messages.length < 2) return; // nothing to rotate between
+      setInterval(() => {
+        span.classList.add("announce-fade");
+        setTimeout(() => {
+          i = (i + 1) % messages.length;
+          span.innerHTML = messages[i];
+          span.classList.remove("announce-fade");
+        }, 350); // matches CSS transition duration
+      }, intervalMs);
+    }
+
+    /* Shows the testing-phase popup for TESTING_POPUP_SECONDS on every
+       page load, with a live countdown + shrinking progress bar. Closes
+       automatically, or immediately if the user taps the ✕. */
+    const TESTING_POPUP_SECONDS = 5;
+    function showTestingPhasePopup(){
+      const popup = document.getElementById("testingPhasePopup");
+      if (!popup) return;
+      const timerEl = document.getElementById("testingPopupTimer");
+      const bar = document.getElementById("testingPopupProgressBar");
+      const closeBtn = document.getElementById("testingPopupClose");
+
+      let secondsLeft = TESTING_POPUP_SECONDS;
+      timerEl.textContent = `${secondsLeft}s`;
+      popup.classList.add("open");
+
+      // kick off the progress-bar shrink animation on the next frame so
+      // the CSS transition actually runs from full width
+      requestAnimationFrame(()=> requestAnimationFrame(()=> bar.classList.add("ticking")));
+
+      const tickId = setInterval(()=>{
+        secondsLeft -= 1;
+        if (secondsLeft <= 0){
+          clearInterval(tickId);
+          closePopup();
+          return;
+        }
+        timerEl.textContent = `${secondsLeft}s`;
+      }, 1000);
+
+      function closePopup(){
+        clearInterval(tickId);
+        popup.classList.remove("open");
+      }
+      closeBtn.onclick = closePopup;
+      popup.onclick = (e)=>{ if (e.target === popup) closePopup(); };
+    }
 
     async function apiRequest(url, options = {}, { retries = 0, silentError = false } = {}) {
       const headers = {
@@ -2448,61 +2602,57 @@ async function openQuickView(productOrId) {
     // ---------------------------------------------------------
     // 3. LOAD PRODUCT DETAILS
     // ---------------------------------------------------------
-    const product = await withFallback(
+    let product;
+    try {
 
-        async () => {
-
-            const res = await apiRequest(
-                API_ENDPOINTS.productDetails(pid),
-                {},
-                {
-                    silentError: true
-                }
-            );
-
-            console.log(
-                "Product Details API Response:",
-                res
-            );
-
-            // Backend:
-            //
-            // {
-            //    data: {...},
-            //    message: "...",
-            //    success: true
-            // }
-
-            const data =
-                res && res.data
-                    ? res.data
-                    : res;
-
-            if (
-                !data ||
-                (!data.productId && !data.id)
-            ) {
-                throw new Error(
-                    "Product details response is empty"
-                );
+        const res = await apiRequest(
+            API_ENDPOINTS.productDetails(pid),
+            {},
+            {
+                silentError: true
             }
+        );
 
-            return data;
-        },
+        console.log(
+            "Product Details API Response:",
+            res
+        );
 
-        () => {
+        // Backend:
+        //
+        // {
+        //    data: {...},
+        //    message: "...",
+        //    success: true
+        // }
 
-            // Existing object hai to fallback mein use karo
-            if (
-                typeof productOrId === "object" &&
-                productOrId !== null
-            ) {
-                return Promise.resolve(productOrId);
-            }
+        const data =
+            res && res.data
+                ? res.data
+                : res;
 
-            return mockProductDetails(pid);
+        if (
+            !data ||
+            (!data.productId && !data.id)
+        ) {
+            throw new Error(
+                "Product details response is empty"
+            );
         }
-    );
+
+        product = data;
+
+    } catch (e) {
+        // No mock fallback — if we already had the product object passed
+        // in (e.g. from a product card click), use that; otherwise show
+        // an error state instead of dummy data.
+        if (typeof productOrId === "object" && productOrId !== null) {
+            product = productOrId;
+        } else {
+            quickViewBody.innerHTML = `<p style="padding:40px;text-align:center;color:var(--muted);grid-column:1/-1;">Couldn't load this product right now. Please try again.</p>`;
+            return;
+        }
+    }
 
     // ---------------------------------------------------------
     // 4. SAVE CURRENT PRODUCT
@@ -2522,10 +2672,9 @@ async function openQuickView(productOrId) {
     // ---------------------------------------------------------
     // 6. RELATED PRODUCTS
     // ---------------------------------------------------------
-    withFallback(
+    (async () => {
 
-        async () => {
-
+        try {
             const res = await apiRequest(
                 API_ENDPOINTS.relatedProducts(pid),
                 {},
@@ -2543,25 +2692,22 @@ async function openQuickView(productOrId) {
                 !Array.isArray(data) ||
                 !data.length
             ) {
-                throw new Error(
-                    "No related products"
-                );
+                return []; // no dummy fallback — treat as empty, section hides
             }
 
             return data;
-        },
+        } catch (e) {
+            return []; // no dummy fallback — treat as empty, section hides
+        }
 
-        () => mockRelatedProducts(pid)
-
-    ).then(renderQuickViewRelated);
+    })().then(renderQuickViewRelated);
 
     // ---------------------------------------------------------
     // 7. REVIEWS
     // ---------------------------------------------------------
-    withFallback(
+    (async () => {
 
-        async () => {
-
+        try {
             const res = await apiRequest(
                 API_ENDPOINTS.reviews(pid),
                 {},
@@ -2579,17 +2725,15 @@ async function openQuickView(productOrId) {
                 !Array.isArray(data) ||
                 !data.length
             ) {
-                throw new Error(
-                    "No reviews"
-                );
+                return []; // no dummy fallback — treat as empty, section hides
             }
 
             return data;
-        },
+        } catch (e) {
+            return []; // no dummy fallback — treat as empty, section hides
+        }
 
-        () => mockProductReviews(pid)
-
-    ).then(renderQuickViewReviews);
+    })().then(renderQuickViewReviews);
 }
 
 
@@ -5092,7 +5236,7 @@ function renderReturnSection(track){
         applyVendorTheme(vendor);
         renderBrandBlock(vendor);
         renderContact(getContactData(vendor));
-        announceEl.innerHTML = `Free shipping on orders over <strong>₹999</strong> · Easy 7-day returns`;
+        startAnnouncementRotation(announceEl);
 
         const categories = toArray(categoriesRaw);
         renderNavCategories(categories);
@@ -5151,6 +5295,7 @@ function renderReturnSection(track){
       }
     }
 
+    showTestingPhasePopup();
     init();
 </script>
 </body>
