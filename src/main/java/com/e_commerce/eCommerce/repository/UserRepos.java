@@ -75,4 +75,6 @@ AND u.id IN :userIds
             @Param("tenantId") String tenantId,
             @Param("userIds") List<Long> userIds
     );
+
+    User findByTenantIdAndId(String tenantId, Long userId);
 }

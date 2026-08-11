@@ -555,6 +555,7 @@
                     </a>
                 </li>
                 <li data-page="banners"><a href="#"><i class="fa-solid fa-images"></i><span>Banners</span></a></li>
+                <li data-page="notices"><a href="#"><i class="fa-solid fa-bullhorn"></i><span>Notices</span></a></li>
                 <li data-page="flashsales"><a href="#"><i class="fa-solid fa-bolt"></i><span>Flash Sales</span><span class="badge-pill" id="flashSalesBadge" style="background:var(--orange);">0</span></a></li>
                 <li data-page="upload"><a href="#"><i class="fa-solid fa-file-arrow-up"></i><span>Bulk Upload</span></a></li>
                 <li data-page="payouts"><a href="#"><i class="fa-solid fa-wallet"></i><span>Payouts</span></a></li>
@@ -857,6 +858,39 @@
                         <table>
                             <thead><tr><th style="width:60px;">#</th><th style="width:110px;">Image</th><th>Title</th><th>Order</th><th>Schedule</th><th>Status</th><th style="width:180px;">Actions</th></tr></thead>
                             <tbody id="bannerTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= NOTICES ================= -->
+            <section class="page-section" id="page-notices">
+                <div class="section-header fade-up">
+                    <div>
+                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Notices</span></div>
+                        <h1>Notices</h1>
+                        <p>Manage the announcement bar and popup notices shown to customers.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="primary-btn" onclick="openAddNoticeModal()"><i class="fa-solid fa-plus"></i>Add Notice</button>
+                    </div>
+                </div>
+                <div class="table-card fade-up fade-up-1">
+                    <div class="card-header"><div><h2>All Notices</h2><p id="noticesCount">Loading...</p></div></div>
+                    <div class="table-actions">
+                        <input type="text" id="noticeSearchInput" placeholder="Search notices..." oninput="filterNotices(this.value)">
+                        <select id="noticeStatusFilter" onchange="filterNoticesByStatus(this.value)">
+                            <option value="all">All Status</option>
+                            <option value="live">Live</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="ended">Ended</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th style="width:60px;">#</th><th>Title / Text</th><th>Location</th><th>Type</th><th>Priority</th><th>Schedule</th><th>Status</th><th style="width:180px;">Actions</th></tr></thead>
+                            <tbody id="noticeTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1553,6 +1587,82 @@
         <div class="modal-footer">
             <button class="secondary-btn" onclick="closeModal('bannerModal')">Cancel</button>
             <button class="primary-btn" id="saveBannerBtn" onclick="saveBanner()"><i class="fa-solid fa-plus"></i>&nbsp; Add Banner</button>
+        </div>
+    </div>
+</div>
+<!-- Create/Edit Notice Modal -->
+<div class="modal-overlay" id="noticeModal">
+    <div class="modal large">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-bullhorn"></i><span id="noticeModalTitle">Add Notice</span></h2>
+            <button class="modal-close-btn" onclick="closeModal('noticeModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Title <small style="color:var(--text-muted);">(used by the popup heading; optional for a bar-only notice)</small></label>
+                <input id="noticeTitle" type="text" maxlength="150" placeholder="e.g. Testing Phase">
+            </div>
+
+            <div class="form-group">
+                <label>Notice Text <span style="color:red;">*</span></label>
+                <textarea id="noticeText" rows="3" maxlength="500" placeholder="This store is currently in testing — orders are not yet accepted."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Display Location</label>
+                    <select id="noticeDisplayLocation">
+                        <option value="BOTH">Announcement Bar + Popup</option>
+                        <option value="ANNOUNCEMENT_BAR">Announcement Bar Only</option>
+                        <option value="POPUP">Popup Only</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="noticeType">
+                        <option value="INFO">Info</option>
+                        <option value="WARNING">Warning</option>
+                        <option value="PROMO">Promo</option>
+                        <option value="SUCCESS">Success</option>
+                        <option value="ERROR">Error</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Priority</label>
+                    <input id="noticePriority" type="number" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Popup Duration (seconds)</label>
+                    <input id="noticePopupDuration" type="number" value="5" min="1">
+                </div>
+            </div>
+
+            <div class="section-title">Schedule</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date & Time</label>
+                    <input id="noticeStartAt" type="datetime-local">
+                </div>
+                <div class="form-group">
+                    <label>End Date & Time</label>
+                    <input id="noticeEndAt" type="datetime-local">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Status</label>
+                <select id="noticeStatus">
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive (Draft)</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('noticeModal')">Cancel</button>
+            <button class="primary-btn" id="saveNoticeBtn" onclick="saveNotice()"><i class="fa-solid fa-plus"></i>&nbsp; Add Notice</button>
         </div>
     </div>
 </div>
@@ -2333,6 +2443,280 @@ async function changeBannerStatus(id) {
     } catch (error) {
         console.error(error);
         showToast('error', 'Banner', 'Something went wrong while updating banner status.');
+    }
+}
+
+/* ============================================================
+   NOTICES
+============================================================ */
+const NOTICE_API = '/vendor/s11/v1/notice';
+
+let noticeList = [];
+let editingNoticeId = null;
+
+const noticeTypeLabels = { INFO: 'Info', WARNING: 'Warning', PROMO: 'Promo', SUCCESS: 'Success', ERROR: 'Error' };
+const noticeLocationLabels = { BOTH: 'Bar + Popup', ANNOUNCEMENT_BAR: 'Bar Only', POPUP: 'Popup Only' };
+
+function computeNoticeState(notice) {
+    if (notice.status !== 'ACTIVE') return 'inactive';
+    const now = new Date();
+    if (notice.startAt && now < new Date(notice.startAt)) return 'upcoming';
+    if (notice.endAt && now > new Date(notice.endAt)) return 'ended';
+    return 'live';
+}
+function noticeStateLabel(state) {
+    return { live: 'Live', upcoming: 'Upcoming', ended: 'Ended', inactive: 'Inactive' }[state] || state;
+}
+
+async function loadNotices() {
+    try {
+        const response = await fetch(NOTICE_API, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast('error', 'Notices', result.message || 'Unable to load notices.');
+            return;
+        }
+
+        noticeList = result.data || result.notices || [];
+        renderNotices(noticeList);
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Notices', 'Something went wrong while loading notices.');
+    }
+}
+
+function renderNotices(list = noticeList) {
+    const tbody = document.getElementById('noticeTableBody');
+    document.getElementById('noticesCount').textContent = `${list.length} notice(s) found`;
+
+    if (!list.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="padding:60px;text-align:center;">
+                    <i class="fa-solid fa-bullhorn" style="font-size:55px;color:#94a3b8;margin-bottom:15px;"></i>
+                    <h3 style="margin-bottom:10px;color:var(--text-primary);">No Notices Yet</h3>
+                    <p style="color:var(--text-muted);margin-bottom:20px;">Create a notice to show on your storefront's announcement bar or popup.</p>
+                    <button class="primary-btn" onclick="openAddNoticeModal()"><i class="fa-solid fa-plus"></i>Add Notice</button>
+                </td>
+            </tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((n, index) => {
+        const state = computeNoticeState(n);
+        const schedule = n.startAt || n.endAt
+            ? `${n.startAt ? formatDateTime(n.startAt) : 'Now'} → ${n.endAt ? formatDateTime(n.endAt) : 'No end'}`
+            : 'Always on';
+
+        return `<tr>
+            <td>${index + 1}</td>
+            <td>
+                <div style="display:flex;flex-direction:column;max-width:280px;">
+                    ${n.title ? `<span style="font-weight:600;color:var(--text-primary);">${escapeHtml(n.title)}</span>` : ''}
+                    <small style="color:var(--text-muted);margin-top:3px;white-space:normal;">${escapeHtml(n.noticeText)}</small>
+                </div>
+            </td>
+            <td>${noticeLocationLabels[n.displayLocation] || n.displayLocation || ''}</td>
+            <td>${noticeTypeLabels[n.type] || n.type || ''}</td>
+            <td>${n.priority ?? 0}</td>
+            <td style="font-size:12px;">${schedule}</td>
+            <td><span class="status ${state}">${noticeStateLabel(state)}</span></td>
+            <td>
+                <button class="action-btn" title="Edit Notice" onclick="editNotice(${n.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="action-btn success" title="Toggle Active/Inactive" onclick="changeNoticeStatus(${n.id})"><i class="fa-solid fa-power-off"></i></button>
+                <button class="action-btn danger" title="Delete Notice" onclick="deleteNotice(${n.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function filterNotices(q) {
+    const query = q.toLowerCase();
+    renderNotices(noticeList.filter(n =>
+        (n.title || '').toLowerCase().includes(query) || (n.noticeText || '').toLowerCase().includes(query)
+    ));
+}
+function filterNoticesByStatus(s) {
+    if (s === 'all') { renderNotices(noticeList); return; }
+    renderNotices(noticeList.filter(n => computeNoticeState(n) === s));
+}
+
+function openAddNoticeModal() {
+    editingNoticeId = null;
+
+    document.getElementById('noticeModalTitle').textContent = 'Add Notice';
+    document.getElementById('saveNoticeBtn').innerHTML = '<i class="fa-solid fa-plus"></i>&nbsp; Add Notice';
+
+    document.getElementById('noticeTitle').value = '';
+    document.getElementById('noticeText').value = '';
+    document.getElementById('noticeDisplayLocation').value = 'BOTH';
+    document.getElementById('noticeType').value = 'INFO';
+    document.getElementById('noticePriority').value = '0';
+    document.getElementById('noticePopupDuration').value = '5';
+    document.getElementById('noticeStartAt').value = '';
+    document.getElementById('noticeEndAt').value = '';
+    document.getElementById('noticeStatus').value = 'ACTIVE';
+
+    openModal('noticeModal');
+}
+
+async function saveNotice() {
+    const title = document.getElementById('noticeTitle').value.trim();
+    const noticeText = document.getElementById('noticeText').value.trim();
+    const startAt = document.getElementById('noticeStartAt').value;
+    const endAt = document.getElementById('noticeEndAt').value;
+
+    if (!noticeText) {
+        showToast('warning', 'Validation', 'Notice text is required.');
+        return;
+    }
+    if (startAt && endAt && new Date(endAt) <= new Date(startAt)) {
+        showToast('warning', 'Validation', 'End date must be after the start date.');
+        return;
+    }
+
+    const request = {
+        title: title || null,
+        noticeText,
+        displayLocation: document.getElementById('noticeDisplayLocation').value,
+        type: document.getElementById('noticeType').value,
+        priority: Number(document.getElementById('noticePriority').value) || 0,
+        popupDurationSeconds: Number(document.getElementById('noticePopupDuration').value) || 5,
+        startAt: startAt || null,
+        endAt: endAt || null,
+        status: document.getElementById('noticeStatus').value,
+    };
+
+    let url = NOTICE_API;
+    let method = 'POST';
+    if (editingNoticeId !== null) {
+        url = NOTICE_API + '/' + editingNoticeId;
+        method = 'PUT';
+    }
+
+    const saveBtn = document.getElementById('saveNoticeBtn');
+    const originalHtml = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Saving...';
+
+    try {
+        const response = await fetch(url, {
+            method,
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request)
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast('error', 'Notice', result.message || 'Unable to save notice.');
+            return;
+        }
+
+        showToast('success', 'Notice', result.message || 'Notice saved successfully.');
+        closeModal('noticeModal');
+        loadNotices();
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Notice', 'Something went wrong.');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalHtml;
+    }
+}
+
+function toNoticeDatetimeLocal(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function editNotice(id) {
+    const n = noticeList.find(item => item.id === id);
+    if (!n) {
+        showToast('error', 'Notice', 'Notice not found.');
+        return;
+    }
+
+    editingNoticeId = id;
+
+    document.getElementById('noticeModalTitle').textContent = 'Edit Notice';
+    document.getElementById('saveNoticeBtn').innerHTML = '<i class="fa-solid fa-check"></i>&nbsp; Save Changes';
+
+    document.getElementById('noticeTitle').value = n.title || '';
+    document.getElementById('noticeText').value = n.noticeText || '';
+    document.getElementById('noticeDisplayLocation').value = n.displayLocation || 'BOTH';
+    document.getElementById('noticeType').value = n.type || 'INFO';
+    document.getElementById('noticePriority').value = n.priority ?? 0;
+    document.getElementById('noticePopupDuration').value = n.popupDurationSeconds ?? 5;
+    document.getElementById('noticeStartAt').value = toNoticeDatetimeLocal(n.startAt);
+    document.getElementById('noticeEndAt').value = toNoticeDatetimeLocal(n.endAt);
+    document.getElementById('noticeStatus').value = n.status || 'ACTIVE';
+
+    openModal('noticeModal');
+}
+
+function deleteNotice(id) {
+    const n = noticeList.find(item => item.id === id);
+    const confirmMsg = n ? `Delete notice "${n.title || n.noticeText}"?` : 'Delete this notice?';
+
+    confirmAction(confirmMsg, async () => {
+        try {
+            const response = await fetch(NOTICE_API + '/' + id, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                showToast('error', 'Notice', result.message || 'Unable to delete notice.');
+                return;
+            }
+
+            showToast('success', 'Notice', result.message || 'Notice deleted successfully.');
+            loadNotices();
+        } catch (error) {
+            console.error(error);
+            showToast('error', 'Notice', 'Something went wrong while deleting the notice.');
+        }
+    });
+}
+
+async function changeNoticeStatus(id) {
+    const n = noticeList.find(item => item.id === id);
+    if (!n) {
+        showToast('error', 'Notice', 'Notice not found.');
+        return;
+    }
+    const newStatus = n.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+
+    try {
+        const response = await fetch(NOTICE_API + '/status', {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status: newStatus })
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast('error', 'Notice', result.message || 'Unable to update notice status.');
+            return;
+        }
+
+        showToast('success', 'Notice', result.message || 'Notice status updated.');
+        loadNotices();
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Notice', 'Something went wrong while updating notice status.');
     }
 }
 
@@ -4173,6 +4557,10 @@ async function uploadCategoryImage(file) {
 if (page === 'banners' && bannerList.length === 0) {   // ← ye naya add karo
     loadBanners();
 }
+
+    if (page === 'notices' && noticeList.length === 0) {
+        loadNotices();
+    }
 
     if (page === 'reviews') {
         loadReviews();

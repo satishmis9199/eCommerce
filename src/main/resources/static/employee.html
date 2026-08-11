@@ -120,6 +120,13 @@
           transition:opacity .35s ease;
         }
         .announce-bar .announce-text.announce-fade{opacity:0;}
+        /* NoticeType-driven bar colors (WARNING / INFO / PROMO / SUCCESS / ERROR) */
+        .announce-bar[data-notice-type="WARNING"]{background:var(--amber-dark);}
+        .announce-bar[data-notice-type="INFO"]{background:var(--brand-primary-dark);}
+        .announce-bar[data-notice-type="PROMO"]{background:linear-gradient(90deg,#7C3AED,#C026D3);}
+        .announce-bar[data-notice-type="SUCCESS"]{background:var(--success);}
+        .announce-bar[data-notice-type="ERROR"]{background:var(--danger);}
+        .announce-bar .announce-icon{flex-shrink:0;}
 
         /* ---------- Testing Phase Popup ---------- */
         .testing-popup{
@@ -177,6 +184,30 @@
         .testing-popup-progress span.ticking{
           transition:transform 5s linear;transform:scaleX(0);
         }
+        /* NoticeType-driven popup theming (WARNING is the default amber look above) */
+        .testing-popup-card[data-notice-type="INFO"]{background:linear-gradient(135deg,#EEF0FE,#FFFFFF);border-color:var(--brand-primary);box-shadow:var(--shadow-lg), 0 0 0 4px var(--brand-primary-light);}
+        .testing-popup-card[data-notice-type="INFO"] .testing-popup-title{color:var(--brand-primary-dark);}
+        .testing-popup-card[data-notice-type="INFO"] .testing-popup-timer{color:var(--brand-primary-dark);}
+        .testing-popup-card[data-notice-type="INFO"] .testing-popup-progress{background:var(--brand-primary-light);}
+        .testing-popup-card[data-notice-type="INFO"] .testing-popup-progress span{background:var(--brand-primary);}
+
+        .testing-popup-card[data-notice-type="PROMO"]{background:linear-gradient(135deg,#F5E8FF,#FFFFFF);border-color:#A855F7;box-shadow:var(--shadow-lg), 0 0 0 4px rgba(168,85,247,.14);}
+        .testing-popup-card[data-notice-type="PROMO"] .testing-popup-title{color:#7C3AED;}
+        .testing-popup-card[data-notice-type="PROMO"] .testing-popup-timer{color:#7C3AED;}
+        .testing-popup-card[data-notice-type="PROMO"] .testing-popup-progress{background:rgba(168,85,247,.18);}
+        .testing-popup-card[data-notice-type="PROMO"] .testing-popup-progress span{background:#A855F7;}
+
+        .testing-popup-card[data-notice-type="SUCCESS"]{background:linear-gradient(135deg,var(--success-bg),#FFFFFF);border-color:var(--success);box-shadow:var(--shadow-lg), 0 0 0 4px rgba(22,163,74,.12);}
+        .testing-popup-card[data-notice-type="SUCCESS"] .testing-popup-title{color:var(--success);}
+        .testing-popup-card[data-notice-type="SUCCESS"] .testing-popup-timer{color:var(--success);}
+        .testing-popup-card[data-notice-type="SUCCESS"] .testing-popup-progress{background:var(--success-bg);}
+        .testing-popup-card[data-notice-type="SUCCESS"] .testing-popup-progress span{background:var(--success);}
+
+        .testing-popup-card[data-notice-type="ERROR"]{background:linear-gradient(135deg,var(--danger-bg),#FFFFFF);border-color:var(--danger);box-shadow:var(--shadow-lg), 0 0 0 4px rgba(220,38,38,.12);}
+        .testing-popup-card[data-notice-type="ERROR"] .testing-popup-title{color:var(--danger);}
+        .testing-popup-card[data-notice-type="ERROR"] .testing-popup-timer{color:var(--danger);}
+        .testing-popup-card[data-notice-type="ERROR"] .testing-popup-progress{background:var(--danger-bg);}
+        .testing-popup-card[data-notice-type="ERROR"] .testing-popup-progress span{background:var(--danger);}
         @media (max-width:520px){
           .testing-popup-card{padding:24px 38px 24px 18px;}
         }
@@ -1607,6 +1638,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       banners:               `${API_BASE}/users/home/banners`,
       categories:            `${API_BASE}/catalog/categories`,
       customerReviews:       `${API_BASE}/store/reviews`,   // <-- naya endpoint
+      notices:               `${API_BASE}/notices/active`, // announcement bar + testing-phase popup
 
       featured:              `${API_BASE}/products/featured`,
       bestSellers:           `${API_BASE}/products/best-sellers`,
@@ -1690,51 +1722,115 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
     const REQUEST_TIMEOUT_MS = 5000;
 
     /* ---------------------------------------------------------------------
-       TESTING-PHASE ANNOUNCEMENT NOTICE (temporary, hardcoded)
-       Store is currently in testing — not accepting live orders yet.
-       This rotates a few hardcoded messages in the announcement bar.
-       TODO: once backend adds a real notice/announcement API, replace
-       ANNOUNCE_MESSAGES + startAnnouncementRotation() below with a fetch
-       from that endpoint (same pattern as withFallback() used elsewhere).
+       NOTICES (announcement bar + testing-phase popup) — backed by the
+       Notice entity/API (com.e_commerce.eCommerce.enums.NoticeType:
+       WARNING / INFO / PROMO / SUCCESS / ERROR). Every notice row has a
+       displayLocation (ANNOUNCEMENT_BAR / POPUP / BOTH) that decides
+       where it renders:
+         - ANNOUNCEMENT_BAR or BOTH -> rotates through the top bar
+         - POPUP or BOTH (with a title) -> the highest-priority one opens
+           as the testing-phase-style modal popup
+       NO MOCK DATA: exactly like Best Sellers / Recommended / New
+       Arrivals, an unreachable API or an empty response just means "no
+       active notices right now" — the bar and popup both stay hidden.
+       Nothing hardcoded is ever substituted in their place.
     --------------------------------------------------------------------- */
-    const ANNOUNCE_MESSAGES = [
-      `🚧 We're currently in <strong>testing phase</strong> — orders are not being accepted yet`,
-      `🎉 Launching <strong>very soon</strong> — thanks for your patience!`,
-      `Free shipping on orders over <strong>₹999</strong> · Easy 7-day returns`,
-    ];
     const ANNOUNCE_ROTATE_MS = 4000;
 
-    function startAnnouncementRotation(el, messages = ANNOUNCE_MESSAGES, intervalMs = ANNOUNCE_ROTATE_MS){
-      if (!el || !messages.length) return;
+    // type -> { icon, label } used to theme the bar/popup via
+    // data-notice-type="WARNING|INFO|PROMO|SUCCESS|ERROR" (see CSS).
+    // Falls back to INFO styling for any type value we don't recognize.
+    const NOTICE_TYPE_META = {
+      WARNING: { icon: "⚠️" },
+      INFO:    { icon: "ℹ️" },
+      PROMO:   { icon: "🎉" },
+      SUCCESS: { icon: "✅" },
+      ERROR:   { icon: "⛔" },
+    };
+    function noticeTypeMeta(type){
+      return NOTICE_TYPE_META[(type || "").toUpperCase()] || NOTICE_TYPE_META.INFO;
+    }
+
+    // Fetches active notices from the backend. No mock fallback — on
+    // failure, or an explicit { success:false }, or an empty array, this
+    // resolves to [] and the caller hides the bar/popup, same rule as
+    // loadNoMockSection() elsewhere on this page.
+    async function loadNotices(){
+      let res;
+      try{
+        res = await apiRequest(API_ENDPOINTS.notices, {}, { silentError: true });
+      }catch(e){
+        return [];
+      }
+      if (res && res.success === false) return [];
+      const data = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      return data;
+    }
+
+    function startAnnouncementRotation(el, notices = [], intervalMs = ANNOUNCE_ROTATE_MS){
+      if (!el) return;
+      const items = notices
+        .filter(n => n.displayLocation === "ANNOUNCEMENT_BAR" || n.displayLocation === "BOTH")
+        .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+      if (!items.length) { el.style.display = "none"; return; }
+
+      el.style.display = "";
       let i = 0;
-      const span = document.createElement("span");
-      span.className = "announce-text";
-      span.innerHTML = messages[0];
+      const iconSpan = document.createElement("span");
+      iconSpan.className = "announce-icon";
+      const textSpan = document.createElement("span");
+      textSpan.className = "announce-text";
+
+      function paint(n){
+        el.setAttribute("data-notice-type", (n.type || "INFO").toUpperCase());
+        iconSpan.textContent = noticeTypeMeta(n.type).icon;
+        textSpan.innerHTML = n.noticeText;
+      }
+
+      paint(items[0]);
       el.innerHTML = "";
-      el.appendChild(span);
-      if (messages.length < 2) return; // nothing to rotate between
+      el.appendChild(iconSpan);
+      el.appendChild(textSpan);
+      if (items.length < 2) return; // nothing to rotate between
       setInterval(() => {
-        span.classList.add("announce-fade");
+        textSpan.classList.add("announce-fade");
         setTimeout(() => {
-          i = (i + 1) % messages.length;
-          span.innerHTML = messages[i];
-          span.classList.remove("announce-fade");
+          i = (i + 1) % items.length;
+          paint(items[i]);
+          textSpan.classList.remove("announce-fade");
         }, 350); // matches CSS transition duration
       }, intervalMs);
     }
 
-    /* Shows the testing-phase popup for TESTING_POPUP_SECONDS on every
-       page load, with a live countdown + shrinking progress bar. Closes
-       automatically, or immediately if the user taps the ✕. */
-    const TESTING_POPUP_SECONDS = 5;
-    function showTestingPhasePopup(){
+    /* Shows the highest-priority POPUP/BOTH notice (that has a title) as
+       a modal for that notice's popupDurationSeconds, with a live
+       countdown + shrinking progress bar, themed by its NoticeType.
+       Closes automatically, or immediately if the user taps the ✕.
+       No active notice for the popup slot -> popup stays hidden. */
+    function showTestingPhasePopup(notices = []){
       const popup = document.getElementById("testingPhasePopup");
       if (!popup) return;
+
+      const candidate = notices
+        .filter(n => (n.displayLocation === "POPUP" || n.displayLocation === "BOTH") && n.title)
+        .sort((a, b) => (b.priority || 0) - (a.priority || 0))[0];
+      if (!candidate) return; // nothing wants the popup slot right now
+
+      const card = popup.querySelector(".testing-popup-card");
+      const iconEl = popup.querySelector(".testing-popup-icon");
+      const titleEl = popup.querySelector(".testing-popup-title");
+      const textEl = popup.querySelector(".testing-popup-text");
+      const type = (candidate.type || "INFO").toUpperCase();
+      if (card) card.setAttribute("data-notice-type", type);
+      if (iconEl) iconEl.textContent = noticeTypeMeta(candidate.type).icon;
+      if (titleEl) titleEl.textContent = candidate.title;
+      if (textEl) textEl.innerHTML = candidate.noticeText;
+
       const timerEl = document.getElementById("testingPopupTimer");
       const bar = document.getElementById("testingPopupProgressBar");
       const closeBtn = document.getElementById("testingPopupClose");
 
-      let secondsLeft = TESTING_POPUP_SECONDS;
+      let secondsLeft = candidate.popupDurationSeconds || 5;
       timerEl.textContent = `${secondsLeft}s`;
       popup.classList.add("open");
 
@@ -5208,7 +5304,7 @@ function renderReturnSection(track){
         // everything (real data or its fallback) has resolved.
         const [
           , // updateAuthUI() result unused directly — it sets isAuthenticated/AppState.user itself
-          vendor, categoriesRaw, banners, reviews,
+          vendor, categoriesRaw, banners, reviews, notices,
           featuredData, bestSellersData, recommendedData, newArrivalsData, flash,
         ] = await Promise.all([
           updateAuthUI(),
@@ -5216,6 +5312,7 @@ function renderReturnSection(track){
           withFallback(()=>apiRequest(API_ENDPOINTS.categories, {}, { silentError:true }), mockCategories),
           withFallback(()=>apiRequest(API_ENDPOINTS.banners, {}, { silentError:true }), mockBanners),
           loadCustomerReviews(),
+          loadNotices(), // announcement bar + testing-phase popup, backend-driven
           // Optional section: { success:true, data:[] } is a valid "nothing
           // to show" response, not an error — see loadOptionalSection().
           loadOptionalSection(API_ENDPOINTS.featured, mockFeatured),
@@ -5236,7 +5333,8 @@ function renderReturnSection(track){
         applyVendorTheme(vendor);
         renderBrandBlock(vendor);
         renderContact(getContactData(vendor));
-        startAnnouncementRotation(announceEl);
+        startAnnouncementRotation(announceEl, notices);
+        showTestingPhasePopup(notices);
 
         const categories = toArray(categoriesRaw);
         renderNavCategories(categories);
@@ -5295,8 +5393,7 @@ function renderReturnSection(track){
       }
     }
 
-    showTestingPhasePopup();
     init();
 </script>
 </body>
-</html>gits
+</html>
