@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Loading store…</title>
+    <meta name="description" content="Shop quality materials or sign in as a vendor.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root{
+          --steel-900:#12181F;
+          --steel-800:#1B2430;
+          --steel-700:#293445;
+          --steel-500:#4A5C73;
+          --steel-200:#C7D0DA;
+          --clay-600:#B4472B;
+          --clay-500:#C6552F;
+          --concrete-50:#F3F1EC;
+          --concrete-100:#EAE6DC;
+          --ink:#171512;
+          --ink-soft:#5B564D;
+          --surface:#FFFFFF;
+          --border:#E4DFD5;
+
+          /* Overwritten at runtime from vendor.themeColor once /store/info
+             resolves — this is only the neutral default shown while loading. */
+          --brand:#293445;
+          --brand-dark:#1B2430;
+          --brand-light:#EDEFF2;
+
+          --font-display:'Space Grotesk',ui-sans-serif,sans-serif;
+          --font-body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+          --font-mono:'JetBrains Mono',ui-monospace,monospace;
+
+          --radius-sm:8px;
+          --radius-lg:22px;
+          --shadow-sm:0 1px 2px rgba(20,22,31,.06);
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0;}
+        html{scroll-behavior:smooth;}
+        body{
+          font-family:var(--font-body);
+          background:var(--surface);
+          color:var(--ink);
+          -webkit-font-smoothing:antialiased;
+          min-height:100vh;
+          display:flex;flex-direction:column;
+        }
+        h1,h2,h3{font-family:var(--font-display);letter-spacing:-0.01em;}
+        button{font-family:inherit;cursor:pointer;}
+        a{color:inherit;text-decoration:none;}
+        img{display:block;max-width:100%;}
+        :focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+        .container{max-width:1180px;margin:0 auto;padding:0 24px;width:100%;}
+
+        /* ---- Skeleton loading shimmer ---------------------------------------*/
+        .skel{
+          background:linear-gradient(100deg,var(--concrete-100) 30%,#DFDACD 45%,var(--concrete-100) 60%);
+          background-size:200% 100%;
+          animation:shimmer 1.4s ease-in-out infinite;
+          border-radius:6px;color:transparent!important;
+        }
+        @keyframes shimmer{0%{background-position:180% 0;}100%{background-position:-20% 0;}}
+        @media (prefers-reduced-motion:reduce){ .skel{animation:none;} html{scroll-behavior:auto;} }
+
+        /* =====================================================================
+           HEADER
+        ===================================================================== */
+        header{
+          position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);
+          backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+        }
+        .header-row{display:flex;align-items:center;gap:16px;padding:14px 0;}
+        .brand{display:flex;align-items:center;gap:11px;min-width:0;flex-shrink:1;}
+        .brand-logo{
+          width:38px;height:38px;border-radius:10px;flex-shrink:0;
+          background:var(--brand);color:#fff;overflow:hidden;
+          display:flex;align-items:center;justify-content:center;
+          font-family:var(--font-display);font-weight:700;font-size:16px;
+        }
+        .brand-logo img{width:100%;height:100%;object-fit:cover;}
+        .brand-name{font-size:16.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .header-actions{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
+
+        .btn{
+          display:inline-flex;align-items:center;justify-content:center;gap:8px;
+          padding:11px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;
+          border:1.5px solid transparent;white-space:nowrap;transition:transform .1s, background .15s, border-color .15s, color .15s;
+        }
+        .btn:active{transform:scale(.98);}
+        .btn-primary{background:var(--brand);color:#fff;}
+        .btn-primary:hover{background:var(--brand-dark);}
+        .btn-outline{background:transparent;border-color:var(--border);color:var(--ink);}
+        .btn-outline:hover{border-color:var(--brand);color:var(--brand);}
+        .btn-ghost-light{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff;}
+        .btn-ghost-light:hover{background:rgba(255,255,255,.2);}
+        .btn-lg{padding:14.5px 26px;font-size:15px;}
+        .btn svg{flex-shrink:0;}
+        .btn[disabled]{opacity:.7;pointer-events:none;}
+
+        .header-actions .btn-outline{padding:10px 16px;}
+
+        /* =====================================================================
+           HERO (this IS the landing page — no other sections)
+        ===================================================================== */
+        .hero{
+          position:relative;overflow:hidden;flex:1;
+          display:flex;align-items:center;
+          background:linear-gradient(165deg,var(--steel-900),var(--steel-800) 60%,var(--steel-700));
+          color:#fff;
+        }
+        .hero-bg{
+          position:absolute;inset:0;background-size:cover;background-position:center;
+          opacity:0;transition:opacity .6s ease;
+        }
+        .hero-bg.show{opacity:.38;}
+        .hero-bg::after{
+          content:"";position:absolute;inset:0;
+          background:linear-gradient(100deg,var(--steel-900) 15%,rgba(18,24,31,.55) 60%,rgba(18,24,31,.3));
+        }
+        .hero-inner{position:relative;z-index:2;padding:88px 0 96px;text-align:center;margin:0 auto;}
+        .hero-eyebrow{
+          display:inline-block;font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;
+          text-transform:uppercase;color:var(--clay-500);margin-bottom:16px;
+        }
+        .hero h1{font-size:clamp(32px,5vw,52px);line-height:1.12;max-width:680px;margin:0 auto;}
+        .hero .lede{font-size:16px;line-height:1.6;color:var(--steel-200);max-width:520px;margin:18px auto 0;}
+        .hero-ctas{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap;justify-content:center;}
+
+        .load-error{
+          display:none;background:#FBEAE8;border:1px solid #F1C7C0;color:#8C2E22;
+          border-radius:8px;padding:14px 16px;margin:24px auto 0;max-width:480px;
+          align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13.5px;text-align:left;
+        }
+        .load-error.show{display:flex;}
+        .load-error button{
+          background:#8C2E22;color:#fff;border:none;border-radius:6px;
+          padding:8px 16px;font-size:13px;font-weight:600;flex-shrink:0;
+        }
+
+        /* =====================================================================
+           FOOTER
+        ===================================================================== */
+        footer{background:var(--steel-900);color:var(--steel-200);padding:22px 0;}
+        .footer-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8B93A0;}
+
+        @media (max-width:760px){
+          .container{padding:0 18px;}
+          .header-actions .btn-label-full{display:none;}
+          .hero-inner{padding:56px 0 64px;}
+          .hero .lede{font-size:14.5px;}
+          .hero-ctas{gap:10px;}
+          .hero-ctas .btn{flex:1;min-width:150px;}
+        }
+        @media (max-width:480px){
+          .header-row{gap:10px;}
+          .btn{padding:9.5px 14px;font-size:13px;}
+          .btn-lg{padding:13px 18px;font-size:14px;}
+          .brand-name{font-size:14.5px;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header>
+    <div class="container header-row">
+        <a href="#top" class="brand">
+            <span class="brand-logo skel" id="brandLogo" style="width:38px;height:38px;">•</span>
+            <span class="brand-name skel" id="brandName">Loading store name</span>
+        </a>
+        <div class="header-actions">
+            <a href="/api/vendor/v1/login" class="btn btn-outline" id="vendorHeaderBtn">
+                <span class="btn-label-full">Sign in as</span> Vendor
+            </a>
+            <a href="/employee.html" class="btn btn-primary" id="shopHeaderBtn">Shop Now</a>
+        </div>
+    </div>
+</header>
+
+<!-- ================= HERO (only content on this landing page) ================= -->
+<section class="hero" id="top">
+    <div class="hero-bg" id="heroBg"></div>
+    <div class="container hero-inner">
+        <span class="hero-eyebrow skel" id="heroEyebrow" style="width:150px;">Loading</span>
+        <h1 id="heroTitle" class="skel" style="width:70%;min-height:1.2em;margin-left:auto;margin-right:auto;">Loading store details…</h1>
+        <p class="lede skel" id="heroLede" style="width:80%;">Loading a short description of this store from the server.</p>
+
+        <div class="hero-ctas">
+            <a href="/employee.html" class="btn btn-primary btn-lg" id="shopNowHeroBtn">
+                Shop Now
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a href="/api/vendor/v1/login" class="btn btn-ghost-light btn-lg" id="vendorHeroBtn">Sign in as Vendor</a>
+        </div>
+
+        <div class="load-error" id="heroError">
+            <span id="heroErrorText">We couldn't load full store details right now.</span>
+            <button id="retryBtn" type="button">Retry</button>
+        </div>
+    </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+    <div class="container footer-row">
+        <span id="footerCopyright">&nbsp;</span>
+        <span>Vendor? <a href="/api/vendor/v1/login" style="color:#fff;font-weight:600;">Sign in here</a></span>
+    </div>
+</footer>
+
+<script>
+    (function(){
+      "use strict";
+
+      /* -----------------------------------------------------------------
+         CONFIG
+           GET /api/u1/v1/store/info → vendor/store profile (branding only)
+           Vendor CTA  → /api/vendor/v1/login (normal navigation, it's an API/auth route)
+           Shop CTA    → employee.html — plain redirect (window.location.href),
+                         so its own <link>/<script> tags in <head> load correctly.
+           No categories / about / contact sections on this page at all.
+      ----------------------------------------------------------------- */
+      const API_BASE = "/api/u1/v1";
+      const STORE_INFO_URL = `${API_BASE}/store/info`;
+      const SHOP_PAGE_URL = "/employee.html";
+      const REQUEST_TIMEOUT_MS = 6000;
+      const R2_PUBLIC_URL = "https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev";
+
+      function getImageUrl(path){
+        if (!path) return "";
+        if (/^https?:\/\//.test(path)) return path;
+        return `${R2_PUBLIC_URL}/${path}`;
+      }
+      function shadeColor(hex, percent){
+        const m = (hex || "").match(/\w\w/g);
+        if (!m || m.length < 3) return hex;
+        let [r,g,b] = m.map(x=>parseInt(x,16));
+        const t = percent<0 ? 0 : 255;
+        const p = Math.abs(percent)/100;
+        r = Math.round((t-r)*p)+r; g = Math.round((t-g)*p)+g; b = Math.round((t-b)*p)+b;
+        return `rgb(${r},${g},${b})`;
+      }
+      async function fetchJson(url){
+        const controller = new AbortController();
+        const timeoutId = setTimeout(()=>controller.abort(), REQUEST_TIMEOUT_MS);
+        try{
+          const res = await fetch(url, { credentials:"include", signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (!res.ok) throw new Error(`Request failed (${res.status})`);
+          return await res.json();
+        }catch(e){
+          clearTimeout(timeoutId);
+          throw e;
+        }
+      }
+      function unskel(el){ el.classList.remove("skel"); }
+
+      function applyTheme(vendor){
+        const primary = vendor.themeColor;
+        if (!primary) return;
+        const root = document.documentElement.style;
+        root.setProperty("--brand", primary);
+        root.setProperty("--brand-dark", shadeColor(primary, -15));
+        root.setProperty("--brand-light", shadeColor(primary, 88));
+      }
+
+      function renderStoreInfo(vendor){
+        document.title = vendor.storeName ? `${vendor.storeName} · Shop or sign in` : "Shop or sign in";
+        applyTheme(vendor);
+
+        if (vendor.faviconUrl){
+          let favicon = document.querySelector("link[rel='icon']");
+          if (!favicon){ favicon = document.createElement("link"); favicon.rel = "icon"; document.head.appendChild(favicon); }
+          favicon.href = getImageUrl(vendor.faviconUrl);
+        }
+
+        // --- Header brand ---
+        const initials = (vendor.storeName || "?").trim().charAt(0).toUpperCase();
+        const logoEl = document.getElementById("brandLogo");
+        unskel(logoEl); logoEl.textContent = "";
+        if (vendor.logoUrl){
+          const img = document.createElement("img");
+          img.src = getImageUrl(vendor.logoUrl);
+          img.alt = vendor.storeName || "Store logo";
+          logoEl.appendChild(img);
+        } else {
+          logoEl.textContent = initials;
+        }
+        const nameEl = document.getElementById("brandName");
+        unskel(nameEl); nameEl.style.width = ""; nameEl.textContent = vendor.storeName || "Our store";
+
+        // --- Hero ---
+        const heroBg = document.getElementById("heroBg");
+        if (vendor.bannerUrl){
+          heroBg.style.backgroundImage = `url('${getImageUrl(vendor.bannerUrl)}')`;
+          heroBg.classList.add("show");
+        }
+
+        const eyebrowEl = document.getElementById("heroEyebrow");
+        unskel(eyebrowEl); eyebrowEl.style.width = "";
+        eyebrowEl.textContent = vendor.tagline || "Welcome";
+
+        const titleEl = document.getElementById("heroTitle");
+        unskel(titleEl); titleEl.style.width = ""; titleEl.style.marginLeft = ""; titleEl.style.marginRight = "";
+        titleEl.textContent = vendor.storeName ? `Welcome to ${vendor.storeName}` : "Welcome";
+
+        const ledeEl = document.getElementById("heroLede");
+        unskel(ledeEl); ledeEl.style.width = "";
+        ledeEl.textContent = vendor.aboutUs
+          ? (vendor.aboutUs.length > 160 ? vendor.aboutUs.slice(0,157) + "…" : vendor.aboutUs)
+          : "Browse the full catalogue, or sign in if you're part of the team.";
+
+        document.getElementById("footerCopyright").textContent =
+          `© ${new Date().getFullYear()} ${vendor.businessName || vendor.storeName || "This store"}. All rights reserved.`;
+      }
+
+      function showHeroError(message){
+        document.getElementById("heroErrorText").textContent = message;
+        document.getElementById("heroError").classList.add("show");
+        const brandName = document.getElementById("brandName");
+        if (brandName.classList.contains("skel")){
+          unskel(brandName); brandName.style.width = ""; brandName.textContent = "Our store";
+        }
+        const logoEl = document.getElementById("brandLogo");
+        if (logoEl.classList.contains("skel")){ unskel(logoEl); logoEl.textContent = "•"; }
+        ["heroEyebrow","heroTitle","heroLede"].forEach(id=>{
+          const el = document.getElementById(id);
+          unskel(el); el.style.width = ""; el.style.marginLeft = ""; el.style.marginRight = "";
+        });
+        document.getElementById("heroTitle").textContent = "Welcome";
+        document.getElementById("heroLede").textContent = "We're having trouble loading store details right now — you can still shop or sign in below.";
+        document.getElementById("heroEyebrow").textContent = "Welcome";
+        document.getElementById("footerCopyright").textContent = `© ${new Date().getFullYear()} All rights reserved.`;
+      }
+
+      async function loadAll(){
+        document.getElementById("heroError").classList.remove("show");
+        try{
+          const result = await fetchJson(STORE_INFO_URL);
+          renderStoreInfo(result.data || result);
+        }catch(e){
+          showHeroError("We couldn't load full store details right now.");
+        }
+      }
+
+      document.getElementById("retryBtn").addEventListener("click", loadAll);
+      loadAll();
+
+      /* -----------------------------------------------------------------
+         SHOP NAVIGATION — plain redirect to employee.html.
+         (A fetch()+DOM-inject approach was tried, but it only swaps
+         document.body — employee.html's own <link>/<script> tags live in
+         its <head> and never get loaded that way, so its CSS/JS broke.
+         Full navigation is what actually loads the shop page correctly.)
+      ----------------------------------------------------------------- */
+      function goToShop(e){
+        if (e) e.preventDefault();
+        window.location.href = SHOP_PAGE_URL;
+      }
+
+      ["shopHeaderBtn","shopNowHeroBtn"].forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("click", goToShop);
+      });
+    })();
+</script>
+
+</body>
+</html>
