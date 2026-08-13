@@ -111,6 +111,7 @@ public class SecurityConfig {
                                 "/api/**",
 
                                 "/css/**",
+                                "/home.html",
                                 "/style.css",
                                 "/api.js",
                                 "/script.js",
@@ -136,8 +137,6 @@ public class SecurityConfig {
                                 "/api/access-denied"
 
                         ).permitAll()
-
-//                        .requestMatchers(("/vendor/**")).hasRole("ADMIN")
                         .requestMatchers(("/s4/**")).permitAll()
                         .requestMatchers("/s1/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/**").permitAll()

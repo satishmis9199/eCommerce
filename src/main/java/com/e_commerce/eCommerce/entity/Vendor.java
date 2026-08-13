@@ -29,20 +29,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Vendor {
-
-    // ===========================================
-    // Primary Key
-    // ===========================================
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-
-
     @Column(nullable = false, unique = true, updatable = false, length = 36)
     private String tenantId;
-
     @Column(nullable = false)
     private String bussinessName;
     @Column
@@ -53,8 +44,6 @@ public class Vendor {
 
     @Column(nullable = false)
     private String lastName;
-
-
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -123,9 +112,6 @@ public class Vendor {
 
     private LocalDateTime updatedAt;
 
-    // ===========================================
-    // Entity Lifecycle
-    // ===========================================
 
     @PrePersist
     public void prePersist() {
