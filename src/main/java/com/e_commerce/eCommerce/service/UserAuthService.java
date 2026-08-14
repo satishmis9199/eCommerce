@@ -2,6 +2,7 @@ package com.e_commerce.eCommerce.service;
 
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.RegisterRequestDTO;
+import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.entity.Roles;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.entity.Vendor;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -20,8 +22,9 @@ public class UserAuthService {
     private final VendorRepository vendorRepository;
     private final UserRepos userRepos;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService service;
 
-    public String registerUser(RegisterRequestDTO registerRequestDTO) {
+    public String registerUser(RegisterRequestDTO registerRequestDTO,String url) {
 
         String tenantId = TenantContext.getTenantId();
 
@@ -78,6 +81,18 @@ public class UserAuthService {
         user.setUpdatedBy("SELF_REGISTER");
 
         userRepos.save(user);
+        EmailRequestDto welcomeEmail = EmailRequestDto.builder()
+                .to(user.getEmail())
+                .subject("Welcome to " + vendor.getStoreName() + " 🎉")
+                .templateName("welcome")
+                .templateVariables(Map.of(
+                        "name", user.getFirstName(),
+                        "loginLink", "https://"+url,
+                        "supportEmail", "support@yourapp.com"
+                ))
+                .build();
+        service.sendEmailAsync(welcomeEmail);
+
 
         return "Registration completed successfully. Please login.";
     }

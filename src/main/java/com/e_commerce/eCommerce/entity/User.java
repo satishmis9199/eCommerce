@@ -82,13 +82,22 @@ public class User {
     @Column(length = 255)
     private String lastLoginDevice;
 
+    /**
+     * NEW — required for the password setup/reset flow. True once the user
+     * has completed their own password setup via the reset link. Until
+     * true, login should be rejected (see SUPER_ADMIN_INTEGRATION.md).
+     * Needs a matching DB column + migration — see updated migration script.
+     */
+    @Column(name = "credentials_setup_complete", nullable = false)
+    private Boolean credentialsSetupComplete = false;
 
+    public Boolean getCredentialsSetupComplete() {
+        return credentialsSetupComplete;
+    }
 
-
-
-
-
-
+    public void setCredentialsSetupComplete(Boolean credentialsSetupComplete) {
+        this.credentialsSetupComplete = credentialsSetupComplete;
+    }
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

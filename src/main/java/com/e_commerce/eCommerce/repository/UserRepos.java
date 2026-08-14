@@ -77,4 +77,6 @@ AND u.id IN :userIds
     );
 
     User findByTenantIdAndId(String tenantId, Long userId);
+
+    User findByEmailAndTenantId(String email, String tenantId);
 }

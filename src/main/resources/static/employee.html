@@ -1465,6 +1465,17 @@
                 <button class="btn btn-primary btn-block" type="submit">Login</button>
             </form>
 
+            <form id="forgotPasswordForm" style="display:none;">
+                <p style="font-size:13px;color:var(--muted);margin:0 0 14px;">Enter your account email and we'll send you a link to reset your password.</p>
+                <div class="field" id="forgotEmailField">
+                    <label for="forgotEmail">Email</label>
+                    <input type="email" id="forgotEmail" placeholder="you@example.com" required>
+                    <div class="field-error">Please enter a valid email address.</div>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Send reset link</button>
+                <div class="form-hint"><button type="button" id="backToLoginBtn">Back to login</button></div>
+            </form>
+
             <form id="registerForm" style="display:none;">
                 <div class="field" id="regNameField">
                     <label for="regName">FirstName</label>
@@ -1661,6 +1672,9 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       register:              `${API_BASE}/user/register`,
       me:                    `${API_BASE}/auth/me`,
       forgotPassword:        `${API_BASE}/auth/forgot-password`,
+      passwordResetRequest:  `${API_BASE}/auth/password-reset/request`,
+      passwordResetVerify:   `${API_BASE}/auth/password-reset/verify`,
+      passwordResetConfirm:  `${API_BASE}/auth/password-reset`,
       verifyOtp:             `${API_BASE}/auth/verify-otp`,
       resetPassword:         `${API_BASE}/auth/reset-password`,
       logout:                `${API_BASE}/auth/logout`,
@@ -3927,6 +3941,7 @@ async function removeCartItem(itemId){
       document.getElementById("tabRegister").classList.toggle("active", tab==="register");
       document.getElementById("loginForm").style.display = tab==="login" ? "block" : "none";
       document.getElementById("registerForm").style.display = tab==="register" ? "block" : "none";
+      document.getElementById("forgotPasswordForm").style.display = "none";
     }
     document.getElementById("tabLogin").addEventListener("click", ()=>switchAuthTab("login"));
     document.getElementById("tabRegister").addEventListener("click", ()=>switchAuthTab("register"));
@@ -4035,11 +4050,51 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
       }
     });
 
-    document.getElementById("forgotPasswordBtn").addEventListener("click", async ()=>{
+    document.getElementById("forgotPasswordBtn").addEventListener("click", ()=>{
+      // Show the "enter your email" panel instead of firing the request blind.
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("forgotPasswordForm").style.display = "block";
+      const loginEmailVal = document.getElementById("loginEmail").value.trim();
+      const forgotEmailInput = document.getElementById("forgotEmail");
+      // Prefill only if it looks like an email (the login field also accepts mobile numbers).
+      forgotEmailInput.value = loginEmailVal.includes("@") ? loginEmailVal : "";
+      forgotEmailInput.focus();
+    });
+
+    document.getElementById("backToLoginBtn").addEventListener("click", ()=>{
+      document.getElementById("forgotPasswordForm").style.display = "none";
+      document.getElementById("loginForm").style.display = "block";
+    });
+
+    document.getElementById("forgotPasswordForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const emailField = document.getElementById("forgotEmailField");
+      const email = document.getElementById("forgotEmail").value.trim();
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      emailField.classList.toggle("error", !emailValid);
+      if (!emailValid) return;
+
+      const submitBtn = e.target.querySelector("button[type=submit]");
+      submitBtn.disabled = true;
       try{
-        await apiRequest(API_ENDPOINTS.forgotPassword, { method:"POST" }, { silentError:true });
-      }catch(e){ /* still show confirmation for demo build */ }
-      toast("Password reset link sent to your email", "success");
+        // Matches PasswordResetController#requestReset — POST /api/auth/password-reset/request
+        const res = await apiRequest(
+          API_ENDPOINTS.passwordResetRequest,
+          { method: "POST", body: JSON.stringify({ email }) },
+          { silentError: true }
+        );
+        toast(res?.message || "If that email is registered, a reset link has been sent.", "success");
+      }catch(e){
+        // Controller returns 200 regardless of whether the email exists (no enumeration),
+        // so a failure here is a genuine network/server error — say so honestly.
+        toast("Couldn't send the reset link. Please try again.", "error");
+      }finally{
+        submitBtn.disabled = false;
+        document.getElementById("forgotPasswordForm").style.display = "none";
+        document.getElementById("loginForm").style.display = "block";
+        document.getElementById("forgotPasswordForm").reset();
+      }
     });
 
     /* Refresh auth state from the server. Because the JWT lives in an

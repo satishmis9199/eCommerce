@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password</title>
+    <style>
+        :root{
+          --bg:#0f172a;
+          --card:#ffffff;
+          --primary:#4f46e5;
+          --primary-dark:#4338ca;
+          --error:#dc2626;
+          --success:#16a34a;
+          --text:#1e293b;
+          --muted:#64748b;
+          --border:#e2e8f0;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{
+          min-height:100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background:linear-gradient(135deg,#0f172a,#312e81);
+          font-family:'Segoe UI',Roboto,Arial,sans-serif;
+          padding:20px;
+        }
+        .card{
+          background:var(--card);
+          width:100%;
+          max-width:420px;
+          border-radius:14px;
+          padding:36px 32px;
+          box-shadow:0 20px 50px rgba(0,0,0,0.35);
+        }
+        .card h1{
+          font-size:22px;
+          color:var(--text);
+          margin-bottom:6px;
+          text-align:center;
+        }
+        .card p.sub{
+          text-align:center;
+          color:var(--muted);
+          font-size:14px;
+          margin-bottom:24px;
+        }
+        .state-box{
+          text-align:center;
+          padding:20px 0;
+        }
+        .spinner{
+          width:36px;height:36px;
+          border:3px solid var(--border);
+          border-top-color:var(--primary);
+          border-radius:50%;
+          margin:0 auto 16px;
+          animation:spin 0.8s linear infinite;
+        }
+        @keyframes spin{to{transform:rotate(360deg);}}
+        .icon{
+          width:56px;height:56px;
+          border-radius:50%;
+          display:flex;align-items:center;justify-content:center;
+          margin:0 auto 16px;
+          font-size:28px;
+        }
+        .icon.error{background:#fee2e2;color:var(--error);}
+        .icon.success{background:#dcfce7;color:var(--success);}
+        .msg-title{font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px;}
+        .msg-sub{font-size:14px;color:var(--muted);}
+        form{display:none;}
+        .field{margin-bottom:18px;}
+        label{
+          display:block;
+          font-size:13px;
+          font-weight:600;
+          color:var(--text);
+          margin-bottom:6px;
+        }
+        .pass-wrap{position:relative;}
+        input[type="password"], input[type="text"]{
+          width:100%;
+          padding:12px 40px 12px 14px;
+          border:1.5px solid var(--border);
+          border-radius:8px;
+          font-size:14px;
+          outline:none;
+          transition:border-color 0.15s;
+        }
+        input:focus{border-color:var(--primary);}
+        .toggle-eye{
+          position:absolute;
+          right:10px;top:50%;
+          transform:translateY(-50%);
+          cursor:pointer;
+          color:var(--muted);
+          font-size:13px;
+          user-select:none;
+          background:none;
+          border:none;
+        }
+        .hint{font-size:12px;color:var(--muted);margin-top:6px;}
+        .hint ul{margin:4px 0 0 16px;}
+        .hint li{margin-bottom:2px;}
+        .hint li.ok{color:var(--success);}
+        button.submit-btn{
+          width:100%;
+          padding:13px;
+          border:none;
+          border-radius:8px;
+          background:var(--primary);
+          color:#fff;
+          font-size:15px;
+          font-weight:600;
+          cursor:pointer;
+          transition:background 0.15s;
+          margin-top:4px;
+        }
+        button.submit-btn:hover{background:var(--primary-dark);}
+        button.submit-btn:disabled{background:#a5b4fc;cursor:not-allowed;}
+        .error-text{
+          color:var(--error);
+          font-size:13px;
+          margin-top:6px;
+          display:none;
+        }
+        .form-error{
+          background:#fee2e2;
+          color:var(--error);
+          font-size:13px;
+          padding:10px 12px;
+          border-radius:8px;
+          margin-bottom:16px;
+          display:none;
+        }
+        a.login-link{
+          display:inline-block;
+          margin-top:18px;
+          color:var(--primary);
+          font-size:14px;
+          text-decoration:none;
+          font-weight:600;
+        }
+        a.login-link:hover{text-decoration:underline;}
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Set Your Password</h1>
+    <p class="sub">Choose a new password to secure your account</p>
+
+    <!-- Verifying token -->
+    <div id="verifyingState" class="state-box">
+        <div class="spinner"></div>
+        <div class="msg-title">Verifying your link...</div>
+        <div class="msg-sub">Please wait a moment</div>
+    </div>
+
+    <!-- Invalid / expired token -->
+    <div id="invalidState" class="state-box" style="display:none;">
+        <div class="icon error">&#10060;</div>
+        <div class="msg-title" id="invalidTitle">This link is invalid or expired</div>
+        <div class="msg-sub">Please request a new password reset link.</div>
+    </div>
+
+    <!-- Success -->
+    <div id="successState" class="state-box" style="display:none;">
+        <div class="icon success">&#10003;</div>
+        <div class="msg-title">Password set successfully!</div>
+        <div class="msg-sub">You can now log in with your new password.</div>
+        <a class="login-link" href="/login">Go to Login &rarr;</a>
+    </div>
+
+    <!-- Reset form -->
+    <form id="resetForm">
+        <div class="form-error" id="formError"></div>
+
+        <div class="field">
+            <label for="newPassword">New Password</label>
+            <div class="pass-wrap">
+                <input type="password" id="newPassword" placeholder="Enter new password" autocomplete="new-password">
+                <button type="button" class="toggle-eye" data-target="newPassword">Show</button>
+            </div>
+            <div class="hint">
+                <ul id="ruleList">
+                    <li id="ruleLen">At least 8 characters</li>
+                    <li id="ruleUpper">One uppercase letter</li>
+                    <li id="ruleNum">One number</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="confirmPassword">Confirm Password</label>
+            <div class="pass-wrap">
+                <input type="password" id="confirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
+                <button type="button" class="toggle-eye" data-target="confirmPassword">Show</button>
+            </div>
+            <div class="error-text" id="matchError">Passwords do not match</div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Set Password</button>
+    </form>
+</div>
+
+<script>
+    // ---- Config ----
+    const API_BASE = "/api/auth/password-reset"; // same-origin. Change if backend runs elsewhere e.g. "http://localhost:8080/api/auth/password-reset"
+
+    // ---- Elements ----
+    const verifyingState = document.getElementById('verifyingState');
+    const invalidState   = document.getElementById('invalidState');
+    const invalidTitle   = document.getElementById('invalidTitle');
+    const successState   = document.getElementById('successState');
+    const resetForm      = document.getElementById('resetForm');
+    const formError      = document.getElementById('formError');
+    const submitBtn      = document.getElementById('submitBtn');
+
+    const newPasswordEl  = document.getElementById('newPassword');
+    const confirmPasswordEl = document.getElementById('confirmPassword');
+    const matchError     = document.getElementById('matchError');
+
+    const ruleLen   = document.getElementById('ruleLen');
+    const ruleUpper = document.getElementById('ruleUpper');
+    const ruleNum   = document.getElementById('ruleNum');
+
+    // ---- Get token from URL ----
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    function showOnly(el){
+      [verifyingState, invalidState, successState, resetForm].forEach(e => {
+        e.style.display = 'none';
+      });
+      el.style.display = (el === resetForm) ? 'block' : 'block';
+    }
+
+    async function verifyToken(){
+      if(!token){
+        invalidTitle.textContent = "No reset token found";
+        showOnly(invalidState);
+        return;
+      }
+      try{
+        const res = await fetch(`${API_BASE}/verify?token=${encodeURIComponent(token)}`, {
+          method: 'GET'
+        });
+        const data = await res.json().catch(() => null);
+
+        // Expecting ApiResponse<TokenVerificationResponse>
+        const isValid = res.ok && data && data.success &&
+                         (!data.data || data.data.valid !== false);
+
+        if(isValid){
+          showOnly(resetForm);
+        } else {
+          invalidTitle.textContent = (data && data.message) ? data.message : "This link is invalid or expired";
+          showOnly(invalidState);
+        }
+      } catch(err){
+        invalidTitle.textContent = "Could not reach the server. Please try again later.";
+        showOnly(invalidState);
+      }
+    }
+
+    // ---- Password toggle ----
+    document.querySelectorAll('.toggle-eye').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.dataset.target);
+        if(target.type === 'password'){
+          target.type = 'text';
+          btn.textContent = 'Hide';
+        } else {
+          target.type = 'password';
+          btn.textContent = 'Show';
+        }
+      });
+    });
+
+    // ---- Live validation ----
+    function validatePasswordRules(pwd){
+      const rules = {
+        len: pwd.length >= 8,
+        upper: /[A-Z]/.test(pwd),
+        num: /[0-9]/.test(pwd)
+      };
+      ruleLen.classList.toggle('ok', rules.len);
+      ruleUpper.classList.toggle('ok', rules.upper);
+      ruleNum.classList.toggle('ok', rules.num);
+      return rules.len && rules.upper && rules.num;
+    }
+
+    newPasswordEl.addEventListener('input', () => {
+      validatePasswordRules(newPasswordEl.value);
+    });
+
+    confirmPasswordEl.addEventListener('input', () => {
+      if(confirmPasswordEl.value && confirmPasswordEl.value !== newPasswordEl.value){
+        matchError.style.display = 'block';
+      } else {
+        matchError.style.display = 'none';
+      }
+    });
+
+    // ---- Submit ----
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formError.style.display = 'none';
+
+      const pwd = newPasswordEl.value;
+      const confirmPwd = confirmPasswordEl.value;
+
+      if(!validatePasswordRules(pwd)){
+        formError.textContent = "Password does not meet the requirements above.";
+        formError.style.display = 'block';
+        return;
+      }
+      if(pwd !== confirmPwd){
+        matchError.style.display = 'block';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Setting password...";
+
+      try{
+        const res = await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token, newPassword: pwd })
+        });
+        const data = await res.json().catch(() => null);
+
+        if(res.ok && data && data.success){
+          showOnly(successState);
+        } else {
+          formError.textContent = (data && data.message) ? data.message : "Something went wrong. Please try again.";
+          formError.style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Set Password";
+        }
+      } catch(err){
+        formError.textContent = "Could not reach the server. Please try again.";
+        formError.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Set Password";
+      }
+    });
+
+    // ---- Init ----
+    verifyToken();
+</script>
+</body>
+</html>

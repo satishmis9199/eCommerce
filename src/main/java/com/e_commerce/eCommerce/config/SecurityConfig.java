@@ -134,7 +134,8 @@ public class SecurityConfig {
                                 "/employee.html",
 
 
-                                "/api/access-denied"
+                                "/api/access-denied",
+                                "/reset-password"
 
                         ).permitAll()
                         .requestMatchers(("/s4/**")).permitAll()

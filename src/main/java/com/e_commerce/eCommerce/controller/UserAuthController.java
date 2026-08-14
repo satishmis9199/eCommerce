@@ -280,9 +280,10 @@ public class UserAuthController {
 
 
     @PostMapping("u1/v1/user/register")
-    public ResponseEntity<?> registerUserData(@RequestBody RegisterRequestDTO registerRequestDTO){
+    public ResponseEntity<?> registerUserData(@RequestBody RegisterRequestDTO registerRequestDTO,HttpServletRequest request){
         try{
-            String message=userAuthService.registerUser(registerRequestDTO);
+            String url=request.getServerName();
+            String message=userAuthService.registerUser(registerRequestDTO,url);
             return ResponseEntity.ok(Map.of(
                     "success",true,
                     "message",message
