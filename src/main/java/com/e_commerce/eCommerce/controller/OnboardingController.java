@@ -5,6 +5,7 @@ import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.repository.VendorOnnBRepo;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.OnboardingService;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -17,16 +18,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/vendor")
+@AllArgsConstructor
 public class OnboardingController {
     private static final Logger logger =
             LoggerFactory.getLogger(OnboardingController.class);
     private final OnboardingService onboardingService;
     private final VendorOnnBRepo vendorOnnBRepo;
 
-    public OnboardingController(OnboardingService onboardingService, VendorOnnBRepo vendorOnnBRepo) {
-        this.onboardingService = onboardingService;
-        this.vendorOnnBRepo = vendorOnnBRepo;
-    }
 
     @GetMapping("/s1/v1/getOnBoardDetail")
     public VendorOnboardingResponseDTO getOnBoardDetail(
@@ -65,7 +63,6 @@ public class OnboardingController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-//    http://satish.localhost:8086/vendor/s1/v1/business-details
     @PostMapping("/s1/v1/business-details")
     public ResponseEntity<?> SaveBussinessDetail(Authentication authentication,
                                       @RequestBody BusinessDetailsDTO dto){
@@ -95,7 +92,7 @@ public class OnboardingController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-//    http://satish.localhost:8086/vendor/s1/v1/address
+
     @PostMapping("/s1/v1/address")
     public ResponseEntity<?> aveBankDetaiils(Authentication authentication,
                                                  @RequestBody BusinessAddressDTO dto){
@@ -125,7 +122,7 @@ public class OnboardingController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-//    /s1/v1/bank-details
+
     @PostMapping("/s1/v1/bank-details")
     public ResponseEntity<?> saveBankDetail(Authentication authentication,
                                             @RequestBody BankInfoDto dto){

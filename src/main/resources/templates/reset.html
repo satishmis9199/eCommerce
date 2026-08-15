@@ -16,9 +16,9 @@
           --forest-900:#0d1912;
           --forest-800:#16301f;
           --forest-700:#204631;
-          --gold:#d59a3c;
-          --gold-deep:#b87f28;
-          --gold-soft:#f0d9a8;
+          --accent:#d59a3c;
+          --accent-deep:color-mix(in srgb, var(--accent) 78%, black 22%);
+          --accent-soft:color-mix(in srgb, var(--accent) 32%, white 68%);
           --error:#c0392b;
           --error-bg:#fbe9e6;
           --success:#2f7d4f;
@@ -37,7 +37,7 @@
           font-family:'Inter',Segoe UI,Roboto,Arial,sans-serif;
           color:var(--ink);
           background:
-            radial-gradient(1100px 620px at 15% -10%, rgba(213,154,60,0.16), transparent 60%),
+            radial-gradient(1100px 620px at 15% -10%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
             radial-gradient(900px 700px at 105% 110%, rgba(32,70,49,0.9), transparent 55%),
             linear-gradient(160deg, var(--forest-900), var(--forest-800) 55%, var(--forest-700));
           background-attachment:fixed;
@@ -74,14 +74,21 @@
           content:"";
           position:absolute;
           top:0;left:0;right:0;height:5px;
-          background:linear-gradient(90deg, var(--gold-deep), var(--gold) 45%, var(--gold-soft) 100%);
+          background:linear-gradient(90deg, var(--accent-deep), var(--accent) 45%, var(--accent-soft) 100%);
         }
 
         .mark{
           width:40px;height:40px;
           margin:6px auto 14px;
-          color:var(--gold-deep);
+          color:var(--accent-deep);
           display:block;
+        }
+        .logo-img{
+          width:44px;height:44px;
+          object-fit:contain;
+          margin:6px auto 14px;
+          display:block;
+          border-radius:8px;
         }
 
         .ref-code{
@@ -116,7 +123,7 @@
         .spinner{
           width:34px;height:34px;
           border:3px solid var(--border);
-          border-top-color:var(--gold-deep);
+          border-top-color:var(--accent-deep);
           border-radius:50%;
           margin:0 auto 18px;
           animation:spin 0.8s linear infinite;
@@ -163,8 +170,8 @@
         }
         input::placeholder{color:#a7ac9e;}
         input:focus{
-          border-color:var(--gold-deep);
-          box-shadow:0 0 0 4px rgba(213,154,60,0.18);
+          border-color:var(--accent-deep);
+          box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
         }
 
         .toggle-eye{
@@ -185,7 +192,7 @@
         }
         .toggle-eye:hover{background:#e9e0c9;}
         .toggle-eye:focus-visible, input:focus-visible, .submit-btn:focus-visible, a.login-link:focus-visible{
-          outline:2px solid var(--gold-deep);
+          outline:2px solid var(--accent-deep);
           outline-offset:2px;
         }
 
@@ -203,7 +210,7 @@
           transition:background 0.2s;
         }
         .strength i.on-1{background:var(--error);}
-        .strength i.on-2{background:var(--gold-deep);}
+        .strength i.on-2{background:var(--accent-deep);}
         .strength i.on-3{background:var(--success);}
 
         .hint{font-size:12.5px;color:var(--ink-soft);margin-top:10px;}
@@ -229,8 +236,8 @@
           padding:14px;
           border:none;
           border-radius:10px;
-          background:linear-gradient(180deg, var(--forest-700), var(--forest-800));
-          color:#fbf8f1;
+          background:linear-gradient(180deg, var(--accent), var(--accent-deep));
+          color:#fff;
           font-size:15px;
           font-weight:600;
           letter-spacing:0.01em;
@@ -269,14 +276,14 @@
           font-size:14px;
           text-decoration:none;
           font-weight:700;
-          border-bottom:1.5px solid var(--gold);
+          border-bottom:1.5px solid var(--accent);
           padding-bottom:2px;
         }
-        a.login-link:hover{color:var(--gold-deep);}
+        a.login-link:hover{color:var(--accent-deep);}
 
         .footnote{
           text-align:center;
-          color:var(--gold-soft);
+          color:var(--accent-soft);
           font-size:12px;
           margin-top:18px;
           letter-spacing:0.03em;
@@ -306,16 +313,17 @@
 <div class="stage">
     <div class="card">
 
-        <svg class="mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <svg class="mark" id="markIcon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M24 4c-1.5 5-6 8-6 14a6 6 0 0 0 12 0c0-6-4.5-9-6-14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
             <path d="M10 44c1-9 6-15 14-15s13 6 14 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             <path d="M17 30c0 3 3 5 7 5s7-2 7-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
+        <img class="logo-img" id="logoImg" alt="" style="display:none;">
 
         <div class="ref-code" id="refCode">Staff Access</div>
 
-        <h1>Set Your Password</h1>
-        <p class="sub">Choose a new password to secure your account</p>
+        <h1 id="pageTitle">Set Your Password</h1>
+        <p class="sub" id="pageSub">Choose a new password to secure your account</p>
 
         <!-- Verifying token -->
         <div id="verifyingState" class="state-box">
@@ -374,12 +382,13 @@
         </form>
 
     </div>
-    <div class="footnote">Rural Cafe &middot; Staff Portal</div>
+    <div class="footnote" id="footnote">Staff Portal</div>
 </div>
 
 <script>
     // ---- Config ----
     const API_BASE = "/api/u1/v1/auth/password-reset"; // same-origin. Change if backend runs elsewhere e.g. "http://localhost:8080/api/auth/password-reset"
+    const STORE_INFO_API = "/api/u1/v1/store/info"; // same-origin. Change if backend runs elsewhere.
 
     // ---- Elements ----
     const verifyingState = document.getElementById('verifyingState');
@@ -401,6 +410,10 @@
     const bar1 = document.getElementById('bar1');
     const bar2 = document.getElementById('bar2');
     const bar3 = document.getElementById('bar3');
+    const markIcon = document.getElementById('markIcon');
+    const logoImg  = document.getElementById('logoImg');
+    const footnote = document.getElementById('footnote');
+    const pageTitle = document.getElementById('pageTitle');
 
     // ---- Get token from URL ----
     const params = new URLSearchParams(window.location.search);
@@ -408,6 +421,41 @@
 
     if (token) {
       refCode.textContent = "Ref " + token.slice(-6).toUpperCase();
+    }
+
+    // ---- Store branding (theme color, logo, name) ----
+    async function loadStoreInfo(){
+      try{
+        const res = await fetch(STORE_INFO_API, { method: 'GET' });
+        const data = await res.json().catch(() => null);
+        const store = data && (data.data || data); // support ApiResponse<T> or raw object
+        if(!store) return;
+
+        const name = store.storeName || store.businessName;
+        if(name){
+          footnote.textContent = name + " \u00b7 Staff Portal";
+          pageTitle.parentElement && (document.title = "Set Your Password \u2013 " + name);
+        }
+
+        if(store.themeColor){
+          document.documentElement.style.setProperty('--accent', store.themeColor);
+        }
+
+        if(store.logoUrl){
+          logoImg.src = store.logoUrl;
+          logoImg.alt = name || "";
+          logoImg.onload = () => {
+            logoImg.style.display = 'block';
+            markIcon.style.display = 'none';
+          };
+          logoImg.onerror = () => {
+            logoImg.style.display = 'none';
+            markIcon.style.display = 'block';
+          };
+        }
+      } catch(err){
+        // silently keep defaults if store info can't be reached
+      }
     }
 
     function showOnly(el){
@@ -540,6 +588,7 @@
     });
 
     // ---- Init ----
+    loadStoreInfo();
     verifyToken();
 </script>
 </body>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Application Approved</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f7; font-family: Arial, Helvetica, sans-serif;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7; padding:30px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                   style="background-color:#ffffff; border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+
+                <!-- Header -->
+                <tr>
+                    <td style="background-color:#15803d; padding:30px 40px; text-align:center;">
+                        <h1 style="color:#ffffff; margin:0; font-size:22px;">
+                            🎉 You're Approved!
+                        </h1>
+                    </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                    <td style="padding:35px 40px;">
+                        <p style="font-size:16px; color:#333333; margin:0 0 10px;">
+                            Hi <strong th:text="${vendorName}">Vendor</strong>,
+                        </p>
+
+                        <p style="font-size:15px; color:#555555; line-height:1.6; margin:0 0 20px;">
+                            Great news! Your vendor application for
+                            <strong th:text="${shopName}">Kumar Store</strong> has been reviewed and
+                            <strong style="color:#15803d;">approved</strong>. Your account is now
+                            active and you can start selling right away.
+                        </p>
+
+                        <!-- Details Box -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                               style="background-color:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; margin-bottom:25px;">
+                            <tr>
+                                <td style="padding:20px 25px;">
+                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="padding:6px 0; font-size:14px; color:#166534;">Application ID</td>
+                                            <td style="padding:6px 0; font-size:14px; color:#111111; font-weight:bold; text-align:right;"
+                                                th:text="${applicationId}">APP-00123</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:6px 0; font-size:14px; color:#166534;">Status</td>
+                                            <td style="padding:6px 0; text-align:right;">
+                                                <span style="display:inline-block; padding:4px 12px; background-color:#dcfce7; color:#166534; font-size:12px; font-weight:bold; border-radius:20px;">
+                                                    APPROVED
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${remarks != null and !remarks.isEmpty()}">
+                                            <td style="padding:6px 0; font-size:14px; color:#166534; vertical-align:top;">Remarks</td>
+                                            <td style="padding:6px 0; font-size:14px; color:#111111; text-align:right;"
+                                                th:text="${remarks}">Looks good, welcome aboard!</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Button -->
+                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 25px;">
+                            <tr>
+                                <td>
+                                    <a th:href="${loginLink}"
+                                       style="display:inline-block; padding:13px 30px; background-color:#15803d; color:#ffffff; text-decoration:none; border-radius:6px; font-size:15px; font-weight:bold;">
+                                        Go to Dashboard
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="font-size:15px; color:#555555; line-height:1.6; margin:0;">
+                            You can now log in, set up your store, add products, and start
+                            receiving orders. Welcome to <span th:text="${shopName}">the platform</span>!
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="background-color:#f9f9fb; padding:20px 40px; text-align:center; border-top:1px solid #eeeeee;">
+                        <p style="font-size:13px; color:#999999; margin:0;">
+                            Need help? Contact us at
+                            <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}" style="color:#15803d; text-decoration:none;">support@kumarstore.online</a>
+                        </p>
+                        <p style="font-size:12px; color:#bbbbbb; margin:10px 0 0;">
+                            &copy; <span th:text="${#calendars.year(#calendars.createNow())}">2026</span>
+                            <span th:text="${shopName}">Kumar Store Online</span>. All rights reserved.
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

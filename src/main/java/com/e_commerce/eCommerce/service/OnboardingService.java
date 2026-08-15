@@ -3,6 +3,7 @@ package com.e_commerce.eCommerce.service;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.controller.OnboardingController;
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -25,6 +27,7 @@ public class OnboardingService {
             LoggerFactory.getLogger(OnboardingService.class);
 
     private final VendorOnnBRepo vendorOnnBRepo;
+    private final EmailService emailService;
 //    private final VendorBankRepository vendorBankRepository;
     private final VendorRepository vendorRepository;
     private final vendorBussinesss vendorBusinessRepository;
@@ -450,29 +453,25 @@ public class OnboardingService {
         vendorBranding.setPrimaryColor(dto.getPrimaryColor());
         vendorBranding.setStoreDescription(dto.getDescription());
         vendorBranding.setStoreTagline(dto.getTagline());
+        vendorBranding.setSupportPhone(vendor.getEmail());
+        vendorBranding.setSupportEmail(vendor.getMobile());
         onboarding.setCompletionPercentage(90);
         onboarding.setCurrentStep(Math.max(onboarding.getCurrentStep(),5));
         vendorBrandingRepository.save(vendorBranding);
         vendorOnnBRepo.save(onboarding);
 
-        return "Brandimg Info Saved";
+        return "Branding Info Saved";
     }
 
     @Transactional
     public SubmitApplicationResponseDTO submitApplication(Long vendorId) {
-
-        // Vendor
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() ->
                         new RuntimeException("Vendor not found"));
-
-        // Onboarding Application
         VendorOnboardingApplication onboarding = vendorOnnBRepo
                 .findByVendorId(vendorId)
                 .orElseThrow(() ->
                         new RuntimeException("Onboarding application not found"));
-
-        // Update Status
         onboarding.setSubmittedAt(LocalDateTime.now());
         onboarding.setStatus(OnboardingStatus.UNDER_REVIEW);
         onboarding.setCurrentStep(6);
@@ -480,35 +479,42 @@ public class OnboardingService {
         onboarding.setCompleted(true);
 
         vendor.setStatus(VendorStatus.PENDING);
-
-        // Save
         vendorOnnBRepo.save(onboarding);
         vendorRepository.save(vendor);
-
-        // Response
         SubmitApplicationResponseDTO response = new SubmitApplicationResponseDTO();
         response.setSuccess(true);
         response.setMessage("Your onboarding application has been submitted successfully.");
         response.setApplicationId(onboarding.getApplicationId());
         response.setStatus(OnboardingStatus.valueOf(onboarding.getStatus().name()));
-//        response.setVendorStatus(vendor.getStatus().name());
         response.setSubmittedAt(onboarding.getSubmittedAt());
+        EmailRequestDto emailRequest = EmailRequestDto.builder()
+                .to(vendor.getEmail())
+                .subject("Onboarding Application Submitted – Kumar Store Online")
+                .templateName("vendor-application-submitted")
+                .templateVariables(Map.of(
+                        "vendorName", vendor.getFirstName(),
+                        "vendorEmail", vendor.getEmail(),
+                        "shopName", vendor.getBussinessName(),
+                        "applicationId", onboarding.getApplicationId(),
+                        "status", onboarding.getStatus().name(),
+                        "supportEmail", "support@kumarstore.online"
+                ))
+                .build();
+
+        emailService.sendEmailAsync(emailRequest);
 
         return response;
     }
 
-    public String makeDecisiion(OnBoardingDecisionDto onBoardingDecisionDto,User user) {
-        // Vendor
+    public String makeDecisiion(OnBoardingDecisionDto onBoardingDecisionDto, User user) {
         Vendor vendor = vendorRepository.findById(onBoardingDecisionDto.getApplicationId())
-                .orElseThrow(() ->
-                        new RuntimeException("Vendor not found"));
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
 
-        // Onboarding Application
         VendorOnboardingApplication onboarding = vendorOnnBRepo
                 .findByVendorId(onBoardingDecisionDto.getApplicationId())
-                .orElseThrow(() ->
-                        new RuntimeException("Onboarding application not found"));
-        if(onBoardingDecisionDto.getAction().equalsIgnoreCase("APPROVE")){
+                .orElseThrow(() -> new RuntimeException("Onboarding application not found"));
+
+        if (onBoardingDecisionDto.getAction().equalsIgnoreCase("APPROVE")) {
             onboarding.setStatus(OnboardingStatus.APPROVED);
             onboarding.setReviewedAt(LocalDateTime.now());
             onboarding.setReviewedBy(user.getId());
@@ -518,10 +524,24 @@ public class OnboardingService {
             vendor.setReSubmit(onBoardingDecisionDto.isAllowResubmit());
             vendorRepository.save(vendor);
             vendorOnnBRepo.save(onboarding);
+            EmailRequestDto approvalEmail = EmailRequestDto.builder()
+                    .to(vendor.getEmail())
+                    .subject("🎉 Your Vendor Application is Approved – " + vendor.getBussinessName())
+                    .templateName("vendor-application-approved")
+                    .templateVariables(Map.of(
+                            "vendorName", vendor.getFirstName(),
+                            "shopName", vendor.getBussinessName(),
+                            "applicationId", onboarding.getApplicationId(),
+                            "remarks", onBoardingDecisionDto.getRemarks() != null ? onBoardingDecisionDto.getRemarks() : "",
+                            "loginLink", "#",
+                            "supportEmail", "support@kumarstore.online"
+                    ))
+                    .build();
+            emailService.sendEmailAsync(approvalEmail);
 
             return "Approved Successfully";
-
         }
+
         onboarding.setStatus(OnboardingStatus.REJECTED);
         onboarding.setReviewedAt(LocalDateTime.now());
         onboarding.setReviewedBy(user.getId());
@@ -531,11 +551,23 @@ public class OnboardingService {
         vendor.setStatus(VendorStatus.REJECTED);
         vendorRepository.save(vendor);
         vendorOnnBRepo.save(onboarding);
+        EmailRequestDto rejectionEmail = EmailRequestDto.builder()
+                .to(vendor.getEmail())
+                .subject("Update on Your Vendor Application – " + vendor.getBussinessName())
+                .templateName("vendor-application-rejected")
+                .templateVariables(Map.of(
+                        "vendorName", vendor.getFirstName(),
+                        "shopName", vendor.getBussinessName(),
+                        "applicationId", onboarding.getApplicationId(),
+                        "remarks", onBoardingDecisionDto.getRemarks() != null ? onBoardingDecisionDto.getRemarks() : "",
+                        "allowResubmit", onBoardingDecisionDto.isAllowResubmit(),
+                        "resubmitLink", "#",
+                        "supportEmail", "support@kumarstore.online"
+                ))
+                .build();
+        emailService.sendEmailAsync(rejectionEmail);
+
         return "Rejected Successfully";
-
-
-
-
     }
 
     public VenddorOnBoardingApplicationStatus getOnboardingStatus(CustomUserDetail userDetail) {
