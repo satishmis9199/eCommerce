@@ -157,4 +157,29 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         if (at <= 1) return "***" + email.substring(at);
         return email.charAt(0) + "***" + email.substring(at);
     }
+
+
+
+
+
+    @Transactional
+    public String initiateForVendor(User user) {
+        Instant now = Instant.now();
+
+        tokenRepository.invalidateOutstandingTokensForUser(user.getId(), now);
+
+        String rawToken = tokenGenerator.generateRawToken(properties.getTokenByteLength());
+        String tokenHash = tokenGenerator.hash(rawToken);
+
+        PasswordResetToken entity = new PasswordResetToken();
+        entity.setUser(user);
+        entity.setTenantId(user.getTenantId());
+        entity.setTokenHash(tokenHash);
+        entity.setExpiresAt(now.plus(properties.getTokenExpiry()));
+        tokenRepository.save(entity);
+        log.info("Password setup token issued for userId={}, tenantId={}, expiresAt={}",
+                user.getId(), user.getTenantId(), entity.getExpiresAt());
+
+        return rawToken;
+    }
 }

@@ -30,20 +30,9 @@ public class VendorController {
             @RequestBody VendorRequestDto vendorRequestDto, HttpServletRequest request) {
 
         try {
-            logger.info("--------------- ENTITY BEFORE SAVE ---------------");
-            logger.info("Vendor First Name   : {}", vendorRequestDto.getFirstName());
-            logger.info("Vendor Last Name    : {}", vendorRequestDto.getLastName());
-            logger.info("Vendor Email        : {}", vendorRequestDto.getEmail());
-            logger.info("Vendor Mobile       : {}", vendorRequestDto.getPhone());
-            logger.info("Vendor Mobile       : {}", vendorRequestDto.getVendorEmail());
 
-            logger.info("Vendor Business     : {}", vendorRequestDto.getBusinessName());
-            logger.info("Vendor Plan         : {}", vendorRequestDto.getPlan());
-            logger.info("--------------------------------------------------");
             String requests=request.getServerName();
-            System.out.println("____"+vendorRequestDto.getVendorEmail());
             vendorService.createVendor(vendorRequestDto,requests);
-
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ApiResponse(
                             true,

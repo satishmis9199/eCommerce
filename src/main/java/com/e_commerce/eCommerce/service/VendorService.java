@@ -3,6 +3,7 @@ package com.e_commerce.eCommerce.service;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.controller.VendorController;
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.UserRepos;
 
@@ -10,6 +11,7 @@ import com.e_commerce.eCommerce.repository.VendorOnnBRepo;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.repository.vendorBussinesss;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,24 +21,23 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
+
 public class VendorService {
     private static final Logger logger= LoggerFactory.getLogger(VendorController.class);
 
-    @Autowired
-    private VendorRepository vendorRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    VendorOnnBRepo vendorOnnBRepo;
-    @Autowired
-    UserRepos userRepos;
-    @Autowired
-    vendorBussinesss vendorBussinessAddress;
-
+    private final VendorRepository vendorRepository;
+    private final PasswordEncoder passwordEncoder;
+   private final VendorOnnBRepo vendorOnnBRepo;
+   private final UserRepos userRepos;
+    private final vendorBussinesss vendorBussinessAddress;
+    private final PasswordResetServiceImpl passwordResetService;
+    private final EmailService emailService;
 
     @Transactional
     public Boolean createVendor(VendorRequestDto vendorRequestDto,String requesst) {
@@ -92,7 +93,7 @@ public class VendorService {
         vendorOnnBRepo.save(vendorOnboardingApplication);
 
         User user=new User();
-        user.setEmail(vendorRequestDto.getVendorEmail());
+        user.setEmail(vendorRequestDto.getEmail());
         user.setPassword(passwordEncoder.encode("satish"));
         user.setRole(Roles.ADMIN);
         user.setMobileNumber(vendor.getMobile());
@@ -104,7 +105,30 @@ public class VendorService {
         user.setUpdatedAt(LocalDateTime.now());
         user.setUpdatedBy("Satish");
         user.setVendorId(vendor.getId());
-        userRepos.save(user);
+       User user1= userRepos.save(user);
+        String token=passwordResetService.initiateForVendor(user1);
+
+        String resetLinks="https://"+vendor.getSubDomain()+requesst+ "/reset-password?token="+token ;
+        String Loginlinks="https://"+vendor.getSubDomain()+requesst;
+
+
+        EmailRequestDto vendorEmail = EmailRequestDto.builder()
+                .to(vendor.getEmail())
+                .subject("Welcome to " + "KUMAR Store Online" + " – Your Vendor Account Details")
+                .templateName("vendor-welcome-email")
+                .templateVariables(Map.of(
+                        "vendorName", vendor.getFirstName(),
+                        "vendorEmail", vendor.getEmail()+" "+vendor.getLastName(),
+                        "tempPassword", "satish123",
+                        "shopName", "Kumar Store",
+                        "loginLink",Loginlinks ,
+                        "resetLink", resetLinks,
+                        "expiryMinutes", 30,
+                        "supportEmail", "support@kumarstore.online"
+                ))
+                .build();
+
+        emailService.sendEmailAsync(vendorEmail);
 
 
 
