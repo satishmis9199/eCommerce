@@ -15,6 +15,7 @@ public class StoreInfoResponseDTO {
     private String businessName;
     private String storeName;
     private String tagline;
+    private String storeType;
 
     private String logoUrl;
     private String bannerUrl;

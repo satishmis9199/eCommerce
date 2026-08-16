@@ -32,6 +32,7 @@ public class UserDashBoardService {
     private final ProductRepository productRepository;
     private final R2Properties r2Properties;
     private final PasswordEncoder passwordEncoder;
+    private final vendorBussinesss vendorBussinesss;
     private final UserRepos userRepos;
     private final BannerRepository bannerRepository;
 //    private static final Logger logger= LoggerFactory.getLogger(UserDashBoardService.class);
@@ -45,18 +46,20 @@ public class UserDashBoardService {
 
         Vendor vendor = vendorRepository.findByTenantId(tenantId)
                 .orElseThrow(() -> new RuntimeException("Vendor does not exist"));
+        VendorBusiness vendorBusiness=vendorBussinesss.findByVendorId(vendor.getId());
 
         VendorBranding branding = vendorBrandingRepository.findByVendorId(vendor.getId());
 
         StoreInfoResponseDTO dto = new StoreInfoResponseDTO();
 
         dto.setVendorId(vendor.getId());
+
         dto.setTenantId(vendor.getTenantId());
         dto.setBusinessName(vendor.getBussinessName());
         dto.setStoreName(vendor.getStoreName());
 
         if (branding != null) {
-
+            dto.setStoreType(vendorBusiness.getBusinessCategory());
             dto.setTagline(branding.getStoreTagline());
             dto.setAboutUs(branding.getStoreDescription());
 

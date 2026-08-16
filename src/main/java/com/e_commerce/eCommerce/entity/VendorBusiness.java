@@ -24,11 +24,6 @@ public class VendorBusiness {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    //===========================
-    // Relation
-    //===========================
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "vendor_id",
@@ -38,11 +33,6 @@ public class VendorBusiness {
     private Vendor vendor;
 
     private String tenant_Id;
-
-    //===========================
-    // Business Information
-    //===========================
-
     @Column(nullable = false)
     private BusinessType businessType;
 
@@ -69,10 +59,6 @@ public class VendorBusiness {
     private Integer establishedYear;
 
     private Integer employeeCount;
-
-    //===========================
-    // Audit
-    //===========================
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

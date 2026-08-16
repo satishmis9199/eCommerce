@@ -44,11 +44,7 @@ public class ProductExcelService {
     private static final int DATA_START_ROW   = 4;
     private static final int SAMPLE_ROW_COUNT = 3;
     private static final int COLUMN_COUNT = 10;
-    // Hidden helper column used purely to flag the 3 sample/dummy rows so the
-    // upload parser can skip them even if the vendor doesn't delete them,
-    // reorders rows, or edits some of the sample values.
-    // NOTE: with COLUMN_COUNT = 10 (indices 0-9 used by HEADERS), this marker
-    // lives at index 10 -> the 11th column.
+
     private static final int SAMPLE_MARKER_COL   = COLUMN_COUNT; // column index 10 (11th column)
     private static final String SAMPLE_MARKER    = "SAMPLE_ROW_DO_NOT_EDIT";
 
@@ -223,19 +219,6 @@ public class ProductExcelService {
         sheet.addValidationData(validation);
     }
 
-    /**
-     * Adds a dropdown for the Category ID column populated with the vendor's
-     * existing active categories, shown as "ID - Category Name" so the vendor
-     * can recognize the category by name instead of a bare number. Uses a
-     * hidden helper sheet + formula-based list (instead of an explicit list)
-     * since Excel's explicit list constraint is capped at 255 characters and
-     * would silently break once there are more than a handful of categories.
-     *
-     * Excel dropdowns cannot show one value while storing a different one
-     * (that needs VBA, which most vendors have disabled) — so the cell will
-     * literally contain "ID - Name". The upload parser strips the "- Name"
-     * part back off and keeps only the leading numeric ID.
-     */
     private void addCategoryDropdown(XSSFWorkbook workbook, XSSFSheet productSheet,
                                      List<ProductCategory> categories, int firstRow, int lastRow) {
         if (categories == null || categories.isEmpty()) {
@@ -281,6 +264,7 @@ public class ProductExcelService {
         }
 
 
+
         String[][] rules = {
                 {"Category ID", "Required. Choose from the dropdown - shows \"ID - Category Name\", only your existing active categories are listed."},
                 {"Product Name", "Required. Max 150 characters."},
@@ -308,16 +292,6 @@ public class ProductExcelService {
         }
     }
 
-    // =========================================================================
-    // UPLOAD / PARSE
-    // =========================================================================
-
-    /**
-     * Parses an uploaded product Excel file, validating every row.
-     * Rows with errors are skipped and reported; valid rows are returned for persistence.
-     * Sample/dummy rows from the template (identified by the hidden marker column)
-     * are silently skipped and are NOT counted as processed, successful, or failed rows.
-     */
     @Transactional
     public UploadResult uploadProducts(MultipartFile file, User user) throws Exception {
 
@@ -426,7 +400,6 @@ public class ProductExcelService {
             }
         }
 
-        // Persist valid rows.
         List<Product> products = new ArrayList<>();
         for (ParsedProductRow r : validRows) {
 
@@ -471,12 +444,6 @@ public class ProductExcelService {
         return formatter.formatCellValue(cell).trim();
     }
 
-    /**
-     * A row counts as empty only if all the *visible, data-bearing* columns
-     * (0..COLUMN_COUNT-1) are blank. The hidden sample marker column is
-     * intentionally excluded so it never makes an otherwise-blank row look
-     * "non-empty".
-     */
     private boolean isRowEmpty(Row row) {
         for (int i = 0; i < COLUMN_COUNT; i++) {
             if (!getCellValue(row, i).isBlank()) {
@@ -485,11 +452,6 @@ public class ProductExcelService {
         }
         return true;
     }
-
-    /**
-     * True if this row is one of the template's built-in sample/dummy rows,
-     * as flagged by the hidden marker column written during template generation.
-     */
     private boolean isSampleRow(Row row) {
         return SAMPLE_MARKER.equals(getCellValue(row, SAMPLE_MARKER_COL));
     }
@@ -517,8 +479,7 @@ public class ProductExcelService {
             errors.add("Category ID is required.");
             return null;
         }
-        // Dropdown value looks like "3 - Cement Category". Also accept a bare
-        // number in case the vendor typed/pasted just the ID.
+
         String leadingDigits = value.trim().split("\\s*-\\s*", 2)[0].trim();
         try {
             return Long.parseLong(leadingDigits);
@@ -575,11 +536,6 @@ public class ProductExcelService {
         }
     }
 
-    // =========================================================================
-    // STYLES
-    // =========================================================================
-
-    /** Groups every reusable CellStyle so they are created once per workbook. */
     private static class Styles {
 
         final CellStyle banner;

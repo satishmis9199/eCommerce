@@ -220,15 +220,22 @@
          CONFIG
            GET /api/u1/v1/store/info → vendor/store profile (branding only)
            Vendor CTA  → /api/vendor/v1/login (normal navigation, it's an API/auth route)
-           Shop CTA    → employee.html — plain redirect (window.location.href),
-                         so its own <link>/<script> tags in <head> load correctly.
+           Shop CTA    → employee.html OR home.html depending on vendor.storeType —
+                         plain redirect (window.location.href), so its own
+                         <link>/<script> tags in <head> load correctly.
            No categories / about / contact sections on this page at all.
       ----------------------------------------------------------------- */
       const API_BASE = "/api/u1/v1";
       const STORE_INFO_URL = `${API_BASE}/store/info`;
       const SHOP_PAGE_URL = "/employee.html";
+      const CAFE_HOME_URL = "/home.html";
+      const CAFE_STORE_TYPE = "Cafe and Restaurant";
       const REQUEST_TIMEOUT_MS = 6000;
       const R2_PUBLIC_URL = "https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev";
+
+      // Resolved once /store/info responds; defaults to employee.html
+      // so early clicks (before the API resolves) still go somewhere sane.
+      let shopUrl = SHOP_PAGE_URL;
 
       function getImageUrl(path){
         if (!path) return "";
@@ -268,9 +275,21 @@
         root.setProperty("--brand-light", shadeColor(primary, 88));
       }
 
+      // Decide which page "Shop Now" should go to, based on storeType,
+      // and keep the <a href> in sync too (so right-click/open-in-new-tab
+      // and no-JS fallback both land on the right page).
+      function applyShopDestination(vendor){
+        shopUrl = (vendor.storeType === CAFE_STORE_TYPE) ? CAFE_HOME_URL : SHOP_PAGE_URL;
+        ["shopHeaderBtn","shopNowHeroBtn"].forEach(id=>{
+          const el = document.getElementById(id);
+          if (el) el.setAttribute("href", shopUrl);
+        });
+      }
+
       function renderStoreInfo(vendor){
         document.title = vendor.storeName ? `${vendor.storeName} · Shop or sign in` : "Shop or sign in";
         applyTheme(vendor);
+        applyShopDestination(vendor);
 
         if (vendor.faviconUrl){
           let favicon = document.querySelector("link[rel='icon']");
@@ -351,15 +370,16 @@
       loadAll();
 
       /* -----------------------------------------------------------------
-         SHOP NAVIGATION — plain redirect to employee.html.
+         SHOP NAVIGATION — plain redirect to shopUrl (employee.html or
+         home.html, resolved from vendor.storeType in applyShopDestination).
          (A fetch()+DOM-inject approach was tried, but it only swaps
-         document.body — employee.html's own <link>/<script> tags live in
-         its <head> and never get loaded that way, so its CSS/JS broke.
+         document.body — the target page's own <link>/<script> tags live
+         in its <head> and never get loaded that way, so its CSS/JS broke.
          Full navigation is what actually loads the shop page correctly.)
       ----------------------------------------------------------------- */
       function goToShop(e){
         if (e) e.preventDefault();
-        window.location.href = SHOP_PAGE_URL;
+        window.location.href = shopUrl;
       }
 
       ["shopHeaderBtn","shopNowHeroBtn"].forEach(id=>{
