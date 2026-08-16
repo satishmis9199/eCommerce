@@ -37,11 +37,9 @@ public class VendorDashboardFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        logger.info("Inside Dashboard filter");
+
 
         String uri = request.getRequestURI();
-
-        // Dashboard nahi hai to kuch mat karo
         if (!DASHBOARD_URI.equals(uri) ) {
             filterChain.doFilter(request, response);
             return;
@@ -87,7 +85,6 @@ public class VendorDashboardFilter extends OncePerRequestFilter {
                 return;
 
             case ONBOARDING:
-                logger.info("Status is ONBOARDING");
                 response.sendRedirect("/vendor/s1/on/v1/onBoarding");
                 return;
 

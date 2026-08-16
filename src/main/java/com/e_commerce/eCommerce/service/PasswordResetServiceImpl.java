@@ -64,15 +64,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         entity.setTokenHash(tokenHash);
         entity.setExpiresAt(now.plus(properties.getTokenExpiry()));
         tokenRepository.save(entity);
-        log.info("Password setup token issued for userId={}, tenantId={}, expiresAt={}",
-                user.getId(), user.getTenantId(), entity.getExpiresAt());
 
-        // Single source of truth for the base URL — comes from config
-        // (application.properties: app.password-reset.frontend-base-url or similar),
-        // so it stays correct across dev/staging/prod instead of being hardcoded.
-//        String baseUrl = properties.getFrontendBaseUrl();
-//        String resetLink = baseUrl + "/reset-password?token=" + rawToken;
-//        log.debug("reset link---{}", resetLink);
         String serverName=request.getServerName();
         String links="http://"+serverName+ "/reset-password?token=" + rawToken;
 

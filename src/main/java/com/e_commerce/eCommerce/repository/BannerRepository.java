@@ -36,4 +36,6 @@ public interface BannerRepository extends JpaRepository<Banner,Long> {
                 @Param("vendorId") Long vendorId,
                 @Param("now") LocalDateTime now
         );
+
+    Banner findByIdAndTenantId(Long id, String tenantId);
 }

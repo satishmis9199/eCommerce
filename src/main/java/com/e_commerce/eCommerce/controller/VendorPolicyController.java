@@ -21,8 +21,7 @@ public class VendorPolicyController {
 
     private final VendorPolicyService vendorPolicyService;
 
-    // TODO: tenantId/vendorId nikalne ka actual tareeka — apke SecurityContext
-    // ya TenantContext ke hisaab se replace karo. Yahan placeholder rakha hai.
+
     private String getTenantId() { return "tenant_id_from_context"; }
     private Long getVendorId() { return 1L; }
 

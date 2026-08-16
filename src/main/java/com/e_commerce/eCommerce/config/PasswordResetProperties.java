@@ -11,6 +11,6 @@ import java.time.Duration;
 @Setter
 public class PasswordResetProperties {
     private String frontendBaseUrl;
-    private Duration tokenExpiry = Duration.ofHours(24);
+    private Duration tokenExpiry = Duration.ofMinutes(5);
     private int tokenByteLength = 32;
 }

@@ -570,10 +570,10 @@
     <div class="mobile-brand-bar">
         <div class="grid-bg"></div>
         <div class="mobile-brand-bar-left">
-            <div class="brand-mark">S</div>
+            <div class="brand-mark" id="mobileBrandMark">S</div>
             <div class="brand-text">
-                <div class="name">SellerHub</div>
-                <div class="tag">Vendor Portal</div>
+                <div class="name" id="mobileBrandName">SellerHub</div>
+                <div class="tag" id="mobileBrandTag">Vendor Portal</div>
             </div>
         </div>
         <div class="live-pill">
@@ -590,10 +590,10 @@
 
         <!-- Brand -->
         <div class="left-brand">
-            <div class="brand-mark">S</div>
+            <div class="brand-mark" id="brandMark">S</div>
             <div class="brand-text">
-                <div class="name">SellerHub</div>
-                <div class="tag">Vendor Portal</div>
+                <div class="name" id="brandName">SellerHub</div>
+                <div class="tag" id="brandTag">Vendor Portal</div>
             </div>
         </div>
 
@@ -606,7 +606,7 @@
         <!-- Headline -->
         <div class="left-headline">
             <h1>Your store.<br/><span class="accent">Always open.</span></h1>
-            <p>Join 48,000+ vendors already selling on SellerHub. Manage orders, track revenue, and grow your brand — all in one place.</p>
+            <p id="brandSubline">Join 48,000+ vendors already selling on SellerHub. Manage orders, track revenue, and grow your brand — all in one place.</p>
         </div>
 
         <!-- Stat Cards -->
@@ -817,6 +817,62 @@
                             <button class="label-link" onclick="retryReset()" style="font-size:12px">resend the link</button>.
                         </p>
                         <button class="submit-btn" onclick="closeForgot()" style="margin-top:24px">← Back to Sign In</button>
+                    </div>
+                </div>
+
+                <!-- Reached via the emailed link (?token=...) while it's being checked -->
+                <div id="forgotStepVerifying" class="hidden">
+                    <div style="text-align:center;padding:32px 0">
+                        <div class="spinner" style="width:28px;height:28px;border-width:3px;margin:0 auto 16px"></div>
+                        <p style="font-size:13px;color:var(--muted)">Verifying your reset link…</p>
+                    </div>
+                </div>
+
+                <!-- Token verified — set a new password -->
+                <div id="forgotStep3" class="hidden">
+                    <div class="field">
+                        <label for="newPassword">New Password</label>
+                        <div class="input-wrap">
+                            <span class="input-icon-left">🔒</span>
+                            <input type="password" id="newPassword" placeholder="Enter a new password"
+                                   autocomplete="new-password" oninput="clearError('newPassword')"/>
+                            <span class="input-icon-right" id="newPwToggle" onclick="toggleNewPassword('newPassword','newPwToggle')" title="Show password">👁</span>
+                        </div>
+                        <div class="field-error hidden" id="err-newPassword"></div>
+                    </div>
+                    <div class="field">
+                        <label for="confirmNewPassword">Confirm New Password</label>
+                        <div class="input-wrap">
+                            <span class="input-icon-left">🔒</span>
+                            <input type="password" id="confirmNewPassword" placeholder="Re-enter the new password"
+                                   autocomplete="new-password" oninput="clearError('confirmNewPassword')"
+                                   onkeydown="if(event.key==='Enter')submitNewPassword()"/>
+                            <span class="input-icon-right" id="confirmPwToggle" onclick="toggleNewPassword('confirmNewPassword','confirmPwToggle')" title="Show password">👁</span>
+                        </div>
+                        <div class="field-error hidden" id="err-confirmNewPassword"></div>
+                    </div>
+                    <button class="submit-btn" id="setPasswordBtn" onclick="submitNewPassword()">
+                        <span id="setPasswordBtnText">Set New Password</span>
+                    </button>
+                </div>
+
+                <!-- New password saved -->
+                <div id="forgotStep4" class="hidden">
+                    <div style="text-align:center;padding:12px 0">
+                        <div class="success-icon-wrap">✅</div>
+                        <h3 style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">Password updated</h3>
+                        <p style="font-size:13px;color:var(--muted);line-height:1.6">You can now sign in with your new password.</p>
+                        <button class="submit-btn" onclick="closeForgot()" style="margin-top:24px">← Back to Sign In</button>
+                    </div>
+                </div>
+
+                <!-- Link invalid or expired -->
+                <div id="forgotStepInvalid" class="hidden">
+                    <div style="text-align:center;padding:12px 0">
+                        <div class="success-icon-wrap">⚠️</div>
+                        <h3 style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">Link expired</h3>
+                        <p style="font-size:13px;color:var(--muted);line-height:1.6" id="invalidTokenMsg">This reset link is invalid or has expired. Request a new one.</p>
+                        <button class="submit-btn" onclick="resetForgotFlow()" style="margin-top:24px">Request a new link</button>
                     </div>
                 </div>
             </div>
@@ -1113,7 +1169,85 @@
       otpSentTo: '',
       otpTimer:  null,
       theme:     localStorage.getItem('vh-theme') || 'light',
+      resetToken: null,
     };
+
+    // ── STORE INFO ─────────────────────────────────────────────────
+    // GET /api/v1/store/info → branding for this vendor portal instance
+    // (multi-tenant: each store gets its own name/logo/accent color on
+    // this same login page). Falls back to the static "SellerHub" demo
+    // branding already in the markup if the call fails or is offline.
+    const STORE_INFO_ENDPOINT = "/api/u1/v1/store/info"
+
+    const DEFAULT_STORE_INFO = {
+      storeName:  'SellerHub',
+      tagline:    'Vendor Portal',
+      logoUrl:    '',
+      themeColor: '#4F46E5',
+    };
+
+    async function loadStoreInfo() {
+      try {
+        const response = await fetch(STORE_INFO_ENDPOINT, {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+
+        if (!response.ok) return DEFAULT_STORE_INFO;
+
+        const data = await response.json();
+        const info = data && data.data ? data.data : data;
+        if (!info || !info.storeName) return DEFAULT_STORE_INFO;
+
+        return {
+          storeName:  info.storeName,
+          tagline:    info.tagline || DEFAULT_STORE_INFO.tagline,
+          logoUrl:    info.logoUrl || '',
+          themeColor: info.themeColor || DEFAULT_STORE_INFO.themeColor,
+        };
+      } catch (err) {
+        console.warn('storeInfo fetch failed, using default branding', err);
+        return DEFAULT_STORE_INFO;
+      }
+    }
+
+    function applyStoreInfo(info) {
+      const initial = (info.storeName || 'S').trim().charAt(0).toUpperCase();
+
+      document.title = info.storeName + ' — Vendor Login';
+
+      ['brandName', 'mobileBrandName'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = info.storeName;
+      });
+
+      const tagEl = document.getElementById('mobileBrandTag');
+      if (tagEl) tagEl.textContent = info.tagline;
+
+      const sublineEl = document.getElementById('brandSubline');
+      if (sublineEl) {
+        sublineEl.textContent = `Manage orders, track revenue, and grow ${info.storeName} — all in one place.`;
+      }
+
+      ['brandMark', 'mobileBrandMark'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (info.logoUrl) {
+          el.style.backgroundImage = `url("${info.logoUrl}")`;
+          el.style.backgroundSize = 'cover';
+          el.style.backgroundPosition = 'center';
+          el.textContent = '';
+        } else {
+          el.style.backgroundImage = 'none';
+          el.textContent = initial;
+        }
+      });
+
+      if (info.themeColor) {
+        document.documentElement.style.setProperty('--indigo', info.themeColor);
+      }
+    }
 
     // ── TICKER DATA ────────────────────────────────────────────────
     const TICKER_ORDERS = [
@@ -1381,17 +1515,40 @@
       document.getElementById('otpInputs').querySelectorAll('input').forEach(i=>{i.value='';i.classList.remove('filled','error');});
     }
 
-    // ── FORGOT PASSWORD ────────────────────────────────────────────
+
+    const PASSWORD_RESET_BASE = '/api/u1/v1/auth/password-reset';
+
+    function showForgotStep(id) {
+      ['forgotStep1','forgotStep2','forgotStepVerifying','forgotStep3','forgotStep4','forgotStepInvalid']
+        .forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+    }
+
     function openForgot() {
       document.getElementById('forgotPanel').classList.add('open');
+      showForgotStep('forgotStep1');
       document.getElementById('forgotEmail').focus();
     }
     function closeForgot() {
       document.getElementById('forgotPanel').classList.remove('open');
-      document.getElementById('forgotStep1').classList.remove('hidden');
-      document.getElementById('forgotStep2').classList.add('hidden');
+      resetForgotFlow();
+    }
+    // Brings the panel back to the "enter your email" step — also used
+    // by the invalid/expired-token screen's "Request a new link" button.
+    function resetForgotFlow() {
+      showForgotStep('forgotStep1');
       document.getElementById('forgotEmail').value='';
       clearError('forgotEmail');
+      document.getElementById('newPassword').value='';
+      document.getElementById('confirmNewPassword').value='';
+      clearError('newPassword');
+      clearError('confirmNewPassword');
+      S.resetToken = null;
+      // Drop ?token=... from the URL so a refresh doesn't re-trigger verification
+      if (window.location.search.includes('token=')) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('token');
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+      }
     }
 
     async function sendResetLink() {
@@ -1403,22 +1560,117 @@
       document.getElementById('resetBtn').innerHTML='<div class="spinner"></div>';
       document.getElementById('resetBtn').disabled=true;
 
-      /* ── REAL: POST /api/vendor/auth/forgot-password ─────────────
-      await fetch('/api/vendor/auth/forgot-password', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ email })
-      });
-      // Always show success (don't reveal if email exists — security)
-      ── END REAL ── */
+      try {
+        const response = await fetch(`${PASSWORD_RESET_BASE}/request`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await response.json().catch(() => ({}));
 
-      await delay(1000);
-      document.getElementById('resetBtn').innerHTML='<span id="resetBtnText">Send Reset Link</span>';
-      document.getElementById('resetBtn').disabled=false;
-      document.getElementById('resetSentTo').textContent=email;
-      document.getElementById('forgotStep1').classList.add('hidden');
-      document.getElementById('forgotStep2').classList.remove('hidden');
+        // Backend intentionally always reports success here (no user
+        // enumeration) — treat any 2xx as "link sent".
+        if (!response.ok) {
+          showToast('error', 'Something went wrong', data.message || 'Please try again in a moment.');
+          return;
+        }
+
+        document.getElementById('resetSentTo').textContent = email;
+        showForgotStep('forgotStep2');
+      } catch (err) {
+        showToast('error', 'Network error', 'Could not reach the server. Please try again.');
+      } finally {
+        document.getElementById('resetBtn').innerHTML='<span id="resetBtnText">Send Reset Link</span>';
+        document.getElementById('resetBtn').disabled=false;
+      }
     }
-    function retryReset() { document.getElementById('forgotStep1').classList.remove('hidden'); document.getElementById('forgotStep2').classList.add('hidden'); }
+    function retryReset() { showForgotStep('forgotStep1'); }
+
+    // Called on page load when the URL contains ?token=... (the vendor
+    // clicked the emailed reset link).
+    async function checkForPasswordResetToken() {
+      const token = new URLSearchParams(window.location.search).get('token');
+      if (!token) return;
+
+      document.getElementById('forgotPanel').classList.add('open');
+      showForgotStep('forgotStepVerifying');
+
+      try {
+        const response = await fetch(`${PASSWORD_RESET_BASE}/verify?token=${encodeURIComponent(token)}`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'X-Requested-With':'XMLHttpRequest' },
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || data.success === false) {
+          document.getElementById('invalidTokenMsg').textContent =
+            data.message || 'This reset link is invalid or has expired. Request a new one.';
+          showForgotStep('forgotStepInvalid');
+          return;
+        }
+
+        S.resetToken = token;
+        showForgotStep('forgotStep3');
+        document.getElementById('newPassword').focus();
+      } catch (err) {
+        document.getElementById('invalidTokenMsg').textContent = 'Could not verify this link. Please try again.';
+        showForgotStep('forgotStepInvalid');
+      }
+    }
+
+    function toggleNewPassword(inputId, toggleId) {
+      const inp = document.getElementById(inputId);
+      const tog = document.getElementById(toggleId);
+      if (inp.type === 'password') { inp.type='text'; tog.textContent='🙈'; }
+      else { inp.type='password'; tog.textContent='👁'; }
+    }
+
+    async function submitNewPassword() {
+      clearError('newPassword');
+      clearError('confirmNewPassword');
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+      if (!newPassword) { setError('newPassword','New password is required'); return; }
+      if (newPassword.length < 6) { setError('newPassword','Password must be at least 6 characters'); return; }
+      if (!confirmNewPassword) { setError('confirmNewPassword','Please confirm your new password'); return; }
+      if (newPassword !== confirmNewPassword) { setError('confirmNewPassword','Passwords do not match'); return; }
+      if (!S.resetToken) { showToast('error','Link expired','Please request a new reset link.'); showForgotStep('forgotStepInvalid'); return; }
+
+      setLoading('setPasswordBtn','setPasswordBtnText', true);
+
+      try {
+        const response = await fetch(PASSWORD_RESET_BASE, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest' },
+          body: JSON.stringify({ token: S.resetToken, newPassword }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || data.success === false) {
+          showToast('error', 'Could not reset password', data.message || 'That link may have expired.');
+          document.getElementById('invalidTokenMsg').textContent =
+            data.message || 'This reset link is invalid or has expired. Request a new one.';
+          showForgotStep('forgotStepInvalid');
+          return;
+        }
+
+        // Clean the token out of the URL now that it's been used.
+        const url = new URL(window.location.href);
+        url.searchParams.delete('token');
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+
+        showToast('success', 'Password updated', data.message || 'You can now sign in with your new password.');
+        showForgotStep('forgotStep4');
+      } catch (err) {
+        showToast('error', 'Network error', 'Could not reach the server. Please try again.');
+      } finally {
+        setLoading('setPasswordBtn','setPasswordBtnText', false, 'Set New Password');
+      }
+    }
 
     // ── SOCIAL LOGIN ────────────────────────────────────────────────
     async function socialLogin(provider) {
@@ -1487,10 +1739,15 @@
     const delay = ms => new Promise(r=>setTimeout(r,ms));
 
     // ── INIT ───────────────────────────────────────────────────────
-    (function init() {
+    (async function init() {
       // Theme
       document.documentElement.setAttribute('data-theme', S.theme);
       document.getElementById('themeBtn').textContent = S.theme==='dark' ? '☀️' : '🌙';
+
+      // Store branding — fetched first so the name/logo/accent are
+      // correct before anything else paints; falls back silently to
+      // the default SellerHub look if the endpoint isn't reachable.
+      applyStoreInfo(await loadStoreInfo());
 
       // Build ticker
       buildTicker();
@@ -1517,6 +1774,10 @@
 
       // Focus email on load
       setTimeout(() => document.getElementById('email')?.focus(), 600);
+
+      // If the vendor arrived via the emailed reset link (?token=...),
+      // jump straight into the reset-password flow.
+      checkForPasswordResetToken();
     })();
 </script>
 </body>

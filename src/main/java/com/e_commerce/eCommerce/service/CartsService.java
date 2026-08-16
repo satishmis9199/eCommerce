@@ -648,7 +648,6 @@ return count;
 
     @Transactional
     public void verifyOrderPayment(VerifyPaymentRequestDto dto) {
-        logger.error("Order Id "+dto.getOrderId());
         String status="";
 
         String tenantId = TenantContext.getTenantId();
@@ -694,10 +693,6 @@ return count;
             order.setPaymentStatus(PaymentStatus.PAID);
             order.setOrderStatus(OrderStatus.PLACED);
 
-//        }else if(status.equalsIgnoreCase("authorized")){
-//            order.setPaymentReferenceId(dto.getRazorpayPaymentId());
-//            order.setPaymentStatus(PaymentStatus.PENDING);
-//            order.setOrderStatus(OrderStatus.PAYMENT_PENDING);
         }else if(status.equalsIgnoreCase("refunded")){
 
             order.setPaymentStatus(PaymentStatus.REFUNDED);
@@ -715,7 +710,6 @@ return count;
             throw new RuntimeException("Payment  failed");
 
         }
-        //for Now We will not Consider Authorized;;;;
         else{
             throw new RuntimeException("Payment not completed.");
         }
