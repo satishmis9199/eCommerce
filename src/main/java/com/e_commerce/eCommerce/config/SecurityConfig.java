@@ -135,6 +135,7 @@ public class SecurityConfig {
 
 
                                 "/api/access-denied",
+                                "/know/about-developer",
                                 "/reset-password"
 
                         ).permitAll()

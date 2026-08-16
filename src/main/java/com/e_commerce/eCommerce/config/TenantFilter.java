@@ -96,10 +96,8 @@ public class TenantFilter extends OncePerRequestFilter {
         catch(Exception e){
             e.printStackTrace();
 
-            logger.info("Error while Finding a Tenant id",e.getMessage());
-//            response.sendRedirect("/tenant-not-found");
+            logger.error("Error while Finding a Tenant id",e.getMessage());
 
-                logger.info("Error while resolving tenant", e);
 
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 response.setContentType("application/json");

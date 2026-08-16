@@ -35,19 +35,13 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String uri = request.getRequestURI();
-//        if (uri.startsWith("/ws") || uri.startsWith("/api") ) {
-//
-//            filterChain.doFilter(request, response);
-//
-//            return;
-//        }
 
         try {
 
             String token = extractToken(request);
             if (token == null || token.isBlank()) {
 
-                logger.warn("⚠️ No JWT token found");
+
 
                 SecurityContextHolder.clearContext();
 
@@ -57,7 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             if (!jwtUtil.validateToken(token)) {
 
-                logger.warn("❌ Invalid JWT Token");
+
 
                 SecurityContextHolder.clearContext();
 
@@ -86,7 +80,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-            logger.info(" AUTHENTICATION SET : {}", username);
+
 
         } catch (Exception e) {
 
@@ -115,7 +109,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
-            logger.info("TOKEN FOUND IN HEADER");
+
 
             return authHeader.substring(7);
         }

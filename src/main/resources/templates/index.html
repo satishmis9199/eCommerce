@@ -146,6 +146,10 @@
         ===================================================================== */
         footer{background:var(--steel-900);color:var(--steel-200);padding:22px 0;}
         .footer-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8B93A0;}
+        .footer-links{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+        .footer-links a{color:#8B93A0;transition:color .15s;}
+        .footer-links a:hover{color:#fff;}
+        .footer-links .dot-sep{color:#3E4756;}
 
         @media (max-width:760px){
           .container{padding:0 18px;}
@@ -208,7 +212,11 @@
 <footer>
     <div class="container footer-row">
         <span id="footerCopyright">&nbsp;</span>
-        <span>Vendor? <a href="/api/vendor/v1/login" style="color:#fff;font-weight:600;">Sign in here</a></span>
+        <div class="footer-links">
+            <a href="/know/about-developer">Know the Developer</a>
+            <span class="dot-sep">·</span>
+            <span>Vendor? <a href="/api/vendor/v1/login" style="color:#fff;font-weight:600;">Sign in here</a></span>
+        </div>
     </div>
 </footer>
 

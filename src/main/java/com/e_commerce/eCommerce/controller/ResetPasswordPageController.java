@@ -11,5 +11,9 @@ public class ResetPasswordPageController {
     public String resetPasswordPage() {
         return "reset";
     }
+    @GetMapping("/know/about-developer")
+    public String about(){
+        return "about-developer";
+    }
 }
 
