@@ -5,12 +5,13 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.*;
-
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.parameters.P;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -39,9 +40,10 @@ public class ProductService {
     private final ProductReviewRepository productReviewRepository;
 
     private final R2Properties r2Properties;
+
     @Transactional
-    public String addProduct(ProductRequestDTO dto,
-                             CustomUserDetail userDetail) {
+    @Caching(evict = {@CacheEvict(value = "adminProduct", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()"), @CacheEvict(value = "products", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")})
+    public String addProduct(ProductRequestDTO dto, CustomUserDetail userDetail) {
 
         User user = userDetail.getUser();
 
@@ -50,14 +52,11 @@ public class ProductService {
         if (!tenantId.equals(user.getTenantId())) {
             throw new RuntimeException("Invalid Tenant");
         }
-        System.out.println(" VendorIdd "+user.getVendorId());
-        System.out.println("Category Id is {}"+dto.getCategoryId());
-        ProductCategory category = categoryRepository
-                .findByIdAndVendorId(dto.getCategoryId(), user.getVendorId())
-                .orElseThrow(() -> new RuntimeException("Category does not exist."));
+        System.out.println(" VendorIdd " + user.getVendorId());
+        System.out.println("Category Id is {}" + dto.getCategoryId());
+        ProductCategory category = categoryRepository.findByIdAndVendorId(dto.getCategoryId(), user.getVendorId()).orElseThrow(() -> new RuntimeException("Category does not exist."));
 
-        Vendor vendor = vendorRepos.findById(user.getVendorId())
-                .orElseThrow(() -> new RuntimeException("Vendor Not Found"));
+        Vendor vendor = vendorRepos.findById(user.getVendorId()).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -94,13 +93,8 @@ public class ProductService {
                     throw new RuntimeException("Duplicate specification found.");
                 }
 
-                CategorySpecification specification =
-                        categorySpecificationRepository
-                                .findByIdAndCategoryIdAndTenantId(
-                                        specificationDto.getCategorySpecificationId(),
-                                        category.getId(),
-                                        tenantId);
-                if(specification==null){
+                CategorySpecification specification = categorySpecificationRepository.findByIdAndCategoryIdAndTenantId(specificationDto.getCategorySpecificationId(), category.getId(), tenantId);
+                if (specification == null) {
                     throw new RuntimeException("Invalid Value");
                 }
 
@@ -113,7 +107,6 @@ public class ProductService {
 
 
                 value.setCategorySpecification(specification);
-
 
 
                 value.setValue(specificationDto.getValue());
@@ -131,43 +124,32 @@ public class ProductService {
 
         return "Product Added Successfully";
     }
-    public List<ProductResponseDTO> loadAllProductsAdmin(
-            CustomUserDetail userDetail) {
 
+    @Cacheable(value = "adminProduct", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> loadAllProductsAdmin(CustomUserDetail userDetail) {
         User user = userDetail.getUser();
         String tenantId = TenantContext.getTenantId();
-        log.error("tenant form Thread"+tenantId);
-
         if (!tenantId.equalsIgnoreCase(user.getTenantId())) {
             throw new RuntimeException("Invalid Tenant");
         }
-
-        List<ProductResponseDTO> products = productRepository.loadAllProducts(
-                tenantId,
-                user.getVendorId());
+        List<ProductResponseDTO> products = productRepository.loadAllProducts(tenantId, user.getVendorId());
 
         for (ProductResponseDTO dto : products) {
 
-            List<ProductSpecificationValue> values =
-                    productSpecificationValueRepository
-                            .findByProductIdAndTenantId(dto.getId(), tenantId);
+            List<ProductSpecificationValue> values = productSpecificationValueRepository.findByProductIdAndTenantId(dto.getId(), tenantId);
 
-            List<ProductSpecificationResponeDto> specs = values.stream()
-                    .map(value -> {
-                        ProductSpecificationResponeDto spec =
-                                new ProductSpecificationResponeDto();
+            List<ProductSpecificationResponeDto> specs = values.stream().map(value -> {
+                ProductSpecificationResponeDto spec = new ProductSpecificationResponeDto();
 
-                        spec.setCategorySpecificationId(
-                                value.getCategorySpecification().getId());
+                spec.setCategorySpecificationId(value.getCategorySpecification().getId());
 
-                        spec.setSpecificationName(
-                                value.getCategorySpecification().getSpecificationName());
+                spec.setSpecificationName(value.getCategorySpecification().getSpecificationName());
 
-                        spec.setValue(value.getValue());
+                spec.setValue(value.getValue());
 
-                        return spec;
-                    })
-                    .toList();
+                return spec;
+            }).toList();
 
             dto.setSpecifications(specs);
         }
@@ -175,10 +157,9 @@ public class ProductService {
         return products;
     }
 
+    @Caching(evict = {@CacheEvict(value = "adminProduct", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()"), @CacheEvict(value = "productsById", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId() + ':' + #id"), @CacheEvict(value = "productsByIds", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId() + ':' + #id"), @CacheEvict(value = "products", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")})
     @Transactional
-    public String updateProduct(Long id,
-                                ProductRequestDTO dto,
-                                CustomUserDetail userDetail) {
+    public String updateProduct(Long id, ProductRequestDTO dto, CustomUserDetail userDetail) {
 
         String tenantId = TenantContext.getTenantId();
         User user = userDetail.getUser();
@@ -188,24 +169,18 @@ public class ProductService {
         }
 
 
-        Product product = productRepository.findByIdAndTenantIdAndVendorId(
-                id,
-                tenantId,
-                user.getVendorId());
+        Product product = productRepository.findByIdAndTenantIdAndVendorId(id, tenantId, user.getVendorId());
 
         if (product == null) {
             throw new RuntimeException("Product does not exist.");
         }
 
-        ProductCategory category = categoryRepository
-                .findByIdAndVendorId(dto.getCategoryId(), user.getVendorId())
-                .orElseThrow(() -> new RuntimeException("Category does not exist."));
-        if(category.getId()!=dto.getCategoryId()){
+        ProductCategory category = categoryRepository.findByIdAndVendorId(dto.getCategoryId(), user.getVendorId()).orElseThrow(() -> new RuntimeException("Category does not exist."));
+        if (category.getId() != dto.getCategoryId()) {
             throw new RuntimeException("Category cannot be Changed ...");
         }
 
-        if (dto.getMrp() != null &&
-                dto.getSellingPrice().compareTo(dto.getMrp()) > 0) {
+        if (dto.getMrp() != null && dto.getSellingPrice().compareTo(dto.getMrp()) > 0) {
             throw new RuntimeException("Selling Price cannot be greater than MRP.");
         }
 
@@ -218,9 +193,7 @@ public class ProductService {
         product.setUnit(dto.getUnit());
         product.setStatus(dto.getStatus());
         product.setFeatured(Boolean.TRUE.equals(dto.getFeatured()));
-//        System.out.print(product.setFeatured(dto.getFeatured());
-        if (dto.getProductImage() != null &&
-                !dto.getProductImage().isBlank()) {
+        if (dto.getProductImage() != null && !dto.getProductImage().isBlank()) {
             product.setProductImage(dto.getProductImage());
         }
         LocalDateTime now = LocalDateTime.now();
@@ -228,35 +201,19 @@ public class ProductService {
         product.setUpdatedBy(userDetail.getId());
 
 
-        List<CategorySpecification> categorySpecifications =
-                categorySpecificationRepository.findByCategoryIdAndTenantId(
-                        category.getId(),
-                        tenantId);
+        List<CategorySpecification> categorySpecifications = categorySpecificationRepository.findByCategoryIdAndTenantId(category.getId(), tenantId);
 
-        Map<Long, CategorySpecification> specificationMap =
-                categorySpecifications.stream()
-                        .collect(Collectors.toMap(
-                                CategorySpecification::getId,
-                                Function.identity()
-                        ));
+        Map<Long, CategorySpecification> specificationMap = categorySpecifications.stream().collect(Collectors.toMap(CategorySpecification::getId, Function.identity()));
 
         for (ProductSpecificationRequestDto specificationDto : dto.getSpecifications()) {
 
-            CategorySpecification categorySpecification =
-                    specificationMap.get(specificationDto.getCategorySpecificationId());
+            CategorySpecification categorySpecification = specificationMap.get(specificationDto.getCategorySpecificationId());
 
             if (categorySpecification == null) {
-                throw new RuntimeException(
-                        "Invalid Specification Id : "
-                                + specificationDto.getCategorySpecificationId());
+                throw new RuntimeException("Invalid Specification Id : " + specificationDto.getCategorySpecificationId());
             }
 
-            ProductSpecificationValue productSpecificationValue =
-                    productSpecificationValueRepository
-                            .findByProductIdAndCategorySpecificationIdAndTenantId(
-                                    product.getId(),
-                                    specificationDto.getCategorySpecificationId(),
-                                    tenantId);
+            ProductSpecificationValue productSpecificationValue = productSpecificationValueRepository.findByProductIdAndCategorySpecificationIdAndTenantId(product.getId(), specificationDto.getCategorySpecificationId(), tenantId);
 
             if (productSpecificationValue == null) {
 
@@ -282,6 +239,7 @@ public class ProductService {
         return "Product Updated Successfully.";
     }
 
+    @Caching(evict = {@CacheEvict(value = "adminProduct", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()"), @CacheEvict(value = "productsById", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId() + ':' + #id"), @CacheEvict(value = "productsByIds", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId() + ':' + #id"), @CacheEvict(value = "products", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")})
     public String deleteProduct(CustomUserDetail userDetail, Long id) {
         String tenantId = TenantContext.getTenantId();
         User user = userDetail.getUser();
@@ -290,11 +248,7 @@ public class ProductService {
             throw new RuntimeException("Vendor does not exist.");
         }
 
-        Product product = productRepository
-                .findByIdAndTenantIdAndVendorId(
-                        id,
-                        tenantId,
-                        user.getVendorId());
+        Product product = productRepository.findByIdAndTenantIdAndVendorId(id, tenantId, user.getVendorId());
 
         if (product == null) {
             throw new RuntimeException("Product does not exist.");
@@ -303,119 +257,53 @@ public class ProductService {
         return "Product Deleted Successfully";
     }
 
-    public ProductResponseDTO getProductById(Long id) {
+    @Cacheable(value = "productsById", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId() + ':' + #ids")
+
+    public ProductResponseDTO getProductById(Long ids) {
 
         String tenantId = TenantContext.getTenantId();
 
-        Product product = productRepository
-                .findByIdAndTenantIdAndStatus(id, tenantId, ProductStatus.ACTIVE);
+        Product product = productRepository.findByIdAndTenantIdAndStatus(ids, tenantId, ProductStatus.ACTIVE);
 
         if (product == null) {
             throw new RuntimeException("Product not found.");
         }
 
-        ProductCategory productCategory = categoryRepository
-                .findByIdAndTenantIdAndStatus(
-                        product.getCategoryId(),
-                        tenantId,CategoryStatus.ACTIVE
+        ProductCategory productCategory = categoryRepository.findByIdAndTenantIdAndStatus(product.getCategoryId(), tenantId, CategoryStatus.ACTIVE
 
-                );
+        );
 
-        List<ProductSpecificationValue> productSpecificationValues =
-                productSpecificationValueRepository
-                        .findByProductIdAndTenantId(id, tenantId);
+        List<ProductSpecificationValue> productSpecificationValues = productSpecificationValueRepository.findByProductIdAndTenantId(ids, tenantId);
 
-        List<ProductSpecificationResponeDto> specificationDtos =
-                productSpecificationValues.stream()
-                        .map(value -> ProductSpecificationResponeDto.builder()
-                                .categorySpecificationId(value.getCategorySpecification().getId())
-                                .value(value.getValue())
-                                .build())
-                        .toList();
+        List<ProductSpecificationResponeDto> specificationDtos = productSpecificationValues.stream().map(value -> ProductSpecificationResponeDto.builder().categorySpecificationId(value.getCategorySpecification().getId()).value(value.getValue()).build()).toList();
 
-        return ProductResponseDTO.builder()
-                .id(product.getId())
-                .categoryId(product.getCategoryId())
-                .categoryName(productCategory != null ? productCategory.getCategoryName() : null)
-                .productName(product.getProductName())
-                .sellingPrice(product.getSellingPrice())
-                .mrp(product.getMrp())
-                .stockQuantity(product.getStockQuantity())
-                .unit(product.getUnit())
-                .productImage(product.getProductImage())
-                .status(ProductStatus.ACTIVE)
-                .description(product.getDescription())
-                .createdAt(product.getCreatedAt())
-                .updatedAt(product.getUpdatedAt())
-                .specifications(specificationDtos)
-                .build();
+        return ProductResponseDTO.builder().id(product.getId()).categoryId(product.getCategoryId()).categoryName(productCategory != null ? productCategory.getCategoryName() : null).productName(product.getProductName()).sellingPrice(product.getSellingPrice()).mrp(product.getMrp()).stockQuantity(product.getStockQuantity()).unit(product.getUnit()).productImage(product.getProductImage()).status(ProductStatus.ACTIVE).description(product.getDescription()).createdAt(product.getCreatedAt()).updatedAt(product.getUpdatedAt()).specifications(specificationDtos).build();
     }
 
-
+    @Cacheable(value = "productsByIds", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId() + ':' + #productId")
     public ProductResponseDTOs findByProductId(Long productId) {
 
-        // =========================================================
-        // 1. TENANT
-        // =========================================================
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null || tenantId.isBlank()) {
             throw new RuntimeException("Invalid Tenant");
         }
-
-        // =========================================================
-        // 2. VENDOR
-        // =========================================================
-        Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() ->
-                        new RuntimeException("Vendor Does Not Exist")
-                );
-
-        // =========================================================
-        // 3. PRODUCT
-        // =========================================================
-        Product product = productRepository
-                .findByIdAndTenantIdAndStatus(
-                        productId,
-                        tenantId,
-                        ProductStatus.ACTIVE
-                );
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new RuntimeException("Vendor Does Not Exist"));
+        Product product = productRepository.findByIdAndTenantIdAndStatus(productId, tenantId, ProductStatus.ACTIVE);
 
         if (product == null) {
             throw new RuntimeException("Product Does Not Exist");
         }
-
-        // =========================================================
-        // 4. PRODUCT KI CATEGORY ID
-        // Product table me already categoryId hai
-        // =========================================================
         Long categoryId = product.getCategoryId();
 
         if (categoryId == null) {
-            throw new RuntimeException(
-                    "Category is not assigned to this product"
-            );
+            throw new RuntimeException("Category is not assigned to this product");
         }
-
-        // =========================================================
-        // 5. PRODUCT CATEGORY
-        // =========================================================
-        ProductCategory category = categoryRepository
-                .findByIdAndVendorIdAndTenantId(
-                        categoryId,
-                        vendor.getId(),
-                        tenantId
-                );
+        ProductCategory category = categoryRepository.findByIdAndVendorIdAndTenantId(categoryId, vendor.getId(), tenantId);
 
         if (category == null) {
-            throw new RuntimeException(
-                    "Product Category Does Not Exist"
-            );
+            throw new RuntimeException("Product Category Does Not Exist");
         }
-
-        // =========================================================
-        // 6. PRODUCT RESPONSE
-        // =========================================================
         ProductResponseDTOs response = new ProductResponseDTOs();
 
         response.setProductId(product.getId());
@@ -425,7 +313,7 @@ public class ProductService {
         response.setVendorId(vendor.getId());
         response.setBusinessName(vendor.getBussinessName());
 
-        response.setImage(r2Properties.getPublicUrl()+"/"+product.getProductImage());
+        response.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
         response.setImages(null);
 
         response.setRating(4.4);
@@ -433,30 +321,14 @@ public class ProductService {
 
         response.setPrice(product.getSellingPrice());
         response.setOldPrice(product.getMrp());
+        if (product.getSellingPrice() != null && product.getMrp() != null && product.getMrp().compareTo(BigDecimal.ZERO) > 0) {
 
-        // =========================================================
-        // 7. DISCOUNT
-        // =========================================================
-        if (product.getSellingPrice() != null
-                && product.getMrp() != null
-                && product.getMrp().compareTo(BigDecimal.ZERO) > 0) {
-
-            response.setDiscountPercent(
-                    cartsService.findDiscount(
-                            product.getSellingPrice(),
-                            product.getMrp()
-                    )
-            );
+            response.setDiscountPercent(cartsService.findDiscount(product.getSellingPrice(), product.getMrp()));
 
         } else {
             response.setDiscountPercent(BigDecimal.ZERO);
         }
-
-        // =========================================================
-        // 8. STOCK LEVEL
-        // =========================================================
-        if (product.getStockQuantity() == null
-                || product.getStockQuantity() <= 0) {
+        if (product.getStockQuantity() == null || product.getStockQuantity() <= 0) {
 
             response.setStockLevel("out_of_stock");
 
@@ -472,154 +344,93 @@ public class ProductService {
         response.setDeliveryEta("Delivery Within 0-1 Days");
         response.setDescription(product.getDescription());
 
-        // =========================================================
-        // 9. CATEGORY KE SAARE SPECIFICATIONS
-        //
-        // Example:
-        // categoryId = 1 (Bricks)
-        //
-        // Brand
-        // Grade
-        // Size
-        // Weight
-        // =========================================================
-        List<CategorySpecification> categorySpecifications =
-                categorySpecificationRepository
-                        .findByCategoryIdAndVendorIdAndTenantIdAndStatusOrderByDisplayOrderAsc(
-                                category.getId(),
-                                vendor.getId(),
-                                tenantId,
-                                CategoryStatus.ACTIVE
-                        );
+        List<CategorySpecification> categorySpecifications = categorySpecificationRepository.findByCategoryIdAndVendorIdAndTenantIdAndStatusOrderByDisplayOrderAsc(category.getId(), vendor.getId(), tenantId, CategoryStatus.ACTIVE);
 
-        List<ProductSpecificationResponeDto> specificationResponse =
-                new ArrayList<>();
+        List<ProductSpecificationResponeDto> specificationResponse = new ArrayList<>();
 
-        // =========================================================
-        // 10. HAR CATEGORY SPECIFICATION KI PRODUCT VALUE
-        // =========================================================
-        if (categorySpecifications != null
-                && !categorySpecifications.isEmpty()) {
+        if (categorySpecifications != null && !categorySpecifications.isEmpty()) {
 
-            for (CategorySpecification specification
-                    : categorySpecifications) {
+            for (CategorySpecification specification : categorySpecifications) {
 
-                if (specification == null
-                        || specification.getId() == null) {
+                if (specification == null || specification.getId() == null) {
                     continue;
                 }
 
 
-
-                ProductSpecificationValue value =
-                        productSpecificationValueRepository
-                                .findByProductIdAndCategorySpecificationIdAndTenantId(
-                                        product.getId(),
-                                        specification.getId(),
-                                        tenantId
-                                );
+                ProductSpecificationValue value = productSpecificationValueRepository.findByProductIdAndCategorySpecificationIdAndTenantId(product.getId(), specification.getId(), tenantId);
 
                 if (value == null) {
                     continue;
                 }
 
-                ProductSpecificationResponeDto specificationDto =
-                        new ProductSpecificationResponeDto();
+                ProductSpecificationResponeDto specificationDto = new ProductSpecificationResponeDto();
 
-                specificationDto.setCategorySpecificationId(
-                        specification.getId()
-                );
+                specificationDto.setCategorySpecificationId(specification.getId());
 
-                specificationDto.setSpecificationName(
-                        specification.getSpecificationName()
-                );
+                specificationDto.setSpecificationName(specification.getSpecificationName());
 
-                specificationDto.setValue(
-                        value.getValue()
-                );
+                specificationDto.setValue(value.getValue());
 
                 specificationResponse.add(specificationDto);
             }
         }
-
-        // =========================================================
-        // 11. SET SPECIFICATIONS
-        // =========================================================
-        response.setProductSpecificationResponeDtos(
-                specificationResponse
-        );
+        response.setProductSpecificationResponeDtos(specificationResponse);
 
         return response;
     }
 
     public List<RelatedProductDTO> getReleatedproducts(Long productId) {
-        String tenantId=TenantContext.getTenantId();
+        String tenantId = TenantContext.getTenantId();
         if (tenantId == null || tenantId.isBlank()) {
             throw new RuntimeException("Invalid Tenant");
         }
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new RuntimeException("Vendor Does Not Exist"));
+        Product product = productRepository.findByIdAndTenantIdAndStatus(productId, tenantId, ProductStatus.ACTIVE);
+        Long categoryId = product.getCategoryId();
+        List<Product> relatedProducts = productRepository.findTop4ByTenantIdAndVendorIdAndCategoryIdAndStatusAndIdNotOrderByTotalSoldDesc(tenantId, vendor.getId(), categoryId, ProductStatus.ACTIVE, product.getId());
+        List<RelatedProductDTO> relatedProductDTOList = new ArrayList<>();
+        for (Product product1 : relatedProducts) {
+            RelatedProductDTO relatedProductDTO = new RelatedProductDTO();
+            relatedProductDTO.setProductId(product1.getId());
+            relatedProductDTO.setName(product1.getProductName());
+            relatedProductDTO.setBrand(vendor.getStoreName());
+            relatedProductDTO.setImage(r2Properties.getPublicUrl() + "/" + product1.getProductImage());
+            relatedProductDTO.setPrice(product1.getSellingPrice());
+            relatedProductDTO.setOldPrice(product1.getMrp());
+            relatedProductDTO.setDiscountPercent(cartsService.findDiscount(product1.getSellingPrice(), product1.getMrp()));
+            relatedProductDTO.setReviewCount(50);
+            if (product1.getStockQuantity() >= 10) {
+                relatedProductDTO.setStockLevel("in_stock");
 
-        // =========================================================
-        // 2. VENDOR
-        // =========================================================
-        Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() ->
-                        new RuntimeException("Vendor Does Not Exist")
-                );
-        Product product=productRepository.findByIdAndTenantIdAndStatus(productId,tenantId,ProductStatus.ACTIVE);
-        Long categoryId=product.getCategoryId();
-        List<Product> relatedProducts =
-                productRepository
-                        .findTop4ByTenantIdAndVendorIdAndCategoryIdAndStatusAndIdNotOrderByTotalSoldDesc(
-                                tenantId,
-                                vendor.getId(),
-                               categoryId,
-                                ProductStatus.ACTIVE,
-                                product.getId()
-                        );
-        List<RelatedProductDTO> relatedProductDTOList=new ArrayList<>();
-       for(Product product1:relatedProducts){
-           RelatedProductDTO relatedProductDTO=new RelatedProductDTO();
-           relatedProductDTO.setProductId(product1.getId());
-           relatedProductDTO.setName(product1.getProductName());
-           relatedProductDTO.setBrand(vendor.getStoreName());
-           relatedProductDTO.setImage(r2Properties.getPublicUrl()+"/"+product1.getProductImage());
-           relatedProductDTO.setPrice(product1.getSellingPrice());
-           relatedProductDTO.setOldPrice(product1.getMrp());
-           relatedProductDTO.setDiscountPercent(cartsService.findDiscount(product1.getSellingPrice(),product1.getMrp()));
-           relatedProductDTO.setReviewCount(50);
-           if(product1.getStockQuantity()>=10) {
-               relatedProductDTO.setStockLevel("in_stock");
+            } else if (product1.getStockQuantity() == 0) {
+                relatedProductDTO.setStockLevel("out_of_stock");
 
-           }else if(product1.getStockQuantity()==0){
-               relatedProductDTO.setStockLevel("out_of_stock");
-
-           }
-           else{
-               relatedProductDTO.setStockLevel("low_stock");
-           }
-           relatedProductDTOList.add(relatedProductDTO);
+            } else {
+                relatedProductDTO.setStockLevel("low_stock");
+            }
+            relatedProductDTOList.add(relatedProductDTO);
 
 
-       }
-       return relatedProductDTOList;
-
+        }
+        return relatedProductDTOList;
 
 
     }
 
+    @Transactional(readOnly = true)
     public List<OrderResponseDto> getOrerdetail(CustomUserDetail customUserDetail) {
-        String tenantId=TenantContext.getTenantId();
-        if (customUserDetail==null){
+        String tenantId = TenantContext.getTenantId();
+        if (customUserDetail == null) {
             throw new RuntimeException("Please login");
         }
-        if(!customUserDetail.getUser().getRole().equals(Roles.ADMIN)){
+        if (!customUserDetail.getUser().getRole().equals(Roles.ADMIN)) {
             throw new RuntimeException("Unauthorized To access");
 
         }
-        HashMap<Long, HashMap<Long, String>> customerDetail=getAllCustomerWithOrder(tenantId);
-        List<Order> orderList=orderRepository.findAllByTenantIdAndReturnStatus(tenantId,ReturnStatus.NONE);
-        List<OrderResponseDto> orderResponseDto=new ArrayList<>();
-        for(Order order:orderList){
+        HashMap<Long, HashMap<Long, String>> customerDetail = getAllCustomerWithOrder(tenantId);
+        List<Order> orderList = orderRepository.findAllByTenantIdAndReturnStatus(tenantId, ReturnStatus.NONE);
+        List<OrderResponseDto> orderResponseDto = new ArrayList<>();
+        for (Order order : orderList) {
             String customerName = "";
 
             if (customerDetail != null) {
@@ -631,8 +442,8 @@ public class ProductService {
                 }
             }
 
-            OrderResponseDto orderResponseDto1=new OrderResponseDto();
-            List<OrderItemDTo> orderItemsDto=new ArrayList<>();
+            OrderResponseDto orderResponseDto1 = new OrderResponseDto();
+            List<OrderItemDTo> orderItemsDto = new ArrayList<>();
             orderResponseDto1.setOrderNo(order.getId());
             orderResponseDto1.setCustomer(customerName);
             orderResponseDto1.setOrderId(order.getOrderNumber());
@@ -641,18 +452,17 @@ public class ProductService {
             orderResponseDto1.setTotal(order.getTotal());
             orderResponseDto1.setPaymentMethod(order.getPaymentMethod());
             orderResponseDto1.setPaymentStatus(order.getPaymentStatus());
-            List<OrderItem> orderItems=orderItemRepository.findAllByOrderIdAndTenantId(order.getId(),tenantId);
-            for(OrderItem orderItem:orderItems){
-                OrderItemDTo orderItemDTo=new OrderItemDTo();
+            List<OrderItem> orderItems = orderItemRepository.findAllByOrderIdAndTenantId(order.getId(), tenantId);
+            for (OrderItem orderItem : orderItems) {
+                OrderItemDTo orderItemDTo = new OrderItemDTo();
                 orderItemDTo.setProductId(orderItem.getProductId());
                 orderItemDTo.setName(orderItem.getProductName());
-                orderItemDTo.setImage(r2Properties.getPublicUrl()+"/"+orderItem.getImageUrl());
+                orderItemDTo.setImage(r2Properties.getPublicUrl() + "/" + orderItem.getImageUrl());
                 orderItemDTo.setPrice(orderItem.getSellingPrice());
-                if(order.getOrderStatus()==OrderStatus.DELIVERED && order.getReturnStatus()==ReturnStatus.NONE){
+                if (order.getOrderStatus() == OrderStatus.DELIVERED && order.getReturnStatus() == ReturnStatus.NONE) {
                     orderItemDTo.setReview(true);
 
-                }
-                else{
+                } else {
                     orderItemDTo.setReview(false);
                 }
 
@@ -666,18 +476,14 @@ public class ProductService {
         return orderResponseDto;
 
     }
+
     private HashMap<Long, HashMap<Long, String>> getAllCustomerWithOrder(String tenantId) {
-
         Set<Long> ids = new HashSet<>();
-
         List<Order> orders = orderRepository.findAllByTenantId(tenantId);
-
         for (Order order : orders) {
             ids.add(order.getUserId());
         }
-
         List<User> users = userRepos.findAllByIdIn(ids);
-
         HashMap<Long, HashMap<Long, String>> result = new HashMap<>();
 
         for (User user : users) {
@@ -687,102 +493,52 @@ public class ProductService {
 
             result.put(user.getId(), innerMap);
         }
-        log.error("All User WIth Order :: {}",result);
-
         return result;
     }
 
     @Transactional
-    public FlashSaleRequestDto createFlashSale(CustomUserDetail userDetail,
-                                               FlashSaleRequestDto request) {
-
+    public FlashSaleRequestDto createFlashSale(CustomUserDetail userDetail, FlashSaleRequestDto request) {
         String tenantId = TenantContext.getTenantId();
-
         if (tenantId == null) {
             throw new RuntimeException("Invalid tenant.");
         }
-
         if (userDetail == null || userDetail.getRole() != Roles.ADMIN) {
             throw new RuntimeException("Unauthorized access.");
         }
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new RuntimeException("Vendor not found."));
 
-        Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> new RuntimeException("Vendor not found."));
-        // Check overlapping flash sale
-
-
-        if (request.getEndDateTime().isBefore(request.getStartDateTime())
-                || request.getEndDateTime().isEqual(request.getStartDateTime())) {
+        if (request.getEndDateTime().isBefore(request.getStartDateTime()) || request.getEndDateTime().isEqual(request.getStartDateTime())) {
             throw new RuntimeException("End date must be after start date.");
         }
 
-        if (request.getDiscountType() == DiscountType.PERCENTAGE &&
-                request.getDiscountValue().compareTo(BigDecimal.valueOf(100)) > 0) {
+        if (request.getDiscountType() == DiscountType.PERCENTAGE && request.getDiscountValue().compareTo(BigDecimal.valueOf(100)) > 0) {
             throw new RuntimeException("Percentage cannot exceed 100.");
         }
-        List<FlashSale> conflictingFlashSales =
-                flashSaleReporsitory.findConflictingFlashSales(
-                        tenantId,
-                        vendor.getId(),
-                        request.getStartDateTime(),
-                        request.getEndDateTime(),
-                        FlashSaleStatus.ACTIVE
-                );
+        List<FlashSale> conflictingFlashSales = flashSaleReporsitory.findConflictingFlashSales(tenantId, vendor.getId(), request.getStartDateTime(), request.getEndDateTime(), FlashSaleStatus.ACTIVE);
 
         if (!conflictingFlashSales.isEmpty()) {
-
-            log.error(
-                    "Flash Sale duration conflict. Tenant: {}, Vendor: {}, Start: {}, End: {}",
-                    tenantId,
-                    vendor.getId(),
-                    request.getStartDateTime(),
-                    request.getEndDateTime()
-            );
-
-            throw new RuntimeException(
-                    "Another Flash Sale already exists for the selected duration. Please choose different start and end date."
-            );
+            throw new RuntimeException("Another Flash Sale already exists for the selected duration. Please choose different start and end date.");
         }
-        FlashSale flashSale = FlashSale.builder()
-                .tenantId(tenantId)
-                .vendorId(vendor.getId())
-                .saleName(request.getSaleName())
-                .description(request.getDescription())
-                .discountType(request.getDiscountType())
-                .discountValue(request.getDiscountValue())
-                .maxDiscountCap(request.getMaxDiscountCap())
-                .startDateTime(request.getStartDateTime())
-                .endDateTime(request.getEndDateTime())
-                .status(request.getStatus())
-                .createdBy(userDetail.getId())
-                .updatedBy(userDetail.getId())
-                .build();
+        FlashSale flashSale = FlashSale.builder().tenantId(tenantId).vendorId(vendor.getId()).saleName(request.getSaleName()).description(request.getDescription()).discountType(request.getDiscountType()).discountValue(request.getDiscountValue()).maxDiscountCap(request.getMaxDiscountCap()).startDateTime(request.getStartDateTime()).endDateTime(request.getEndDateTime()).status(request.getStatus()).createdBy(userDetail.getId()).updatedBy(userDetail.getId()).build();
 
         List<FlashSaleItem> items = new ArrayList<>();
 
         for (FlashSaleItemDto dto : request.getItems()) {
 
-            Product product = productRepository
-                    .findByIdAndTenantIdAndVendorId(
-                            dto.getProductId(),
-                            tenantId,
-                            vendor.getId());
-            if(product==null){
-                throw new RuntimeException("Product not Found : "+dto.getProductId());
+            Product product = productRepository.findByIdAndTenantIdAndVendorId(dto.getProductId(), tenantId, vendor.getId());
+            if (product == null) {
+                throw new RuntimeException("Product not Found : " + dto.getProductId());
             }
 
             BigDecimal originalPrice1 = product.getMrp();
-            BigDecimal originalPrice=product.getSellingPrice();
+            BigDecimal originalPrice = product.getSellingPrice();
             BigDecimal salePrice;
 
             if (request.getDiscountType() == DiscountType.PERCENTAGE) {
 
-                BigDecimal discount = originalPrice
-                        .multiply(request.getDiscountValue())
-                        .divide(BigDecimal.valueOf(100));
+                BigDecimal discount = originalPrice.multiply(request.getDiscountValue()).divide(BigDecimal.valueOf(100));
 
-                if (request.getMaxDiscountCap() != null &&
-                        discount.compareTo(request.getMaxDiscountCap()) > 0) {
+                if (request.getMaxDiscountCap() != null && discount.compareTo(request.getMaxDiscountCap()) > 0) {
                     discount = request.getMaxDiscountCap();
                 }
 
@@ -798,12 +554,7 @@ public class ProductService {
                 salePrice = BigDecimal.ZERO;
             }
 
-            FlashSaleItem item = FlashSaleItem.builder()
-                    .flashSale(flashSale)
-                    .productId(product.getId())
-                    .originalPrice(originalPrice1)
-                    .salePrice(salePrice)
-                    .build();
+            FlashSaleItem item = FlashSaleItem.builder().flashSale(flashSale).productId(product.getId()).originalPrice(originalPrice1).salePrice(salePrice).build();
 
             items.add(item);
         }
@@ -830,11 +581,9 @@ public class ProductService {
             throw new RuntimeException("Unauthorized access.");
         }
 
-        Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> new RuntimeException("Vendor not found."));
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new RuntimeException("Vendor not found."));
 
-        List<FlashSale> flashSales =
-                flashSaleReporsitory.findAllByTenantIdAndVendorId(tenantId, vendor.getId());
+        List<FlashSale> flashSales = flashSaleReporsitory.findAllByTenantIdAndVendorId(tenantId, vendor.getId());
 
         if (flashSales.isEmpty()) {
             return response;
@@ -858,10 +607,7 @@ public class ProductService {
 
             for (FlashSaleItem flashSaleItem : flashSale.getItems()) {
 
-                Product product = productRepository.findByIdAndTenantId(
-                        flashSaleItem.getProductId(),
-                        tenantId
-                );
+                Product product = productRepository.findByIdAndTenantId(flashSaleItem.getProductId(), tenantId);
 
                 if (product == null) {
                     continue;
@@ -870,28 +616,6 @@ public class ProductService {
                 BigDecimal originalPrice = product.getMrp();
                 BigDecimal salePrice;
 
-//                if (flashSale.getDiscountType() == DiscountType.PERCENTAGE) {
-//
-//                    BigDecimal discountAmount = originalPrice
-//                            .multiply(flashSale.getDiscountValue())
-//                            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-//
-//                    if (flashSale.getMaxDiscountCap() != null
-//                            && discountAmount.compareTo(flashSale.getMaxDiscountCap()) > 0) {
-//                        discountAmount = flashSale.getMaxDiscountCap();
-//                    }
-//
-//                    salePrice = originalPrice.subtract(discountAmount);
-//
-//                } else {
-//
-//                    salePrice = originalPrice.subtract(flashSale.getDiscountValue());
-//
-//                }
-//
-//                if (salePrice.compareTo(BigDecimal.ZERO) < 0) {
-//                    salePrice = BigDecimal.ZERO;
-//                }
 
                 FlashSaleItemResponseDto itemDto = new FlashSaleItemResponseDto();
 
@@ -912,38 +636,31 @@ public class ProductService {
     }
 
 
-
     @Transactional
-    public String updateFlashSale(CustomUserDetail userDetail,
-                                  Long flashSaleId,
-                                  FlashSaleRequestDto request) {
+    public String updateFlashSale(CustomUserDetail userDetail, Long flashSaleId, FlashSaleRequestDto request) {
 
-        log.info("Updating flash sale. FlashSaleId : {}", flashSaleId);
+
 
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null) {
-            log.error("Tenant id is null.");
+
             throw new RuntimeException("Invalid tenant.");
         }
 
         if (userDetail == null || userDetail.getRole() != Roles.ADMIN) {
-            log.error("Unauthorized access.");
             throw new RuntimeException("Unauthorized access.");
         }
 
-        Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> {
-                    log.error("Vendor not found. Tenant : {}", tenantId);
-                    return new RuntimeException("Vendor not found.");
-                });
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> {
+            return new RuntimeException("Vendor not found.");
+        });
 
 
-        FlashSale flashSale = flashSaleReporsitory
-                .findByTenantIdAndVendorIdAndId(tenantId, vendor.getId(), flashSaleId);
+        FlashSale flashSale = flashSaleReporsitory.findByTenantIdAndVendorIdAndId(tenantId, vendor.getId(), flashSaleId);
 
         if (flashSale == null) {
-            log.error("Flash sale not found. Id : {}", flashSaleId);
+
             throw new RuntimeException("Flash Sale does not exist.");
         }
 
@@ -951,33 +668,13 @@ public class ProductService {
             throw new RuntimeException("End date must be after start date.");
         }
 
-        if (request.getDiscountType() == DiscountType.PERCENTAGE
-                && request.getDiscountValue().compareTo(BigDecimal.valueOf(100)) > 0) {
+        if (request.getDiscountType() == DiscountType.PERCENTAGE && request.getDiscountValue().compareTo(BigDecimal.valueOf(100)) > 0) {
             throw new RuntimeException("Percentage discount cannot exceed 100.");
         }
-        List<FlashSale> conflictingFlashSales =
-                flashSaleReporsitory.findConflictingFlashSalesForUpdate(
-                        tenantId,
-                        vendor.getId(),
-                        request.getStartDateTime(),
-                        request.getEndDateTime(),
-                        FlashSaleStatus.ACTIVE,
-                        flashSaleId
-                );
+        List<FlashSale> conflictingFlashSales = flashSaleReporsitory.findConflictingFlashSalesForUpdate(tenantId, vendor.getId(), request.getStartDateTime(), request.getEndDateTime(), FlashSaleStatus.ACTIVE, flashSaleId);
 
         if (!conflictingFlashSales.isEmpty()) {
-
-            log.error(
-                    "Flash Sale duration conflict. Tenant: {}, Vendor: {}, Start: {}, End: {}",
-                    tenantId,
-                    vendor.getId(),
-                    request.getStartDateTime(),
-                    request.getEndDateTime()
-            );
-
-            throw new RuntimeException(
-                    "Another Flash Sale already exists for the selected duration. Please choose different start and end date."
-            );
+            throw new RuntimeException("Another Flash Sale already exists for the selected duration. Please choose different start and end date.");
         }
         // Update Master
         flashSale.setSaleName(request.getSaleName());
@@ -999,10 +696,7 @@ public class ProductService {
 
         for (FlashSaleItemDto dto : request.getItems()) {
 
-            Product product = productRepository.findByIdAndTenantIdAndVendorId(
-                    dto.getProductId(),
-                    tenantId,
-                    vendor.getId());
+            Product product = productRepository.findByIdAndTenantIdAndVendorId(dto.getProductId(), tenantId, vendor.getId());
 
             if (product == null) {
                 throw new RuntimeException("Product not found : " + dto.getProductId());
@@ -1015,12 +709,9 @@ public class ProductService {
 
             if (request.getDiscountType() == DiscountType.PERCENTAGE) {
 
-                BigDecimal discount = originalPrice
-                        .multiply(request.getDiscountValue())
-                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                BigDecimal discount = originalPrice.multiply(request.getDiscountValue()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-                if (request.getMaxDiscountCap() != null
-                        && discount.compareTo(request.getMaxDiscountCap()) > 0) {
+                if (request.getMaxDiscountCap() != null && discount.compareTo(request.getMaxDiscountCap()) > 0) {
                     discount = request.getMaxDiscountCap();
                 }
 
@@ -1036,12 +727,7 @@ public class ProductService {
                 salePrice = BigDecimal.ZERO;
             }
 
-            FlashSaleItem item = FlashSaleItem.builder()
-                    .flashSale(flashSale)
-                    .productId(product.getId())
-                    .originalPrice(originalPrice1)
-                    .salePrice(salePrice)
-                    .build();
+            FlashSaleItem item = FlashSaleItem.builder().flashSale(flashSale).productId(product.getId()).originalPrice(originalPrice1).salePrice(salePrice).build();
 
             flashSale.getItems().add(item);
         }
@@ -1052,101 +738,85 @@ public class ProductService {
 
         return "Flash Sale Updated Successfully";
     }
-    public String deleteFlashSale(CustomUserDetail userDetail,Long flashSaleId){
+
+    public String deleteFlashSale(CustomUserDetail userDetail, Long flashSaleId) {
         log.info("Updating flash sale. FlashSaleId : {}", flashSaleId);
 
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null) {
-            log.error("Tenant id is null.");
+
             throw new RuntimeException("Invalid tenant.");
         }
 
         if (userDetail == null || userDetail.getRole() != Roles.ADMIN) {
-            log.error("Unauthorized access.");
+
             throw new RuntimeException("Unauthorized access.");
         }
 
-        Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> {
-                    log.error("Vendor not found. Tenant : {}", tenantId);
-                    return new RuntimeException("Vendor not found.");
-                });
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> {
 
-        FlashSale flashSale = flashSaleReporsitory
-                .findByTenantIdAndVendorIdAndId(tenantId, vendor.getId(), flashSaleId);
+            return new RuntimeException("Vendor not found.");
+        });
+
+        FlashSale flashSale = flashSaleReporsitory.findByTenantIdAndVendorIdAndId(tenantId, vendor.getId(), flashSaleId);
 
         if (flashSale == null) {
-            log.error("Flash sale not found. Id : {}", flashSaleId);
             throw new RuntimeException("Flash Sale does not exist.");
         }
         flashSaleReporsitory.deleteById(flashSaleId);
-        return flashSale.getSaleName()+" deleted Successfully";
+        return flashSale.getSaleName() + " deleted Successfully";
 
     }
 
     public FlashSaleDashBoardResponseDTO getFlashSaleProduct() {
 
         String tenantId = TenantContext.getTenantId();
-        FlashSaleDashBoardResponseDTO flashSaleDashBoardResponseDTO=new FlashSaleDashBoardResponseDTO();
+        FlashSaleDashBoardResponseDTO flashSaleDashBoardResponseDTO = new FlashSaleDashBoardResponseDTO();
 
         if (tenantId == null) {
-            log.error("Tenant id is null.");
+
             throw new RuntimeException("Invalid tenant.");
         }
-        Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> {
-                    log.error("Vendor not found. Tenant : {}", tenantId);
-                    return new RuntimeException("Vendor not found.");
-                });
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> {
+
+            return new RuntimeException("Vendor not found.");
+        });
         LocalDateTime now = LocalDateTime.now();
 
-        FlashSale activeFlashSale = flashSaleReporsitory
-                .findByTenantIdAndStatusAndStartDateTimeLessThanEqualAndEndDateTimeGreaterThanEqual(
-                        tenantId,
-                        FlashSaleStatus.ACTIVE,
-                        now,
-                        now
-                );
+        FlashSale activeFlashSale = flashSaleReporsitory.findByTenantIdAndStatusAndStartDateTimeLessThanEqualAndEndDateTimeGreaterThanEqual(tenantId, FlashSaleStatus.ACTIVE, now, now);
 
-        if (activeFlashSale == null
-                || activeFlashSale.getStartDateTime().isAfter(now)) {
+        if (activeFlashSale == null || activeFlashSale.getStartDateTime().isAfter(now)) {
 
-            throw new RuntimeException(
-                    "No Active Flash Sale"
-            );
+            throw new RuntimeException("No Active Flash Sale");
         }
         LocalDateTime start = activeFlashSale.getStartDateTime();
         LocalDateTime end = activeFlashSale.getEndDateTime();
 
-        long startMillis = start.atZone(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli();
+        long startMillis = start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 
-        long endMillis = end.atZone(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli();
+        long endMillis = end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         flashSaleDashBoardResponseDTO.setEndsAt(endMillis);
         flashSaleDashBoardResponseDTO.setStartedAt(startMillis);
-        List<FlashSaleItem> flashSaleItems=activeFlashSale.getItems();
-        List<ProductDTO> productDTOS=new ArrayList<>();
-        for(FlashSaleItem flashSaleItem:flashSaleItems){
-            Product product=productRepository.findByIdAndTenantId(flashSaleItem.getProductId(),tenantId);
-            ProductDTO productDTO=new ProductDTO();
+        List<FlashSaleItem> flashSaleItems = activeFlashSale.getItems();
+        List<ProductDTO> productDTOS = new ArrayList<>();
+        for (FlashSaleItem flashSaleItem : flashSaleItems) {
+            Product product = productRepository.findByIdAndTenantId(flashSaleItem.getProductId(), tenantId);
+            ProductDTO productDTO = new ProductDTO();
             productDTO.setProductId(String.valueOf(flashSaleItem.getProductId()));
             productDTO.setName(product.getProductName());
             productDTO.setBrand(vendor.getStoreName());
             productDTO.setVendorId(String.valueOf(vendor.getId()));
             productDTO.setVendorName(vendor.getFirstName());
             productDTO.setBusinessName(vendor.getBussinessName());
-            productDTO.setImage(r2Properties.getPublicUrl()+"/"+product.getProductImage());
+            productDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productDTO.setImages(Collections.singletonList(r2Properties.getPublicUrl() + "/" + product.getProductImage()));
             productDTO.setDescription(product.getDescription());
             productDTO.setRating(5.0);
             productDTO.setReviewCount(115);
             productDTO.setOldPrice(flashSaleItem.getOriginalPrice());
             productDTO.setPrice(flashSaleItem.getSalePrice());
-            productDTO.setDiscountPercent(cartsService.findDiscount(flashSaleItem.getSalePrice(),flashSaleItem.getOriginalPrice()));
+            productDTO.setDiscountPercent(cartsService.findDiscount(flashSaleItem.getSalePrice(), flashSaleItem.getOriginalPrice()));
             productDTO.setStockLevel(String.valueOf(product.getStockQuantity()));
             productDTO.setDeliveryEta("Next day");
 
@@ -1158,22 +828,23 @@ public class ProductService {
 
 
     }
-   @Transactional
-    public String addreviewToProduct(CustomUserDetail userDetail,ReviewRequetDTO reviewRequetDTO,String orderNum) {
-        String tenantId= TenantContext.getTenantId();
-        if(tenantId==null){
+
+    @Transactional
+    public String addreviewToProduct(CustomUserDetail userDetail, ReviewRequetDTO reviewRequetDTO, String orderNum) {
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
             throw new RuntimeException("No tenant");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenantId);
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenantId);
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Tenant does Not Exists");
         }
-        if(userDetail==null){
+        if (userDetail == null) {
             throw new RuntimeException("Please Login First");
         }
-        String  orderId=orderNum;
-        Order order=orderRepository.findByTenantIdAndOrderNumber(tenantId,orderId);
-        if(order==null){
+        String orderId = orderNum;
+        Order order = orderRepository.findByTenantIdAndOrderNumber(tenantId, orderId);
+        if (order == null) {
             throw new RuntimeException("Order does Not exist");
         }
         if (order.getOrderStatus() != OrderStatus.DELIVERED) {
@@ -1183,27 +854,17 @@ public class ProductService {
         if (order.getReturnStatus() != ReturnStatus.NONE) {
             throw new RuntimeException("You cannot review this product because a return has been initiated.");
         }
-        Long pid= Long.valueOf(reviewRequetDTO.getProductId());
-        OrderItem existence=orderItemRepository.findByOrderIdAndProductIdAndTenantId(order.getId(),pid,tenantId);
-        if(existence==null){
+        Long pid = Long.valueOf(reviewRequetDTO.getProductId());
+        OrderItem existence = orderItemRepository.findByOrderIdAndProductIdAndTenantId(order.getId(), pid, tenantId);
+        if (existence == null) {
             throw new RuntimeException("You cnnot review this item..Purchase it to review");
         }
-        if(existence.isReview()){
+        if (existence.isReview()) {
             throw new RuntimeException("Already reviewed");
         }
         existence.setReview(true);
 
-        ProductReview productReview= ProductReview.builder()
-                .productId(pid)
-                .tenantId(tenantId)
-                .vendorId(vendor.get().getId())
-                .orderItemId(existence.getId())
-                .userId(userDetail.getId())
-                .rating(reviewRequetDTO.getRating())
-                .reviewTitle("Item Review")
-                .reviewText(reviewRequetDTO.getText())
-                .status(ReviewStatus.PENDING)
-                .build();
+        ProductReview productReview = ProductReview.builder().productId(pid).tenantId(tenantId).vendorId(vendor.get().getId()).orderItemId(existence.getId()).userId(userDetail.getId()).rating(reviewRequetDTO.getRating()).reviewTitle("Item Review").reviewText(reviewRequetDTO.getText()).status(ReviewStatus.PENDING).build();
         productReviewRepository.save(productReview);
         orderItemRepository.save(existence);
         return "Thanks For Your Review";

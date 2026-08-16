@@ -114,7 +114,6 @@ public class UserAuthController {
                         ));
             }
 
-            // Account Active
             if (!Boolean.TRUE.equals(user.getActive())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of(

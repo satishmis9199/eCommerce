@@ -12,6 +12,9 @@ import com.e_commerce.eCommerce.repository.BannerRepository;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,7 +27,10 @@ import java.util.Optional;
 public class BannerService {
     private final VendorRepository vendorRepository;
     private final BannerRepository bannerRepository;
-
+    @Caching(evict = {
+            @CacheEvict(value="banners", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()"),
+            @CacheEvict(value="allBanner" ,key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
+    })
     public String saveBanner(CustomUserDetail userDetail, BannerRequestDto bannerRequestDTO) {
         String tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
@@ -58,7 +64,7 @@ public class BannerService {
         bannerRepository.save(banner);
         return "Banner Added SuccessFully";
     }
-
+    @Cacheable(value="allBanner" ,key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
     public List<BannerResponseDto> loadBbanner(CustomUserDetail customUserDetail) {
         String tenantId = TenantContext.getTenantId();
         List<BannerResponseDto> bannerResponseDtos = new ArrayList<>();
@@ -106,7 +112,10 @@ public class BannerService {
         // Active period ke andar hai
         return "ACTIVE";
     }
-
+    @Caching(evict = {
+            @CacheEvict(value="banners", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()"),
+            @CacheEvict(value="allBanner" ,key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
+    })
     public String updateBanner(
             CustomUserDetail userDetail,
             BannerRequestDto bannerRequestDTO,
@@ -193,6 +202,10 @@ public class BannerService {
 
         return "Banner Updated Successfully";
     }
+    @Caching(evict = {
+            @CacheEvict(value="banners", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()"),
+            @CacheEvict(value="allBanner" ,key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
+    })
     public String changeBannerStatus(
             CustomUserDetail userDetail,
             Long id,

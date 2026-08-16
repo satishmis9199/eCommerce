@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.service;
 
+import com.e_commerce.eCommerce.config.JwtUtil;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.controller.VendorController;
 import com.e_commerce.eCommerce.dto.*;
@@ -84,6 +85,7 @@ public class VendorService {
         logger.info("WHile Creating a Vendor subdomain "+vendorRequestDto.getSubDomain()+requesst);
         vendor.setSubDomain(vendorRequestDto.getSubDomain()+requesst);
         vendor.setPassword(passwordEncoder.encode("satish123"));
+        vendor.setJwtSecret(JwtUtil.generateJwtSecret());
 
         vendorRepository.save(vendor);
         VendorOnboardingApplication vendorOnboardingApplication=new VendorOnboardingApplication();

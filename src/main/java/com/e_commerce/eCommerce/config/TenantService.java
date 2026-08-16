@@ -1,65 +1,28 @@
-package com.e_commerce.eCommerce.service;
+package com.e_commerce.eCommerce.config;
 
 import com.e_commerce.eCommerce.entity.Vendor;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TenantService {
 
     private final VendorRepository vendorRepository;
 
-    /**
-     * Cache
-     * Key   = subdomain
-     * Value = Vendor
-     */
-    private final Map<String, Vendor> tenantCache = new ConcurrentHashMap<>();
-
-
-    /**
-     * Resolve tenant from Host Name
-     *
-     * Example:
-     * abc.mystore.com
-     * xyz.mystore.com
-     */
+    @Cacheable(value = "tenants", key = "#hostName")
     public Vendor resolveTenant(String hostName) {
-
-        // 1. Check Cache
-        Vendor cachedVendor = tenantCache.get(hostName);
-
-        if (cachedVendor != null) {
-            return cachedVendor;
-        }
-
-
-
-        // 2. Fetch From Database
-        System.out.println("hostname is {} "+hostName);
-        Optional<Vendor> vendor = vendorRepository.findBySubDomain(hostName);
-        if(vendor.isEmpty()){
-            throw new RuntimeException("Vendor Not Present");
-        }
-        Vendor ven=vendor.get();
-
-
-        // 3. Store In Cache
-        tenantCache.put(hostName, ven);
-
-        return ven;
+        return vendorRepository.findBySubDomain(hostName)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor Not Present"));
     }
 
-
-    /**
-     * Find Vendor using tenantId
-     */
     public Vendor getTenant(String tenantId) {
 
         return vendorRepository.findByTenantId(tenantId)
@@ -67,34 +30,22 @@ public class TenantService {
                         new RuntimeException("Invalid Tenant"));
     }
 
-
-    /**
-     * Remove Single Tenant From Cache
-     */
+    @CacheEvict(value = "tenants", key = "#hostName")
     public void evictTenant(String hostName) {
-
-        tenantCache.remove(hostName);
-
+        log.error("Tenant cache evicted: " + hostName);
     }
 
-
-    /**
-     * Clear Whole Cache
-     */
+    @CacheEvict(value = "tenants", allEntries = true)
     public void clearCache() {
-
-        tenantCache.clear();
-
+        log.error("All tenant cache cleared");
     }
 
+    @CachePut(value = "tenants", key = "#vendor.subDomain")
+    public Vendor refreshTenant(Vendor vendor) {
 
-    /**
-     * Update Cache After Vendor Update
-     */
-    public void refreshTenant(Vendor vendor) {
+        log.error("Tenant cache refreshed: "
+                + vendor.getSubDomain());
 
-        tenantCache.put(vendor.getSubDomain(), vendor);
-
+        return vendor;
     }
-
 }

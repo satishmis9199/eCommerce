@@ -60,6 +60,8 @@ public class Vendor {
 
     @Column(nullable = false, unique = true)
     private String mobile;
+    @Column(name = "jwt_secret", nullable = false, length = 512)
+    private String jwtSecret;
 
     @Column(nullable = false)
     private String password;

@@ -6,10 +6,9 @@ import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.parameters.P;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +18,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserDashBoardService {
 
     private final VendorBrandingRepository vendorBrandingRepository;
@@ -35,7 +34,6 @@ public class UserDashBoardService {
     private final vendorBussinesss vendorBussinesss;
     private final UserRepos userRepos;
     private final BannerRepository bannerRepository;
-//    private static final Logger logger= LoggerFactory.getLogger(UserDashBoardService.class);
 
     public StoreInfoResponseDTO getStoreInfo() {
 
@@ -46,7 +44,7 @@ public class UserDashBoardService {
 
         Vendor vendor = vendorRepository.findByTenantId(tenantId)
                 .orElseThrow(() -> new RuntimeException("Vendor does not exist"));
-        VendorBusiness vendorBusiness=vendorBussinesss.findByVendorId(vendor.getId());
+        VendorBusiness vendorBusiness = vendorBussinesss.findByVendorId(vendor.getId());
 
         VendorBranding branding = vendorBrandingRepository.findByVendorId(vendor.getId());
 
@@ -72,7 +70,7 @@ public class UserDashBoardService {
             dto.setSupportPhone(branding.getSupportPhone());
         }
 
-        VendorAddress address=vendorAddresssRepo.findByVendorId(vendor.getId());
+        VendorAddress address = vendorAddresssRepo.findByVendorId(vendor.getId());
         if (address != null) {
             StringBuilder sb = new StringBuilder();
 
@@ -121,37 +119,37 @@ public class UserDashBoardService {
     }
 
     public List<ProductCardResponseDTO> getFeaturedProd(String tenant) {
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenant);
-        List<ProductCardResponseDTO> productCardResponseDTOS=new ArrayList<>();
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenant);
+        List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Vendor Does not exist");
         }
-        Vendor v1=vendor.get();
+        Vendor v1 = vendor.get();
 
-        List<Product> products=productRepository.findAllByTenantIdAndStatusAndFeatured(tenant,ProductStatus.ACTIVE,true);
-        System.out.println("Featired Prod size"+products.size());
-        for(Product product:products){
-            ProductCardResponseDTO productCardResponseDTO=new ProductCardResponseDTO();
+        List<Product> products = productRepository.findAllByTenantIdAndStatusAndFeatured(tenant, ProductStatus.ACTIVE, true);
+        System.out.println("Featired Prod size" + products.size());
+        for (Product product : products) {
+            ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
 
-            productCardResponseDTO.setImage(r2Properties.getPublicUrl()+"/"+product.getProductImage());
+            productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
             productCardResponseDTO.setReviewCount(1200);
             productCardResponseDTO.setPrice(product.getSellingPrice());
             productCardResponseDTO.setOldPrice(product.getMrp());
-            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(),product.getMrp()));
+            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(), product.getMrp()));
             productCardResponseDTO.setDeliveryEta("0-1 Days");
             productCardResponseDTO.setVendorId(vendor.get().getId());
-            String stockLabel="";
-            if(product.getStockQuantity()>1){
-                stockLabel="low_stock";
+            String stockLabel = "";
+            if (product.getStockQuantity() > 1) {
+                stockLabel = "low_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
 
-            }else{
-                stockLabel="out_of_stock";
+            } else {
+                stockLabel = "out_of_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
             }
             productCardResponseDTOS.add(productCardResponseDTO);
@@ -159,7 +157,6 @@ public class UserDashBoardService {
         }
         return productCardResponseDTOS;
     }
-
 
 
     private Integer getDiscountPrice(BigDecimal sellingPrice, BigDecimal mrp) {
@@ -176,40 +173,38 @@ public class UserDashBoardService {
     }
 
 
-
-
-
+    @Cacheable(value="products", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
     public List<ProductCardResponseDTO> getAllProducts(String tenant) {
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenant);
-        List<ProductCardResponseDTO> productCardResponseDTOS=new ArrayList<>();
-        if(vendor.isEmpty()){
+        log.error("DB hit for gtAll Products");
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenant);
+        List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Vendor Does not exist");
         }
-        Vendor v1=vendor.get();
-//        Pageable pageable = PageRequest.of(0, 20);
-        List<Product> products=productRepository.findAllByTenantIdAndStatus(tenant,ProductStatus.ACTIVE);
-        System.out.println("All Prod "+products.size());
-        for(Product product:products){
-            ProductCardResponseDTO productCardResponseDTO=new ProductCardResponseDTO();
+        Vendor v1 = vendor.get();
+        List<Product> products = productRepository.findAllByTenantIdAndStatus(tenant, ProductStatus.ACTIVE);
+        System.out.println("All Prod " + products.size());
+        for (Product product : products) {
+            ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url"+r2Properties.getPublicUrl());
-            productCardResponseDTO.setImage(r2Properties.getPublicUrl()+"/"+product.getProductImage());
+            System.out.println("Public url" + r2Properties.getPublicUrl());
+            productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
             productCardResponseDTO.setReviewCount(1200);
             productCardResponseDTO.setPrice(product.getSellingPrice());
             productCardResponseDTO.setOldPrice(product.getMrp());
-            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(),product.getMrp()));
+            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(), product.getMrp()));
             productCardResponseDTO.setDeliveryEta("0-1 Days");
-            String stockLabel="";
-            if(product.getStockQuantity()>1){
-                stockLabel="low_stock";
+            String stockLabel = "";
+            if (product.getStockQuantity() > 1) {
+                stockLabel = "low_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
 
-            }else{
-                stockLabel="out_of_stock";
+            } else {
+                stockLabel = "out_of_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
             }
             productCardResponseDTOS.add(productCardResponseDTO);
@@ -219,43 +214,43 @@ public class UserDashBoardService {
     }
 
     public List<ProductCardResponseDTO> getProductsByCategory(Long categoryId) {
-        List<ProductCardResponseDTO> productCardResponseDTOS=new ArrayList<>();
-        String tenantId=TenantContext.getTenantId();
-        if(tenantId==null){
+        List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
             throw new RuntimeException("Invalid Tenant");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenantId);
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenantId);
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Tenant Does not exist");
         }
-        Vendor v1=vendor.get();
+        Vendor v1 = vendor.get();
 
-        boolean existence=categoryRepository.existsByTenantIdAndIdAndStatus(tenantId,categoryId,CategoryStatus.ACTIVE);
-        if(!existence){
+        boolean existence = categoryRepository.existsByTenantIdAndIdAndStatus(tenantId, categoryId, CategoryStatus.ACTIVE);
+        if (!existence) {
             throw new RuntimeException("Category does Not Exist...");
         }
-        List<Product> products=productRepository.findAllByTenantIdAndStatusAndCategoryId(tenantId,ProductStatus.ACTIVE,categoryId);
-        for(Product product:products){
-            ProductCardResponseDTO productCardResponseDTO=new ProductCardResponseDTO();
+        List<Product> products = productRepository.findAllByTenantIdAndStatusAndCategoryId(tenantId, ProductStatus.ACTIVE, categoryId);
+        for (Product product : products) {
+            ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url"+r2Properties.getPublicUrl());
-            productCardResponseDTO.setImage(r2Properties.getPublicUrl()+"/"+product.getProductImage());
+            System.out.println("Public url" + r2Properties.getPublicUrl());
+            productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
             productCardResponseDTO.setReviewCount(1200);
             productCardResponseDTO.setPrice(product.getSellingPrice());
             productCardResponseDTO.setOldPrice(product.getMrp());
-            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(),product.getMrp()));
+            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(), product.getMrp()));
             productCardResponseDTO.setDeliveryEta("0-1 Days");
-            String stockLabel="";
-            if(product.getStockQuantity()>1){
-                stockLabel="low_stock";
+            String stockLabel = "";
+            if (product.getStockQuantity() > 1) {
+                stockLabel = "low_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
 
-            }else{
-                stockLabel="out_of_stock";
+            } else {
+                stockLabel = "out_of_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
             }
             productCardResponseDTOS.add(productCardResponseDTO);
@@ -266,39 +261,39 @@ public class UserDashBoardService {
     }
 
     public List<ProductCardResponseDTO> findRecommendedProd() {
-        List<ProductCardResponseDTO> productCardResponseDTOS=new ArrayList<>();
-        String tenanId=TenantContext.getTenantId();
-        if(tenanId==null){
+        List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
+        String tenanId = TenantContext.getTenantId();
+        if (tenanId == null) {
             throw new RuntimeException("Invalid Tenant");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenanId);
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenanId);
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Vendor Does Not existt");
         }
-        Vendor v1=vendor.get();
-        List<Product> products=productRepository.findAllByTenantIdAndStatus(tenanId,ProductStatus.ACTIVE);
-        for(Product product:products){
-            ProductCardResponseDTO productCardResponseDTO=new ProductCardResponseDTO();
+        Vendor v1 = vendor.get();
+        List<Product> products = productRepository.findAllByTenantIdAndStatus(tenanId, ProductStatus.ACTIVE);
+        for (Product product : products) {
+            ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url"+r2Properties.getPublicUrl());
-            productCardResponseDTO.setImage(r2Properties.getPublicUrl()+"/"+product.getProductImage());
+            System.out.println("Public url" + r2Properties.getPublicUrl());
+            productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
             productCardResponseDTO.setReviewCount(1200);
             productCardResponseDTO.setVendorId(v1.getId());
             productCardResponseDTO.setPrice(product.getSellingPrice());
             productCardResponseDTO.setOldPrice(product.getMrp());
-            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(),product.getMrp()));
+            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(), product.getMrp()));
             productCardResponseDTO.setDeliveryEta("0-1 Days");
-            String stockLabel="";
-            if(product.getStockQuantity()>1){
-                stockLabel="low_stock";
+            String stockLabel = "";
+            if (product.getStockQuantity() > 1) {
+                stockLabel = "low_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
 
-            }else{
-                stockLabel="out_of_stock";
+            } else {
+                stockLabel = "out_of_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
             }
             productCardResponseDTOS.add(productCardResponseDTO);
@@ -308,16 +303,16 @@ public class UserDashBoardService {
     }
 
     public List<ProductCardResponseDTO> findNewArrivals() {
-        List<ProductCardResponseDTO> productCardResponseDTOS=new ArrayList<>();
-        String tenanId=TenantContext.getTenantId();
-        if(tenanId==null){
+        List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
+        String tenanId = TenantContext.getTenantId();
+        if (tenanId == null) {
             throw new RuntimeException("Invalid Tenant");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenanId);
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenanId);
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Vendor Does Not exist");
         }
-        Vendor v1=vendor.get();
+        Vendor v1 = vendor.get();
         List<Product> products =
                 productRepository
                         .findTop10ByTenantIdAndStatusOrderByCreatedAtDesc(
@@ -325,28 +320,28 @@ public class UserDashBoardService {
                                 ProductStatus.ACTIVE
 
                         );
-        for(Product product:products){
-            ProductCardResponseDTO productCardResponseDTO=new ProductCardResponseDTO();
+        for (Product product : products) {
+            ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url"+r2Properties.getPublicUrl());
-            productCardResponseDTO.setImage(r2Properties.getPublicUrl()+"/"+product.getProductImage());
+            System.out.println("Public url" + r2Properties.getPublicUrl());
+            productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
             productCardResponseDTO.setReviewCount(1200);
             productCardResponseDTO.setVendorId(v1.getId());
             productCardResponseDTO.setPrice(product.getSellingPrice());
             productCardResponseDTO.setOldPrice(product.getMrp());
-            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(),product.getMrp()));
+            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(), product.getMrp()));
             productCardResponseDTO.setDeliveryEta("0-1 Days");
-            String stockLabel="";
-            if(product.getStockQuantity()>1){
-                stockLabel="low_stock";
+            String stockLabel = "";
+            if (product.getStockQuantity() > 1) {
+                stockLabel = "low_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
 
-            }else{
-                stockLabel="out_of_stock";
+            } else {
+                stockLabel = "out_of_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
             }
             productCardResponseDTOS.add(productCardResponseDTO);
@@ -356,16 +351,16 @@ public class UserDashBoardService {
     }
 
     public List<ProductCardResponseDTO> findBestSeller() {
-        List<ProductCardResponseDTO> productCardResponseDTOS=new ArrayList<>();
-        String tenanId=TenantContext.getTenantId();
-        if(tenanId==null){
+        List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
+        String tenanId = TenantContext.getTenantId();
+        if (tenanId == null) {
             throw new RuntimeException("Invalid Tenant");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenanId);
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenanId);
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Vendor Does Not exist");
         }
-        Vendor v1=vendor.get();
+        Vendor v1 = vendor.get();
         List<Product> products =
                 productRepository
                         .findTop10ByTenantIdAndStatusOrderByTotalSold(
@@ -373,28 +368,28 @@ public class UserDashBoardService {
                                 ProductStatus.ACTIVE
 
                         );
-        for(Product product:products){
-            ProductCardResponseDTO productCardResponseDTO=new ProductCardResponseDTO();
+        for (Product product : products) {
+            ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url"+r2Properties.getPublicUrl());
-            productCardResponseDTO.setImage(r2Properties.getPublicUrl()+"/"+product.getProductImage());
+            System.out.println("Public url" + r2Properties.getPublicUrl());
+            productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
             productCardResponseDTO.setReviewCount(1200);
             productCardResponseDTO.setVendorId(v1.getId());
             productCardResponseDTO.setPrice(product.getSellingPrice());
             productCardResponseDTO.setOldPrice(product.getMrp());
-            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(),product.getMrp()));
+            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(), product.getMrp()));
             productCardResponseDTO.setDeliveryEta("0-1 Days");
-            String stockLabel="";
-            if(product.getStockQuantity()>1){
-                stockLabel="low_stock";
+            String stockLabel = "";
+            if (product.getStockQuantity() > 1) {
+                stockLabel = "low_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
 
-            }else{
-                stockLabel="out_of_stock";
+            } else {
+                stockLabel = "out_of_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
             }
             productCardResponseDTOS.add(productCardResponseDTO);
@@ -404,18 +399,18 @@ public class UserDashBoardService {
     }
 
     public String changeMyPassword(ChangePasswordDTO changePasswordDTO, CustomUserDetail userDetail) {
-        String tenaantId=TenantContext.getTenantId();
-        if (tenaantId==null){
+        String tenaantId = TenantContext.getTenantId();
+        if (tenaantId == null) {
             throw new RuntimeException("Invalid tenent");
         }
-        if(userDetail==null){
+        if (userDetail == null) {
             throw new RuntimeException("Please Login...");
         }
-        User user=userDetail.getUser();
-        if(!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())){
+        User user = userDetail.getUser();
+        if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
             throw new RuntimeException("New Password and Confirmm passWord should be same...");
         }
-        if(!passwordEncoder.matches(changePasswordDTO.getCurrentPassword(), user.getPassword())){
+        if (!passwordEncoder.matches(changePasswordDTO.getCurrentPassword(), user.getPassword())) {
             throw new RuntimeException("Current passwor is not matching");
 
         }
@@ -425,19 +420,19 @@ public class UserDashBoardService {
         userRepos.save(user);
         return "passsword changes Successfully";
     }
-
+    @Cacheable(value="banners", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
     public List<UserBannerResponseDTo> loadBanners() {
-        String tenaantId=TenantContext.getTenantId();
-        if (tenaantId==null){
+        String tenaantId = TenantContext.getTenantId();
+        if (tenaantId == null) {
             throw new RuntimeException("Invalid tenent");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenaantId);
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenaantId);
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Vendor Does Not exist");
         }
-        Vendor v1=vendor.get();
+        Vendor v1 = vendor.get();
 
-        List<UserBannerResponseDTo> userBannerResponseDTo=bannerRepository.findActiveBanners(tenaantId,v1.getId(),LocalDateTime.now());
+        List<UserBannerResponseDTo> userBannerResponseDTo = bannerRepository.findActiveBanners(tenaantId, v1.getId(), LocalDateTime.now());
         return userBannerResponseDTo;
 
     }

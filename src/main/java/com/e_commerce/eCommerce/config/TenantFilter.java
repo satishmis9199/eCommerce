@@ -1,7 +1,7 @@
 package com.e_commerce.eCommerce.config;
 
 import com.e_commerce.eCommerce.entity.Vendor;
-import com.e_commerce.eCommerce.service.TenantService;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
