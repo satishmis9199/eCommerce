@@ -18,7 +18,7 @@ import java.io.IOException;
 public class TenantFilter extends OncePerRequestFilter {
 
     private final TenantService tenantService;
-    private static final Logger logger= LoggerFactory.getLogger(TenantFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(TenantFilter.class);
 
     public TenantFilter(TenantService tenantService) {
         this.tenantService = tenantService;
@@ -26,11 +26,9 @@ public class TenantFilter extends OncePerRequestFilter {
 
     @Value("${app.super-admin-domain}")
     private String superAdminDomain;
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         try {
             String host = request.getServerName();
@@ -43,31 +41,24 @@ public class TenantFilter extends OncePerRequestFilter {
             }
 
 
-
             Vendor vendor = tenantService.resolveTenant(host);
 
             String accept = request.getHeader("Accept");
             String requestedWith = request.getHeader("X-Requested-With");
 
-            boolean isApiRequest =
-                    request.getRequestURI().startsWith("/api")
-                            || "XMLHttpRequest".equals(requestedWith)
-                            || (accept != null && accept.contains("application/json"));
+            boolean isApiRequest = request.getRequestURI().startsWith("/api") || "XMLHttpRequest".equals(requestedWith) || (accept != null && accept.contains("application/json"));
 
             if (vendor == null) {
-//                logger.error("Vendor Is Null");
-
                 if (isApiRequest) {
-
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     response.setContentType("application/json");
 
                     response.getWriter().write("""
-        {
-            "success": false,
-            "message": "Tenant not found"
-        }
-        """);
+                            {
+                                "success": false,
+                                "message": "Tenant not found"
+                            }
+                            """);
 
                 } else {
 
@@ -82,8 +73,7 @@ public class TenantFilter extends OncePerRequestFilter {
 
             String uri = request.getRequestURI();
 
-            if (TenantContext.getTenantId() != null
-                    && uri.contains("/super")) {
+            if (TenantContext.getTenantId() != null && uri.contains("/super")) {
 
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
@@ -91,29 +81,25 @@ public class TenantFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
 
-
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
 
-            logger.error("Error while Finding a Tenant id",e.getMessage());
+            logger.error("Error while Finding a Tenant id", e.getMessage());
 
 
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.setContentType("application/json");
-                response.getWriter().write("""
-    {
-        "success": false,
-        "message": "Internal Server Error"
-    }
-    """);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setContentType("application/json");
+            response.getWriter().write("""
+                    {
+                        "success": false,
+                        "message": "Internal Server Error"
+                    }
+                    """);
             response.sendRedirect("/s4/v1/tenantnot-found");
-                return;
+            return;
 
 
-
-        }
-        finally {
+        } finally {
 
 
             TenantContext.clear();

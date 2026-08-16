@@ -1011,6 +1011,94 @@
           a,button,.cat-tile,.sugg-item{-webkit-tap-highlight-color:rgba(79,70,229,.12);}
         }
 
+        /* =====================================================================
+           MOBILE SMOOTHNESS & POLISH LAYER
+           Purely additive — sits after every other rule so it wins the
+           cascade on the breakpoints it targets. Goal: buttery scrolling,
+           no iOS auto-zoom on inputs, no accidental horizontal scroll,
+           softer/rounder feel, and comfortably-sized tap targets, without
+           touching desktop layout or any existing selector above.
+        ===================================================================== */
+
+        /* Never allow the page to scroll sideways on small screens. */
+        html,body{overflow-x:hidden;}
+        html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+
+        /* Momentum scrolling + no bounce-through on any internally
+           scrolling surface (horizontal rails, modals, drawers, listing
+           filters, account sidebar) — makes scroll feel native/smooth. */
+        .rail,.brand-strip,
+        .overlay .modal,
+        .mobile-nav-drawer,
+        .account-shell,
+        .listing-shell .filter-block,
+        body{
+          -webkit-overflow-scrolling:touch;
+        }
+        .overlay .modal,.mobile-nav-drawer{overscroll-behavior:contain;}
+        .rail,.brand-strip{overscroll-behavior-x:contain;scroll-behavior:smooth;}
+
+        @media (max-width:768px){
+          /* 16px stops iOS Safari from zooming the page in on focus —
+             the single biggest "janky mobile form" complaint. Desktop
+             sizing (14px) is untouched above 768px. */
+          input,select,textarea,.newsletter-form input{font-size:16px !important;}
+
+          /* A little extra breathing room + softer corners reads as
+             "smooth" on a small screen without changing the desktop feel. */
+          .container{padding:0 16px;}
+          section,.container > *{border-radius:var(--radius-md);}
+          .modal{border-radius:18px 18px 0 0;}
+
+          /* Comfortable 44px minimum tap targets (Apple/Google guidance)
+             on the controls people actually tap most. */
+          .btn,.btn-sm,.icon-btn,.hamburger-btn,.modal-close,
+          .qty-stepper button,.qa-btn,#loginNavBtn,.cat-tile{
+            min-height:44px;
+          }
+          .btn,.btn-sm{padding-top:11px;padding-bottom:11px;}
+
+          /* Snappier, softer press feedback instead of hover states
+             (which don't really exist on touch). */
+          .btn:active,.rail-card:active,.cat-tile:active,
+          .icon-btn:active,.pcard-name:active{
+            transform:scale(.97);
+            transition:transform .1s ease;
+          }
+
+          /* Slightly calmer shadows on small screens so cards/modals feel
+             soft rather than heavy against a small viewport. */
+          .rail-card,.modal{box-shadow:var(--shadow-sm);}
+
+          /* Respect notches / home-indicator on fixed bottom UI. */
+          .toast-stack{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+          .demo-bar{padding-bottom:calc(6px + env(safe-area-inset-bottom));}
+          .mobile-nav-drawer{padding-bottom:env(safe-area-inset-bottom);}
+
+          /* Sticky header keeps working smoothly even with iOS toolbars
+             collapsing/expanding on scroll. */
+          .site-header{-webkit-transform:translateZ(0);transform:translateZ(0);}
+        }
+
+        @media (max-width:480px){
+          /* Full-bleed, rounded-top sheet modals feel far smoother than a
+             centered small box on a phone. */
+          .overlay{align-items:flex-end;}
+          .overlay .modal{
+            width:100%;max-width:none;
+            max-height:88dvh;
+            border-radius:20px 20px 0 0;
+          }
+          .qv-body{max-height:88dvh;overflow-y:auto;}
+        }
+
+        /* Cut animation/transition durations a touch on coarse-pointer
+           devices — keeps interactions feeling immediate rather than
+           laggy on lower-powered phones, while keeping the same easing. */
+        @media (pointer:coarse){
+          .btn,.rail-card,.cat-tile,.icon-btn{transition-duration:.12s;}
+        }
+
     </style>
 </head>
 <body>

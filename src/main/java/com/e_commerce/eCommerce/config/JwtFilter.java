@@ -2,7 +2,6 @@ package com.e_commerce.eCommerce.config;
 
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.repository.UserRepos;
-
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -42,7 +41,6 @@ public class JwtFilter extends OncePerRequestFilter {
             if (token == null || token.isBlank()) {
 
 
-
                 SecurityContextHolder.clearContext();
 
                 filterChain.doFilter(request, response);
@@ -50,7 +48,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
             if (!jwtUtil.validateToken(token)) {
-
 
 
                 SecurityContextHolder.clearContext();
@@ -75,11 +72,9 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
             CustomUserDetail userDetails = new CustomUserDetail(user);
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-                    null, userDetails.getAuthorities());
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
-
 
 
         } catch (Exception e) {
@@ -108,7 +103,6 @@ public class JwtFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-
 
 
             return authHeader.substring(7);

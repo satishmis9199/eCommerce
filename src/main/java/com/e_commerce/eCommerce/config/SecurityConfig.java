@@ -2,48 +2,36 @@ package com.e_commerce.eCommerce.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.http.MediaType;
-
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 
-import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-
 @Configuration
 public class SecurityConfig {
-    private static final Logger log= LoggerFactory.getLogger(SecurityConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Autowired
     private JwtFilter jwtFilter;
-    @Autowired TenantFilter tenantFilter;
+    @Autowired
+    TenantFilter tenantFilter;
 
-//    @Autowired
+    //    @Autowired
 //    private CustomOAuth2SuccessHandler successHandler;
-    private final String SECRET_KEY="satishmishra";
+    private final String SECRET_KEY = "satishmishra";
+
     @Bean
     public RequestCache requestCache() {
 
@@ -90,6 +78,7 @@ public class SecurityConfig {
             }
         };
     }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -154,13 +143,13 @@ public class SecurityConfig {
                                     String uri = request.getRequestURI();
 
                                     boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
-                                    String redirectUrl="";
-                                    String tenantId=TenantContext.getTenantId();
-                                    if(tenantId!=null){
-                                        redirectUrl="/api/vendor/v1/login";
+                                    String redirectUrl = "";
+                                    String tenantId = TenantContext.getTenantId();
+                                    if (tenantId != null) {
+                                        redirectUrl = "/api/vendor/v1/login";
 
-                                    }else{
-                                        redirectUrl="/super/admin";
+                                    } else {
+                                        redirectUrl = "/super/admin";
                                     }
 
 
@@ -203,7 +192,6 @@ public class SecurityConfig {
                                             isAjax
 
 
-
                                     ) {
 
                                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -222,7 +210,6 @@ public class SecurityConfig {
                                         response.sendRedirect("/api/access-denied");
                                     }
                                 }))
-
 
 
 //                .oauth2Login(oauth -> oauth.successHandler(successHandler))
@@ -250,7 +237,6 @@ public class SecurityConfig {
 
         return config.getAuthenticationManager();
     }
-
 
 
 }

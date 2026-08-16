@@ -7,4 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface vendorBussinesss extends JpaRepository<VendorBusiness,Long> {
     VendorBusiness findByVendorId(Long vendorId);
 
+    VendorBusiness findByVendorIdAndTenantId(Vendor vendor, String tenantId);
 }
