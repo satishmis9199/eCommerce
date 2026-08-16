@@ -1,5 +1,4 @@
 package com.e_commerce.eCommerce.controller;
-
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.BannerRequestDto;
 import com.e_commerce.eCommerce.dto.BannerResponseDto;
@@ -12,14 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @AllArgsConstructor
 public class BannerController {
     private final BannerService bannerService;
-
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/vendor/s11/v1/banner")
     public ResponseEntity<ApiResponse<?>> saveBanner(@AuthenticationPrincipal CustomUserDetail customerDetailDTo, @RequestBody BannerRequestDto bannerRequestDTO) {
@@ -30,7 +27,6 @@ public class BannerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Unable To fetch", e.getMessage()));
         }
     }
-
     @GetMapping("/vendor/s11/v1/banner")
     public ResponseEntity<ApiResponse<List<BannerResponseDto>>> getBannerAdmin(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
         try {
