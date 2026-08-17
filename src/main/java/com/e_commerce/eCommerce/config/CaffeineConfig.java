@@ -89,6 +89,22 @@ public class CaffeineConfig {
                         .recordStats()
                         .build()
         );
+        CaffeineCache allVendors = new CaffeineCache(
+                "AllVendors",
+                Caffeine.newBuilder()
+                        .expireAfterWrite(Duration.ofMinutes(30))
+                        .maximumSize(1000)
+                        .recordStats()
+                        .build()
+        );
+        CaffeineCache vendorDetail = new CaffeineCache(
+                "vendorDetail",
+                Caffeine.newBuilder()
+                        .expireAfterWrite(Duration.ofMinutes(30))
+                        .maximumSize(1000)
+                        .recordStats()
+                        .build()
+        );
 
 
         SimpleCacheManager cacheManager = new SimpleCacheManager();
@@ -101,7 +117,8 @@ public class CaffeineConfig {
                 adminProductCache,
                 productsByIdCache,
                 productsByIdsCache,
-                jwtSecret
+                jwtSecret,allVendors
+                ,vendorDetail
         ));
 
         return cacheManager;

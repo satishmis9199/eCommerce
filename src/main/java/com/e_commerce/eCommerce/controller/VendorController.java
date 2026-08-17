@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -50,7 +51,7 @@ public class VendorController {
                     ));
         }
     }
-//    Get Registered Vendor /s1/api/v1/super/admin/getAllVendor
+
 @GetMapping("/v1/super/admin/getAllVendor")
 public ResponseEntity<List<VendorResponseDto>> getAllVendors() {
     try {
@@ -66,6 +67,7 @@ public ResponseEntity<List<VendorResponseDto>> getAllVendors() {
                 .body(Collections.emptyList());
     }
 }
+
     @GetMapping("/v1/super/admin/vendor/{id}")
     public ResponseEntity<VendorDetailsResponseDto> getVendorDetails(
             @PathVariable Long id) {

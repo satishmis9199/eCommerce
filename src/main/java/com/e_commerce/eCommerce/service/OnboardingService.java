@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -162,11 +164,6 @@ public class OnboardingService {
 
         return dto;
     }
-
-    //===========================================================
-    // Business Address
-    //===========================================================
-
     private BusinessAddressDTO getBusinessAddress(Long vendorId) {
 
         BusinessAddressDTO dto = new BusinessAddressDTO();
@@ -196,10 +193,6 @@ public class OnboardingService {
         return dto;
     }
 
-    //===========================================================
-    // Bank Details
-    //===========================================================
-
     private BankInfoDto getBankDetails(Long vendorId) {
 
         BankInfoDto dto = new BankInfoDto();
@@ -227,11 +220,6 @@ public class OnboardingService {
 
         return dto;
     }
-
-    //===========================================================
-    // Branding Details
-    //===========================================================
-
     private BrandingDTO getBrandingDetails(Long vendorId) {
 
         BrandingDTO dto = new BrandingDTO();
@@ -262,7 +250,10 @@ public class OnboardingService {
 
 
 
-
+    @Caching(evict = {
+            @CacheEvict(value = "vendorDetail", allEntries = true),
+            @CacheEvict(value = "AllVendors", allEntries = true)
+    })
     public String saveBasicDetail(Long vendorId, BasicInfoDto dto) {
 
 
@@ -462,7 +453,10 @@ public class OnboardingService {
 
         return "Branding Info Saved";
     }
-
+    @Caching(evict = {
+            @CacheEvict(value = "vendorDetail", allEntries = true),
+            @CacheEvict(value = "AllVendors", allEntries = true)
+    })
     @Transactional
     public SubmitApplicationResponseDTO submitApplication(Long vendorId) {
         Vendor vendor = vendorRepository.findById(vendorId)
@@ -505,7 +499,10 @@ public class OnboardingService {
 
         return response;
     }
-
+    @Caching(evict = {
+            @CacheEvict(value = "vendorDetail", allEntries = true),
+            @CacheEvict(value = "AllVendors", allEntries = true)
+    })
     public String makeDecisiion(OnBoardingDecisionDto onBoardingDecisionDto, User user) {
         Vendor vendor = vendorRepository.findById(onBoardingDecisionDto.getApplicationId())
                 .orElseThrow(() -> new RuntimeException("Vendor not found"));

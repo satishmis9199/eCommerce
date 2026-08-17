@@ -7,7 +7,6 @@ import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.UserRepos;
-
 import com.e_commerce.eCommerce.repository.VendorOnnBRepo;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.repository.vendorBussinesss;
@@ -15,7 +14,9 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,19 +30,20 @@ import java.util.Optional;
 @AllArgsConstructor
 
 public class VendorService {
-    private static final Logger logger= LoggerFactory.getLogger(VendorController.class);
+    private static final Logger logger = LoggerFactory.getLogger(VendorController.class);
 
 
     private final VendorRepository vendorRepository;
     private final PasswordEncoder passwordEncoder;
-   private final VendorOnnBRepo vendorOnnBRepo;
-   private final UserRepos userRepos;
+    private final VendorOnnBRepo vendorOnnBRepo;
+    private final UserRepos userRepos;
     private final vendorBussinesss vendorBussinessAddress;
     private final PasswordResetServiceImpl passwordResetService;
     private final EmailService emailService;
 
+    @CacheEvict(value = "AllVendors", allEntries = true)
     @Transactional
-    public Boolean createVendor(VendorRequestDto vendorRequestDto,String requesst) {
+    public Boolean createVendor(VendorRequestDto vendorRequestDto, String requesst) {
 
         StringBuilder errorMessage = new StringBuilder();
 
@@ -61,10 +63,8 @@ public class VendorService {
         if (vendorRepository.existsBySubDomain(vendorRequestDto.getSubDomain())) {
             errorMessage.append("Sub domain already exists. ");
         }
-        String[] vendorEmails=vendorRequestDto.getVendorEmail().split("@");
-
-        System.out.println("Venderpr "+vendorEmails[1]);
-        if(!vendorEmails[1].equalsIgnoreCase("mystore.com")){
+        String[] vendorEmails = vendorRequestDto.getVendorEmail().split("@");
+        if (!vendorEmails[1].equalsIgnoreCase("mystore.com")) {
             errorMessage.append("Vendor Email must start with a @mystore.com");
         }
 
@@ -82,21 +82,16 @@ public class VendorService {
         vendor.setStoreName(vendorRequestDto.getBusinessName());
         vendor.setVendorEmail(vendorRequestDto.getVendorEmail());
         vendor.setPlan(vendorRequestDto.getPlan());
-        logger.info("WHile Creating a Vendor subdomain "+vendorRequestDto.getSubDomain()+requesst);
-        vendor.setSubDomain(vendorRequestDto.getSubDomain()+requesst);
+        vendor.setSubDomain(vendorRequestDto.getSubDomain() + requesst);
         vendor.setPassword(passwordEncoder.encode("satish123"));
         vendor.setJwtSecret(JwtUtil.generateJwtSecret());
-
         vendorRepository.save(vendor);
-        VendorOnboardingApplication vendorOnboardingApplication=new VendorOnboardingApplication();
-//        vendorOnboardingApplication.setApplicationId("ONB"+vendor.getId());
+        VendorOnboardingApplication vendorOnboardingApplication = new VendorOnboardingApplication();
         vendorOnboardingApplication.setVendor(vendor);
-
         vendorOnnBRepo.save(vendorOnboardingApplication);
-
-        User user=new User();
+        User user = new User();
         user.setEmail(vendorRequestDto.getEmail());
-        user.setPassword(passwordEncoder.encode("satish"));
+        user.setPassword(passwordEncoder.encode(vendorRequestDto.getFirstName() + "@" + 123));
         user.setRole(Roles.ADMIN);
         user.setMobileNumber(vendor.getMobile());
         user.setTenantId(vendor.getTenantId());
@@ -107,44 +102,37 @@ public class VendorService {
         user.setUpdatedAt(LocalDateTime.now());
         user.setUpdatedBy("Satish");
         user.setVendorId(vendor.getId());
-       User user1= userRepos.save(user);
-        String token=passwordResetService.initiateForVendor(user1);
+        User user1 = userRepos.save(user);
+        String token = passwordResetService.initiateForVendor(user1);
 
-        String resetLinks="https://"+vendor.getSubDomain()+requesst+ "/reset-password?token="+token ;
-        String Loginlinks="https://"+vendor.getSubDomain()+requesst;
+        String resetLinks = "https://" + requesst + "/reset-password?token=" + token;
+        String Loginlinks = "https://" + requesst;
 
 
-        EmailRequestDto vendorEmail = EmailRequestDto.builder()
-                .to(vendor.getEmail())
-                .subject("Welcome to " + "KUMAR Store Online" + " – Your Vendor Account Details")
-                .templateName("vendor-welcome-email")
-                .templateVariables(Map.of(
-                        "vendorName", vendor.getFirstName(),
-                        "vendorEmail", vendor.getEmail()+" "+vendor.getLastName(),
-                        "tempPassword", "satish123",
-                        "shopName", "Kumar Store",
-                        "loginLink",Loginlinks ,
-                        "resetLink", resetLinks,
-                        "expiryMinutes", 30,
-                        "supportEmail", "support@kumarstore.online"
-                ))
-                .build();
+        EmailRequestDto vendorEmail = EmailRequestDto.builder().
+                to(vendor.getEmail()).
+                subject("Welcome to " + "KUMAR Store Online" + " – Your Vendor Account Details").
+                templateName("vendor-welcome-email").
+                templateVariables(Map.of("vendorName", vendor.getFirstName(),
+                        "vendorEmail", vendor.getEmail() + " " + vendor.getLastName(),
+                        "tempPassword", vendorRequestDto.getFirstName() + "@" + 123, "shopName", "Kumar Store",
+                        "loginLink", Loginlinks, "resetLink",
+                        resetLinks, "expiryMinutes", 30,
+                        "supportEmail",
+                        "support@kumarstore.online")).build();
 
         emailService.sendEmailAsync(vendorEmail);
-
-
-
-
-
         return true;
     }
 
+    @Cacheable(value = "AllVendors")
     public List<VendorResponseDto> getAllVendors() {
+        logger.info("Fist hit in DB for  Vendor");
+
 
         List<VendorResponseDto> responseDtoList = new ArrayList<>();
 
-        List<Vendor> vendors = vendorRepository
-                .findByStatusNot(VendorStatus.ONBOARDING);
+        List<Vendor> vendors = vendorRepository.findByStatusNot(VendorStatus.ONBOARDING);
 
         if (vendors.isEmpty()) {
             logger.info("No vendors found.");
@@ -161,8 +149,6 @@ public class VendorService {
             vendorResponseDto.setBusinessName(vendor.getBussinessName());
             vendorResponseDto.setStatus(vendor.getStatus().name());
             vendorResponseDto.setSubscriptionPlan(vendor.getPlan().name());
-
-            // TODO: Replace these with actual values
             vendorResponseDto.setTotalOrders(0);
             vendorResponseDto.setTotalRevenue(0L);
 
@@ -171,60 +157,27 @@ public class VendorService {
 
         return responseDtoList;
     }
+
+    @Cacheable(value = "vendorDetail", key = "#vendorId")
     public VendorDetailsResponseDto getVendorDetails(Long vendorId) {
-
-        Vendor vendor = vendorRepository.findById(vendorId)
-                .orElseThrow(() -> new RuntimeException("Vendor not found."));
-
+        Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(() -> new RuntimeException("Vendor not found."));
         VendorBusiness vendorBusiness = vendorBussinessAddress.findByVendorId(vendorId);
-
         VendorDetailsResponseDto dto = new VendorDetailsResponseDto();
-
-        // =====================================================
-        // Basic Information
-        // =====================================================
-
         dto.setVendorId(vendor.getId());
-//
-
-        dto.setFullName(
-                valueOrNA(vendor.getFirstName()) + " " +
-                        valueOrNA(vendor.getLastName())
-        );
-
+        dto.setFullName(valueOrNA(vendor.getFirstName()) + " " + valueOrNA(vendor.getLastName()));
         dto.setEmail(valueOrNA(vendor.getEmail()));
         dto.setMobileNumber(valueOrNA(vendor.getMobile()));
-
         dto.setStatus(vendor.getStatus());
-
         dto.setRegistrationDate(vendor.getCreatedAt());
-//        dto.setLastLogin(vendor.getLastLogin());
-
-        // =====================================================
-        // Business Information
-        // =====================================================
-
         dto.setBusinessName(valueOrNA(vendor.getBussinessName()));
         dto.setStoreName(valueOrNA(vendor.getStoreName()));
-
         if (vendorBusiness != null) {
-
-
-
             dto.setBusinessType(valueOrNA(String.valueOf(vendorBusiness.getBusinessType())));
-
             dto.setBusinessCategory(valueOrNA(vendorBusiness.getBusinessCategory()));
-
-            dto.setBusinessDescription(
-                    valueOrNA(vendorBusiness.getBusinessDescription())
-            );
-
+            dto.setBusinessDescription(valueOrNA(vendorBusiness.getBusinessDescription()));
             dto.setPanNumber(maskPan(vendorBusiness.getPanNumber()));
-
             dto.setGstNumber(maskGSTIN(vendorBusiness.getGstNumber()));
-
         } else {
-
             dto.setStoreName("N/A");
             dto.setBusinessType("N/A");
             dto.setBusinessCategory("N/A");
@@ -233,15 +186,11 @@ public class VendorService {
             dto.setGstNumber("N/A");
 
         }
-
         return dto;
     }
-
     private String valueOrNA(String value) {
 
-        return (value == null || value.trim().isEmpty())
-                ? "N/A"
-                : value;
+        return (value == null || value.trim().isEmpty()) ? "N/A" : value;
     }
 
 
@@ -251,25 +200,25 @@ public class VendorService {
             return pan;
         }
 
-        return pan.substring(0, 5)
-                + "****"
-                + pan.substring(9);
+        return pan.substring(0, 5) + "****" + pan.substring(9);
     }
+
     public static String maskGSTIN(String gstin) {
         if (gstin == null || gstin.length() != 15) {
             return gstin;
         }
-        return gstin.substring(0, 2)
-                + "*".repeat(10)
-                + gstin.substring(12);
+        return gstin.substring(0, 2) + "*".repeat(10) + gstin.substring(12);
     }
+
+    @Caching(evict = {
+            @CacheEvict(value = "vendorDetail", allEntries = true),
+            @CacheEvict(value = "AllVendors", allEntries = true)
+    })
     @Transactional
     public String editProfile(VendorEditResponse request, User loggedInUser) {
 
-        User user = userRepos.findById(loggedInUser.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Vendor v1=vendorRepository.findById(user.getVendorId())
-                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+        User user = userRepos.findById(loggedInUser.getId()).orElseThrow(() -> new RuntimeException("User not found"));
+        Vendor v1 = vendorRepository.findById(user.getVendorId()).orElseThrow(() -> new RuntimeException("Vendor not found"));
 
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -284,12 +233,13 @@ public class VendorService {
 
         return "Profile updated successfully";
     }
-@Transactional
+
+    @Transactional
     public String changeCurrentUserPassword(PasswordChangeDto pas, CustomUserDetail userDetail) {
-        String tenantId= TenantContext.getTenantId();
-        User user=userDetail.getUser();
-        if(!user.getTenantId().equalsIgnoreCase(tenantId)){
-            throw  new RuntimeException("Try From Required Vendor Profile");
+        String tenantId = TenantContext.getTenantId();
+        User user = userDetail.getUser();
+        if (!user.getTenantId().equalsIgnoreCase(tenantId)) {
+            throw new RuntimeException("Try From Required Vendor Profile");
         }
         if (!passwordEncoder.matches(pas.getCurrentPassword(), user.getPassword())) {
             throw new RuntimeException("Current Password does not match.");
@@ -302,19 +252,19 @@ public class VendorService {
     }
 
     public List<CustomerListResponseDTO> findAllCustomer(CustomUserDetail userDetail) {
-        String tenantid=TenantContext.getTenantId();
-        if(userDetail==null){
+        String tenantid = TenantContext.getTenantId();
+        if (userDetail == null) {
             throw new RuntimeException("Please login again");
         }
-        if(userDetail.getRole()!=Roles.ADMIN){
+        if (userDetail.getRole() != Roles.ADMIN) {
             throw new RuntimeException("Unauthorizee access");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenantid);
-        if(vendor==null){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenantid);
+        if (vendor == null) {
             throw new RuntimeException("Invalid vendor");
         }
-        List<User> users=userRepos.findAllByTenantIdAndVendorId(tenantid,vendor.get().getId());
-        List<CustomerListResponseDTO> customerListResponseDTOS=userRepos.getCustomerList(tenantid,vendor.get().getId());
+        List<User> users = userRepos.findAllByTenantIdAndVendorId(tenantid, vendor.get().getId());
+        List<CustomerListResponseDTO> customerListResponseDTOS = userRepos.getCustomerList(tenantid, vendor.get().getId());
         return customerListResponseDTOS;
 
     }
