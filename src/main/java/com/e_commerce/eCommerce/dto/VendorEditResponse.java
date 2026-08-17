@@ -13,7 +13,7 @@ public class VendorEditResponse {
 
     private String firstName;
 
-    private String  lastName;
+    private String lastName;
     private String mobile;
     private String profileImage;
 

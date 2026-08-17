@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,5 +14,5 @@ public class FlashSaleDashBoardResponseDTO {
     private Long endsAt;      // epoch millis
     private List<ProductDTO> products;
 
-    }
+}
 

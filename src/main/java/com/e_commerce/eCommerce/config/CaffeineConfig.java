@@ -117,8 +117,8 @@ public class CaffeineConfig {
                 adminProductCache,
                 productsByIdCache,
                 productsByIdsCache,
-                jwtSecret,allVendors
-                ,vendorDetail
+                jwtSecret, allVendors
+                , vendorDetail
         ));
 
         return cacheManager;

@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ReturnTrackingRepository extends JpaRepository<ReturnTracking,Long> {
+public interface ReturnTrackingRepository extends JpaRepository<ReturnTracking, Long> {
     List<ReturnTracking> findByTenantIdAndOrderId(String tenantId, Long id);
 }

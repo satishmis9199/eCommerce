@@ -1,6 +1,5 @@
 package com.e_commerce.eCommerce.dto;
 
-import com.e_commerce.eCommerce.entity.OrderStatus;
 import com.e_commerce.eCommerce.entity.PaymentMethod;
 import com.e_commerce.eCommerce.entity.PaymentStatus;
 import lombok.AllArgsConstructor;
@@ -9,8 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
+
 @AllArgsConstructor
 @Getter
 @Setter

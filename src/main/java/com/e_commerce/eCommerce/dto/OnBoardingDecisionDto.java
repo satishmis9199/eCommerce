@@ -1,9 +1,8 @@
 package com.e_commerce.eCommerce.dto;
 
-public class OnBoardingDecisionDto
-{
+public class OnBoardingDecisionDto {
     private Long applicationId;
-    private  String action;
+    private String action;
     private String remarks;
     private boolean allowResubmit;
 

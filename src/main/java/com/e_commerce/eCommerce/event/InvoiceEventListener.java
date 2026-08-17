@@ -30,12 +30,13 @@ public class InvoiceEventListener {
                 event.getTenantid()
         );
     }
+
     @TransactionalEventListener(
             phase = TransactionPhase.AFTER_COMMIT
     )
     public void handlePlacingOrder(
             OrderTrackingEvent event) {
-        productSalesAsyncService.createPlacedTracking(event.getOrderId(),event.getTenantId(), event.getVendorId());
+        productSalesAsyncService.createPlacedTracking(event.getOrderId(), event.getTenantId(), event.getVendorId());
 
         log.error("Transaction committed.");
 

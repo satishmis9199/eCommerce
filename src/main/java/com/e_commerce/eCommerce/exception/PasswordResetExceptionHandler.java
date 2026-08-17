@@ -17,19 +17,19 @@ public class PasswordResetExceptionHandler {
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidToken(InvalidTokenException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(	new ApiResponse<>(false, ex.getMessage()));
+                .body(new ApiResponse<>(false, ex.getMessage()));
     }
 
     @ExceptionHandler(TokenExpiredException.class)
     public ResponseEntity<ApiResponse<Void>> handleExpired(TokenExpiredException ex) {
         return ResponseEntity.status(HttpStatus.GONE)
-                .body(	new ApiResponse<>(false, ex.getMessage()));
+                .body(new ApiResponse<>(false, ex.getMessage()));
     }
 
     @ExceptionHandler(TokenAlreadyUsedException.class)
     public ResponseEntity<ApiResponse<Void>> handleUsed(TokenAlreadyUsedException ex) {
         return ResponseEntity.status(HttpStatus.GONE)
-                .body(	new ApiResponse<>(false, ex.getMessage()));
+                .body(new ApiResponse<>(false, ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -38,6 +38,6 @@ public class PasswordResetExceptionHandler {
                 .map(err -> err.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(	new ApiResponse<>(false, ex.getMessage()));
+                .body(new ApiResponse<>(false, ex.getMessage()));
     }
 }

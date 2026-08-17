@@ -6,18 +6,19 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @Getter
 @Setter
-public class CustomerListResponseDTO
-{
+public class CustomerListResponseDTO {
     private Long id;
-        private String customerName;
-        private String phone;
-        private Long totalOrders;
-        private String email;
-        private BigDecimal totalSpent;
-        private LocalDateTime lastOrderDate;
+    private String customerName;
+    private String phone;
+    private Long totalOrders;
+    private String email;
+    private BigDecimal totalSpent;
+    private LocalDateTime lastOrderDate;
+
     public CustomerListResponseDTO(
             Long id,
             String customerName,
@@ -35,7 +36,6 @@ public class CustomerListResponseDTO
         this.totalSpent = totalSpent;
         this.lastOrderDate = lastOrderDate;
     }
-
 
 
 }

@@ -7,15 +7,18 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+
 @Component
 public class TokenGenerator {
 
     private final SecureRandom secureRandom = new SecureRandom();
+
     public String generateRawToken(int byteLength) {
         byte[] bytes = new byte[byteLength];
         secureRandom.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
+
     public String hash(String rawToken) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

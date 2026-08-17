@@ -21,10 +21,8 @@ public class VendorSubscription {
     private Long id;
 
 
-
     @Column(nullable = false, length = 36)
     private String tenantId;
-
 
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -50,9 +48,6 @@ public class VendorSubscription {
 
     @Column(nullable = false)
     private LocalDate expiryDate;
-
-
-
 
 
     // =====================================
@@ -89,8 +84,6 @@ public class VendorSubscription {
         if (subscriptionStatus == null) {
             subscriptionStatus = SubscriptionStatus.ACTIVE;
         }
-
-
 
 
         if (autoRenew == null)

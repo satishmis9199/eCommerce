@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 /**
  * DTO for a single item inside the "Related Products" response.
  * Used by: GET /api/u1/v1/products/{productId}/related
- *
+ * <p>
  * Only productId, name, image, price are currently rendered by the
  * frontend (renderQuickViewRelated()) — the rest are included so the
  * card can be upgraded later (rating, discount badge, stock dot, etc.)

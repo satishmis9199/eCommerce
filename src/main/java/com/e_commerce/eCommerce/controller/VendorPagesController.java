@@ -11,19 +11,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @PreAuthorize("hasRole('ADMIN')")
 public class VendorPagesController {
     @GetMapping("/s1/v1/dashboard")
-    public String vendorDashBoard(){
+    public String vendorDashBoard() {
         return "VendordashBoard";
     }
+
     @GetMapping("/s1/on/v1/onBoarding")
     public String getOnBoarding() {
         return "onboarding";
     }
+
     @GetMapping("s11/v1/application-status")
-    public String getApplicationStatus(){
+    public String getApplicationStatus() {
         return "applicationStatus";
     }
+
     @GetMapping("/do/policy")
-    public String openPolicy(){
+    public String openPolicy() {
         return "vendorPoliciesAdmin";
     }
 }

@@ -7,7 +7,6 @@ import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -173,7 +172,7 @@ public class UserDashBoardService {
     }
 
 
-    @Cacheable(value="products", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
+    @Cacheable(value = "products", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
     public List<ProductCardResponseDTO> getAllProducts(String tenant) {
         log.error("DB hit for gtAll Products");
         Optional<Vendor> vendor = vendorRepository.findByTenantId(tenant);
@@ -420,7 +419,8 @@ public class UserDashBoardService {
         userRepos.save(user);
         return "passsword changes Successfully";
     }
-    @Cacheable(value="banners", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
+
+    @Cacheable(value = "banners", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
     public List<UserBannerResponseDTo> loadBanners() {
         String tenaantId = TenantContext.getTenantId();
         if (tenaantId == null) {

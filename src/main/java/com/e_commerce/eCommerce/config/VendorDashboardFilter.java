@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -22,7 +21,7 @@ import java.io.IOException;
 
 @Component
 public class VendorDashboardFilter extends OncePerRequestFilter {
-    private static final Logger logger= LoggerFactory.getLogger(VendorDashboardFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(VendorDashboardFilter.class);
     @Autowired
     private UserRepos userRepository;
 
@@ -40,7 +39,7 @@ public class VendorDashboardFilter extends OncePerRequestFilter {
 
 
         String uri = request.getRequestURI();
-        if (!DASHBOARD_URI.equals(uri) ) {
+        if (!DASHBOARD_URI.equals(uri)) {
             filterChain.doFilter(request, response);
             return;
         }

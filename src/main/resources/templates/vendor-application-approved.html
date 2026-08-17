@@ -6,7 +6,8 @@
 </head>
 <body style="margin:0; padding:0; background-color:#f4f4f7; font-family: Arial, Helvetica, sans-serif;">
 
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7; padding:30px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#f4f4f7; padding:30px 0;">
     <tr>
         <td align="center">
             <table role="presentation" width="600" cellpadding="0" cellspacing="0"
@@ -42,9 +43,11 @@
                                 <td style="padding:20px 25px;">
                                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                         <tr>
-                                            <td style="padding:6px 0; font-size:14px; color:#166534;">Application ID</td>
+                                            <td style="padding:6px 0; font-size:14px; color:#166534;">Application ID
+                                            </td>
                                             <td style="padding:6px 0; font-size:14px; color:#111111; font-weight:bold; text-align:right;"
-                                                th:text="${applicationId}">APP-00123</td>
+                                                th:text="${applicationId}">APP-00123
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td style="padding:6px 0; font-size:14px; color:#166534;">Status</td>
@@ -55,9 +58,12 @@
                                             </td>
                                         </tr>
                                         <tr th:if="${remarks != null and !remarks.isEmpty()}">
-                                            <td style="padding:6px 0; font-size:14px; color:#166534; vertical-align:top;">Remarks</td>
+                                            <td style="padding:6px 0; font-size:14px; color:#166534; vertical-align:top;">
+                                                Remarks
+                                            </td>
                                             <td style="padding:6px 0; font-size:14px; color:#111111; text-align:right;"
-                                                th:text="${remarks}">Looks good, welcome aboard!</td>
+                                                th:text="${remarks}">Looks good, welcome aboard!
+                                            </td>
                                         </tr>
                                     </table>
                                 </td>
@@ -88,7 +94,8 @@
                     <td style="background-color:#f9f9fb; padding:20px 40px; text-align:center; border-top:1px solid #eeeeee;">
                         <p style="font-size:13px; color:#999999; margin:0;">
                             Need help? Contact us at
-                            <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}" style="color:#15803d; text-decoration:none;">support@kumarstore.online</a>
+                            <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}"
+                               style="color:#15803d; text-decoration:none;">support@kumarstore.online</a>
                         </p>
                         <p style="font-size:12px; color:#bbbbbb; margin:10px 0 0;">
                             &copy; <span th:text="${#calendars.year(#calendars.createNow())}">2026</span>

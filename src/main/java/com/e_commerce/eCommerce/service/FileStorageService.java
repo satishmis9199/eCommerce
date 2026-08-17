@@ -20,7 +20,7 @@ public class FileStorageService {
 
     private final S3Client s3Client;
     private final R2Properties properties;
-    private static final Logger logger= LoggerFactory.getLogger(FileStorageService.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
 
 
     public String upload(MultipartFile file, String folder) {
@@ -28,18 +28,18 @@ public class FileStorageService {
         try {
 
             String original = file.getOriginalFilename();
-            logger.info("Original FIle Name {}",original);
+            logger.info("Original FIle Name {}", original);
 
             String extension = "";
-            int size= Math.toIntExact(file.getSize());
-            logger.info("Size Of Uploaded File :: "+size);
+            int size = Math.toIntExact(file.getSize());
+            logger.info("Size Of Uploaded File :: " + size);
 
             if (original != null && original.contains(".")) {
                 extension = original.substring(original.lastIndexOf("."));
             }
 
             String objectKey = folder + "/" + UUID.randomUUID() + extension;
-            logger.info("Object Key {}",objectKey);
+            logger.info("Object Key {}", objectKey);
 
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(properties.getBucket())
@@ -55,7 +55,7 @@ public class FileStorageService {
                     )
             );
 
-            return  objectKey;
+            return objectKey;
 
         } catch (IOException e) {
             throw new RuntimeException("File Upload Failed", e);
@@ -96,7 +96,7 @@ public class FileStorageService {
                 request,
                 RequestBody.fromBytes(fileBytes)
         );
-        logger.error("Returning object Key fpr  Pdf"+objectKey);
+        logger.error("Returning object Key fpr  Pdf" + objectKey);
         return objectKey;
 
     }

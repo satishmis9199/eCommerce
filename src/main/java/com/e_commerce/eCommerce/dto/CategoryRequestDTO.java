@@ -1,7 +1,6 @@
 package com.e_commerce.eCommerce.dto;
 
 import com.e_commerce.eCommerce.entity.CategoryStatus;
-
 import lombok.*;
 
 import java.util.List;
@@ -20,5 +19,5 @@ public class CategoryRequestDTO {
 
     private String imageUrl;
     private CategoryStatus status;
-    private List<CategorySpecificationRequestDTO > specifications;
+    private List<CategorySpecificationRequestDTO> specifications;
 }

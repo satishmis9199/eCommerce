@@ -16,9 +16,6 @@ import java.util.List;
 public class ProductResponseDTO {
 
 
-
-
-
     private Long id;
 
     private Long categoryId;
@@ -45,6 +42,7 @@ public class ProductResponseDTO {
 
     private LocalDateTime updatedAt;
     private List<ProductSpecificationResponeDto> specifications;
+
     public ProductResponseDTO(
             Long id,
             Long categoryId,

@@ -1,11 +1,11 @@
 package com.e_commerce.eCommerce.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "order_address")
 @Setter

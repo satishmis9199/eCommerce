@@ -12,8 +12,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableCaching
 public class ECommerceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ECommerceApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ECommerceApplication.class, args);
+    }
 
 }

@@ -20,7 +20,7 @@ public class FileUploadController {
 
     private final FileStorageService storageService;
     private final R2Properties r2Properties;
-    private static final Logger logger= LoggerFactory.getLogger(FileUploadController.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileUploadController.class);
 
 
     @PostMapping("/upload/profile")
@@ -33,14 +33,13 @@ public class FileUploadController {
             String url = storageService.upload(file, "profile");
 
 
-
             dto.setSuccess(true);
             dto.setMessage("Profile Image Uploaded Successfully");
 
             dto.setObjectKey(url);
 
             return ResponseEntity.ok(dto);
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             dto.setSuccess(false);
             dto.setMessage(e.getMessage());
@@ -85,25 +84,27 @@ public class FileUploadController {
         return ResponseEntity.ok(dto);
 
     }
+
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUnUsedFile(@RequestParam("objectKey") String obj){
-        try{
+    public ResponseEntity<?> deleteUnUsedFile(@RequestParam("objectKey") String obj) {
+        try {
 
             storageService.delete(obj);
             return ResponseEntity.ok().body(Map.of(
-                    "success",true,
-                    "message","File Deleted SuccessFully"
+                    "success", true,
+                    "message", "File Deleted SuccessFully"
             ));
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "success",false,
-                    "message","Error While Deleteing"
+                    "success", false,
+                    "message", "Error While Deleteing"
             ));
         }
     }
+
     @PostMapping("/upload/category")
-    public ResponseEntity<?> uplaodCategoryImage(@RequestParam("file") MultipartFile file){
+    public ResponseEntity<?> uplaodCategoryImage(@RequestParam("file") MultipartFile file) {
         String url = storageService.upload(file, "category");
 
         UploadResponseDTO dto = new UploadResponseDTO();
@@ -115,9 +116,10 @@ public class FileUploadController {
 
         return ResponseEntity.ok(dto);
     }
+
     @PostMapping("/upload/product")
 
-    public ResponseEntity<?> uploadProduct(@RequestParam("file") MultipartFile file){
+    public ResponseEntity<?> uploadProduct(@RequestParam("file") MultipartFile file) {
         logger.error("Inside Product Image Upload");
         String url = storageService.upload(file, "products");
 

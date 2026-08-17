@@ -37,7 +37,6 @@ public class Notice {
     private String noticeText;
 
 
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private NoticeStatus status;

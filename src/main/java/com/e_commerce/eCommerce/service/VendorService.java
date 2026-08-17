@@ -188,6 +188,7 @@ public class VendorService {
         }
         return dto;
     }
+
     private String valueOrNA(String value) {
 
         return (value == null || value.trim().isEmpty()) ? "N/A" : value;

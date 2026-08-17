@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Body for POST /auth/password-reset.
- *
+ * <p>
  * Password rule below is a reasonable default (8+ chars, upper, lower,
  * digit). Replace the @Pattern with whatever your app's existing password
  * policy actually enforces (e.g. a shared @ValidPassword annotation) —
@@ -25,8 +25,19 @@ public class PasswordResetDto {
     )
     private String newPassword;
 
-    public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
-    public String getNewPassword() { return newPassword; }
-    public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
 }

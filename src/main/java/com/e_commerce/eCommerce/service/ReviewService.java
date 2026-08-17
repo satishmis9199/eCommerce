@@ -158,25 +158,25 @@ public class ReviewService {
         if (vendor.isEmpty()) {
             throw new RuntimeException("Tenant Does Not Exist");
         }
-        List<ProductReview> pro=productReviewRepository.findTop10ByTenantIdAndStatusOrderByCreatedAtDesc(tenantId, ReviewStatus.APPROVE);
-        List<Long> userIds=new ArrayList<>();
+        List<ProductReview> pro = productReviewRepository.findTop10ByTenantIdAndStatusOrderByCreatedAtDesc(tenantId, ReviewStatus.APPROVE);
+        List<Long> userIds = new ArrayList<>();
 
-        for(ProductReview productReview:pro){
+        for (ProductReview productReview : pro) {
             userIds.add(productReview.getUserId());
         }
-      Map<Long,String> userNames=findUserNameWithUserIdInTenant(tenantId,userIds);
-        log.error("All Username Wit id For Review {}",userNames);
-        List<UserReviewResponseDTO> userReviewResponseDTOS=new ArrayList<>();
-        for(ProductReview productReview:pro){
-            UserReviewResponseDTO userReviewResponseDTO=new UserReviewResponseDTO();
+        Map<Long, String> userNames = findUserNameWithUserIdInTenant(tenantId, userIds);
+        log.error("All Username Wit id For Review {}", userNames);
+        List<UserReviewResponseDTO> userReviewResponseDTOS = new ArrayList<>();
+        for (ProductReview productReview : pro) {
+            UserReviewResponseDTO userReviewResponseDTO = new UserReviewResponseDTO();
             userReviewResponseDTO.setReviewId(String.valueOf(productReview.getId()));
             userReviewResponseDTO.setCustomerName(userNames.get(productReview.getUserId()));
             userReviewResponseDTO.setComment(productReview.getReviewText());
             userReviewResponseDTO.setVerified(true);
-            if(productReview.getRating()<3){
+            if (productReview.getRating() < 3) {
                 userReviewResponseDTO.setRating(3);
 
-            }else{
+            } else {
                 userReviewResponseDTO.setRating(productReview.getRating());
             }
             userReviewResponseDTOS.add(userReviewResponseDTO);

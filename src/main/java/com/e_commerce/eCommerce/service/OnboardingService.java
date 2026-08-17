@@ -1,7 +1,6 @@
 package com.e_commerce.eCommerce.service;
 
 import com.e_commerce.eCommerce.config.TenantContext;
-import com.e_commerce.eCommerce.controller.OnboardingController;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.entity.*;
@@ -13,9 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -30,7 +27,7 @@ public class OnboardingService {
 
     private final VendorOnnBRepo vendorOnnBRepo;
     private final EmailService emailService;
-//    private final VendorBankRepository vendorBankRepository;
+    //    private final VendorBankRepository vendorBankRepository;
     private final VendorRepository vendorRepository;
     private final vendorBussinesss vendorBusinessRepository;
     private final VendorAddresss vendorAddressRepository;
@@ -65,7 +62,7 @@ public class OnboardingService {
         }
 
         VendorOnboardingApplication application = optionalApplication.get();
-        int percent=application.getCompletionPercentage();
+        int percent = application.getCompletionPercentage();
         response.setSuccess(true);
 
 
@@ -164,6 +161,7 @@ public class OnboardingService {
 
         return dto;
     }
+
     private BusinessAddressDTO getBusinessAddress(Long vendorId) {
 
         BusinessAddressDTO dto = new BusinessAddressDTO();
@@ -220,6 +218,7 @@ public class OnboardingService {
 
         return dto;
     }
+
     private BrandingDTO getBrandingDetails(Long vendorId) {
 
         BrandingDTO dto = new BrandingDTO();
@@ -249,7 +248,6 @@ public class OnboardingService {
     }
 
 
-
     @Caching(evict = {
             @CacheEvict(value = "vendorDetail", allEntries = true),
             @CacheEvict(value = "AllVendors", allEntries = true)
@@ -260,7 +258,7 @@ public class OnboardingService {
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() ->
                         new RuntimeException("Vendor not found"));
-        VendorOnboardingApplication vendorOnboardingApplication=vendorOnnBRepo.findByVendorId(vendorId)
+        VendorOnboardingApplication vendorOnboardingApplication = vendorOnnBRepo.findByVendorId(vendorId)
                 .orElseThrow(() ->
                         new RuntimeException("Vendor not found"));
 
@@ -340,8 +338,7 @@ public class OnboardingService {
     }
 
 
-
-    public String saveBussienssddress(Long vendorId, BusinessAddressDTO dto){
+    public String saveBussienssddress(Long vendorId, BusinessAddressDTO dto) {
         // Vendor
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() ->
@@ -352,7 +349,7 @@ public class OnboardingService {
                 vendorOnnBRepo.findByVendorId(vendorId)
                         .orElseThrow(() ->
                                 new RuntimeException("Onboarding application not found"));
-        VendorAddress vendorAddress=vendorAddressRepo.findByVendorId(vendorId);
+        VendorAddress vendorAddress = vendorAddressRepo.findByVendorId(vendorId);
         if (dto.getAddressLine1() == null || dto.getAddressLine1().isBlank()) {
             throw new RuntimeException("Address Line 1 is required");
         }
@@ -372,8 +369,8 @@ public class OnboardingService {
         if (dto.getPincode() == null || dto.getPincode().isBlank()) {
             throw new RuntimeException("Pincode is required");
         }
-        if(vendorAddress==null){
-            vendorAddress=new VendorAddress();
+        if (vendorAddress == null) {
+            vendorAddress = new VendorAddress();
             vendorAddress.setVendor(vendor);
         }
         vendorAddress.setAddressLine1(dto.getAddressLine1());
@@ -385,7 +382,7 @@ public class OnboardingService {
         vendorAddress.setAddressType(AddressType.WAREHOUSE);
         vendorAddress.setDefaultAddress(true);
 
-        onboarding.setCurrentStep(Math.max(onboarding.getCurrentStep(),3));
+        onboarding.setCurrentStep(Math.max(onboarding.getCurrentStep(), 3));
         onboarding.setCompletionPercentage(Math.max(onboarding.getCompletionPercentage(), 60));
         vendorAddressRepo.save(vendorAddress);
         vendorOnnBRepo.save(onboarding);
@@ -404,9 +401,9 @@ public class OnboardingService {
                 vendorOnnBRepo.findByVendorId(vendorid)
                         .orElseThrow(() ->
                                 new RuntimeException("Onboarding application not found"));
-        VendorBank vendorBank=vendorBankRepository.findByVendorId(vendorid);
-        if(vendorBank==null){
-            vendorBank=new VendorBank();
+        VendorBank vendorBank = vendorBankRepository.findByVendorId(vendorid);
+        if (vendorBank == null) {
+            vendorBank = new VendorBank();
             vendorBank.setVendor(vendor);
 
         }
@@ -415,8 +412,8 @@ public class OnboardingService {
         vendorBank.setBranchName(dto.getBranchName());
         vendorBank.setIfscCode(dto.getIfscCode());
         vendorBank.setAccountNumber(dto.getAccountNumber());
-        onboarding.setCompletionPercentage(Math.max(onboarding.getCompletionPercentage(),80));
-        onboarding.setCurrentStep(Math.max(onboarding.getCurrentStep(),4));
+        onboarding.setCompletionPercentage(Math.max(onboarding.getCompletionPercentage(), 80));
+        onboarding.setCurrentStep(Math.max(onboarding.getCurrentStep(), 4));
         vendorBankRepository.save(vendorBank);
         return "Bank Detail saved";
     }
@@ -433,9 +430,9 @@ public class OnboardingService {
                 vendorOnnBRepo.findByVendorId(vendorid)
                         .orElseThrow(() ->
                                 new RuntimeException("Onboarding application not found"));
-        VendorBranding vendorBranding=vendorBrandingRepository.findByVendorId(vendorid);
-        if(vendorBranding==null){
-             vendorBranding=new VendorBranding();
+        VendorBranding vendorBranding = vendorBrandingRepository.findByVendorId(vendorid);
+        if (vendorBranding == null) {
+            vendorBranding = new VendorBranding();
             vendorBranding.setVendor(vendor);
 
         }
@@ -447,12 +444,13 @@ public class OnboardingService {
         vendorBranding.setSupportPhone(vendor.getEmail());
         vendorBranding.setSupportEmail(vendor.getMobile());
         onboarding.setCompletionPercentage(90);
-        onboarding.setCurrentStep(Math.max(onboarding.getCurrentStep(),5));
+        onboarding.setCurrentStep(Math.max(onboarding.getCurrentStep(), 5));
         vendorBrandingRepository.save(vendorBranding);
         vendorOnnBRepo.save(onboarding);
 
         return "Branding Info Saved";
     }
+
     @Caching(evict = {
             @CacheEvict(value = "vendorDetail", allEntries = true),
             @CacheEvict(value = "AllVendors", allEntries = true)
@@ -499,6 +497,7 @@ public class OnboardingService {
 
         return response;
     }
+
     @Caching(evict = {
             @CacheEvict(value = "vendorDetail", allEntries = true),
             @CacheEvict(value = "AllVendors", allEntries = true)
@@ -568,19 +567,19 @@ public class OnboardingService {
     }
 
     public VenddorOnBoardingApplicationStatus getOnboardingStatus(CustomUserDetail userDetail) {
-        String tenantId= TenantContext.getTenantId();
-        VenddorOnBoardingApplicationStatus v2=new VenddorOnBoardingApplicationStatus();
-        logger.info(" Tenant Id while Onboarding Status "+tenantId);
-        Optional<Vendor> v1=vendorRepository.findByTenantId(tenantId);
-        if(!v1.isPresent()){
+        String tenantId = TenantContext.getTenantId();
+        VenddorOnBoardingApplicationStatus v2 = new VenddorOnBoardingApplicationStatus();
+        logger.info(" Tenant Id while Onboarding Status " + tenantId);
+        Optional<Vendor> v1 = vendorRepository.findByTenantId(tenantId);
+        if (!v1.isPresent()) {
             throw new RuntimeException("Vendpr Does Not Exist");
         }
-        Vendor v3=v1.get();
-        Optional<VendorOnboardingApplication> v4=vendorOnnBRepo.findByVendorId(v3.getId());
-        if(!v4.isPresent()){
+        Vendor v3 = v1.get();
+        Optional<VendorOnboardingApplication> v4 = vendorOnnBRepo.findByVendorId(v3.getId());
+        if (!v4.isPresent()) {
             throw new RuntimeException("VendorApplication Does Not Exist");
         }
-        VendorOnboardingApplication v5=v4.get();
+        VendorOnboardingApplication v5 = v4.get();
         v2.setApplicationId(v5.getApplicationId());
         v2.setStatus(String.valueOf(v5.getStatus()));
         v2.setSuccess(true);
@@ -596,17 +595,17 @@ public class OnboardingService {
     }
 
     public String initiateResubmit(CustomUserDetail userDetail, String applicationId) {
-        String tenantid=TenantContext.getTenantId();
+        String tenantid = TenantContext.getTenantId();
         VendorOnboardingApplication onboarding = vendorOnnBRepo
                 .findByApplicationId(applicationId);
-        if(onboarding==null){
+        if (onboarding == null) {
             throw new RuntimeException("Application Doee Not Exist ..Contact Support team");
         }
-        Optional<Vendor> v11=vendorRepository.findByTenantId(tenantid);
-        if(!v11.isPresent()){
+        Optional<Vendor> v11 = vendorRepository.findByTenantId(tenantid);
+        if (!v11.isPresent()) {
             throw new RuntimeException("Vendor Does not Exist ");
         }
-        Vendor v1=v11.get();
+        Vendor v1 = v11.get();
         onboarding.setStatus(OnboardingStatus.DRAFT);
         v1.setStatus(VendorStatus.ONBOARDING);
         onboarding.setCompletionPercentage(90);
@@ -615,7 +614,6 @@ public class OnboardingService {
         vendorOnnBRepo.save(onboarding);
         vendorRepository.save(v1);
         return "Resubmit Initiated Success";
-
 
 
     }

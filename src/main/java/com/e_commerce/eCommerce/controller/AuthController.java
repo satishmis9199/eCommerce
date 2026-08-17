@@ -6,28 +6,27 @@ import com.e_commerce.eCommerce.dto.LoginRequestDTO;
 import com.e_commerce.eCommerce.entity.Roles;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.repository.UserRepos;
-
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -39,8 +38,6 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     @Autowired
     UserRepos userRepository;
-
-
 
 
     private final JwtUtil jwtUtil;
@@ -55,7 +52,6 @@ public class AuthController {
 
         this.jwtUtil = jwtUtil;
     }
-
 
 
     @PostMapping("/v1/auth/super-admin/login")
@@ -82,15 +78,15 @@ public class AuthController {
                                     dto.getPassword()
                             )
                     );
-            String loginIp=getClientIp(request);
-            String loginDevice=request.getHeader("User-Agent");
-            logger.info("Loginn Ip --- :: {}",loginIp);
-            logger.info("Loginn Device --- :: {}",loginDevice);
-            logger.info("Requet data --- :: {}",request);
+            String loginIp = getClientIp(request);
+            String loginDevice = request.getHeader("User-Agent");
+            logger.info("Loginn Ip --- :: {}", loginIp);
+            logger.info("Loginn Device --- :: {}", loginDevice);
+            logger.info("Requet data --- :: {}", request);
             CustomUserDetail user =
 
                     (CustomUserDetail) auth.getPrincipal();
-            Optional<User> user1=userRepository.findById(user.getId());
+            Optional<User> user1 = userRepository.findById(user.getId());
 
 
             if (!user1.isPresent()) {
@@ -136,27 +132,27 @@ public class AuthController {
             ) {
 
                 redirectUrl =
-                     "";
+                        "";
             }
-                 user2.setLastLoginIp(loginIp);
-                 user2.setLastLoginDevice(loginDevice);
-                 user2.setLastLoginTime(LocalDateTime.now());
-                 user2.setFailedLoginAttempt(0);
-                 userRepository.save(user2);
-                 Roles role= user.getRole();
-                 logger.info("Authentic Person role is :: "+role);
-                 String currentTenat= TenantContext.getTenantId();
-                 logger.info(" tenant id is "+currentTenat);
-                 if(role!=Roles.SUPER_ADMIN){
-                     return ResponseEntity.status(401)
-                             .body(Map.of(
-                                     "success", false,
-                                     "message", "Please Login through a Vendor Portal"
-                             ));
+            user2.setLastLoginIp(loginIp);
+            user2.setLastLoginDevice(loginDevice);
+            user2.setLastLoginTime(LocalDateTime.now());
+            user2.setFailedLoginAttempt(0);
+            userRepository.save(user2);
+            Roles role = user.getRole();
+            logger.info("Authentic Person role is :: " + role);
+            String currentTenat = TenantContext.getTenantId();
+            logger.info(" tenant id is " + currentTenat);
+            if (role != Roles.SUPER_ADMIN) {
+                return ResponseEntity.status(401)
+                        .body(Map.of(
+                                "success", false,
+                                "message", "Please Login through a Vendor Portal"
+                        ));
 
-                 }
+            }
 
-                redirectUrl="/s1/super/admin/v1/dashboard";
+            redirectUrl = "/s1/super/admin/v1/dashboard";
             return ResponseEntity.ok(
 
                     Map.of(
@@ -192,15 +188,14 @@ public class AuthController {
             User user =
                     userRepository.findByEmail(dto.getEmail());
 
-            if (user!=null) {
-
+            if (user != null) {
 
 
                 int failedAttempt =
                         user.getFailedLoginAttempt() == null
                                 ? 0
                                 : user.getFailedLoginAttempt();
-                if(failedAttempt>=2){
+                if (failedAttempt >= 2) {
                     user.setAccountLocked(true);
                 }
 
@@ -229,7 +224,6 @@ public class AuthController {
         }
         return request.getRemoteAddr();
     }
-
 
 
     @PostMapping("/super/admin/logout")
@@ -306,7 +300,6 @@ public class AuthController {
                 )
         );
     }
-
 
 
 }

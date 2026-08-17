@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class UserBannerResponseDTo {
-//    { id:"b1", eyebrow:"Bulk Pricing", title:"Cement & TMT Steel,\ndirect from plant.",
+    //    { id:"b1", eyebrow:"Bulk Pricing", title:"Cement & TMT Steel,\ndirect from plant.",
 //            subtitle:"Save up to 18% on bulk orders above 5 tonnes.",
 //            ctaLabel:"Shop Cement & Steel",
 //            ctaLink:"#", image:IMG.hero1}

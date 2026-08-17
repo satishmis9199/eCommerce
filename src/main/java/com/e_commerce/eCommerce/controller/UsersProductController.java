@@ -8,11 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/s4")
 public class UsersProductController {
     @GetMapping("/v1/t1/view-product")
-    public String viewProductForSell(){
+    public String viewProductForSell() {
         return "employee";
     }
+
     @GetMapping("/v1/tenantnot-found")
-    public String getTenantNotFo8nd(){
+    public String getTenantNotFo8nd() {
         return "tenant-not-found";
     }
 }

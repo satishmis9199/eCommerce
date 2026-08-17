@@ -13,7 +13,10 @@
         "vendorName": "Kumar Bricks",
         "businessName": "Kumar Bricks",
         "image": "products/cement.jpg",
-        "images": ["products/cement1.jpg", "products/cement2.jpg"],
+        "images": [
+          "products/cement1.jpg",
+          "products/cement2.jpg"
+        ],
         "rating": 4.7,
         "reviewCount": 1342,
         "price": 349,

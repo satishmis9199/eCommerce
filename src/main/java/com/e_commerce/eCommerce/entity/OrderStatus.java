@@ -23,7 +23,6 @@ public enum OrderStatus {
     CANCELLED(10);
 
 
-
     private final int sequence;
 
     OrderStatus(int sequence) {

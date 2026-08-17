@@ -22,8 +22,13 @@ public class VendorPolicyController {
     private final VendorPolicyService vendorPolicyService;
 
 
-    private String getTenantId() { return "tenant_id_from_context"; }
-    private Long getVendorId() { return 1L; }
+    private String getTenantId() {
+        return "tenant_id_from_context";
+    }
+
+    private Long getVendorId() {
+        return 1L;
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<VendorPolicyResponseDto>> saveOrUpdatePolicy(@Valid @RequestBody VendorPolicyRequestDto dto) {
@@ -55,7 +60,7 @@ public class VendorPolicyController {
     }
 
     @GetMapping("/{policyType}")
-    public ResponseEntity<ApiResponse<VendorPolicyResponseDto>>getPolicyByType(@PathVariable PolicyType policyType) {
+    public ResponseEntity<ApiResponse<VendorPolicyResponseDto>> getPolicyByType(@PathVariable PolicyType policyType) {
         VendorPolicyResponseDto result = vendorPolicyService.getPolicyByType(getTenantId(), getVendorId(), policyType);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
@@ -71,7 +76,7 @@ public class VendorPolicyController {
     @DeleteMapping("/{policyType}")
     public ResponseEntity<ApiResponse<?>> deletePolicy(@PathVariable PolicyType policyType) {
         vendorPolicyService.deletePolicy(getTenantId(), getVendorId(), policyType);
-       return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         new ApiResponse<>(
                                 true,

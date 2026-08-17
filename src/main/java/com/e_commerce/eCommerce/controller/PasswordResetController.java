@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 @AllArgsConstructor
 @RestController
 
@@ -23,21 +24,22 @@ public class PasswordResetController {
 
     private final PasswordResetService passwordResetService;
     private final UserRepos userRepository;
+
     @PostMapping("/request")
     public ResponseEntity<ApiResponse<Void>> requestReset(@Valid @RequestBody PasswordResetRequestDto dto, HttpServletRequest request) {
-        String tenantId= TenantContext.getTenantId();
-      User email=  userRepository.findByEmailAndTenantId(dto.getEmail(),tenantId);
-      if(email!=null){
-          passwordResetService.initiatePasswordSetup(email,request);
-      }
+        String tenantId = TenantContext.getTenantId();
+        User email = userRepository.findByEmailAndTenantId(dto.getEmail(), tenantId);
+        if (email != null) {
+            passwordResetService.initiatePasswordSetup(email, request);
+        }
 
 
-         return ResponseEntity.status(HttpStatus.CREATED)
-                 .body(new ApiResponse<>(
-                         true,
-                         "If that email is registered, a reset link has been sent.",
-                         null
-                 ));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        true,
+                        "If that email is registered, a reset link has been sent.",
+                        null
+                ));
 
     }
 

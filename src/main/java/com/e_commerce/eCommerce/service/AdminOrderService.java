@@ -9,14 +9,11 @@ import com.e_commerce.eCommerce.repository.OrderTrackingrepository;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -28,6 +25,7 @@ public class AdminOrderService {
     private OrderTrackingrepository orderTrackingrepository;
     private final PdfInvoiceService pdfInvoiceServicel;
     private final ApplicationEventPublisher eventPublisher;
+
     @Transactional
     public String updateStatus(CustomUserDetail userDetail, OrderUpdatRequestDTO orderUpdatRequestDTO) {
 
@@ -57,7 +55,7 @@ public class AdminOrderService {
         }
 
         OrderStatus previousStatus = order.getOrderStatus();
-        OrderStatus newStatus =OrderStatus.valueOf(orderUpdatRequestDTO.getStatus().toUpperCase());
+        OrderStatus newStatus = OrderStatus.valueOf(orderUpdatRequestDTO.getStatus().toUpperCase());
         if (previousStatus == newStatus) {
             throw new RuntimeException("Order is already in " + previousStatus + " status.");
         }
@@ -70,7 +68,7 @@ public class AdminOrderService {
             );
         }
 
-      order.setUpdatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
         order.setOrderStatus(newStatus);
 
 

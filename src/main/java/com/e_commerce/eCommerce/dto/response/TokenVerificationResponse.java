@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TokenVerificationResponse {
 
-    public enum Status { VALID, EXPIRED, USED, INVALID }
+    public enum Status {VALID, EXPIRED, USED, INVALID}
 
     private final Status status;
     private final String emailMasked;

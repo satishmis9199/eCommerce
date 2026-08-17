@@ -4,7 +4,6 @@ package com.e_commerce.eCommerce.config;
 import com.e_commerce.eCommerce.entity.Roles;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.repository.UserRepos;
-
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,7 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class SuperAdminSeeder implements CommandLineRunner {
-     private static final Logger logger= LoggerFactory.getLogger(SuperAdminSeeder.class);
+    private static final Logger logger = LoggerFactory.getLogger(SuperAdminSeeder.class);
     private final UserRepos userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -66,7 +65,7 @@ public class SuperAdminSeeder implements CommandLineRunner {
             logger.info("SUPER ADMIN CREATED SUCCESSFULLY");
             logger.info("===========================================");
 
-    }catch(Exception exception){
+        } catch (Exception exception) {
             exception.printStackTrace();
             logger.info("Error Occured while Saving a SSuoer ADMin");
         }

@@ -2,9 +2,6 @@ package com.e_commerce.eCommerce.controller;
 
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
-import com.e_commerce.eCommerce.repository.VendorAddresss;
-import com.e_commerce.eCommerce.repository.VendorBrandingRepository;
-import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.UserDashBoardService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -188,9 +184,7 @@ public class UserDashBoardController {
     }
 
     @GetMapping("/products/best-sellers")
-    public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getBestSellProducts()
-
-    {
+    public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getBestSellProducts() {
         try {
             List<ProductCardResponseDTO> data = userDashBoardService.findBestSeller();
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -214,6 +208,7 @@ public class UserDashBoardController {
         }
 
     }
+
     @PostMapping("/users/me/change-password")
     public ResponseEntity<ApiResponse<?>> changePassword(
             @RequestBody ChangePasswordDTO changePasswordDTO,
@@ -248,6 +243,7 @@ public class UserDashBoardController {
                     ));
         }
     }
+
     @GetMapping("/users/home/banners")
     public ResponseEntity<ApiResponse<List<UserBannerResponseDTo>>> loadBanner(
             @AuthenticationPrincipal CustomUserDetail userDetail) {

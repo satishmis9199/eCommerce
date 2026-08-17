@@ -8,7 +8,6 @@ import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,32 +28,33 @@ public class OrderService {
     private final R2Properties r2Properties;
     private final OrderTrackingrepository orderTrackingrepository;
     private final ReturnTrackingRepository returnTrackingRepository;
+
     public OrderResponseDto findOrderDetails(String orderId, CustomUserDetail userDetail) {
-        String tenantId= TenantContext.getTenantId();
-        if(tenantId==null){
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
             throw new RuntimeException("No tenant");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenantId);
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenantId);
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Tenant does Not Exists");
         }
-        if(userDetail==null){
+        if (userDetail == null) {
             throw new RuntimeException("Please Login First");
         }
-        Order order=orderRepository.findByTenantIdAndOrderNumber(tenantId,orderId);
-        if(order==null){
+        Order order = orderRepository.findByTenantIdAndOrderNumber(tenantId, orderId);
+        if (order == null) {
             throw new RuntimeException("Order Not Found");
         }
 
-        OrderResponseDto orderResponseDto=new OrderResponseDto();
-         List<OrderItemDTo> orderItemDToList=new ArrayList<>();
-        List<OrderItem> orderItem=orderItemRepository.findByOrderId(order.getId());
-        BigDecimal total= BigDecimal.valueOf(0);
-        for(OrderItem item:orderItem){
-            OrderItemDTo itemDTo=new OrderItemDTo();
+        OrderResponseDto orderResponseDto = new OrderResponseDto();
+        List<OrderItemDTo> orderItemDToList = new ArrayList<>();
+        List<OrderItem> orderItem = orderItemRepository.findByOrderId(order.getId());
+        BigDecimal total = BigDecimal.valueOf(0);
+        for (OrderItem item : orderItem) {
+            OrderItemDTo itemDTo = new OrderItemDTo();
             itemDTo.setName(item.getProductName());
             itemDTo.setProductId(item.getProductId());
-            itemDTo.setImage(r2Properties.getPublicUrl()+"/"+item.getImageUrl());
+            itemDTo.setImage(r2Properties.getPublicUrl() + "/" + item.getImageUrl());
 
             itemDTo.setPrice(item.getSellingPrice());
             if (item.getLineTotal() != null) {
@@ -78,34 +78,34 @@ public class OrderService {
     }
 
     public List<OrderResponseDto> findByOrder(CustomUserDetail userDetail) {
-        String tenantId= TenantContext.getTenantId();
-        List<OrderResponseDto> orderResponseDtos=new ArrayList<>();
-        if(tenantId==null){
+        String tenantId = TenantContext.getTenantId();
+        List<OrderResponseDto> orderResponseDtos = new ArrayList<>();
+        if (tenantId == null) {
             throw new RuntimeException("No tenant");
         }
-        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenantId);
-        if(vendor.isEmpty()){
+        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenantId);
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Tenant does Not Exists");
         }
-        if(userDetail==null){
+        if (userDetail == null) {
             throw new RuntimeException("Please Login First");
         }
-        List<Order> order1=orderRepository.findAllByTenantIdAndUserId(tenantId,userDetail.getId());
-        if(order1==null){
+        List<Order> order1 = orderRepository.findAllByTenantIdAndUserId(tenantId, userDetail.getId());
+        if (order1 == null) {
             throw new RuntimeException("Order Not Found");
         }
-        for(Order order:order1){
+        for (Order order : order1) {
 
-            OrderResponseDto orderResponseDto=new OrderResponseDto();
-            List<OrderItemDTo> orderItemDToList=new ArrayList<>();
-            List<OrderItem> orderItem=orderItemRepository.findByOrderId(order.getId());
-            BigDecimal total= BigDecimal.valueOf(0);
-            for(OrderItem item:orderItem){
-                OrderItemDTo itemDTo=new OrderItemDTo();
+            OrderResponseDto orderResponseDto = new OrderResponseDto();
+            List<OrderItemDTo> orderItemDToList = new ArrayList<>();
+            List<OrderItem> orderItem = orderItemRepository.findByOrderId(order.getId());
+            BigDecimal total = BigDecimal.valueOf(0);
+            for (OrderItem item : orderItem) {
+                OrderItemDTo itemDTo = new OrderItemDTo();
                 itemDTo.setName(item.getProductName());
                 itemDTo.setProductId(item.getProductId());
                 itemDTo.setReview(true);
-                itemDTo.setImage(r2Properties.getPublicUrl()+"/"+item.getImageUrl());
+                itemDTo.setImage(r2Properties.getPublicUrl() + "/" + item.getImageUrl());
 
                 itemDTo.setPrice(item.getSellingPrice());
                 if (item.getLineTotal() != null) {
@@ -120,9 +120,9 @@ public class OrderService {
             orderResponseDto.setOrderId(order.getOrderNumber());
             orderResponseDto.setDate(String.valueOf(order.getCreatedAt()));
 
-            if(order.getOrderStatus()==OrderStatus.DELIVERED && order.getReturnStatus()!=ReturnStatus.NONE){
+            if (order.getOrderStatus() == OrderStatus.DELIVERED && order.getReturnStatus() != ReturnStatus.NONE) {
                 orderResponseDto.setStatus(String.valueOf(order.getReturnStatus()));
-            }else{
+            } else {
                 orderResponseDto.setStatus(String.valueOf(order.getOrderStatus()));
             }
 
@@ -130,7 +130,6 @@ public class OrderService {
             orderResponseDto.setPaymentStatus(order.getPaymentStatus());
             orderResponseDto.setPaymentMethod(order.getPaymentMethod());
             orderResponseDtos.add(orderResponseDto);
-
 
 
         }
@@ -163,7 +162,7 @@ public class OrderService {
 
         response.setOrderId(orderId);
         response.setReturnStatus(String.valueOf(order.getReturnStatus()));
-        if(order.getOrderStatus()==OrderStatus.DELIVERED &&  order.getReturnStatus()==ReturnStatus.NONE){
+        if (order.getOrderStatus() == OrderStatus.DELIVERED && order.getReturnStatus() == ReturnStatus.NONE) {
             response.setCurrentStatus(order.getOrderStatus().name().toLowerCase());
         }
         response.setCurrentStatus(order.getOrderStatus().name().toLowerCase());
@@ -172,22 +171,22 @@ public class OrderService {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate estimatedDelivery = calculateEstimatedDelivery(order.getCreatedAt());
-        log.error("estimated Delivery is {}",estimatedDelivery);
-        log.error("Estimated Delivery Format {}",estimatedDelivery.format(formatter));
+        log.error("estimated Delivery is {}", estimatedDelivery);
+        log.error("Estimated Delivery Format {}", estimatedDelivery.format(formatter));
         response.setEstimatedDelivery(estimatedDelivery.format(formatter));
 
         List<OrderTracking> trackingList =
                 orderTrackingrepository.findByTenantIdAndOrderId(tenantId, order.getId());
-        List<ReturnTracking> returnTrackings=returnTrackingRepository.findByTenantIdAndOrderId(tenantId, order.getId());
+        List<ReturnTracking> returnTrackings = returnTrackingRepository.findByTenantIdAndOrderId(tenantId, order.getId());
 
         HashMap<OrderStatus, OrderTracking> trackingMap = new HashMap<>();
-        HashMap<ReturnStatus,ReturnTracking> rMap=new HashMap<>();
+        HashMap<ReturnStatus, ReturnTracking> rMap = new HashMap<>();
 
         for (OrderTracking tracking : trackingList) {
             trackingMap.put(tracking.getStatus(), tracking);
         }
-        for(ReturnTracking returnTracking:returnTrackings){
-            rMap.put(returnTracking.getStatus(),returnTracking);
+        for (ReturnTracking returnTracking : returnTrackings) {
+            rMap.put(returnTracking.getStatus(), returnTracking);
         }
 
         List<OrderStatus> timeline = new ArrayList<>();
@@ -197,7 +196,6 @@ public class OrderService {
         timeline.add(OrderStatus.SHIPPED);
         timeline.add(OrderStatus.OUT_FOR_DELIVERY);
         timeline.add(OrderStatus.DELIVERED);
-
 
 
         if (order.getOrderStatus() == OrderStatus.CANCELLED) {
@@ -239,12 +237,12 @@ public class OrderService {
         timelines.add(ReturnStatus.PICKUP_SCHEDULED);
         timelines.add(ReturnStatus.REFUND_INITIATED);
         timelines.add(ReturnStatus.COMPLETED);
-        if (order.getReturnStatus()==ReturnStatus.REJECTED) {
+        if (order.getReturnStatus() == ReturnStatus.REJECTED) {
             timelines.add(ReturnStatus.REJECTED);
-        }else if(order.getReturnStatus()==ReturnStatus.RETURNRD_CANCELLED){
+        } else if (order.getReturnStatus() == ReturnStatus.RETURNRD_CANCELLED) {
             timelines.add(ReturnStatus.RETURNRD_CANCELLED);
         }
-        List<ReturnTrackingHistory> returnTrackingHistories=new ArrayList<>();
+        List<ReturnTrackingHistory> returnTrackingHistories = new ArrayList<>();
         for (ReturnStatus status : timelines) {
 
             ReturnTrackingHistory dto = new ReturnTrackingHistory();
@@ -277,8 +275,9 @@ public class OrderService {
 
         return response;
     }
+
     private LocalDate calculateEstimatedDelivery(LocalDateTime orderCreatedAt) {
-        log.error("Inside calculateEstimatedDelivery {}",orderCreatedAt);
+        log.error("Inside calculateEstimatedDelivery {}", orderCreatedAt);
         LocalTime cutoffTime = LocalTime.of(14, 0);
 
         if (orderCreatedAt.toLocalTime().isBefore(cutoffTime)) {
@@ -287,8 +286,9 @@ public class OrderService {
             return orderCreatedAt.toLocalDate().plusDays(1);
         }
     }
+
     @Transactional
-    public String cancelOrderByUser(CustomUserDetail userDetail,String reason,String orderId){
+    public String cancelOrderByUser(CustomUserDetail userDetail, String reason, String orderId) {
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null) {
@@ -304,7 +304,7 @@ public class OrderService {
             throw new RuntimeException("Please Login First");
         }
 
-        Order order = orderRepository.findByTenantIdAndOrderNumberAndUserId(tenantId, orderId,userDetail.getId());
+        Order order = orderRepository.findByTenantIdAndOrderNumberAndUserId(tenantId, orderId, userDetail.getId());
         if (order == null) {
             throw new RuntimeException("Order Not Found");
         }
@@ -338,7 +338,7 @@ public class OrderService {
     }
 
     @Transactional
-    public String returnOrder(CustomUserDetail userDetail,String reason,String orderId){
+    public String returnOrder(CustomUserDetail userDetail, String reason, String orderId) {
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null) {
@@ -354,7 +354,7 @@ public class OrderService {
             throw new RuntimeException("Please Login First");
         }
 
-        Order order = orderRepository.findByTenantIdAndOrderNumberAndUserId(tenantId, orderId,userDetail.getId());
+        Order order = orderRepository.findByTenantIdAndOrderNumberAndUserId(tenantId, orderId, userDetail.getId());
         if (order == null) {
             throw new RuntimeException("Order Not Found");
         }
@@ -364,12 +364,12 @@ public class OrderService {
                 OrderStatus.SHIPPED
         );
 
-        if (allowedStatuses.contains(order.getOrderStatus()) && order.getReturnStatus()==ReturnStatus.NONE ) {
+        if (allowedStatuses.contains(order.getOrderStatus()) && order.getReturnStatus() == ReturnStatus.NONE) {
             throw new RuntimeException("Order cannot be Returned at this stage.");
         }
         order.setReturnStatus(ReturnStatus.RETURN_REQUESTED);
         order.setUpdatedAt(LocalDateTime.now());
-        ReturnTracking returnTracking=ReturnTracking.builder()
+        ReturnTracking returnTracking = ReturnTracking.builder()
                 .tenantId(tenantId)
                 .vendorId(vendor.get().getId())
                 .orderId(order.getId())
@@ -389,4 +389,4 @@ public class OrderService {
     }
 
 
-    }
+}

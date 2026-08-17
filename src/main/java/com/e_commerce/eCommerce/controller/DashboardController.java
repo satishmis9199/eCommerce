@@ -21,13 +21,14 @@ import java.util.Map;
 @RequestMapping("/vendor")
 public class DashboardController {
     private final DashBoardService dashBoardService;
-    private static final Logger logger= LoggerFactory.getLogger(DashboardController.class);
+    private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
     private final VendorService vendorService;
 
     public DashboardController(DashBoardService dashBoardService, VendorService vendorService) {
         this.dashBoardService = dashBoardService;
         this.vendorService = vendorService;
     }
+
     @GetMapping("/s1/v1/load/dashBoard")
     public ResponseEntity<?> getDashBoardData(@AuthenticationPrincipal CustomUserDetail user1) {
 
@@ -56,6 +57,7 @@ public class DashboardController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @GetMapping("/s1/v1/view/profile")
     public ResponseEntity<MyProfileResponseDTO> getProfileData(
             @AuthenticationPrincipal CustomUserDetail userDetail) {
@@ -85,25 +87,26 @@ public class DashboardController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
+
     @PutMapping("/v1/vendor/editProfile")
-    public ResponseEntity<?> editProfile(@RequestBody VendorEditResponse vendorEditResponse, @AuthenticationPrincipal CustomUserDetail userDetail){
-        try{
-            User user=userDetail.getUser();
-            String message=vendorService.editProfile(vendorEditResponse,user);
+    public ResponseEntity<?> editProfile(@RequestBody VendorEditResponse vendorEditResponse, @AuthenticationPrincipal CustomUserDetail userDetail) {
+        try {
+            User user = userDetail.getUser();
+            String message = vendorService.editProfile(vendorEditResponse, user);
             return ResponseEntity.ok().body(Map.of(
-                    "success",true,
-                    "message",message
+                    "success", true,
+                    "message", message
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "success",false,
-                    "message","Errir While Profile Edit"
+                    "success", false,
+                    "message", "Errir While Profile Edit"
             ));
         }
     }
 
     @PostMapping("/s2/v1/change-password")
-    public ResponseEntity<?> updatePassword(@RequestBody PasswordChangeDto pas, @AuthenticationPrincipal CustomUserDetail userDetail){
+    public ResponseEntity<?> updatePassword(@RequestBody PasswordChangeDto pas, @AuthenticationPrincipal CustomUserDetail userDetail) {
         logger.info("Inside chnage Pw");
         try {
 
@@ -122,12 +125,12 @@ public class DashboardController {
         }
     }
 
-    @GetMapping(value = "/customer",produces = MediaType.APPLICATION_JSON_VALUE
+    @GetMapping(value = "/customer", produces = MediaType.APPLICATION_JSON_VALUE
     )
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<CustomerListResponseDTO>>> getAllCustomerInforFornAdmin(@AuthenticationPrincipal CustomUserDetail userDetail){
-        try{
-            List<CustomerListResponseDTO> customerDetailDTos=vendorService.findAllCustomer(userDetail);
+    public ResponseEntity<ApiResponse<List<CustomerListResponseDTO>>> getAllCustomerInforFornAdmin(@AuthenticationPrincipal CustomUserDetail userDetail) {
+        try {
+            List<CustomerListResponseDTO> customerDetailDTos = vendorService.findAllCustomer(userDetail);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
                             new ApiResponse<>(

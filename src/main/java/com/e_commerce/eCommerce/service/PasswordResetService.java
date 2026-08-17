@@ -8,7 +8,9 @@ public interface PasswordResetService {
 
     String initiatePasswordSetup(User user, HttpServletRequest request);
 
-    /** GET /auth/password-reset/verify — read-only, does not consume the token. */
+    /**
+     * GET /auth/password-reset/verify — read-only, does not consume the token.
+     */
     TokenVerificationResponse verifyToken(String rawToken);
 
     /**

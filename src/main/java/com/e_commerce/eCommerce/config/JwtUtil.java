@@ -17,6 +17,7 @@ import java.util.Date;
 @Slf4j
 public class JwtUtil {
     private final JwtSecret jwtSecret;
+
     public String generateToken(
             Long id,
             String username,

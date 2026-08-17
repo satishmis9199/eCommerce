@@ -1,11 +1,8 @@
 package com.e_commerce.eCommerce.entity;
 
 
-import com.e_commerce.eCommerce.entity.DiscountType;
-import com.e_commerce.eCommerce.entity.FlashSaleItem;
 import jakarta.persistence.*;
 import lombok.*;
-import com.e_commerce.eCommerce.entity.FlashSaleStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

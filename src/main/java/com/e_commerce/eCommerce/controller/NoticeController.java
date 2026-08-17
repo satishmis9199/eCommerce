@@ -112,6 +112,7 @@ public class NoticeController {
 
         return ResponseEntity.ok(notices);
     }
+
     @PutMapping(
             value = "/vendor/s11/v1/notice/{noticeId}",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -152,6 +153,7 @@ public class NoticeController {
                     );
         }
     }
+
     @DeleteMapping(
             value = "/vendor/s11/v1/notice/{noticeId}",
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -189,7 +191,6 @@ public class NoticeController {
                     );
         }
     }
-
 
 
     @PatchMapping(

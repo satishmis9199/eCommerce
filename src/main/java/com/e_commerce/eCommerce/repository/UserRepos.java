@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 @Repository
-public interface UserRepos extends JpaRepository<User,Long> {
+public interface UserRepos extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     User findByEmail(String username);
@@ -29,33 +29,33 @@ public interface UserRepos extends JpaRepository<User,Long> {
     List<User> findAllByTenantIdAndVendorId(String tenantid, Long id);
 
     @Query("""
-SELECT new com.e_commerce.eCommerce.dto.CustomerListResponseDTO(
-    u.id,
-    CONCAT(u.firstName,' ',u.lastName),
-    u.email,
-    u.phone,
-    COUNT(DISTINCT o.id),
-    COALESCE(SUM(oi.lineTotal),0),
-    MAX(o.createdAt)
-)
-FROM User u
-LEFT JOIN Order o
-    ON o.userId = u.id
-    AND o.tenantId = :tenantId
-    AND o.vendorId = :vendorId
-LEFT JOIN OrderItem oi
-    ON oi.orderId = o.id
-WHERE u.role = com.e_commerce.eCommerce.entity.Roles.USER
-AND u.tenantId = :tenantId AND o.orderStatus=
-com.e_commerce.eCommerce.entity.OrderStatus.DELIVERED
-GROUP BY
-    u.id,
-    u.firstName,
-    u.lastName,
-    u.email,
-    u.phone
-ORDER BY COALESCE(SUM(oi.lineTotal),0) DESC
-""")
+            SELECT new com.e_commerce.eCommerce.dto.CustomerListResponseDTO(
+                u.id,
+                CONCAT(u.firstName,' ',u.lastName),
+                u.email,
+                u.phone,
+                COUNT(DISTINCT o.id),
+                COALESCE(SUM(oi.lineTotal),0),
+                MAX(o.createdAt)
+            )
+            FROM User u
+            LEFT JOIN Order o
+                ON o.userId = u.id
+                AND o.tenantId = :tenantId
+                AND o.vendorId = :vendorId
+            LEFT JOIN OrderItem oi
+                ON oi.orderId = o.id
+            WHERE u.role = com.e_commerce.eCommerce.entity.Roles.USER
+            AND u.tenantId = :tenantId AND o.orderStatus=
+            com.e_commerce.eCommerce.entity.OrderStatus.DELIVERED
+            GROUP BY
+                u.id,
+                u.firstName,
+                u.lastName,
+                u.email,
+                u.phone
+            ORDER BY COALESCE(SUM(oi.lineTotal),0) DESC
+            """)
     List<CustomerListResponseDTO> getCustomerList(
             @Param("tenantId") String tenantId,
             @Param("vendorId") Long vendorId
@@ -65,12 +65,13 @@ ORDER BY COALESCE(SUM(oi.lineTotal),0) DESC
 
 
     User findByTenantIdAndEmail(String tenanTid, String email);
+
     @Query("""
-SELECT u.id, CONCAT(u.firstName,' ',u.lastName)
-FROM User u
-WHERE u.tenantId = :tenantId
-AND u.id IN :userIds
-""")
+            SELECT u.id, CONCAT(u.firstName,' ',u.lastName)
+            FROM User u
+            WHERE u.tenantId = :tenantId
+            AND u.id IN :userIds
+            """)
     List<Object[]> findUserNames(
             @Param("tenantId") String tenantId,
             @Param("userIds") List<Long> userIds

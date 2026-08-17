@@ -1,6 +1,5 @@
 package com.e_commerce.eCommerce.dto;
 
-import com.e_commerce.eCommerce.dto.RowError;
 import lombok.Builder;
 import lombok.Data;
 

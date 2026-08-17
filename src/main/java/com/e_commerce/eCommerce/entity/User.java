@@ -28,7 +28,7 @@ public class User {
     @Column
     private String phone;
 
-    public String  getTenantId() {
+    public String getTenantId() {
         return tenantId;
     }
 
@@ -40,7 +40,6 @@ public class User {
     private String tenantId;
     @Column(name = "vendorid")
     private Long vendorId;
-
 
 
     @Column(nullable = false)

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -19,6 +20,6 @@ public class OrderTrackingResponseDto {
     private String trackingNumber;
     private String estimatedDelivery;   // yyyy-MM-dd format string
     private List<OrderTrackingHistoryDto> history;
-   private List<ReturnTrackingHistory> returnHistory;
+    private List<ReturnTrackingHistory> returnHistory;
 
 }

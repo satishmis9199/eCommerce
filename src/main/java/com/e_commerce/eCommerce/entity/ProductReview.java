@@ -1,6 +1,5 @@
 package com.e_commerce.eCommerce.entity;
 
-import com.e_commerce.eCommerce.entity.ReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

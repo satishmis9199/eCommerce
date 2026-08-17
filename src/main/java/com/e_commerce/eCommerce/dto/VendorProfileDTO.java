@@ -40,9 +40,7 @@ public class VendorProfileDTO {
     private Boolean emailVerified;
 
 
-
     private LocalDateTime lastLogin;
-
 
 
 }

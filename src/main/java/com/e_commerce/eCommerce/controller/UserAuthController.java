@@ -4,41 +4,33 @@ import com.e_commerce.eCommerce.config.JwtUtil;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.AuthMeResponse;
 import com.e_commerce.eCommerce.dto.LoginRequestDTO;
-import com.e_commerce.eCommerce.dto.PasswordChangeDto;
 import com.e_commerce.eCommerce.dto.RegisterRequestDTO;
 import com.e_commerce.eCommerce.entity.Roles;
 import com.e_commerce.eCommerce.entity.User;
-import com.e_commerce.eCommerce.entity.Vendor;
 import com.e_commerce.eCommerce.repository.UserRepos;
-
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.UserAuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import jakarta.servlet.http.HttpSession;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -57,11 +49,7 @@ public class UserAuthController {
     VendorRepository vendorRepository;
 
 
-
-
     private final JwtUtil jwtUtil;
-
-
 
 
     @PostMapping("/u1/v1/auth/login")
@@ -191,6 +179,7 @@ public class UserAuthController {
                     ));
         }
     }
+
     private String getClientIp(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");
         if (xfHeader != null && !xfHeader.isBlank()) {
@@ -198,7 +187,6 @@ public class UserAuthController {
         }
         return request.getRemoteAddr();
     }
-
 
 
     @PostMapping("//logout")
@@ -277,23 +265,23 @@ public class UserAuthController {
     }
 
 
-
     @PostMapping("u1/v1/user/register")
-    public ResponseEntity<?> registerUserData(@RequestBody RegisterRequestDTO registerRequestDTO,HttpServletRequest request){
-        try{
-            String url=request.getServerName();
-            String message=userAuthService.registerUser(registerRequestDTO,url);
+    public ResponseEntity<?> registerUserData(@RequestBody RegisterRequestDTO registerRequestDTO, HttpServletRequest request) {
+        try {
+            String url = request.getServerName();
+            String message = userAuthService.registerUser(registerRequestDTO, url);
             return ResponseEntity.ok(Map.of(
-                    "success",true,
-                    "message",message
+                    "success", true,
+                    "message", message
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "success",false,
-                    "message",e.getMessage()
+                    "success", false,
+                    "message", e.getMessage()
             ));
         }
     }
+
     @GetMapping("/u1/v1/auth/me")
 
     public ResponseEntity<?> checkAuthentication(
@@ -307,7 +295,7 @@ public class UserAuthController {
                             "message", "Unauthorized"
                     ));
         }
-        User userDetail1=userDetail.getUser();
+        User userDetail1 = userDetail.getUser();
 
         AuthMeResponse.UserData user =
                 new AuthMeResponse.UserData(
@@ -327,7 +315,6 @@ public class UserAuthController {
                 new AuthMeResponse(true, user)
         );
     }
-
 
 
 }

@@ -3,7 +3,7 @@ package com.e_commerce.eCommerce.service;
 import com.e_commerce.eCommerce.config.PasswordResetProperties;
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.dto.response.TokenVerificationResponse;
-
+import com.e_commerce.eCommerce.entity.PasswordResetToken;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.exception.InvalidTokenException;
 import com.e_commerce.eCommerce.exception.TokenAlreadyUsedException;
@@ -11,7 +11,6 @@ import com.e_commerce.eCommerce.exception.TokenExpiredException;
 import com.e_commerce.eCommerce.repository.PasswordResetTokenRepository;
 import com.e_commerce.eCommerce.repository.UserRepos;
 import com.e_commerce.eCommerce.util.TokenGenerator;
-import com.e_commerce.eCommerce.entity.PasswordResetToken;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +64,8 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         entity.setExpiresAt(now.plus(properties.getTokenExpiry()));
         tokenRepository.save(entity);
 
-        String serverName=request.getServerName();
-        String links="http://"+serverName+ "/reset-password?token=" + rawToken;
+        String serverName = request.getServerName();
+        String links = "http://" + serverName + "/reset-password?token=" + rawToken;
 
         EmailRequestDto emailRequest = EmailRequestDto.builder()
                 .to(user.getEmail())
@@ -149,9 +148,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         if (at <= 1) return "***" + email.substring(at);
         return email.charAt(0) + "***" + email.substring(at);
     }
-
-
-
 
 
     @Transactional

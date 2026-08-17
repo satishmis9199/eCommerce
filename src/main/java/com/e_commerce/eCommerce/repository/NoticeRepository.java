@@ -10,17 +10,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface NoticeRepository extends JpaRepository<Notice,Long> {
+public interface NoticeRepository extends JpaRepository<Notice, Long> {
     List<Notice> findByTenantId(String tenantId);
+
     @Query("""
-        SELECT n FROM Notice n
-        WHERE n.tenantId = :tenantId
-          AND n.vendorId = :vendorId
-          AND n.status = :status
-          AND (n.startAt IS NULL OR n.startAt <= :now)
-          AND (n.endAt IS NULL OR n.endAt >= :now)
-        ORDER BY n.priority DESC, n.createdAt DESC
-        """)
+            SELECT n FROM Notice n
+            WHERE n.tenantId = :tenantId
+              AND n.vendorId = :vendorId
+              AND n.status = :status
+              AND (n.startAt IS NULL OR n.startAt <= :now)
+              AND (n.endAt IS NULL OR n.endAt >= :now)
+            ORDER BY n.priority DESC, n.createdAt DESC
+            """)
     List<Notice> findActiveNotices(
             @Param("tenantId") String tenantId,
             @Param("vendorId") Long vendorId,

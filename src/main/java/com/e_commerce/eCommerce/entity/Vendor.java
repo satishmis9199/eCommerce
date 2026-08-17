@@ -47,7 +47,7 @@ public class Vendor {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(unique=true)
+    @Column(unique = true)
     private String vendorEmail;
 
     public String getVendorEmail() {
@@ -67,11 +67,8 @@ public class Vendor {
     private String password;
 
 
-
-
     @Column(nullable = false)
     private String storeName;
-
 
 
     @Column(nullable = false, unique = true)
@@ -84,7 +81,6 @@ public class Vendor {
     private boolean reSubmit;
 
     private boolean customDomainVerified;
-
 
 
     @Enumerated(EnumType.STRING)
@@ -117,7 +113,7 @@ public class Vendor {
 
     @PrePersist
     public void prePersist() {
-        reSubmit=false;
+        reSubmit = false;
 
         tenantId = UUID.randomUUID().toString();
 
@@ -134,7 +130,7 @@ public class Vendor {
 
         mobileVerified = false;
 
-        completeVerified=false;
+        completeVerified = false;
 
         role = "VENDOR";
 

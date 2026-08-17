@@ -10,8 +10,6 @@ public class VendorRequestDto {
     private String email;
 
 
-
-
     private String vendorEmail;
     private String phone;
     private String subDomain;
@@ -28,6 +26,7 @@ public class VendorRequestDto {
     public String getFirstName() {
         return firstName;
     }
+
     public String getVendorEmail() {
         return vendorEmail;
     }

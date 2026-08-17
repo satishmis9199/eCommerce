@@ -25,10 +25,11 @@ public class AdminProductService {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final CategorySpecificationRepository categorySpecificationRepository;
+
     @Transactional
     public CategoryResponseDTO createCategory(CustomUserDetail userDetail,
                                               CategoryRequestDTO categoryRequestDTO) {
-        String tenanatId=TenantContext.getTenantId();
+        String tenanatId = TenantContext.getTenantId();
 
 
         User user = userDetail.getUser();
@@ -84,6 +85,7 @@ public class AdminProductService {
                 .updatedAt(savedCategory.getUpdatedAt())
                 .build();
     }
+
     @Transactional
     public List<CategoryResponseDTO> getAllCategory(CustomUserDetail userDetail) {
 
@@ -142,6 +144,7 @@ public class AdminProductService {
 
         return response;
     }
+
     @Transactional
     public void updateCategory(Long categoryId,
                                CategoryRequestDTO dto,
@@ -188,17 +191,18 @@ public class AdminProductService {
 
         categoryRepository.save(category);
     }
-@Transactional
+
+    @Transactional
     public void updateCategoryStatus(UpdateCategoryDTO updateCategoryDTO, CustomUserDetail userDetail) {
-        User user=userDetail.getUser();
-        String tenant=TenantContext.getTenantId();
-        if(!tenant.equalsIgnoreCase(user.getTenantId())){
+        User user = userDetail.getUser();
+        String tenant = TenantContext.getTenantId();
+        if (!tenant.equalsIgnoreCase(user.getTenantId())) {
             throw new RuntimeException("Tenant Not Found");
         }
-        ProductCategory productCategory=categoryRepository.findByIdAndVendorIdAndTenantId(updateCategoryDTO.getId(),
-                user.getVendorId(),tenant
+        ProductCategory productCategory = categoryRepository.findByIdAndVendorIdAndTenantId(updateCategoryDTO.getId(),
+                user.getVendorId(), tenant
         );
-        if(productCategory==null){
+        if (productCategory == null) {
             throw new RuntimeException("Category Does not Exist");
 
         }
@@ -212,9 +216,9 @@ public class AdminProductService {
         if (!tenant.equalsIgnoreCase(user.getTenantId())) {
             throw new RuntimeException("Tenant Not Found");
         }
-        int count=productRepository.countByCategoryIdAndTenantIdAndVendorId(categoryId,tenant,user.getVendorId());
-        if(count>0){
-            throw new RuntimeException("There Are Already "+count+" product Mapped exists...Kindly move them Manually into some Other Category ");
+        int count = productRepository.countByCategoryIdAndTenantIdAndVendorId(categoryId, tenant, user.getVendorId());
+        if (count > 0) {
+            throw new RuntimeException("There Are Already " + count + " product Mapped exists...Kindly move them Manually into some Other Category ");
         }
         ProductCategory productCategory = categoryRepository.findByIdAndVendorIdAndTenantId(categoryId, user.getVendorId(), tenant);
         if (productCategory == null) {
@@ -273,6 +277,6 @@ public class AdminProductService {
 
         categoryRepository.delete(oldCategory);
 
-        return productCount +" Products moved successfully. Category deleted successfully.";
+        return productCount + " Products moved successfully. Category deleted successfully.";
     }
 }

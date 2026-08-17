@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyStore | Vendor Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
@@ -539,24 +540,35 @@
 </head>
 <body>
 
-<div id="loader"><div class="loader-content"><div class="spinner"></div><h3>Loading your store...</h3></div></div>
+<div id="loader">
+    <div class="loader-content">
+        <div class="spinner"></div>
+        <h3>Loading your store...</h3></div>
+</div>
 <div class="overlay" id="overlay"></div>
-<div id="loadingOverlay"><div class="loader-content"><div class="spinner"></div><h3 id="loadingText">Loading...</h3></div></div>
+<div id="loadingOverlay">
+    <div class="loader-content">
+        <div class="spinner"></div>
+        <h3 id="loadingText">Loading...</h3></div>
+</div>
 
 <!-- My Profile Modal -->
 <div class="modal-overlay" id="profileModal">
     <div class="modal large">
         <div class="modal-header">
             <h2><i class="fa-solid fa-user"></i>My Profile</h2>
-            <button class="modal-close-btn" onclick="closeModal('profileModal')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeModal('profileModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <div class="modal-body">
             <div class="profile-header">
                 <div class="profile-image-wrap" id="profileImageWrap" onclick="triggerProfileImageUpload()">
                     <img id="profileImage" src="https://ui-avatars.com/api/?name=Vendor&background=6366f1&color=fff">
-                    <div class="profile-image-edit-overlay" id="profileImageEditOverlay" style="display:none;"><i class="fa-solid fa-camera"></i></div>
+                    <div class="profile-image-edit-overlay" id="profileImageEditOverlay" style="display:none;"><i
+                            class="fa-solid fa-camera"></i></div>
                 </div>
-                <input type="file" id="profileImageInput" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleProfileImageSelect(event)">
+                <input type="file" id="profileImageInput" accept="image/png,image/jpeg,image/webp" style="display:none"
+                       onchange="handleProfileImageSelect(event)">
                 <h2 id="profileFullName"></h2>
                 <span id="profileRole"></span>
                 <span class="status active" id="profileStatus"></span>
@@ -578,7 +590,8 @@
         </div>
         <div class="modal-footer">
             <button class="secondary-btn" onclick="closeModal('profileModal')">Close</button>
-            <button class="primary-btn" onclick="enableProfileEdit()"><i class="fa-solid fa-pen"></i>Edit Profile</button>
+            <button class="primary-btn" onclick="enableProfileEdit()"><i class="fa-solid fa-pen"></i>Edit Profile
+            </button>
         </div>
     </div>
 </div>
@@ -588,12 +601,14 @@
     <div class="modal">
         <div class="modal-header">
             <h2><i class="fa-solid fa-key"></i>Change Password</h2>
-            <button class="modal-close-btn" onclick="closeModal('changePasswordModal')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeModal('changePasswordModal')"><i
+                    class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="form-group">
                 <label>Current Password</label>
-                <input type="password" id="currentPassword" placeholder="Enter your current password" autocomplete="current-password">
+                <input type="password" id="currentPassword" placeholder="Enter your current password"
+                       autocomplete="current-password">
             </div>
             <div class="form-group">
                 <label>New Password</label>
@@ -601,12 +616,15 @@
             </div>
             <div class="form-group">
                 <label>Confirm New Password</label>
-                <input type="password" id="confirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
+                <input type="password" id="confirmPassword" placeholder="Re-enter new password"
+                       autocomplete="new-password">
             </div>
         </div>
         <div class="modal-footer">
             <button class="secondary-btn" onclick="closeModal('changePasswordModal')">Cancel</button>
-            <button class="primary-btn" id="changePasswordBtn" onclick="changePassword()"><i class="fa-solid fa-check"></i>Update Password</button>
+            <button class="primary-btn" id="changePasswordBtn" onclick="changePassword()"><i
+                    class="fa-solid fa-check"></i>Update Password
+            </button>
         </div>
     </div>
 </div>
@@ -622,10 +640,13 @@
         <nav class="sidebar__menu">
             <p class="menu-label">Main</p>
             <ul>
-                <li class="active" data-page="overview"><a href="#"><i class="fa-solid fa-chart-line"></i><span>Overview</span></a></li>
-                <li data-page="orders"><a href="#"><i class="fa-solid fa-box"></i><span>Orders</span><span class="badge-pill" id="ordersBadge">0</span></a></li>
+                <li class="active" data-page="overview"><a href="#"><i
+                        class="fa-solid fa-chart-line"></i><span>Overview</span></a></li>
+                <li data-page="orders"><a href="#"><i class="fa-solid fa-box"></i><span>Orders</span><span
+                        class="badge-pill" id="ordersBadge">0</span></a></li>
                 <li data-page="customers"><a href="#"><i class="fa-solid fa-users"></i><span>Customers</span></a></li>
-                <li data-page="products"><a href="#"><i class="fa-solid fa-boxes-stacked"></i><span>Products</span></a></li>
+                <li data-page="products"><a href="#"><i class="fa-solid fa-boxes-stacked"></i><span>Products</span></a>
+                </li>
                 <li data-page="categories">
                     <a href="#">
                         <i class="fa-solid fa-layer-group"></i>
@@ -634,19 +655,26 @@
                 </li>
                 <li data-page="banners"><a href="#"><i class="fa-solid fa-images"></i><span>Banners</span></a></li>
                 <li data-page="notices"><a href="#"><i class="fa-solid fa-bullhorn"></i><span>Notices</span></a></li>
-                <li data-page="flashsales"><a href="#"><i class="fa-solid fa-bolt"></i><span>Flash Sales</span><span class="badge-pill" id="flashSalesBadge" style="background:var(--orange);">0</span></a></li>
-                <li data-page="upload"><a href="#"><i class="fa-solid fa-file-arrow-up"></i><span>Bulk Upload</span></a></li>
+                <li data-page="flashsales"><a href="#"><i class="fa-solid fa-bolt"></i><span>Flash Sales</span><span
+                        class="badge-pill" id="flashSalesBadge" style="background:var(--orange);">0</span></a></li>
+                <li data-page="upload"><a href="#"><i class="fa-solid fa-file-arrow-up"></i><span>Bulk Upload</span></a>
+                </li>
                 <li data-page="payouts"><a href="#"><i class="fa-solid fa-wallet"></i><span>Payouts</span></a></li>
-                <li data-page="payouts"><a href="/vendor/do/policy"><i class="fa-solid fa-wallet"></i><span>Policy</span></a></li>
+                <li data-page="payouts"><a href="/vendor/do/policy"><i
+                        class="fa-solid fa-wallet"></i><span>Policy</span></a></li>
 
-                <li data-page="reviews"><a href="#"><i class="fa-solid fa-star"></i><span>Reviews</span><span class="badge-pill" id="reviewsBadge" style="background:var(--orange);">0</span></a></li>
+                <li data-page="reviews"><a href="#"><i class="fa-solid fa-star"></i><span>Reviews</span><span
+                        class="badge-pill" id="reviewsBadge" style="background:var(--orange);">0</span></a></li>
             </ul>
             <p class="menu-label">Account</p>
             <ul>
-                <li data-page="settings"><a href="#" onclick="switchPage('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>            </ul>
+                <li data-page="settings"><a href="#" onclick="switchPage('settings')"><i
+                        class="fa-solid fa-gear"></i><span>Settings</span></a></li>
+            </ul>
         </nav>
         <div class="sidebar__footer">
-            <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button>
+            <button class="logout-btn" onclick="logout()"><i
+                    class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button>
         </div>
     </aside>
 
@@ -656,13 +684,17 @@
                 <button class="menu-toggle-btn" id="menuToggleBtn"><i class="fa-solid fa-bars"></i></button>
                 <div class="search-box" id="searchTrigger">
                     <i class="fa-solid fa-search"></i>
-                    <input type="text" placeholder="Search your orders, customers, products... (⌘K)" readonly style="cursor:pointer">
+                    <input type="text" placeholder="Search your orders, customers, products... (⌘K)" readonly
+                           style="cursor:pointer">
                 </div>
             </div>
             <div class="topbar__right">
-                <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i></button>
-                <button class="icon-btn" id="notifBtn" title="Notifications"><i class="fa-solid fa-bell"></i><span class="badge">6</span></button>
-                <button class="icon-btn" title="Messages"><i class="fa-solid fa-envelope"></i><span class="badge">2</span></button>
+                <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i>
+                </button>
+                <button class="icon-btn" id="notifBtn" title="Notifications"><i class="fa-solid fa-bell"></i><span
+                        class="badge">6</span></button>
+                <button class="icon-btn" title="Messages"><i class="fa-solid fa-envelope"></i><span
+                        class="badge">2</span></button>
                 <button class="profile-btn" id="profileBtn">
                     <img src="https://ui-avatars.com/api/?name=Vendor&background=6366f1&color=fff&size=64" alt="Vendor">
                     <div class="profile-info"><h4>Vendor</h4><span>Loading...</span></div>
@@ -677,51 +709,75 @@
             <section class="page-section active" id="page-overview">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Overview</span></div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Overview</span></div>
                         <h1>Store Overview</h1>
                         <p>Welcome back 👋 — loading your store data...</p>
                     </div>
                     <div class="header-actions">
-                        <button class="primary-btn" onclick="switchPage('products');openAddProductModal()"><i class="fa-solid fa-plus"></i>Add Product</button>
-                        <button class="secondary-btn" onclick="switchPage('flashsales');openAddFlashSaleModal()"><i class="fa-solid fa-bolt"></i>Create Flash Sale</button>
+                        <button class="primary-btn" onclick="switchPage('products');openAddProductModal()"><i
+                                class="fa-solid fa-plus"></i>Add Product
+                        </button>
+                        <button class="secondary-btn" onclick="switchPage('flashsales');openAddFlashSaleModal()"><i
+                                class="fa-solid fa-bolt"></i>Create Flash Sale
+                        </button>
                         <button class="secondary-btn" onclick="switchPage('upload')">
                             <i class="fa-solid fa-file-arrow-up"></i> Bulk Upload
                         </button>
-                        <button class="secondary-btn" onclick="showToast('success','Export','Sales report downloading...')"><i class="fa-solid fa-download"></i>Export Report</button>
+                        <button class="secondary-btn"
+                                onclick="showToast('success','Export','Sales report downloading...')"><i
+                                class="fa-solid fa-download"></i>Export Report
+                        </button>
                     </div>
                 </div>
 
                 <div class="card-grid fade-up fade-up-1">
                     <div class="dashboard-card blue">
-                        <div class="card-left"><span>Total Revenue</span><h2 id="kpi-revenue">₹0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+18% This Month</small></div>
+                        <div class="card-left"><span>Total Revenue</span>
+                            <h2 id="kpi-revenue">₹0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+18%
+                                This Month</small></div>
                         <div class="card-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
                     </div>
                     <div class="dashboard-card green">
-                        <div class="card-left"><span>Total Orders</span><h2 id="kpi-orders">0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+9% This Month</small></div>
+                        <div class="card-left"><span>Total Orders</span>
+                            <h2 id="kpi-orders">0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+9%
+                                This Month</small></div>
                         <div class="card-icon"><i class="fa-solid fa-cart-shopping"></i></div>
                     </div>
                     <div class="dashboard-card orange">
-                        <div class="card-left"><span>Total Customers</span><h2 id="kpi-customers">0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+6% This Month</small></div>
+                        <div class="card-left"><span>Total Customers</span>
+                            <h2 id="kpi-customers">0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+6%
+                                This Month</small></div>
                         <div class="card-icon"><i class="fa-solid fa-users"></i></div>
                     </div>
                     <div class="dashboard-card purple">
-                        <div class="card-left"><span>Pending Orders</span><h2 id="kpi-pending">0</h2><small><i class="fa-solid fa-clock"></i>Needs Action</small></div>
+                        <div class="card-left"><span>Pending Orders</span>
+                            <h2 id="kpi-pending">0</h2><small><i class="fa-solid fa-clock"></i>Needs Action</small>
+                        </div>
                         <div class="card-icon"><i class="fa-solid fa-hourglass-half"></i></div>
                     </div>
                     <div class="dashboard-card cyan">
-                        <div class="card-left"><span>Products Listed</span><h2 id="kpi-products">0</h2><small style="color:var(--orange)"><i class="fa-solid fa-triangle-exclamation"></i>5 Low Stock</small></div>
+                        <div class="card-left"><span>Products Listed</span>
+                            <h2 id="kpi-products">0</h2><small style="color:var(--orange)"><i
+                                    class="fa-solid fa-triangle-exclamation"></i>5 Low Stock</small></div>
                         <div class="card-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
                     </div>
                     <div class="dashboard-card pink">
-                        <div class="card-left"><span>Avg. Rating</span><h2>4.6<span style="font-size:16px;color:var(--text-muted);">/5</span></h2><small class="up"><i class="fa-solid fa-star"></i>312 Reviews</small></div>
+                        <div class="card-left"><span>Avg. Rating</span>
+                            <h2>4.6<span style="font-size:16px;color:var(--text-muted);">/5</span></h2><small
+                                    class="up"><i class="fa-solid fa-star"></i>312 Reviews</small></div>
                         <div class="card-icon"><i class="fa-solid fa-star"></i></div>
                     </div>
                     <div class="dashboard-card red">
-                        <div class="card-left"><span>Returns / Refunds</span><h2>23</h2><small style="color:var(--red)"><i class="fa-solid fa-arrow-rotate-left"></i>2.1% of Orders</small></div>
+                        <div class="card-left"><span>Returns / Refunds</span>
+                            <h2>23</h2><small style="color:var(--red)"><i class="fa-solid fa-arrow-rotate-left"></i>2.1%
+                                of Orders</small></div>
                         <div class="card-icon"><i class="fa-solid fa-rotate-left"></i></div>
                     </div>
                     <div class="dashboard-card accent">
-                        <div class="card-left"><span>Wallet Balance</span><h2>₹1,84,320</h2><small class="up"><i class="fa-solid fa-wallet"></i>Ready for Payout</small></div>
+                        <div class="card-left"><span>Wallet Balance</span>
+                            <h2>₹1,84,320</h2><small class="up"><i class="fa-solid fa-wallet"></i>Ready for
+                                Payout</small></div>
                         <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
                     </div>
                 </div>
@@ -729,11 +785,18 @@
                 <section class="analytics-section fade-up fade-up-2">
                     <div class="analytics-card large">
                         <div class="card-header">
-                            <div><h3>Sales Overview</h3><p>Your revenue and orders over time</p></div>
+                            <div><h3>Sales Overview</h3>
+                                <p>Your revenue and orders over time</p></div>
                             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                                 <div class="chart-legend">
-                                    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Revenue</div>
-                                    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Orders</div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background:var(--accent)"></div>
+                                        Revenue
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background:var(--green)"></div>
+                                        Orders
+                                    </div>
                                 </div>
                                 <select id="salesPeriod" onchange="updateSalesChart()">
                                     <option value="7">Last 7 Days</option>
@@ -745,32 +808,63 @@
                         <canvas id="salesChart" height="120"></canvas>
                     </div>
                     <div class="analytics-card">
-                        <div class="card-header"><div><h3>Order Status</h3><p>Breakdown of all orders</p></div></div>
+                        <div class="card-header">
+                            <div><h3>Order Status</h3>
+                                <p>Breakdown of all orders</p></div>
+                        </div>
                         <canvas id="statusChart" height="240"></canvas>
                     </div>
                 </section>
 
                 <section class="dashboard-content-grid fade-up fade-up-3">
                     <div class="table-card">
-                        <div class="card-header"><div><h2>Recent Orders</h2><p>Latest orders placed on your store</p></div></div>
+                        <div class="card-header">
+                            <div><h2>Recent Orders</h2>
+                                <p>Latest orders placed on your store</p></div>
+                        </div>
                         <div class="table-actions">
                             <input type="text" placeholder="Search orders..." oninput="filterOrders(this.value)">
-                            <button class="secondary-btn" onclick="switchPage('orders')"><i class="fa-solid fa-arrow-right"></i>View All</button>
+                            <button class="secondary-btn" onclick="switchPage('orders')"><i
+                                    class="fa-solid fa-arrow-right"></i>View All
+                            </button>
                         </div>
                         <div class="table-responsive">
                             <table>
-                                <thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                                <thead>
+                                <tr>
+                                    <th>Order</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
                                 <tbody id="recentOrdersBody"></tbody>
                             </table>
                         </div>
                     </div>
                     <div class="right-panel">
                         <div class="panel-card">
-                            <div class="card-header"><h3>Notifications</h3><button class="secondary-btn" style="padding:5px 10px;font-size:11px;" onclick="showToast('info','Notifications','All marked as read')">Mark all read</button></div>
+                            <div class="card-header"><h3>Notifications</h3>
+                                <button class="secondary-btn" style="padding:5px 10px;font-size:11px;"
+                                        onclick="showToast('info','Notifications','All marked as read')">Mark all read
+                                </button>
+                            </div>
                             <div class="notification-list">
-                                <div class="notification-item"><i class="fa-solid fa-cart-shopping"></i><div><h4>New Order Received</h4><p>Order #ORD-7741 · ₹3,499</p><small>4 min ago</small></div></div>
-                                <div class="notification-item"><i class="fa-solid fa-star"></i><div><h4>New Review</h4><p>Priya rated your product 5★</p><small>1 hour ago</small></div></div>
-                                <div class="notification-item"><i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i><div><h4>Low Stock Alert</h4><p>iPhone 15 Case has only 3 units left.</p><small>2 hours ago</small></div></div>
+                                <div class="notification-item"><i class="fa-solid fa-cart-shopping"></i>
+                                    <div><h4>New Order Received</h4>
+                                        <p>Order #ORD-7741 · ₹3,499</p><small>4 min ago</small></div>
+                                </div>
+                                <div class="notification-item"><i class="fa-solid fa-star"></i>
+                                    <div><h4>New Review</h4>
+                                        <p>Priya rated your product 5★</p><small>1 hour ago</small></div>
+                                </div>
+                                <div class="notification-item"><i class="fa-solid fa-triangle-exclamation"
+                                                                  style="color:var(--red)"></i>
+                                    <div><h4>Low Stock Alert</h4>
+                                        <p>iPhone 15 Case has only 3 units left.</p><small>2 hours ago</small></div>
+                                </div>
                             </div>
                         </div>
                         <div class="panel-card">
@@ -785,15 +879,20 @@
             <section class="page-section" id="page-orders">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Orders</span></div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Orders</span></div>
                         <h1>Orders</h1>
                         <p>Track and manage every order placed on your store.</p>
                     </div>
                 </div>
                 <div class="table-card fade-up fade-up-1">
-                    <div class="card-header"><div><h2>All Orders</h2><p id="ordersCount">Loading...</p></div></div>
+                    <div class="card-header">
+                        <div><h2>All Orders</h2>
+                            <p id="ordersCount">Loading...</p></div>
+                    </div>
                     <div class="table-actions">
-                        <input type="text" id="orderSearchInput" placeholder="Search by order id or customer..." oninput="filterOrdersFullPage(this.value)">
+                        <input type="text" id="orderSearchInput" placeholder="Search by order id or customer..."
+                               oninput="filterOrdersFullPage(this.value)">
                         <select id="orderStatusFilter" onchange="filterOrdersByStatus(this.value)">
                             <option value="all">All Status</option>
                             <option value="placed">Placed</option>
@@ -806,7 +905,17 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                            <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
                             <tbody id="allOrdersBody"></tbody>
                         </table>
                     </div>
@@ -817,22 +926,51 @@
             <section class="page-section" id="page-customers">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Customers</span></div>
+                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Customers</span>
+                        </div>
                         <h1>Customers</h1>
                         <p>Everyone who has shopped at your store.</p>
                     </div>
                 </div>
-                <div class="card-grid fade-up fade-up-1" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
-                    <div class="dashboard-card blue"><div class="card-left"><span>Total Customers</span><h2 id="customersTotalKpi">0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>Live count</small></div><div class="card-icon"><i class="fa-solid fa-users"></i></div></div>
-                    <div class="dashboard-card green"><div class="card-left"><span>Repeat Customers</span><h2 id="customersRepeatKpi">0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>2+ Orders</small></div><div class="card-icon"><i class="fa-solid fa-rotate"></i></div></div>
-                    <div class="dashboard-card orange"><div class="card-left"><span>New This Month</span><h2 id="customersNewKpi">0</h2><small><i class="fa-solid fa-user-plus"></i>First order this month</small></div><div class="card-icon"><i class="fa-solid fa-user-plus"></i></div></div>
+                <div class="card-grid fade-up fade-up-1"
+                     style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+                    <div class="dashboard-card blue">
+                        <div class="card-left"><span>Total Customers</span>
+                            <h2 id="customersTotalKpi">0</h2><small class="up"><i
+                                    class="fa-solid fa-arrow-trend-up"></i>Live count</small></div>
+                        <div class="card-icon"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                    <div class="dashboard-card green">
+                        <div class="card-left"><span>Repeat Customers</span>
+                            <h2 id="customersRepeatKpi">0</h2><small class="up"><i
+                                    class="fa-solid fa-arrow-trend-up"></i>2+ Orders</small></div>
+                        <div class="card-icon"><i class="fa-solid fa-rotate"></i></div>
+                    </div>
+                    <div class="dashboard-card orange">
+                        <div class="card-left"><span>New This Month</span>
+                            <h2 id="customersNewKpi">0</h2><small><i class="fa-solid fa-user-plus"></i>First order this
+                                month</small></div>
+                        <div class="card-icon"><i class="fa-solid fa-user-plus"></i></div>
+                    </div>
                 </div>
                 <div class="table-card fade-up fade-up-2">
-                    <div class="card-header"><div><h2>Customer List</h2><p>Search and view individual customer history</p></div></div>
-                    <div class="table-actions"><input type="text" placeholder="Search customers..." oninput="filterCustomers(this.value)"></div>
+                    <div class="card-header">
+                        <div><h2>Customer List</h2>
+                            <p>Search and view individual customer history</p></div>
+                    </div>
+                    <div class="table-actions"><input type="text" placeholder="Search customers..."
+                                                      oninput="filterCustomers(this.value)"></div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Customer</th><th>Orders</th><th>Total Spent</th><th>Last Order</th><th>Actions</th></tr></thead>
+                            <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
+                                <th>Last Order</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
                             <tbody id="customersBody"></tbody>
                         </table>
                     </div>
@@ -843,12 +981,15 @@
             <section class="page-section" id="page-products">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Products</span></div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Products</span></div>
                         <h1>Products</h1>
                         <p>Manage your catalog, stock, and pricing.</p>
                     </div>
                     <div class="header-actions">
-                        <button class="primary-btn"onclick="switchPage('products');openAddProductModal()"><i class="fa-solid fa-plus"></i>Add Product</button>
+                        <button class="primary-btn" onclick="switchPage('products');openAddProductModal()"><i
+                                class="fa-solid fa-plus"></i>Add Product
+                        </button>
                     </div>
                 </div>
                 <div class="table-actions fade-up fade-up-1" style="padding:0;">
@@ -912,18 +1053,25 @@
             <section class="page-section" id="page-banners">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Banners</span></div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Banners</span></div>
                         <h1>Banners</h1>
                         <p>Manage homepage banners — image, CTA, and schedule.</p>
                     </div>
                     <div class="header-actions">
-                        <button class="primary-btn" onclick="openAddBannerModal()"><i class="fa-solid fa-plus"></i>Add Banner</button>
+                        <button class="primary-btn" onclick="openAddBannerModal()"><i class="fa-solid fa-plus"></i>Add
+                            Banner
+                        </button>
                     </div>
                 </div>
                 <div class="table-card fade-up fade-up-1">
-                    <div class="card-header"><div><h2>All Banners</h2><p id="bannersCount">Loading...</p></div></div>
+                    <div class="card-header">
+                        <div><h2>All Banners</h2>
+                            <p id="bannersCount">Loading...</p></div>
+                    </div>
                     <div class="table-actions">
-                        <input type="text" id="bannerSearchInput" placeholder="Search banners..." oninput="filterBanners(this.value)">
+                        <input type="text" id="bannerSearchInput" placeholder="Search banners..."
+                               oninput="filterBanners(this.value)">
                         <select id="bannerStatusFilter" onchange="filterBannersByStatus(this.value)">
                             <option value="all">All Status</option>
                             <option value="live">Live</option>
@@ -934,7 +1082,17 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th style="width:60px;">#</th><th style="width:110px;">Image</th><th>Title</th><th>Order</th><th>Schedule</th><th>Status</th><th style="width:180px;">Actions</th></tr></thead>
+                            <thead>
+                            <tr>
+                                <th style="width:60px;">#</th>
+                                <th style="width:110px;">Image</th>
+                                <th>Title</th>
+                                <th>Order</th>
+                                <th>Schedule</th>
+                                <th>Status</th>
+                                <th style="width:180px;">Actions</th>
+                            </tr>
+                            </thead>
                             <tbody id="bannerTableBody"></tbody>
                         </table>
                     </div>
@@ -945,18 +1103,25 @@
             <section class="page-section" id="page-notices">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Notices</span></div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Notices</span></div>
                         <h1>Notices</h1>
                         <p>Manage the announcement bar and popup notices shown to customers.</p>
                     </div>
                     <div class="header-actions">
-                        <button class="primary-btn" onclick="openAddNoticeModal()"><i class="fa-solid fa-plus"></i>Add Notice</button>
+                        <button class="primary-btn" onclick="openAddNoticeModal()"><i class="fa-solid fa-plus"></i>Add
+                            Notice
+                        </button>
                     </div>
                 </div>
                 <div class="table-card fade-up fade-up-1">
-                    <div class="card-header"><div><h2>All Notices</h2><p id="noticesCount">Loading...</p></div></div>
+                    <div class="card-header">
+                        <div><h2>All Notices</h2>
+                            <p id="noticesCount">Loading...</p></div>
+                    </div>
                     <div class="table-actions">
-                        <input type="text" id="noticeSearchInput" placeholder="Search notices..." oninput="filterNotices(this.value)">
+                        <input type="text" id="noticeSearchInput" placeholder="Search notices..."
+                               oninput="filterNotices(this.value)">
                         <select id="noticeStatusFilter" onchange="filterNoticesByStatus(this.value)">
                             <option value="all">All Status</option>
                             <option value="live">Live</option>
@@ -967,7 +1132,18 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th style="width:60px;">#</th><th>Title / Text</th><th>Location</th><th>Type</th><th>Priority</th><th>Schedule</th><th>Status</th><th style="width:180px;">Actions</th></tr></thead>
+                            <thead>
+                            <tr>
+                                <th style="width:60px;">#</th>
+                                <th>Title / Text</th>
+                                <th>Location</th>
+                                <th>Type</th>
+                                <th>Priority</th>
+                                <th>Schedule</th>
+                                <th>Status</th>
+                                <th style="width:180px;">Actions</th>
+                            </tr>
+                            </thead>
                             <tbody id="noticeTableBody"></tbody>
                         </table>
                     </div>
@@ -978,38 +1154,53 @@
             <section class="page-section" id="page-flashsales">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Flash Sales</span></div>
+                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Flash Sales</span>
+                        </div>
                         <h1>Flash Sales</h1>
                         <p>Create time-bound discounts on your products to drive urgency and boost sales.</p>
                     </div>
                     <div class="header-actions">
-                        <button class="primary-btn" onclick="openAddFlashSaleModal()"><i class="fa-solid fa-bolt"></i>Create Flash Sale</button>
+                        <button class="primary-btn" onclick="openAddFlashSaleModal()"><i class="fa-solid fa-bolt"></i>Create
+                            Flash Sale
+                        </button>
                     </div>
                 </div>
 
-                <div class="card-grid fade-up fade-up-1" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));">
+                <div class="card-grid fade-up fade-up-1"
+                     style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));">
                     <div class="dashboard-card orange">
-                        <div class="card-left"><span>Live Now</span><h2 id="fsKpiLive">0</h2><small class="up"><i class="fa-solid fa-bolt"></i>Active Flash Sales</small></div>
+                        <div class="card-left"><span>Live Now</span>
+                            <h2 id="fsKpiLive">0</h2><small class="up"><i class="fa-solid fa-bolt"></i>Active Flash
+                                Sales</small></div>
                         <div class="card-icon"><i class="fa-solid fa-bolt"></i></div>
                     </div>
                     <div class="dashboard-card blue">
-                        <div class="card-left"><span>Upcoming</span><h2 id="fsKpiUpcoming">0</h2><small><i class="fa-solid fa-clock"></i>Scheduled</small></div>
+                        <div class="card-left"><span>Upcoming</span>
+                            <h2 id="fsKpiUpcoming">0</h2><small><i class="fa-solid fa-clock"></i>Scheduled</small></div>
                         <div class="card-icon"><i class="fa-solid fa-calendar-clock"></i></div>
                     </div>
                     <div class="dashboard-card red">
-                        <div class="card-left"><span>Ended</span><h2 id="fsKpiEnded">0</h2><small><i class="fa-solid fa-flag-checkered"></i>Completed</small></div>
+                        <div class="card-left"><span>Ended</span>
+                            <h2 id="fsKpiEnded">0</h2><small><i class="fa-solid fa-flag-checkered"></i>Completed</small>
+                        </div>
                         <div class="card-icon"><i class="fa-solid fa-flag-checkered"></i></div>
                     </div>
                     <div class="dashboard-card purple">
-                        <div class="card-left"><span>Products On Sale</span><h2 id="fsKpiProducts">0</h2><small><i class="fa-solid fa-boxes-stacked"></i>Across All Sales</small></div>
+                        <div class="card-left"><span>Products On Sale</span>
+                            <h2 id="fsKpiProducts">0</h2><small><i class="fa-solid fa-boxes-stacked"></i>Across All
+                                Sales</small></div>
                         <div class="card-icon"><i class="fa-solid fa-tags"></i></div>
                     </div>
                 </div>
 
                 <div class="table-card fade-up fade-up-2">
-                    <div class="card-header"><div><h2>All Flash Sales</h2><p id="flashSalesCount">Loading...</p></div></div>
+                    <div class="card-header">
+                        <div><h2>All Flash Sales</h2>
+                            <p id="flashSalesCount">Loading...</p></div>
+                    </div>
                     <div class="table-actions">
-                        <input type="text" id="flashSaleSearchInput" placeholder="Search flash sales..." oninput="filterFlashSales(this.value)">
+                        <input type="text" id="flashSaleSearchInput" placeholder="Search flash sales..."
+                               oninput="filterFlashSales(this.value)">
                         <select id="flashSaleStatusFilter" onchange="filterFlashSalesByStatus(this.value)">
                             <option value="all">All Status</option>
                             <option value="live">Live</option>
@@ -1020,7 +1211,17 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Sale Name</th><th>Discount</th><th>Products</th><th>Starts</th><th>Ends</th><th>Status</th><th>Actions</th></tr></thead>
+                            <thead>
+                            <tr>
+                                <th>Sale Name</th>
+                                <th>Discount</th>
+                                <th>Products</th>
+                                <th>Starts</th>
+                                <th>Ends</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
                             <tbody id="flashSalesBody"></tbody>
                         </table>
                     </div>
@@ -1031,7 +1232,8 @@
             <section class="page-section" id="page-upload">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Bulk Upload</span></div>
+                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Bulk Upload</span>
+                        </div>
                         <h1>Bulk Upload Products</h1>
                         <p>Add many products at once by uploading a filled-in Excel sheet.</p>
                     </div>
@@ -1057,9 +1259,12 @@
                         </button>
                     </div>
                     <ul class="upload-steps">
-                        <li><i class="fa-solid fa-circle-1"></i>Download the product template using the button above.</li>
+                        <li><i class="fa-solid fa-circle-1"></i>Download the product template using the button above.
+                        </li>
                         <li><i class="fa-solid fa-circle-2"></i>Fill in your product details, one row per product.</li>
-                        <li><i class="fa-solid fa-circle-3"></i>Save the file and upload it here — results will appear below.</li>
+                        <li><i class="fa-solid fa-circle-3"></i>Save the file and upload it here — results will appear
+                            below.
+                        </li>
                     </ul>
                 </div>
 
@@ -1116,7 +1321,8 @@
             <section class="page-section" id="page-payouts">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Payouts</span></div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Payouts</span></div>
                         <h1>Payouts & Wallet</h1>
                         <p>Track your earnings and request payouts.</p>
                     </div>
@@ -1127,12 +1333,19 @@
                             <span>Available Balance</span>
                             <h2>₹1,84,320</h2>
                             <div class="wallet-actions">
-                                <button onclick="requestPayout()"><i class="fa-solid fa-money-bill-transfer"></i>&nbsp; Request Payout</button>
-                                <button onclick="showToast('info','Bank Details','Opening bank account settings...')"><i class="fa-solid fa-building-columns"></i>&nbsp; Bank Details</button>
+                                <button onclick="requestPayout()"><i class="fa-solid fa-money-bill-transfer"></i>&nbsp;
+                                    Request Payout
+                                </button>
+                                <button onclick="showToast('info','Bank Details','Opening bank account settings...')"><i
+                                        class="fa-solid fa-building-columns"></i>&nbsp; Bank Details
+                                </button>
                             </div>
                         </div>
                         <div class="analytics-card">
-                            <div class="card-header"><div><h3>Earnings Trend</h3><p>Net payout-eligible earnings by month</p></div></div>
+                            <div class="card-header">
+                                <div><h3>Earnings Trend</h3>
+                                    <p>Net payout-eligible earnings by month</p></div>
+                            </div>
                             <canvas id="earningsChart" height="180"></canvas>
                         </div>
                     </div>
@@ -1149,35 +1362,64 @@
             <section class="page-section" id="page-reviews">
                 <div class="section-header fade-up">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Reviews</span></div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Reviews</span></div>
                         <h1>Reviews</h1>
                         <p>Moderate customer reviews on your products.</p>
                     </div>
                 </div>
-                <div class="card-grid fade-up fade-up-1" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
-                    <div class="dashboard-card orange"><div class="card-left"><span>Pending Review</span><h2 id="reviewsPendingKpi">0</h2><small><i class="fa-solid fa-hourglass-half"></i>Awaiting moderation</small></div><div class="card-icon"><i class="fa-solid fa-hourglass-half"></i></div></div>
-                    <div class="dashboard-card green"><div class="card-left"><span>Active Reviews</span><h2 id="reviewsActiveKpi">0</h2><small class="up"><i class="fa-solid fa-check"></i>Approved &amp; live</small></div><div class="card-icon"><i class="fa-solid fa-check-double"></i></div></div>
-                    <div class="dashboard-card red"><div class="card-left"><span>Rejected Reviews</span><h2 id="reviewsRejectedKpi">0</h2><small class="down"><i class="fa-solid fa-xmark"></i>Not shown publicly</small></div><div class="card-icon"><i class="fa-solid fa-ban"></i></div></div>
-                    <div class="dashboard-card accent"><div class="card-left"><span>Avg. Rating</span><h2 id="reviewsAvgKpi">0.0</h2><small><i class="fa-solid fa-star"></i>Across all reviews</small></div><div class="card-icon"><i class="fa-solid fa-star"></i></div></div>
+                <div class="card-grid fade-up fade-up-1"
+                     style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+                    <div class="dashboard-card orange">
+                        <div class="card-left"><span>Pending Review</span>
+                            <h2 id="reviewsPendingKpi">0</h2><small><i class="fa-solid fa-hourglass-half"></i>Awaiting
+                                moderation</small></div>
+                        <div class="card-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                    </div>
+                    <div class="dashboard-card green">
+                        <div class="card-left"><span>Active Reviews</span>
+                            <h2 id="reviewsActiveKpi">0</h2><small class="up"><i class="fa-solid fa-check"></i>Approved
+                                &amp; live</small></div>
+                        <div class="card-icon"><i class="fa-solid fa-check-double"></i></div>
+                    </div>
+                    <div class="dashboard-card red">
+                        <div class="card-left"><span>Rejected Reviews</span>
+                            <h2 id="reviewsRejectedKpi">0</h2><small class="down"><i class="fa-solid fa-xmark"></i>Not
+                                shown publicly</small></div>
+                        <div class="card-icon"><i class="fa-solid fa-ban"></i></div>
+                    </div>
+                    <div class="dashboard-card accent">
+                        <div class="card-left"><span>Avg. Rating</span>
+                            <h2 id="reviewsAvgKpi">0.0</h2><small><i class="fa-solid fa-star"></i>Across all
+                                reviews</small></div>
+                        <div class="card-icon"><i class="fa-solid fa-star"></i></div>
+                    </div>
                 </div>
 
                 <div class="table-card fade-up fade-up-2">
                     <div class="card-header">
-                        <div><h2>Customer Reviews</h2><p id="reviewsCount">Loading...</p></div>
+                        <div><h2>Customer Reviews</h2>
+                            <p id="reviewsCount">Loading...</p></div>
                     </div>
                     <div class="review-tabs">
-                        <button type="button" class="review-tab-btn active" id="reviewTabPendingBtn" onclick="switchReviewTab('pending')">
-                            <i class="fa-solid fa-hourglass-half"></i>Pending<span class="badge-pill" id="reviewTabPendingCount">0</span>
+                        <button type="button" class="review-tab-btn active" id="reviewTabPendingBtn"
+                                onclick="switchReviewTab('pending')">
+                            <i class="fa-solid fa-hourglass-half"></i>Pending<span class="badge-pill"
+                                                                                   id="reviewTabPendingCount">0</span>
                         </button>
-                        <button type="button" class="review-tab-btn" id="reviewTabActiveBtn" onclick="switchReviewTab('active')">
-                            <i class="fa-solid fa-check-double"></i>Active<span class="badge-pill" id="reviewTabActiveCount">0</span>
+                        <button type="button" class="review-tab-btn" id="reviewTabActiveBtn"
+                                onclick="switchReviewTab('active')">
+                            <i class="fa-solid fa-check-double"></i>Active<span class="badge-pill"
+                                                                                id="reviewTabActiveCount">0</span>
                         </button>
-                        <button type="button" class="review-tab-btn" id="reviewTabRejectedBtn" onclick="switchReviewTab('rejected')">
+                        <button type="button" class="review-tab-btn" id="reviewTabRejectedBtn"
+                                onclick="switchReviewTab('rejected')">
                             <i class="fa-solid fa-ban"></i>Rejected<span class="badge-pill" id="reviewTabRejectedCount">0</span>
                         </button>
                     </div>
                     <div class="table-actions">
-                        <input type="text" id="reviewSearchInput" placeholder="Search by product or customer..." oninput="filterReviews(this.value)">
+                        <input type="text" id="reviewSearchInput" placeholder="Search by product or customer..."
+                               oninput="filterReviews(this.value)">
                         <select id="reviewRatingFilter" onchange="filterReviewsByRating(this.value)">
                             <option value="all">All Ratings</option>
                             <option value="5">5 Stars</option>
@@ -1189,14 +1431,27 @@
                     </div>
                     <div class="table-responsive">
                         <table>
-                            <thead><tr><th>Product</th><th>Customer</th><th>Rating</th><th>Review</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                            <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Customer</th>
+                                <th>Rating</th>
+                                <th>Review</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
                             <tbody id="reviewsBody"></tbody>
                         </table>
                     </div>
                     <div class="review-pagination">
-                        <button type="button" class="secondary-btn" id="reviewPrevBtn" onclick="changeReviewPage(-1)"><i class="fa-solid fa-chevron-left"></i>Prev</button>
+                        <button type="button" class="secondary-btn" id="reviewPrevBtn" onclick="changeReviewPage(-1)"><i
+                                class="fa-solid fa-chevron-left"></i>Prev
+                        </button>
                         <span id="reviewPageInfo">Page 1 of 1</span>
-                        <button type="button" class="secondary-btn" id="reviewNextBtn" onclick="changeReviewPage(1)">Next<i class="fa-solid fa-chevron-right"></i></button>
+                        <button type="button" class="secondary-btn" id="reviewNextBtn" onclick="changeReviewPage(1)">
+                            Next<i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
             </section>
@@ -1206,7 +1461,8 @@
         <section class="page-section" id="page-settings">
             <div class="section-header fade-up">
                 <div>
-                    <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Settings</span></div>
+                    <div class="breadcrumb"><span>Home</span><i
+                            class="fa-solid fa-chevron-right"></i><span>Settings</span></div>
                     <h1>Store Settings</h1>
                     <p>Manage your business, branding, payments and security preferences.</p>
                 </div>
@@ -1216,14 +1472,22 @@
                 <!-- Left Nav -->
                 <div class="settings-nav panel-card">
                     <ul id="settingsNavList">
-                        <li class="active" data-tab="business-profile" onclick="switchSettingsTab('business-profile')"><i class="fa-solid fa-building"></i><span>Business Profile</span></li>
-                        <li data-tab="business-address" onclick="switchSettingsTab('business-address')"><i class="fa-solid fa-location-dot"></i><span>Business Address</span></li>
-                        <li data-tab="branding" onclick="switchSettingsTab('branding')"><i class="fa-solid fa-palette"></i><span>Branding</span></li>
-                        <li data-tab="contact-info" onclick="switchSettingsTab('contact-info')"><i class="fa-solid fa-address-book"></i><span>Contact Information</span></li>
-                        <li data-tab="bank-details" onclick="switchSettingsTab('bank-details')"><i class="fa-solid fa-building-columns"></i><span>Bank Details</span></li>
-                        <li data-tab="invoice-settings" onclick="switchSettingsTab('invoice-settings')"><i class="fa-solid fa-file-invoice"></i><span>Invoice Settings</span></li>
-                        <li data-tab="store-settings" onclick="switchSettingsTab('store-settings')"><i class="fa-solid fa-store"></i><span>Store Settings</span></li>
-                        <li data-tab="security" onclick="switchSettingsTab('security')"><i class="fa-solid fa-shield-halved"></i><span>Security</span></li>
+                        <li class="active" data-tab="business-profile" onclick="switchSettingsTab('business-profile')">
+                            <i class="fa-solid fa-building"></i><span>Business Profile</span></li>
+                        <li data-tab="business-address" onclick="switchSettingsTab('business-address')"><i
+                                class="fa-solid fa-location-dot"></i><span>Business Address</span></li>
+                        <li data-tab="branding" onclick="switchSettingsTab('branding')"><i
+                                class="fa-solid fa-palette"></i><span>Branding</span></li>
+                        <li data-tab="contact-info" onclick="switchSettingsTab('contact-info')"><i
+                                class="fa-solid fa-address-book"></i><span>Contact Information</span></li>
+                        <li data-tab="bank-details" onclick="switchSettingsTab('bank-details')"><i
+                                class="fa-solid fa-building-columns"></i><span>Bank Details</span></li>
+                        <li data-tab="invoice-settings" onclick="switchSettingsTab('invoice-settings')"><i
+                                class="fa-solid fa-file-invoice"></i><span>Invoice Settings</span></li>
+                        <li data-tab="store-settings" onclick="switchSettingsTab('store-settings')"><i
+                                class="fa-solid fa-store"></i><span>Store Settings</span></li>
+                        <li data-tab="security" onclick="switchSettingsTab('security')"><i
+                                class="fa-solid fa-shield-halved"></i><span>Security</span></li>
                     </ul>
                 </div>
 
@@ -1233,201 +1497,351 @@
                     <!-- 1. BUSINESS PROFILE -->
                     <div class="settings-panel active" id="tab-business-profile">
                         <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:16px;"><div><h2>Business Profile</h2><p>Core details about your registered business</p></div></div>
-                            <div class="form-group"><label>Business Name</label><input type="text" id="setBusinessName" placeholder="e.g. MyStore Retail Pvt Ltd"></div>
-                            <div class="form-row">
-                                <div class="form-group"><label>Owner Name</label><input type="text" id="setOwnerName" placeholder="Owner full name"></div>
-                                <div class="form-group"><label>Business Registration Number</label><input type="text" id="setRegNumber" placeholder="e.g. U74999DL2019PTC123456"></div>
+                            <div class="card-header" style="padding:0;margin-bottom:16px;">
+                                <div><h2>Business Profile</h2>
+                                    <p>Core details about your registered business</p></div>
+                            </div>
+                            <div class="form-group"><label>Business Name</label><input type="text" id="setBusinessName"
+                                                                                       placeholder="e.g. MyStore Retail Pvt Ltd">
                             </div>
                             <div class="form-row">
-                                <div class="form-group"><label>GST Number</label><input type="text" id="setGst" placeholder="e.g. 22AAAAA0000A1Z5"></div>
-                                <div class="form-group"><label>PAN Number</label><input type="text" id="setPan" placeholder="e.g. ABCDE1234F"></div>
+                                <div class="form-group"><label>Owner Name</label><input type="text" id="setOwnerName"
+                                                                                        placeholder="Owner full name">
+                                </div>
+                                <div class="form-group"><label>Business Registration Number</label><input type="text"
+                                                                                                          id="setRegNumber"
+                                                                                                          placeholder="e.g. U74999DL2019PTC123456">
+                                </div>
                             </div>
-                            <div class="form-group"><label>Business Description</label><textarea id="setBizDesc" rows="4" placeholder="Short description about your business..."></textarea></div>
-                            <button class="primary-btn" onclick="saveBusinessProfile()"><i class="fa-solid fa-check"></i>Save Changes</button>
+                            <div class="form-row">
+                                <div class="form-group"><label>GST Number</label><input type="text" id="setGst"
+                                                                                        placeholder="e.g. 22AAAAA0000A1Z5">
+                                </div>
+                                <div class="form-group"><label>PAN Number</label><input type="text" id="setPan"
+                                                                                        placeholder="e.g. ABCDE1234F">
+                                </div>
+                            </div>
+                            <div class="form-group"><label>Business Description</label><textarea id="setBizDesc"
+                                                                                                 rows="4"
+                                                                                                 placeholder="Short description about your business..."></textarea>
+                            </div>
+                            <button class="primary-btn" onclick="saveBusinessProfile()"><i
+                                    class="fa-solid fa-check"></i>Save Changes
+                            </button>
                         </div>
                     </div>
 
                     <!-- 2. BUSINESS ADDRESS -->
                     <div class="settings-panel" id="tab-business-address">
                         <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:16px;"><div><h2>Business Address</h2><p>Registered/operating address of your store</p></div></div>
-                            <div class="form-group"><label>Address Line 1</label><input type="text" id="setAddr1" placeholder="Building, Street"></div>
-                            <div class="form-group"><label>Address Line 2</label><input type="text" id="setAddr2" placeholder="Area, Landmark"></div>
+                            <div class="card-header" style="padding:0;margin-bottom:16px;">
+                                <div><h2>Business Address</h2>
+                                    <p>Registered/operating address of your store</p></div>
+                            </div>
+                            <div class="form-group"><label>Address Line 1</label><input type="text" id="setAddr1"
+                                                                                        placeholder="Building, Street">
+                            </div>
+                            <div class="form-group"><label>Address Line 2</label><input type="text" id="setAddr2"
+                                                                                        placeholder="Area, Landmark">
+                            </div>
                             <div class="form-row">
                                 <div class="form-group"><label>City</label><input type="text" id="setCity"></div>
                                 <div class="form-group"><label>State</label><input type="text" id="setState"></div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group"><label>Country</label><input type="text" id="setCountry" value="India"></div>
-                                <div class="form-group"><label>Pincode</label><input type="text" id="setPincode" placeholder="e.g. 226001"></div>
+                                <div class="form-group"><label>Country</label><input type="text" id="setCountry"
+                                                                                     value="India"></div>
+                                <div class="form-group"><label>Pincode</label><input type="text" id="setPincode"
+                                                                                     placeholder="e.g. 226001"></div>
                             </div>
-                            <button class="primary-btn" onclick="saveBusinessAddress()"><i class="fa-solid fa-check"></i>Save Address</button>
+                            <button class="primary-btn" onclick="saveBusinessAddress()"><i
+                                    class="fa-solid fa-check"></i>Save Address
+                            </button>
                         </div>
                     </div>
 
                     <!-- 3. BRANDING -->
                     <div class="settings-panel" id="tab-branding">
                         <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:16px;"><div><h2>Branding</h2><p>Logo, banner and theme colors shown to customers</p></div></div>
+                            <div class="card-header" style="padding:0;margin-bottom:16px;">
+                                <div><h2>Branding</h2>
+                                    <p>Logo, banner and theme colors shown to customers</p></div>
+                            </div>
 
                             <div class="form-group">
                                 <label>Store Logo</label>
                                 <div class="branding-preview-box">
-                                    <img id="settingsLogoPreview" src="https://ui-avatars.com/api/?name=Logo&background=6366f1&color=fff">
-                                    <input type="file" id="settingsLogoInput" accept="image/png,image/jpeg,image/webp" onchange="handleSettingsImagePreview(event,'settingsLogoPreview')" style="flex:1;">
+                                    <img id="settingsLogoPreview"
+                                         src="https://ui-avatars.com/api/?name=Logo&background=6366f1&color=fff">
+                                    <input type="file" id="settingsLogoInput" accept="image/png,image/jpeg,image/webp"
+                                           onchange="handleSettingsImagePreview(event,'settingsLogoPreview')"
+                                           style="flex:1;">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>Store Banner</label>
                                 <div class="branding-preview-box">
-                                    <img id="settingsBannerPreview" src="https://ui-avatars.com/api/?name=Banner&background=6366f1&color=fff">
-                                    <input type="file" id="settingsBannerInput" accept="image/png,image/jpeg,image/webp" onchange="handleSettingsImagePreview(event,'settingsBannerPreview')" style="flex:1;">
+                                    <img id="settingsBannerPreview"
+                                         src="https://ui-avatars.com/api/?name=Banner&background=6366f1&color=fff">
+                                    <input type="file" id="settingsBannerInput" accept="image/png,image/jpeg,image/webp"
+                                           onchange="handleSettingsImagePreview(event,'settingsBannerPreview')"
+                                           style="flex:1;">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>Favicon</label>
                                 <div class="branding-preview-box">
-                                    <img id="settingsFaviconPreview" src="https://ui-avatars.com/api/?name=F&background=6366f1&color=fff">
-                                    <input type="file" id="settingsFaviconInput" accept="image/png,image/x-icon" onchange="handleSettingsImagePreview(event,'settingsFaviconPreview')" style="flex:1;">
+                                    <img id="settingsFaviconPreview"
+                                         src="https://ui-avatars.com/api/?name=F&background=6366f1&color=fff">
+                                    <input type="file" id="settingsFaviconInput" accept="image/png,image/x-icon"
+                                           onchange="handleSettingsImagePreview(event,'settingsFaviconPreview')"
+                                           style="flex:1;">
                                 </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Primary Theme Color</label>
-                                    <div class="color-field"><input type="color" id="setPrimaryColor" value="#6366f1"><span id="setPrimaryColorVal" style="font-size:12px;color:var(--text-muted);">#6366f1</span></div>
+                                    <div class="color-field"><input type="color" id="setPrimaryColor"
+                                                                    value="#6366f1"><span id="setPrimaryColorVal"
+                                                                                          style="font-size:12px;color:var(--text-muted);">#6366f1</span>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Secondary Theme Color</label>
-                                    <div class="color-field"><input type="color" id="setSecondaryColor" value="#8b5cf6"><span id="setSecondaryColorVal" style="font-size:12px;color:var(--text-muted);">#8b5cf6</span></div>
+                                    <div class="color-field"><input type="color" id="setSecondaryColor" value="#8b5cf6"><span
+                                            id="setSecondaryColorVal" style="font-size:12px;color:var(--text-muted);">#8b5cf6</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="section-title">Preview</div>
                             <div class="branding-preview-box" id="brandPreviewBox">
-                                <div class="card-icon accent" style="width:44px;height:44px;"><i class="fa-solid fa-store"></i></div>
-                                <div><h4 style="font-size:14px;">Live Theme Preview</h4><span style="font-size:12px;color:var(--text-muted);">Buttons and accents will use these colors</span></div>
+                                <div class="card-icon accent" style="width:44px;height:44px;"><i
+                                        class="fa-solid fa-store"></i></div>
+                                <div><h4 style="font-size:14px;">Live Theme Preview</h4><span
+                                        style="font-size:12px;color:var(--text-muted);">Buttons and accents will use these colors</span>
+                                </div>
                             </div>
 
-                            <button class="primary-btn" style="margin-top:16px;" onclick="saveBranding()"><i class="fa-solid fa-check"></i>Save Branding</button>
+                            <button class="primary-btn" style="margin-top:16px;" onclick="saveBranding()"><i
+                                    class="fa-solid fa-check"></i>Save Branding
+                            </button>
                         </div>
                     </div>
 
                     <!-- 4. CONTACT INFORMATION -->
                     <div class="settings-panel" id="tab-contact-info">
                         <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:16px;"><div><h2>Contact Information</h2><p>How customers and support can reach you</p></div></div>
-                            <div class="form-row">
-                                <div class="form-group"><label>Support Email</label><input type="email" id="setSupportEmail" placeholder="support@mystore.com"></div>
-                                <div class="form-group"><label>Support Phone</label><input type="tel" id="setSupportPhone" placeholder="+91 98765 43210"></div>
+                            <div class="card-header" style="padding:0;margin-bottom:16px;">
+                                <div><h2>Contact Information</h2>
+                                    <p>How customers and support can reach you</p></div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group"><label>WhatsApp Number</label><input type="tel" id="setWhatsapp" placeholder="+91 98765 43210"></div>
-                                <div class="form-group"><label>Website</label><input type="url" id="setWebsite" placeholder="https://mystore.com"></div>
+                                <div class="form-group"><label>Support Email</label><input type="email"
+                                                                                           id="setSupportEmail"
+                                                                                           placeholder="support@mystore.com">
+                                </div>
+                                <div class="form-group"><label>Support Phone</label><input type="tel"
+                                                                                           id="setSupportPhone"
+                                                                                           placeholder="+91 98765 43210">
+                                </div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group"><label>Facebook</label><input type="url" id="setFacebook" placeholder="https://facebook.com/mystore"></div>
-                                <div class="form-group"><label>Instagram</label><input type="url" id="setInstagram" placeholder="https://instagram.com/mystore"></div>
+                                <div class="form-group"><label>WhatsApp Number</label><input type="tel" id="setWhatsapp"
+                                                                                             placeholder="+91 98765 43210">
+                                </div>
+                                <div class="form-group"><label>Website</label><input type="url" id="setWebsite"
+                                                                                     placeholder="https://mystore.com">
+                                </div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group"><label>LinkedIn</label><input type="url" id="setLinkedin" placeholder="https://linkedin.com/company/mystore"></div>
-                                <div class="form-group"><label>YouTube</label><input type="url" id="setYoutube" placeholder="https://youtube.com/@mystore"></div>
+                                <div class="form-group"><label>Facebook</label><input type="url" id="setFacebook"
+                                                                                      placeholder="https://facebook.com/mystore">
+                                </div>
+                                <div class="form-group"><label>Instagram</label><input type="url" id="setInstagram"
+                                                                                       placeholder="https://instagram.com/mystore">
+                                </div>
                             </div>
-                            <button class="primary-btn" onclick="saveContactInfo()"><i class="fa-solid fa-check"></i>Save Contact</button>
+                            <div class="form-row">
+                                <div class="form-group"><label>LinkedIn</label><input type="url" id="setLinkedin"
+                                                                                      placeholder="https://linkedin.com/company/mystore">
+                                </div>
+                                <div class="form-group"><label>YouTube</label><input type="url" id="setYoutube"
+                                                                                     placeholder="https://youtube.com/@mystore">
+                                </div>
+                            </div>
+                            <button class="primary-btn" onclick="saveContactInfo()"><i class="fa-solid fa-check"></i>Save
+                                Contact
+                            </button>
                         </div>
                     </div>
 
                     <!-- 5. BANK DETAILS -->
                     <div class="settings-panel" id="tab-bank-details">
                         <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:16px;"><div><h2>Bank Details</h2><p>Used for processing your payouts</p></div></div>
-                            <div class="form-row">
-                                <div class="form-group"><label>Account Holder Name</label><input type="text" id="setAccHolder"></div>
-                                <div class="form-group"><label>Bank Name</label><input type="text" id="setBankName"></div>
+                            <div class="card-header" style="padding:0;margin-bottom:16px;">
+                                <div><h2>Bank Details</h2>
+                                    <p>Used for processing your payouts</p></div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group"><label>Account Number</label><input type="text" id="setAccNumber"></div>
-                                <div class="form-group"><label>IFSC Code</label><input type="text" id="setIfsc" placeholder="e.g. HDFC0001234"></div>
+                                <div class="form-group"><label>Account Holder Name</label><input type="text"
+                                                                                                 id="setAccHolder">
+                                </div>
+                                <div class="form-group"><label>Bank Name</label><input type="text" id="setBankName">
+                                </div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group"><label>Branch Name</label><input type="text" id="setBranch"></div>
-                                <div class="form-group"><label>UPI ID</label><input type="text" id="setUpi" placeholder="e.g. mystore@okhdfcbank"></div>
+                                <div class="form-group"><label>Account Number</label><input type="text"
+                                                                                            id="setAccNumber"></div>
+                                <div class="form-group"><label>IFSC Code</label><input type="text" id="setIfsc"
+                                                                                       placeholder="e.g. HDFC0001234">
+                                </div>
                             </div>
-                            <button class="primary-btn" onclick="saveBankDetails()"><i class="fa-solid fa-check"></i>Save Bank Details</button>
+                            <div class="form-row">
+                                <div class="form-group"><label>Branch Name</label><input type="text" id="setBranch">
+                                </div>
+                                <div class="form-group"><label>UPI ID</label><input type="text" id="setUpi"
+                                                                                    placeholder="e.g. mystore@okhdfcbank">
+                                </div>
+                            </div>
+                            <button class="primary-btn" onclick="saveBankDetails()"><i class="fa-solid fa-check"></i>Save
+                                Bank Details
+                            </button>
                         </div>
                     </div>
 
                     <!-- 6. INVOICE SETTINGS -->
                     <div class="settings-panel" id="tab-invoice-settings">
                         <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:16px;"><div><h2>Invoice Settings</h2><p>Customize invoices generated for your orders</p></div></div>
+                            <div class="card-header" style="padding:0;margin-bottom:16px;">
+                                <div><h2>Invoice Settings</h2>
+                                    <p>Customize invoices generated for your orders</p></div>
+                            </div>
                             <div class="form-row">
-                                <div class="form-group"><label>Invoice Prefix</label><input type="text" id="setInvPrefix" placeholder="e.g. INV-2026-"></div>
-                                <div class="form-group"><label>Invoice Footer</label><input type="text" id="setInvFooter" placeholder="e.g. Thank you for shopping with us!"></div>
+                                <div class="form-group"><label>Invoice Prefix</label><input type="text"
+                                                                                            id="setInvPrefix"
+                                                                                            placeholder="e.g. INV-2026-">
+                                </div>
+                                <div class="form-group"><label>Invoice Footer</label><input type="text"
+                                                                                            id="setInvFooter"
+                                                                                            placeholder="e.g. Thank you for shopping with us!">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Authorized Signature</label>
                                 <div class="branding-preview-box">
-                                    <img id="settingsSignaturePreview" src="https://ui-avatars.com/api/?name=Sign&background=6366f1&color=fff">
-                                    <input type="file" id="settingsSignatureInput" accept="image/png,image/jpeg" onchange="handleSettingsImagePreview(event,'settingsSignaturePreview')" style="flex:1;">
+                                    <img id="settingsSignaturePreview"
+                                         src="https://ui-avatars.com/api/?name=Sign&background=6366f1&color=fff">
+                                    <input type="file" id="settingsSignatureInput" accept="image/png,image/jpeg"
+                                           onchange="handleSettingsImagePreview(event,'settingsSignaturePreview')"
+                                           style="flex:1;">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>Company Seal</label>
                                 <div class="branding-preview-box">
-                                    <img id="settingsSealPreview" src="https://ui-avatars.com/api/?name=Seal&background=6366f1&color=fff">
-                                    <input type="file" id="settingsSealInput" accept="image/png,image/jpeg" onchange="handleSettingsImagePreview(event,'settingsSealPreview')" style="flex:1;">
+                                    <img id="settingsSealPreview"
+                                         src="https://ui-avatars.com/api/?name=Seal&background=6366f1&color=fff">
+                                    <input type="file" id="settingsSealInput" accept="image/png,image/jpeg"
+                                           onchange="handleSettingsImagePreview(event,'settingsSealPreview')"
+                                           style="flex:1;">
                                 </div>
                             </div>
-                            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><input type="checkbox" id="setShowGst" checked> Show GST on Invoice</label>
-                            <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><input type="checkbox" id="setShowBank" checked> Show Bank Details on Invoice</label>
-                            <button class="primary-btn" onclick="saveInvoiceSettings()"><i class="fa-solid fa-check"></i>Save Invoice Settings</button>
+                            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><input
+                                    type="checkbox" id="setShowGst" checked> Show GST on Invoice</label>
+                            <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><input
+                                    type="checkbox" id="setShowBank" checked> Show Bank Details on Invoice</label>
+                            <button class="primary-btn" onclick="saveInvoiceSettings()"><i
+                                    class="fa-solid fa-check"></i>Save Invoice Settings
+                            </button>
                         </div>
                     </div>
 
                     <!-- 7. STORE SETTINGS -->
                     <div class="settings-panel" id="tab-store-settings">
                         <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:16px;"><div><h2>Store Settings</h2><p>Operational preferences for your storefront</p></div></div>
+                            <div class="card-header" style="padding:0;margin-bottom:16px;">
+                                <div><h2>Store Settings</h2>
+                                    <p>Operational preferences for your storefront</p></div>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group"><label>Store Status</label>
-                                    <select id="setStoreStatus"><option value="OPEN">Open</option><option value="CLOSED">Closed</option></select>
+                                    <select id="setStoreStatus">
+                                        <option value="OPEN">Open</option>
+                                        <option value="CLOSED">Closed</option>
+                                    </select>
                                 </div>
                                 <div class="form-group"><label>Maintenance Mode</label>
-                                    <select id="setMaintenanceMode"><option value="false">Off</option><option value="true">On</option></select>
+                                    <select id="setMaintenanceMode">
+                                        <option value="false">Off</option>
+                                        <option value="true">On</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group"><label>Currency</label>
-                                    <select id="setCurrency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option></select>
+                                    <select id="setCurrency">
+                                        <option value="INR">INR (₹)</option>
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                    </select>
                                 </div>
                                 <div class="form-group"><label>Timezone</label>
-                                    <select id="setTimezone"><option value="Asia/Kolkata">Asia/Kolkata (IST)</option><option value="UTC">UTC</option></select>
+                                    <select id="setTimezone">
+                                        <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                                        <option value="UTC">UTC</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>Language</label>
-                                <select id="setLanguage"><option value="en">English</option><option value="hi">Hindi</option></select>
+                                <select id="setLanguage">
+                                    <option value="en">English</option>
+                                    <option value="hi">Hindi</option>
+                                </select>
                             </div>
-                            <button class="primary-btn" onclick="saveStoreSettings()"><i class="fa-solid fa-check"></i>Save Store Settings</button>
+                            <button class="primary-btn" onclick="saveStoreSettings()"><i class="fa-solid fa-check"></i>Save
+                                Store Settings
+                            </button>
                         </div>
                     </div>
 
                     <!-- 8. SECURITY -->
                     <div class="settings-panel" id="tab-security">
                         <div class="table-card" style="padding:24px;margin-bottom:20px;">
-                            <div class="card-header" style="padding:0;margin-bottom:16px;"><div><h2>Change Password</h2><p>Use a strong, unique password</p></div></div>
-                            <div class="form-group"><label>Current Password</label><input type="password" id="setCurrentPwd" autocomplete="current-password"></div>
-                            <div class="form-group"><label>New Password</label><input type="password" id="setNewPwd" autocomplete="new-password"></div>
-                            <div class="form-group"><label>Confirm Password</label><input type="password" id="setConfirmPwd" autocomplete="new-password"></div>
-                            <button class="primary-btn" onclick="updateSettingsPassword()"><i class="fa-solid fa-key"></i>Update Password</button>
+                            <div class="card-header" style="padding:0;margin-bottom:16px;">
+                                <div><h2>Change Password</h2>
+                                    <p>Use a strong, unique password</p></div>
+                            </div>
+                            <div class="form-group"><label>Current Password</label><input type="password"
+                                                                                          id="setCurrentPwd"
+                                                                                          autocomplete="current-password">
+                            </div>
+                            <div class="form-group"><label>New Password</label><input type="password" id="setNewPwd"
+                                                                                      autocomplete="new-password"></div>
+                            <div class="form-group"><label>Confirm Password</label><input type="password"
+                                                                                          id="setConfirmPwd"
+                                                                                          autocomplete="new-password">
+                            </div>
+                            <button class="primary-btn" onclick="updateSettingsPassword()"><i
+                                    class="fa-solid fa-key"></i>Update Password
+                            </button>
                         </div>
 
                         <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:8px;"><div><h2>Active Sessions</h2><p>Devices currently logged into your account</p></div></div>
-                            <div class="session-row"><div><h4 style="font-size:13px;font-weight:600;">Last Login</h4><span style="font-size:12px;color:var(--text-muted);" id="setLastLoginVal">N/A</span></div><span class="status active">Current</span></div>
-                            <button class="danger-btn" style="margin-top:16px;" onclick="logoutAllDevices()"><i class="fa-solid fa-right-from-bracket"></i>Logout From All Devices</button>
+                            <div class="card-header" style="padding:0;margin-bottom:8px;">
+                                <div><h2>Active Sessions</h2>
+                                    <p>Devices currently logged into your account</p></div>
+                            </div>
+                            <div class="session-row">
+                                <div><h4 style="font-size:13px;font-weight:600;">Last Login</h4><span
+                                        style="font-size:12px;color:var(--text-muted);" id="setLastLoginVal">N/A</span>
+                                </div>
+                                <span class="status active">Current</span></div>
+                            <button class="danger-btn" style="margin-top:16px;" onclick="logoutAllDevices()"><i
+                                    class="fa-solid fa-right-from-bracket"></i>Logout From All Devices
+                            </button>
                         </div>
                     </div>
 
@@ -1439,7 +1853,8 @@
             <div>© 2026 MyStore Vendor · Powered by MyStore</div>
             <div style="display:flex;gap:16px;align-items:center;">
                 <span>v1.0.0</span>
-                <span style="color:var(--green);display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle" style="font-size:8px"></i>Store Online</span>
+                <span style="color:var(--green);display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle"
+                                                                                             style="font-size:8px"></i>Store Online</span>
             </div>
         </footer>
     </main>
@@ -1447,36 +1862,64 @@
 
 <!-- Notification Drawer -->
 <aside class="notification-drawer" id="notificationDrawer">
-    <div class="drawer-header"><h2>Notifications <span style="font-size:12px;font-weight:400;color:var(--text-muted);">6 unread</span></h2><button class="close-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="drawer-header"><h2>Notifications <span style="font-size:12px;font-weight:400;color:var(--text-muted);">6 unread</span>
+    </h2>
+        <button class="close-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
     <div class="drawer-body">
-        <div class="notification-card unread"><i class="fa-solid fa-cart-shopping"></i><div><h4>New Order</h4><p>Order #ORD-7741 placed by Priya Sharma.</p><small>4 Minutes Ago</small></div></div>
-        <div class="notification-card unread"><i class="fa-solid fa-star"></i><div><h4>New 5★ Review</h4><p>"Great product, fast delivery!"</p><small>1 Hour Ago</small></div></div>
-        <div class="notification-card"><i class="fa-solid fa-triangle-exclamation"></i><div><h4>Low Stock Alert</h4><p>iPhone 15 Case — only 3 units left.</p><small>2 Hours Ago</small></div></div>
-        <div class="notification-card"><i class="fa-solid fa-money-bill-transfer"></i><div><h4>Payout Processed</h4><p>₹42,000 credited to your bank account.</p><small>1 Day Ago</small></div></div>
+        <div class="notification-card unread"><i class="fa-solid fa-cart-shopping"></i>
+            <div><h4>New Order</h4>
+                <p>Order #ORD-7741 placed by Priya Sharma.</p><small>4 Minutes Ago</small></div>
+        </div>
+        <div class="notification-card unread"><i class="fa-solid fa-star"></i>
+            <div><h4>New 5★ Review</h4>
+                <p>"Great product, fast delivery!"</p><small>1 Hour Ago</small></div>
+        </div>
+        <div class="notification-card"><i class="fa-solid fa-triangle-exclamation"></i>
+            <div><h4>Low Stock Alert</h4>
+                <p>iPhone 15 Case — only 3 units left.</p><small>2 Hours Ago</small></div>
+        </div>
+        <div class="notification-card"><i class="fa-solid fa-money-bill-transfer"></i>
+            <div><h4>Payout Processed</h4>
+                <p>₹42,000 credited to your bank account.</p><small>1 Day Ago</small></div>
+        </div>
     </div>
 </aside>
 
 <!-- Profile Dropdown -->
 <div class="profile-dropdown" id="profileDropdown">
-    <div class="dropdown-header"><img id="dropdownAvatarImg" src="https://ui-avatars.com/api/?name=Vendor&background=6366f1&color=fff&size=64"><div><h3 id="dropdownNameEl">Vendor</h3><span id="dropdownEmailEl"></span></div></div>
+    <div class="dropdown-header"><img id="dropdownAvatarImg"
+                                      src="https://ui-avatars.com/api/?name=Vendor&background=6366f1&color=fff&size=64">
+        <div><h3 id="dropdownNameEl">Vendor</h3><span id="dropdownEmailEl"></span></div>
+    </div>
     <ul class="dropdown-menu">
         <li onclick="openProfileModal()"><i class="fa-solid fa-user"></i>My Profile</li>
-        <li onclick="showToast('info','Store','Opening store settings...')"><i class="fa-solid fa-shop"></i>Store Settings</li>
+        <li onclick="showToast('info','Store','Opening store settings...')"><i class="fa-solid fa-shop"></i>Store
+            Settings
+        </li>
         <li onclick="openChangePasswordModal()">
             <i class="fa-solid fa-key"></i>
             Change Password
         </li>
         <li onclick="openDrawer()"><i class="fa-solid fa-bell"></i>Notifications</li>
-        <li class="logout" onclick="showToast('info','Logout','Signing out...')"><i class="fa-solid fa-right-from-bracket"></i>Logout</li>
+        <li class="logout" onclick="showToast('info','Logout','Signing out...')"><i
+                class="fa-solid fa-right-from-bracket"></i>Logout
+        </li>
     </ul>
 </div>
 
 <!-- Confirm Modal -->
 <div class="modal-overlay" id="confirmModal">
     <div class="modal">
-        <div class="modal-header"><h2><i class="fa-solid fa-circle-question"></i>Confirm Action</h2><button class="modal-close-btn" onclick="closeModal('confirmModal')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="modal-header"><h2><i class="fa-solid fa-circle-question"></i>Confirm Action</h2>
+            <button class="modal-close-btn" onclick="closeModal('confirmModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
         <div class="modal-body"><p id="confirmMessage">Are you sure?</p></div>
-        <div class="modal-footer"><button class="secondary-btn" onclick="closeModal('confirmModal')">Cancel</button><button class="danger-btn" id="confirmActionBtn">Confirm</button></div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('confirmModal')">Cancel</button>
+            <button class="danger-btn" id="confirmActionBtn">Confirm</button>
+        </div>
     </div>
 </div>
 
@@ -1485,13 +1928,15 @@
     <div class="modal">
         <div class="modal-header">
             <h2><i class="fa-solid fa-layer-group"></i><span id="categoryModalTitle">Create Category</span></h2>
-            <button class="modal-close-btn" onclick="closeModal('categoryModal')"><i class="fa-solid fa-xmark"></i></button>
-        </div><div id="uploadLoader" class="upload-loader hidden">
-        <div class="loader-box">
-            <div class="spinner"></div>
-            <p>Uploading category image...</p>
+            <button class="modal-close-btn" onclick="closeModal('categoryModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-    </div>
+        <div id="uploadLoader" class="upload-loader hidden">
+            <div class="loader-box">
+                <div class="spinner"></div>
+                <p>Uploading category image...</p>
+            </div>
+        </div>
 
         <div class="modal-body">
             <div class="form-group">
@@ -1505,8 +1950,11 @@
             <div class="form-group">
                 <label>Category Image</label>
                 <div style="display:flex;align-items:center;gap:12px;">
-                    <img id="categoryImagePreview" src="https://ui-avatars.com/api/?name=Category&background=6366f1&color=fff" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;">
-                    <input id="categoryImage" type="file" accept="image/png,image/jpeg,image/webp" onchange="handleCategoryImageSelect(event)" style="flex:1;">
+                    <img id="categoryImagePreview"
+                         src="https://ui-avatars.com/api/?name=Category&background=6366f1&color=fff"
+                         style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;">
+                    <input id="categoryImage" type="file" accept="image/png,image/jpeg,image/webp"
+                           onchange="handleCategoryImageSelect(event)" style="flex:1;">
                 </div>
             </div>
             <div class="form-group">
@@ -1547,7 +1995,8 @@
     <div class="modal">
         <div class="modal-header">
             <h2><i class="fa-solid fa-right-left"></i>Delete Category</h2>
-            <button class="modal-close-btn" onclick="closeMoveCategoryModal()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeMoveCategoryModal()"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <div class="modal-body">
             <div class="info-grid" style="grid-template-columns:1fr;margin-bottom:14px;">
@@ -1585,17 +2034,23 @@
     <div class="modal large">
         <div class="modal-header">
             <h2><i class="fa-solid fa-images"></i><span id="bannerModalTitle">Add Banner</span></h2>
-            <button class="modal-close-btn" onclick="closeModal('bannerModal')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeModal('bannerModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <div id="bannerUploadLoader" class="upload-loader hidden">
-            <div class="loader-box"><div class="spinner"></div><p>Uploading banner image...</p></div>
+            <div class="loader-box">
+                <div class="spinner"></div>
+                <p>Uploading banner image...</p></div>
         </div>
         <div class="modal-body">
             <div class="form-group">
                 <label>Banner Image <span style="color:red;">*</span></label>
                 <div style="display:flex;align-items:center;gap:15px;">
-                    <img id="bannerImagePreview" src="https://ui-avatars.com/api/?name=Banner&background=6366f1&color=fff" style="width:110px;height:47px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;">
-                    <input id="bannerImage" type="file" accept="image/png,image/jpeg,image/webp" onchange="handleBannerImageSelect(event)" style="flex:1;">
+                    <img id="bannerImagePreview"
+                         src="https://ui-avatars.com/api/?name=Banner&background=6366f1&color=fff"
+                         style="width:110px;height:47px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;">
+                    <input id="bannerImage" type="file" accept="image/png,image/jpeg,image/webp"
+                           onchange="handleBannerImageSelect(event)" style="flex:1;">
                 </div>
             </div>
 
@@ -1617,7 +2072,8 @@
 
             <div class="form-group">
                 <label>Subtitle</label>
-                <textarea id="bannerSubtitle" rows="2" maxlength="250" placeholder="Shop the new collection before stocks run out"></textarea>
+                <textarea id="bannerSubtitle" rows="2" maxlength="250"
+                          placeholder="Shop the new collection before stocks run out"></textarea>
             </div>
 
             <div class="section-title">Call To Action</div>
@@ -1664,7 +2120,9 @@
         </div>
         <div class="modal-footer">
             <button class="secondary-btn" onclick="closeModal('bannerModal')">Cancel</button>
-            <button class="primary-btn" id="saveBannerBtn" onclick="saveBanner()"><i class="fa-solid fa-plus"></i>&nbsp; Add Banner</button>
+            <button class="primary-btn" id="saveBannerBtn" onclick="saveBanner()"><i class="fa-solid fa-plus"></i>&nbsp;
+                Add Banner
+            </button>
         </div>
     </div>
 </div>
@@ -1673,17 +2131,20 @@
     <div class="modal large">
         <div class="modal-header">
             <h2><i class="fa-solid fa-bullhorn"></i><span id="noticeModalTitle">Add Notice</span></h2>
-            <button class="modal-close-btn" onclick="closeModal('noticeModal')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeModal('noticeModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label>Title <small style="color:var(--text-muted);">(used by the popup heading; optional for a bar-only notice)</small></label>
+                <label>Title <small style="color:var(--text-muted);">(used by the popup heading; optional for a bar-only
+                    notice)</small></label>
                 <input id="noticeTitle" type="text" maxlength="150" placeholder="e.g. Testing Phase">
             </div>
 
             <div class="form-group">
                 <label>Notice Text <span style="color:red;">*</span></label>
-                <textarea id="noticeText" rows="3" maxlength="500" placeholder="This store is currently in testing — orders are not yet accepted."></textarea>
+                <textarea id="noticeText" rows="3" maxlength="500"
+                          placeholder="This store is currently in testing — orders are not yet accepted."></textarea>
             </div>
 
             <div class="form-row">
@@ -1740,7 +2201,9 @@
         </div>
         <div class="modal-footer">
             <button class="secondary-btn" onclick="closeModal('noticeModal')">Cancel</button>
-            <button class="primary-btn" id="saveNoticeBtn" onclick="saveNotice()"><i class="fa-solid fa-plus"></i>&nbsp; Add Notice</button>
+            <button class="primary-btn" id="saveNoticeBtn" onclick="saveNotice()"><i class="fa-solid fa-plus"></i>&nbsp;
+                Add Notice
+            </button>
         </div>
     </div>
 </div>
@@ -1749,7 +2212,8 @@
     <div class="modal large">
         <div class="modal-header">
             <h2><i class="fa-solid fa-bolt"></i><span id="flashSaleModalTitle">Create Flash Sale</span></h2>
-            <button class="modal-close-btn" onclick="closeModal('flashSaleModal')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeModal('flashSaleModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <div class="modal-body">
             <div class="form-group">
@@ -1770,7 +2234,8 @@
                 </div>
                 <div class="form-group">
                     <label id="fsDiscountValueLabel">Discount Value (%) <span style="color:red;">*</span></label>
-                    <input id="fsDiscountValue" type="number" min="0" step="0.01" placeholder="e.g. 20" oninput="applyAutoSalePrices()">
+                    <input id="fsDiscountValue" type="number" min="0" step="0.01" placeholder="e.g. 20"
+                           oninput="applyAutoSalePrices()">
                 </div>
             </div>
             <div class="form-row">
@@ -1797,9 +2262,12 @@
                 </div>
             </div>
 
-            <div class="section-title">Select Products <span style="color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;">(<span id="fsSelectedCount">0</span> selected)</span></div>
+            <div class="section-title">Select Products <span
+                    style="color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0;">(<span
+                    id="fsSelectedCount">0</span> selected)</span></div>
             <div class="table-actions" style="padding:0 0 10px;">
-                <input type="text" id="fsProductSearchInput" placeholder="Search your products to add..." oninput="filterFlashSaleProducts(this.value)">
+                <input type="text" id="fsProductSearchInput" placeholder="Search your products to add..."
+                       oninput="filterFlashSaleProducts(this.value)">
             </div>
             <div class="spec-table-wrap" style="max-height:280px;overflow-y:auto;">
                 <table>
@@ -1817,7 +2285,9 @@
         </div>
         <div class="modal-footer">
             <button class="secondary-btn" onclick="closeModal('flashSaleModal')">Cancel</button>
-            <button class="primary-btn" id="saveFlashSaleBtn" onclick="saveFlashSale()"><i class="fa-solid fa-bolt"></i>&nbsp; Create Flash Sale</button>
+            <button class="primary-btn" id="saveFlashSaleBtn" onclick="saveFlashSale()"><i class="fa-solid fa-bolt"></i>&nbsp;
+                Create Flash Sale
+            </button>
         </div>
     </div>
 </div>
@@ -1882,7 +2352,9 @@
 
             <!-- Order status update — lets the vendor action the order right from the item view -->
             <div class="order-status-update">
-                <div class="osu-title"><i class="fa-solid fa-truck-fast" style="color:var(--accent);"></i>&nbsp; Update Order Status</div>
+                <div class="osu-title"><i class="fa-solid fa-truck-fast" style="color:var(--accent);"></i>&nbsp; Update
+                    Order Status
+                </div>
 
                 <div class="osu-row">
                     <div>
@@ -1905,7 +2377,8 @@
 
                 <div>
                     <label for="orderStatusRemarks">Remarks</label>
-                    <textarea id="orderStatusRemarks" rows="2" placeholder="Optional note for this status update (e.g. reason for delay/cancellation)..."></textarea>
+                    <textarea id="orderStatusRemarks" rows="2"
+                              placeholder="Optional note for this status update (e.g. reason for delay/cancellation)..."></textarea>
                 </div>
 
                 <div class="osu-actions" style="margin-top:14px;">
@@ -1933,7 +2406,10 @@
 <!-- Customer Detail Modal -->
 <div class="modal-overlay" id="customerModal">
     <div class="modal">
-        <div class="modal-header"><h2><i class="fa-solid fa-user"></i>Customer Details</h2><button class="modal-close-btn" onclick="closeModal('customerModal')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="modal-header"><h2><i class="fa-solid fa-user"></i>Customer Details</h2>
+            <button class="modal-close-btn" onclick="closeModal('customerModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
         <div class="modal-body">
             <div class="info-grid">
                 <div><label>Name</label><span id="custModalName"></span></div>
@@ -1944,7 +2420,12 @@
                 <div><label>Last Order</label><span id="custModalLast"></span></div>
             </div>
         </div>
-        <div class="modal-footer"><button class="secondary-btn" onclick="closeModal('customerModal')">Close</button><button class="primary-btn" onclick="showToast('info','Message','Opening chat with customer...')"><i class="fa-solid fa-message"></i>Message</button></div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('customerModal')">Close</button>
+            <button class="primary-btn" onclick="showToast('info','Message','Opening chat with customer...')"><i
+                    class="fa-solid fa-message"></i>Message
+            </button>
+        </div>
     </div>
 </div>
 <!-- Add/Edit Product Modal -->
@@ -1991,7 +2472,7 @@
 
                     <label>Category <span style="color:red;">*</span></label>
 
-                    <select id="prodCategory" onchange="handleProductCategoryChange(this.value)" >
+                    <select id="prodCategory" onchange="handleProductCategoryChange(this.value)">
 
                         <option value="">Select Category</option>
 
@@ -2167,7 +2648,6 @@
 <div id="toastContainer"></div>
 
 <script>
-
 
 
     const BANNER_API = '/vendor/s11/v1/banner';

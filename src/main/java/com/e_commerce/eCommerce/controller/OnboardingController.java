@@ -63,9 +63,10 @@ public class OnboardingController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @PostMapping("/s1/v1/business-details")
     public ResponseEntity<?> SaveBussinessDetail(Authentication authentication,
-                                      @RequestBody BusinessDetailsDTO dto){
+                                                 @RequestBody BusinessDetailsDTO dto) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -95,7 +96,7 @@ public class OnboardingController {
 
     @PostMapping("/s1/v1/address")
     public ResponseEntity<?> aveBankDetaiils(Authentication authentication,
-                                                 @RequestBody BusinessAddressDTO dto){
+                                             @RequestBody BusinessAddressDTO dto) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -125,7 +126,7 @@ public class OnboardingController {
 
     @PostMapping("/s1/v1/bank-details")
     public ResponseEntity<?> saveBankDetail(Authentication authentication,
-                                            @RequestBody BankInfoDto dto){
+                                            @RequestBody BankInfoDto dto) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -153,9 +154,10 @@ public class OnboardingController {
         }
 
     }
+
     @PostMapping("/s1/v1/branding")
     public ResponseEntity<?> saveBankDetail(Authentication authentication,
-                                            @RequestBody BrandingInfoDto dto){
+                                            @RequestBody BrandingInfoDto dto) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -184,6 +186,7 @@ public class OnboardingController {
 
 
     }
+
     @PostMapping("/s1/v1/submit")
     public ResponseEntity<?> submitApplication(Authentication authentication) {
 
@@ -209,16 +212,17 @@ public class OnboardingController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @PostMapping("/s1/v1/super/admin/vendor/onboarding/decision")
     public ResponseEntity<?> makeDecision(
             @RequestBody OnBoardingDecisionDto request,
             @AuthenticationPrincipal CustomUserDetail userDetails) {
 
         try {
-            logger.info("Application IDs  "+request.getApplicationId());
+            logger.info("Application IDs  " + request.getApplicationId());
 
             User loggedInUser = userDetails.getUser();
-            logger.info("Logged User"+loggedInUser.getFirstName());
+            logger.info("Logged User" + loggedInUser.getFirstName());
 
             String message = onboardingService.makeDecisiion(request, loggedInUser);
 
@@ -240,19 +244,20 @@ public class OnboardingController {
         }
     }
 
-//    GET /vendor
+    //    GET /vendor
     @GetMapping("/s1/v1/application-status")
-    public ResponseEntity<VenddorOnBoardingApplicationStatus> getApplicationStaus(@AuthenticationPrincipal CustomUserDetail userDetail){
-        VenddorOnBoardingApplicationStatus v2=new VenddorOnBoardingApplicationStatus();
-        try{
-            v2=onboardingService.getOnboardingStatus(userDetail);
+    public ResponseEntity<VenddorOnBoardingApplicationStatus> getApplicationStaus(@AuthenticationPrincipal CustomUserDetail userDetail) {
+        VenddorOnBoardingApplicationStatus v2 = new VenddorOnBoardingApplicationStatus();
+        try {
+            v2 = onboardingService.getOnboardingStatus(userDetail);
             return ResponseEntity.ok(v2);
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(v2);
 
 
         }
     }
+
     @PostMapping("/s1/onboarding/resubmit")
     public ResponseEntity<?> resubmitApplication(
             @RequestParam("applicationId") String applicationId,
@@ -280,6 +285,6 @@ public class OnboardingController {
             ));
         }
     }
-    }
+}
 
 

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface OrderTrackingrepository extends JpaRepository<OrderTracking,Long> {
+public interface OrderTrackingrepository extends JpaRepository<OrderTracking, Long> {
     List<OrderTracking> findByTenantIdAndOrderId(String tenantId, Long id);
 
     OrderTracking findByTenantIdAndOrderIdAndStatus(String tenantId, Long orderId, OrderStatus orderStatus);

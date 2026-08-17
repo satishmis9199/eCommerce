@@ -5,7 +5,8 @@ import com.e_commerce.eCommerce.entity.Notice;
 
 public class NoticeMapper {
 
-    private NoticeMapper() {}
+    private NoticeMapper() {
+    }
 
     public static NoticeResponseDto toDto(Notice n) {
         return NoticeResponseDto.builder()

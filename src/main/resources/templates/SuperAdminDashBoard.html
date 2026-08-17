@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyStore | Super Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
@@ -474,15 +475,18 @@
             <p class="menu-label">Main</p>
             <ul>
                 <li class="active"><a href="#"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a></li>
-                <li><a href="#"><i class="fa-solid fa-shop"></i><span>Vendors</span><span class="badge-pill">27</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-shop"></i><span>Vendors</span><span
+                        class="badge-pill">27</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-users"></i><span>Customers</span></a></li>
-                <li><a href="#"><i class="fa-solid fa-box"></i><span>Orders</span><span class="badge-pill">5</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-box"></i><span>Orders</span><span class="badge-pill">5</span></a>
+                </li>
                 <li><a href="#"><i class="fa-solid fa-credit-card"></i><span>Revenue</span></a></li>
             </ul>
             <p class="menu-label">Platform</p>
             <ul>
                 <li><a href="#"><i class="fa-solid fa-chart-column"></i><span>Analytics</span></a></li>
-                <li><a href="#"><i class="fa-solid fa-ticket"></i><span>Support</span><span class="badge-pill">41</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-ticket"></i><span>Support</span><span class="badge-pill">41</span></a>
+                </li>
                 <li><a href="#"><i class="fa-solid fa-shield-halved"></i><span>Security</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>
             </ul>
@@ -507,7 +511,8 @@
                 </div>
             </div>
             <div class="topbar__right">
-                <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i></button>
+                <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i>
+                </button>
                 <button class="icon-btn" id="notifBtn" title="Notifications">
                     <i class="fa-solid fa-bell"></i>
                     <span class="badge">12</span>
@@ -517,7 +522,8 @@
                     <span class="badge">5</span>
                 </button>
                 <button class="profile-btn" id="profileBtn">
-                    <img src="https://ui-avatars.com/api/?name=Super+Admin&background=6366f1&color=fff&size=64" alt="Admin">
+                    <img src="https://ui-avatars.com/api/?name=Super+Admin&background=6366f1&color=fff&size=64"
+                         alt="Admin">
                     <div class="profile-info">
                         <h4>Super Admin</h4>
                         <span>Platform Owner</span>
@@ -532,13 +538,19 @@
             <section class="dashboard-overview fade-up">
                 <div class="section-header">
                     <div>
-                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Dashboard</span></div>
+                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Dashboard</span>
+                        </div>
                         <h1>Platform Dashboard</h1>
                         <p>Welcome back, Super Admin 👋 — Here's what's happening today.</p>
                     </div>
                     <div class="header-actions">
-                        <button class="primary-btn" onclick="openModal('createVendorModal')"><i class="fa-solid fa-plus"></i>Create Vendor</button>
-                        <button class="secondary-btn" onclick="showToast('success','Export','Report generated and downloading...')"><i class="fa-solid fa-download"></i>Export Report</button>
+                        <button class="primary-btn" onclick="openModal('createVendorModal')"><i
+                                class="fa-solid fa-plus"></i>Create Vendor
+                        </button>
+                        <button class="secondary-btn"
+                                onclick="showToast('success','Export','Report generated and downloading...')"><i
+                                class="fa-solid fa-download"></i>Export Report
+                        </button>
                     </div>
                 </div>
 
@@ -587,7 +599,8 @@
                         <div class="card-left">
                             <span>Support Tickets</span>
                             <h2>41</h2>
-                            <small style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i>5 Critical</small>
+                            <small style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i>5
+                                Critical</small>
                         </div>
                         <div class="card-icon"><i class="fa-solid fa-headset"></i></div>
                     </div>
@@ -619,8 +632,14 @@
                         </div>
                         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                             <div class="chart-legend">
-                                <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Revenue</div>
-                                <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Orders</div>
+                                <div class="legend-item">
+                                    <div class="legend-dot" style="background:var(--accent)"></div>
+                                    Revenue
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-dot" style="background:var(--green)"></div>
+                                    Orders
+                                </div>
                             </div>
                             <select id="revenuePeriod" onchange="updateRevenueChart()">
                                 <option value="7">Last 7 Days</option>
@@ -633,7 +652,10 @@
                 </div>
 
                 <div class="analytics-card">
-                    <div class="card-header"><div><h3>Vendor Growth</h3><p>Monthly registrations</p></div></div>
+                    <div class="card-header">
+                        <div><h3>Vendor Growth</h3>
+                            <p>Monthly registrations</p></div>
+                    </div>
                     <canvas id="vendorChart" height="240"></canvas>
                 </div>
             </section>
@@ -642,29 +664,54 @@
                 <div class="health-card">
                     <h3>Platform Health</h3>
                     <ul>
-                        <li><span><i class="fa-solid fa-server" style="margin-right:8px;color:var(--text-muted)"></i>Application Server</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Online</strong></li>
-                        <li><span><i class="fa-solid fa-database" style="margin-right:8px;color:var(--text-muted)"></i>Database (PostgreSQL)</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Healthy</strong></li>
-                        <li><span><i class="fa-solid fa-memory" style="margin-right:8px;color:var(--text-muted)"></i>Redis Cache</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Connected</strong></li>
-                        <li><span><i class="fa-brands fa-kafka" style="margin-right:8px;color:var(--text-muted)"></i>Kafka Broker</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Running</strong></li>
-                        <li><span><i class="fa-solid fa-hard-drive" style="margin-right:8px;color:var(--text-muted)"></i>Storage</span>
+                        <li><span><i class="fa-solid fa-server" style="margin-right:8px;color:var(--text-muted)"></i>Application Server</span><strong
+                                class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Online</strong>
+                        </li>
+                        <li><span><i class="fa-solid fa-database" style="margin-right:8px;color:var(--text-muted)"></i>Database (PostgreSQL)</span><strong
+                                class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i>
+                            Healthy</strong></li>
+                        <li><span><i class="fa-solid fa-memory" style="margin-right:8px;color:var(--text-muted)"></i>Redis Cache</span><strong
+                                class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i>
+                            Connected</strong></li>
+                        <li><span><i class="fa-brands fa-kafka" style="margin-right:8px;color:var(--text-muted)"></i>Kafka Broker</span><strong
+                                class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i>
+                            Running</strong></li>
+                        <li><span><i class="fa-solid fa-hard-drive"
+                                     style="margin-right:8px;color:var(--text-muted)"></i>Storage</span>
                             <div style="display:flex;align-items:center;gap:10px;flex:1;justify-content:flex-end;">
                                 <strong class="warning">72%</strong>
-                                <div class="health-bar" style="width:80px"><div class="health-bar-fill" style="width:72%"></div></div>
+                                <div class="health-bar" style="width:80px">
+                                    <div class="health-bar-fill" style="width:72%"></div>
+                                </div>
                             </div>
                         </li>
-                        <li><span><i class="fa-solid fa-shield" style="margin-right:8px;color:var(--text-muted)"></i>SSL Certificate</span><strong class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Valid</strong></li>
+                        <li><span><i class="fa-solid fa-shield" style="margin-right:8px;color:var(--text-muted)"></i>SSL Certificate</span><strong
+                                class="success"><i class="fa-solid fa-circle" style="font-size:8px"></i> Valid</strong>
+                        </li>
                     </ul>
                 </div>
 
                 <div class="health-card">
                     <h3>Quick Actions</h3>
                     <div class="quick-grid">
-                        <button class="quick-btn" onclick="openModal('createVendorModal')"><i class="fa-solid fa-user-plus"></i>New Vendor</button>
-                        <button class="quick-btn" onclick="showToast('info','Reports','Generating report...')"><i class="fa-solid fa-file-export"></i>Reports</button>
-                        <button class="quick-btn" onclick="showToast('info','Broadcast','Opening broadcast panel...')"><i class="fa-solid fa-envelope"></i>Broadcast</button>
-                        <button class="quick-btn" onclick="showToast('warning','Security','Scanning for threats...')"><i class="fa-solid fa-shield-halved"></i>Security</button>
-                        <button class="quick-btn" onclick="showToast('info','Plans','Loading subscription plans...')"><i class="fa-solid fa-credit-card"></i>Plans</button>
-                        <button class="quick-btn" onclick="showToast('info','Settings','Opening settings...')"><i class="fa-solid fa-gear"></i>Settings</button>
+                        <button class="quick-btn" onclick="openModal('createVendorModal')"><i
+                                class="fa-solid fa-user-plus"></i>New Vendor
+                        </button>
+                        <button class="quick-btn" onclick="showToast('info','Reports','Generating report...')"><i
+                                class="fa-solid fa-file-export"></i>Reports
+                        </button>
+                        <button class="quick-btn" onclick="showToast('info','Broadcast','Opening broadcast panel...')">
+                            <i class="fa-solid fa-envelope"></i>Broadcast
+                        </button>
+                        <button class="quick-btn" onclick="showToast('warning','Security','Scanning for threats...')"><i
+                                class="fa-solid fa-shield-halved"></i>Security
+                        </button>
+                        <button class="quick-btn" onclick="showToast('info','Plans','Loading subscription plans...')"><i
+                                class="fa-solid fa-credit-card"></i>Plans
+                        </button>
+                        <button class="quick-btn" onclick="showToast('info','Settings','Opening settings...')"><i
+                                class="fa-solid fa-gear"></i>Settings
+                        </button>
                     </div>
                 </div>
             </section>
@@ -679,9 +726,13 @@
                         </div>
                     </div>
                     <div class="table-actions">
-                        <input type="text" id="vendorSearch" placeholder="Search vendors..." oninput="filterVendors(this.value)">
-                        <button class="secondary-btn" onclick="showToast('info','Filter','Opening filter options...')"><i class="fa-solid fa-filter"></i>Filters</button>
-                        <select id="statusFilter" onchange="filterByStatus(this.value)" style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:12px;padding:8px 10px;outline:none;">
+                        <input type="text" id="vendorSearch" placeholder="Search vendors..."
+                               oninput="filterVendors(this.value)">
+                        <button class="secondary-btn" onclick="showToast('info','Filter','Opening filter options...')">
+                            <i class="fa-solid fa-filter"></i>Filters
+                        </button>
+                        <select id="statusFilter" onchange="filterByStatus(this.value)"
+                                style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:12px;padding:8px 10px;outline:none;">
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
                             <option value="pending">Pending</option>
@@ -692,7 +743,13 @@
                         <table>
                             <thead>
                             <tr>
-                                <th>Vendor</th><th>Business</th><th>Plan</th><th>Status</th><th>Revenue</th><th>Orders</th><th>Actions</th>
+                                <th>Vendor</th>
+                                <th>Business</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                                <th>Revenue</th>
+                                <th>Orders</th>
+                                <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody id="vendorTableBody"></tbody>
@@ -705,20 +762,25 @@
                     <div class="panel-card">
                         <div class="card-header">
                             <h3>Notifications</h3>
-                            <button class="secondary-btn" style="padding:5px 10px;font-size:11px;" onclick="showToast('info','Notifications','All marked as read')">Mark all read</button>
+                            <button class="secondary-btn" style="padding:5px 10px;font-size:11px;"
+                                    onclick="showToast('info','Notifications','All marked as read')">Mark all read
+                            </button>
                         </div>
                         <div class="notification-list">
                             <div class="notification-item">
                                 <i class="fa-solid fa-user-plus"></i>
-                                <div><h4>New Vendor Registered</h4><p>Grocery Mart submitted KYC documents.</p><small>2 min ago</small></div>
+                                <div><h4>New Vendor Registered</h4>
+                                    <p>Grocery Mart submitted KYC documents.</p><small>2 min ago</small></div>
                             </div>
                             <div class="notification-item">
                                 <i class="fa-solid fa-credit-card"></i>
-                                <div><h4>Subscription Renewed</h4><p>Hasan Mobile World renewed Enterprise Plan.</p><small>18 min ago</small></div>
+                                <div><h4>Subscription Renewed</h4>
+                                    <p>Hasan Mobile World renewed Enterprise Plan.</p><small>18 min ago</small></div>
                             </div>
                             <div class="notification-item">
                                 <i class="fa-solid fa-circle-exclamation" style="color:var(--red)"></i>
-                                <div><h4>Security Alert</h4><p>Multiple failed login attempts detected.</p><small>1 hour ago</small></div>
+                                <div><h4>Security Alert</h4>
+                                    <p>Multiple failed login attempts detected.</p><small>1 hour ago</small></div>
                             </div>
                         </div>
                     </div>
@@ -726,10 +788,26 @@
                     <div class="panel-card">
                         <div class="card-header"><h3>Recent Activities</h3></div>
                         <div class="timeline">
-                            <div class="timeline-item"><div class="dot success"></div><div><h4>Vendor Approved</h4><p>Hasan Mobile World approved by admin.</p><small>5 min ago</small></div></div>
-                            <div class="timeline-item"><div class="dot warning"></div><div><h4>Plan Expired</h4><p>Grocery Hub subscription expired.</p><small>30 min ago</small></div></div>
-                            <div class="timeline-item"><div class="dot danger"></div><div><h4>Vendor Blocked</h4><p>Fraud detected by AI engine.</p><small>2 hours ago</small></div></div>
-                            <div class="timeline-item"><div class="dot info"></div><div><h4>Report Generated</h4><p>Monthly revenue report exported.</p><small>3 hours ago</small></div></div>
+                            <div class="timeline-item">
+                                <div class="dot success"></div>
+                                <div><h4>Vendor Approved</h4>
+                                    <p>Hasan Mobile World approved by admin.</p><small>5 min ago</small></div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="dot warning"></div>
+                                <div><h4>Plan Expired</h4>
+                                    <p>Grocery Hub subscription expired.</p><small>30 min ago</small></div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="dot danger"></div>
+                                <div><h4>Vendor Blocked</h4>
+                                    <p>Fraud detected by AI engine.</p><small>2 hours ago</small></div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="dot info"></div>
+                                <div><h4>Report Generated</h4>
+                                    <p>Monthly revenue report exported.</p><small>3 hours ago</small></div>
+                            </div>
                         </div>
                     </div>
 
@@ -762,7 +840,8 @@
             <div>© 2026 MyStore Enterprise Platform — All rights reserved.</div>
             <div style="display:flex;gap:16px;align-items:center;">
                 <span>v2.0.0</span>
-                <span style="color:var(--green);display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle" style="font-size:8px"></i>All Systems Operational</span>
+                <span style="color:var(--green);display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle"
+                                                                                             style="font-size:8px"></i>All Systems Operational</span>
             </div>
         </footer>
     </main>
@@ -776,19 +855,23 @@
     <div class="drawer-body">
         <div class="notification-card unread">
             <i class="fa-solid fa-circle-check"></i>
-            <div><h4>Vendor Approved</h4><p>Hasan Mobile World has been approved successfully.</p><small>2 Minutes Ago</small></div>
+            <div><h4>Vendor Approved</h4>
+                <p>Hasan Mobile World has been approved successfully.</p><small>2 Minutes Ago</small></div>
         </div>
         <div class="notification-card unread">
             <i class="fa-solid fa-wallet"></i>
-            <div><h4>Payment Received</h4><p>Enterprise Subscription renewed. ₹24,999 credited.</p><small>18 Minutes Ago</small></div>
+            <div><h4>Payment Received</h4>
+                <p>Enterprise Subscription renewed. ₹24,999 credited.</p><small>18 Minutes Ago</small></div>
         </div>
         <div class="notification-card">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <div><h4>Security Alert</h4><p>5 failed login attempts detected from IP 192.168.x.x</p><small>1 Hour Ago</small></div>
+            <div><h4>Security Alert</h4>
+                <p>5 failed login attempts detected from IP 192.168.x.x</p><small>1 Hour Ago</small></div>
         </div>
         <div class="notification-card">
             <i class="fa-solid fa-user-plus"></i>
-            <div><h4>New Vendor Signup</h4><p>TechZone Store submitted registration form.</p><small>3 Hours Ago</small></div>
+            <div><h4>New Vendor Signup</h4>
+                <p>TechZone Store submitted registration form.</p><small>3 Hours Ago</small></div>
         </div>
     </div>
 </aside>
@@ -800,11 +883,16 @@
     </div>
     <ul class="dropdown-menu">
         <li onclick="showToast('info','Profile','Opening profile...')"><i class="fa-solid fa-user"></i>Profile</li>
-        <li onclick="showToast('info','Security','Opening security settings...')"><i class="fa-solid fa-lock"></i>Security</li>
-        <li onclick="showToast('info','Password','Opening change password...')"><i class="fa-solid fa-key"></i>Change Password</li>
+        <li onclick="showToast('info','Security','Opening security settings...')"><i class="fa-solid fa-lock"></i>Security
+        </li>
+        <li onclick="showToast('info','Password','Opening change password...')"><i class="fa-solid fa-key"></i>Change
+            Password
+        </li>
         <li onclick="openDrawer()"><i class="fa-solid fa-bell"></i>Notifications</li>
         <li onclick="showToast('info','Settings','Opening settings...')"><i class="fa-solid fa-gear"></i>Settings</li>
-        <li class="logout" onclick="showToast('info','Logout','Signing out...')"><i class="fa-solid fa-right-from-bracket"></i>Logout</li>
+        <li class="logout" onclick="showToast('info','Logout','Signing out...')"><i
+                class="fa-solid fa-right-from-bracket"></i>Logout
+        </li>
     </ul>
 </div>
 
@@ -812,9 +900,11 @@
     <div class="modal">
         <div class="modal-header">
             <h2><i class="fa-solid fa-circle-question"></i>Confirm Action</h2>
-            <button class="modal-close-btn" onclick="closeModal('confirmModal')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeModal('confirmModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-        <div class="modal-body"><p id="confirmMessage">Are you sure you want to perform this action? This cannot be undone.</p></div>
+        <div class="modal-body"><p id="confirmMessage">Are you sure you want to perform this action? This cannot be
+            undone.</p></div>
         <div class="modal-footer">
             <button class="secondary-btn" onclick="closeModal('confirmModal')">Cancel</button>
             <button class="danger-btn" id="confirmActionBtn">Confirm</button>
@@ -826,7 +916,8 @@
     <div class="modal large">
         <div class="modal-header">
             <h2><i class="fa-solid fa-store"></i>Vendor Details</h2>
-            <button class="modal-close-btn" onclick="closeModal('vendorModal')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeModal('vendorModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <div class="modal-body">
             <div class="vendor-profile">
@@ -854,7 +945,8 @@
                 <div><label>Store Name</label><span id="storeName"></span></div>
                 <div><label>Business Type</label><span id="businessType"></span></div>
                 <div><label>Business Category</label><span id="businessCategory"></span></div>
-                <div style="grid-column:1 / -1"><label>Business Description</label><span id="businessDescription"></span></div>
+                <div style="grid-column:1 / -1"><label>Business Description</label><span
+                        id="businessDescription"></span></div>
                 <div><label>GST Number</label><span id="gstNumber"></span></div>
                 <div><label>PAN Number</label><span id="panNumber"></span></div>
             </div>
@@ -873,42 +965,71 @@
     <div class="modal">
         <div class="modal-header">
             <h2><i class="fa-solid fa-user-plus"></i>Create New Vendor</h2>
-            <button class="modal-close-btn" onclick="closeModal('createVendorModal')"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close-btn" onclick="closeModal('createVendorModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <div class="modal-body">
             <div style="display:grid;gap:14px;">
                 <div>
-                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Business Name *</label>
-                    <input id="bussinessname" type="text" placeholder="e.g. Hasan Mobile World" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Business
+                        Name *</label>
+                    <input id="bussinessname" type="text" placeholder="e.g. Hasan Mobile World"
+                           style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;"
+                           onfocus="this.style.borderColor='var(--border-focus)'"
+                           onblur="this.style.borderColor='var(--border)'">
                 </div>
                 <div>
-                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">First name *</label>
-                    <input id="firstName" type="text" placeholder="Owner name" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">First
+                        name *</label>
+                    <input id="firstName" type="text" placeholder="Owner name"
+                           style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;"
+                           onfocus="this.style.borderColor='var(--border-focus)'"
+                           onblur="this.style.borderColor='var(--border)'">
                 </div>
                 <div>
-                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Last Name *</label>
-                    <input id="lastName" type="text" placeholder="e.g. Mishra" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Last
+                        Name *</label>
+                    <input id="lastName" type="text" placeholder="e.g. Mishra"
+                           style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;"
+                           onfocus="this.style.borderColor='var(--border-focus)'"
+                           onblur="this.style.borderColor='var(--border)'">
                 </div>
                 <div>
-                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Vendor Email *</label>
-                    <input id="vendorEmail" type="text" placeholder="@myStore.com" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Vendor
+                        Email *</label>
+                    <input id="vendorEmail" type="text" placeholder="@myStore.com"
+                           style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;"
+                           onfocus="this.style.borderColor='var(--border-focus)'"
+                           onblur="this.style.borderColor='var(--border)'">
                 </div>
                 <div>
-                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Owner Email *</label>
-                    <input id="email1" type="email" placeholder="owner@business.com" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                    <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Owner
+                        Email *</label>
+                    <input id="email1" type="email" placeholder="owner@business.com"
+                           style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;"
+                           onfocus="this.style.borderColor='var(--border-focus)'"
+                           onblur="this.style.borderColor='var(--border)'">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                     <div>
                         <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Phone</label>
-                        <input id="mobile" type="tel" placeholder="+91 XXXXX XXXXX" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                        <input id="mobile" type="tel" placeholder="+91 XXXXX XXXXX"
+                               style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;"
+                               onfocus="this.style.borderColor='var(--border-focus)'"
+                               onblur="this.style.borderColor='var(--border)'">
                     </div>
                     <div>
-                        <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">SubDomain *</label>
-                        <input id="subDomain" type="text" placeholder="e.g. satish." style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                        <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">SubDomain
+                            *</label>
+                        <input id="subDomain" type="text" placeholder="e.g. satish."
+                               style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;"
+                               onfocus="this.style.borderColor='var(--border-focus)'"
+                               onblur="this.style.borderColor='var(--border)'">
                     </div>
                     <div>
                         <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">Plan</label>
-                        <select id="plan" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;">
+                        <select id="plan"
+                                style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text-primary);outline:none;">
                             <option>STARTER</option>
                             <option>Business</option>
                             <option>Enterprise</option>
@@ -972,7 +1093,8 @@
                 </label>
 
                 <p style="margin:8px 0 0 28px;font-size:12px;color:var(--text-muted);line-height:1.5;">
-                    If enabled, the vendor can update the rejected application and submit it again after addressing your remarks.
+                    If enabled, the vendor can update the rejected application and submit it again after addressing your
+                    remarks.
                 </p>
 
             </div>
@@ -998,11 +1120,13 @@
     <div class="search-modal">
         <div class="search-input">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="globalSearch" placeholder="Search vendors, customers, orders, subscriptions..." oninput="globalSearchFn(this.value)">
+            <input type="text" id="globalSearch" placeholder="Search vendors, customers, orders, subscriptions..."
+                   oninput="globalSearchFn(this.value)">
         </div>
         <div class="search-results" id="searchResults">
             <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">
-                <i class="fa-solid fa-magnifying-glass" style="font-size:28px;margin-bottom:10px;display:block;opacity:0.3"></i>
+                <i class="fa-solid fa-magnifying-glass"
+                   style="font-size:28px;margin-bottom:10px;display:block;opacity:0.3"></i>
                 Start typing to search...
             </div>
         </div>

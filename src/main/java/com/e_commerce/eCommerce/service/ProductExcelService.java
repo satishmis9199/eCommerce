@@ -37,20 +37,20 @@ public class ProductExcelService {
     private final CategoryRepository categoryRepository;
 
     // ---- Layout constants ----
-    private static final int COMPANY_ROW      = 0;
-    private static final int TITLE_ROW        = 1;
-    private static final int INSTRUCTION_ROW  = 2;
-    private static final int HEADER_ROW       = 3;
-    private static final int DATA_START_ROW   = 4;
+    private static final int COMPANY_ROW = 0;
+    private static final int TITLE_ROW = 1;
+    private static final int INSTRUCTION_ROW = 2;
+    private static final int HEADER_ROW = 3;
+    private static final int DATA_START_ROW = 4;
     private static final int SAMPLE_ROW_COUNT = 3;
     private static final int COLUMN_COUNT = 10;
 
-    private static final int SAMPLE_MARKER_COL   = COLUMN_COUNT; // column index 10 (11th column)
-    private static final String SAMPLE_MARKER    = "SAMPLE_ROW_DO_NOT_EDIT";
+    private static final int SAMPLE_MARKER_COL = COLUMN_COUNT; // column index 10 (11th column)
+    private static final String SAMPLE_MARKER = "SAMPLE_ROW_DO_NOT_EDIT";
 
     private static final String[] HEADERS = {
             "Category ID", "Product Name", "Description",
-            "Selling Price", "MRP", "Stock Quantity", "Unit", "Image URL","Status","Featured"
+            "Selling Price", "MRP", "Stock Quantity", "Unit", "Image URL", "Status", "Featured"
     };
 
     private static final String[] VALID_UNITS = {
@@ -61,6 +61,7 @@ public class ProductExcelService {
 
     private final DataFormatter formatter = new DataFormatter();
     private final VendorRepository vendorRepository;
+
     public byte[] generateTemplate(User user) throws Exception {
 
         Vendor vendor = vendorRepository.findByTenantIdAndId(
@@ -135,9 +136,9 @@ public class ProductExcelService {
         }
 
         Object[][] samples = {
-                {1L, "UltraTech Cement", "Premium OPC 53-grade cement, 50kg bag", 420, 450, 250, "BAG", "https://example.com/cement.jpg","ACTIVE",true},
-                {2L, "Ambuja Cement", "PPC blended cement for general construction", 395, 410, 180, "BAG", "https://example.com/ambuja.jpg","ACTIVE",true},
-                {3L, "Tata Steel TMT Bar", "Fe 500D grade, 12mm corrosion resistant", 62, 68, 500, "PIECE", "https://example.com/tmt.jpg","ACTIVE",true}
+                {1L, "UltraTech Cement", "Premium OPC 53-grade cement, 50kg bag", 420, 450, 250, "BAG", "https://example.com/cement.jpg", "ACTIVE", true},
+                {2L, "Ambuja Cement", "PPC blended cement for general construction", 395, 410, 180, "BAG", "https://example.com/ambuja.jpg", "ACTIVE", true},
+                {3L, "Tata Steel TMT Bar", "Fe 500D grade, 12mm corrosion resistant", 62, 68, 500, "PIECE", "https://example.com/tmt.jpg", "ACTIVE", true}
         };
 
         for (int r = 0; r < SAMPLE_ROW_COUNT; r++) {
@@ -188,7 +189,7 @@ public class ProductExcelService {
 
         addDropdownValidation(
                 sheet,
-                new String[]{"TRUE","FALSE"},
+                new String[]{"TRUE", "FALSE"},
                 DATA_START_ROW,
                 blankRowsEnd - 1,
                 9
@@ -245,7 +246,7 @@ public class ProductExcelService {
     }
 
     private void buildInstructionsSheet(XSSFSheet sheet, Styles styles, Vendor vendor) {
-        String tenantId=TenantContext.getTenantId();
+        String tenantId = TenantContext.getTenantId();
         sheet.setColumnWidth(0, 22 * 256);
         sheet.setColumnWidth(1, 60 * 256);
 
@@ -258,11 +259,10 @@ public class ProductExcelService {
         h2.setCellStyle(styles.header);
         List<ProductCategory> categories = categoryRepository.findByTenantIdAndVendorIdAndStatus(
                 tenantId, vendor != null ? vendor.getId() : null, CategoryStatus.ACTIVE);
-        StringBuilder stringBuildder=new StringBuilder();
-        for(ProductCategory category : categories){
+        StringBuilder stringBuildder = new StringBuilder();
+        for (ProductCategory category : categories) {
             stringBuildder.append(" ").append(category.getId()).append(" - ").append(category.getCategoryName()).append(" ,");
         }
-
 
 
         String[][] rules = {
@@ -278,7 +278,7 @@ public class ProductExcelService {
                 {"Featured", "Required. Choose TRUE or FALSE from the dropdown."},
                 {"Sample rows", "The first 3 filled-in rows below the header are examples only. "
                         + "They are ignored automatically when you upload, even if you don't delete them."},
-                {"Availble Category","Please Use Category From This Availble Category IDs"+stringBuildder.toString()}
+                {"Availble Category", "Please Use Category From This Availble Category IDs" + stringBuildder.toString()}
         };
 
         for (int i = 0; i < rules.length; i++) {
@@ -452,6 +452,7 @@ public class ProductExcelService {
         }
         return true;
     }
+
     private boolean isSampleRow(Row row) {
         return SAMPLE_MARKER.equals(getCellValue(row, SAMPLE_MARKER_COL));
     }

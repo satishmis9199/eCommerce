@@ -4,9 +4,6 @@ import com.e_commerce.eCommerce.dto.ProductResponseDTO;
 import com.e_commerce.eCommerce.entity.Product;
 import com.e_commerce.eCommerce.entity.ProductStatus;
 import jakarta.transaction.Transactional;
-import org.apache.catalina.WebResource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,40 +18,39 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByTenantIdAndVendorId(String tenantId, Long vendorid);
 
     @Query("""
-SELECT new com.e_commerce.eCommerce.dto.ProductResponseDTO(
-
-p.id,
-p.categoryId,
-c.categoryName,
-p.productName,
-p.sellingPrice,
-p.mrp,
-p.stockQuantity,
-p.unit,
-p.productImage,
-p.status,
-p.description,
-p.createdAt,
-p.updatedAt
-
-)
-
-FROM Product p
-
-JOIN ProductCategory c
-ON p.categoryId = c.id
-
-WHERE p.tenantId = :tenantId
-AND p.vendorId = :vendorId
-
-ORDER BY p.createdAt DESC
-""")
+            SELECT new com.e_commerce.eCommerce.dto.ProductResponseDTO(
+            
+            p.id,
+            p.categoryId,
+            c.categoryName,
+            p.productName,
+            p.sellingPrice,
+            p.mrp,
+            p.stockQuantity,
+            p.unit,
+            p.productImage,
+            p.status,
+            p.description,
+            p.createdAt,
+            p.updatedAt
+            
+            )
+            
+            FROM Product p
+            
+            JOIN ProductCategory c
+            ON p.categoryId = c.id
+            
+            WHERE p.tenantId = :tenantId
+            AND p.vendorId = :vendorId
+            
+            ORDER BY p.createdAt DESC
+            """)
     List<ProductResponseDTO> loadAllProducts(
             @Param("tenantId") String tenantId,
             @Param("vendorId") Long vendorId);
 
     Product findByIdAndTenantIdAndVendorId(Long id, String tenantId, Long vendorid);
-
 
 
     int countByCategoryIdAndTenantId(Long id, String tenantId);
@@ -64,12 +60,12 @@ ORDER BY p.createdAt DESC
     @Modifying
     @Transactional
     @Query("""
-        UPDATE Product p
-        SET p.categoryId = :newCategoryId
-        WHERE p.categoryId = :oldCategoryId
-        AND p.tenantId = :tenantId
-        AND p.vendorId = :vendorId
-    """)
+                UPDATE Product p
+                SET p.categoryId = :newCategoryId
+                WHERE p.categoryId = :oldCategoryId
+                AND p.tenantId = :tenantId
+                AND p.vendorId = :vendorId
+            """)
     int moveProductsToCategory(
             @Param("newCategoryId") Long newCategoryId,
             @Param("oldCategoryId") Long oldCategoryId,
@@ -81,7 +77,6 @@ ORDER BY p.createdAt DESC
     Product findByIdAndTenantIdAndStatus(Long id, String tenantId, ProductStatus active);
 
 
-
     List<Product> findAllByTenantIdAndStatus(String tenant, ProductStatus productStatus);
 
     List<Product> findAllByTenantIdAndStatusAndFeatured(String tenant, ProductStatus productStatus, boolean b);
@@ -89,13 +84,14 @@ ORDER BY p.createdAt DESC
     List<Product> findAllByTenantIdAndStatusAndCategoryId(String tenantId, ProductStatus productStatus, Long categoryId);
 
     List<Product> findTop10ByTenantIdAndStatusOrderByCreatedAtDesc(String tenanId, ProductStatus productStatus);
+
     @Modifying
     @Query("""
-    UPDATE Product p
-    SET p.totalSold = COALESCE(p.totalSold, 0) + :quantity
-    WHERE p.id = :productId
-      AND p.tenantId = :tenantId
-""")
+                UPDATE Product p
+                SET p.totalSold = COALESCE(p.totalSold, 0) + :quantity
+                WHERE p.id = :productId
+                  AND p.tenantId = :tenantId
+            """)
     int incrementTotalSold(
             @Param("productId") Long productId,
             @Param("quantity") Long quantity,

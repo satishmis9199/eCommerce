@@ -1,11 +1,7 @@
 package com.e_commerce.eCommerce.dto;
 
 import com.e_commerce.eCommerce.entity.ReviewStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -45,6 +41,7 @@ public class ReviewResponseAdminDto {
      */
     private Integer helpfulCount;
     private Integer reportCount;
+
     public ReviewResponseAdminDto(
             Long id,
             Long productId,

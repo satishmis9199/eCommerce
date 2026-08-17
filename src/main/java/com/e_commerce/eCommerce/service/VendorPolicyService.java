@@ -59,11 +59,11 @@ public class VendorPolicyService {
 
         Optional<VendorPolicy> policy1 = vendorPolicyRepository
                 .findByTenantIdAndVendorIdAndPolicyType(tenantId, vendorId, policyType);
-        if(policy1.isEmpty()){
-           throw new RuntimeException(
+        if (policy1.isEmpty()) {
+            throw new RuntimeException(
                     "Policy of type " + policyType + " not found for this vendor");
         }
-        VendorPolicy policy=policy1.get();
+        VendorPolicy policy = policy1.get();
         return toResponseDto(policy);
     }
 

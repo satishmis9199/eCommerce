@@ -1,7 +1,5 @@
 package com.e_commerce.eCommerce.dto;
 
-import com.e_commerce.eCommerce.dto.SocialMediaDTO;
-import com.e_commerce.eCommerce.dto.StorePolicyDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,7 +8,7 @@ import lombok.Setter;
 public class StoreInfoResponseDTO {
 
     private Long vendorId;
-    private String  tenantId;
+    private String tenantId;
 
     private String businessName;
     private String storeName;

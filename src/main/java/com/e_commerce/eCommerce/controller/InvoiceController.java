@@ -4,15 +4,14 @@ import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.PdfInvoiceService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
@@ -28,8 +27,8 @@ public class InvoiceController {
 
     @GetMapping(value = "/{orderId}/pdf", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<String>> downloadInvoice(@PathVariable String orderId, @AuthenticationPrincipal CustomUserDetail customUserDetail) {
-       log.error("Inside Pdf Download");
-        try{
+        log.error("Inside Pdf Download");
+        try {
             String pdfBytes = pdfInvoiceService.generateInvoicePdf(orderId, customUserDetail.getUser());
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(

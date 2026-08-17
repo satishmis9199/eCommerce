@@ -26,5 +26,4 @@ public class VenddorOnBoardingApplicationStatus {
     private boolean resubmit;
 
 
-
 }

@@ -25,7 +25,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @GetMapping(value = "/vendor/s2/v1/reviews",produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/vendor/s2/v1/reviews", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<Page<ReviewResponseAdminDto>>> getReviewWithStatus(
             @AuthenticationPrincipal CustomUserDetail userDetail,
             @RequestParam(required = false) ReviewStatus status,
@@ -63,13 +63,14 @@ public class ReviewController {
                     );
         }
     }
-    @PatchMapping(value = "/vendor/s2/v1/reviews/{id}/status",consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<?>> updateReviewStatus(@PathVariable Long id, @RequestBody Map<String,ReviewStatus> action,@AuthenticationPrincipal CustomUserDetail userDetail){
+
+    @PatchMapping(value = "/vendor/s2/v1/reviews/{id}/status", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<?>> updateReviewStatus(@PathVariable Long id, @RequestBody Map<String, ReviewStatus> action, @AuthenticationPrincipal CustomUserDetail userDetail) {
         try {
 
 
             String reviews =
-                    reviewService.updateReviewStatus(action,userDetail,id);
+                    reviewService.updateReviewStatus(action, userDetail, id);
 
             return ResponseEntity.ok(
                     new ApiResponse<>(
@@ -91,12 +92,13 @@ public class ReviewController {
                     );
         }
     }
+
     @GetMapping("/api/u1/v1/store/reviews")
-    public ResponseEntity<ApiResponse<List<UserReviewResponseDTO>>> getVerifiedReviwed(){
+    public ResponseEntity<ApiResponse<List<UserReviewResponseDTO>>> getVerifiedReviwed() {
         try {
 
 
-           List<UserReviewResponseDTO> userReviewResponseDTOS=reviewService.findVerifiedReviewed();
+            List<UserReviewResponseDTO> userReviewResponseDTOS = reviewService.findVerifiedReviewed();
 
             return ResponseEntity.ok(
                     new ApiResponse<>(

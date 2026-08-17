@@ -32,7 +32,7 @@ public class ProductSalesAsyncService {
 
     @Async
     @Transactional
-    public void updateSoldCount(List<OrderItem> items,String tenant) {
+    public void updateSoldCount(List<OrderItem> items, String tenant) {
         try {
             if (items == null) {
                 return;
@@ -60,7 +60,7 @@ public class ProductSalesAsyncService {
                     int updatedRows =
                             productRepository.incrementTotalSold(
                                     productId,
-                                    quantity,tenant
+                                    quantity, tenant
                             );
                     if (updatedRows == 0) {
 
@@ -106,9 +106,10 @@ public class ProductSalesAsyncService {
             logger.error("END :: ProductSalesAsyncService.updateSoldCount()");
         }
     }
+
     @Async
     @Transactional
-    public void createPlacedTracking(Long orderId, String tenantId,Long vedorId) {
+    public void createPlacedTracking(Long orderId, String tenantId, Long vedorId) {
         try {
 
             if (orderId == null) {
@@ -119,7 +120,7 @@ public class ProductSalesAsyncService {
                 return;
             }
 
-            Order order = orderRepository.findByidAndTenantId(orderId,tenantId);
+            Order order = orderRepository.findByidAndTenantId(orderId, tenantId);
 
             if (order == null) {
                 return;

@@ -38,7 +38,7 @@ public class ProductCardResponseDTO {
 
     private String deliveryEta;
 
-//    added new
+    //    added new
     private String description;
     private String specifications;
     private Long vendorId;

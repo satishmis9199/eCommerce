@@ -18,18 +18,18 @@ import java.util.Map;
 
 /**
  * Generic email sending service.
- *
+ * <p>
  * Supports:
  * 1. Thymeleaf HTML templates
  * 2. Direct HTML email
  * 3. Direct plain-text email
  * 4. CC / BCC
  * 5. Async email sending
- *
+ * <p>
  * Templates should be placed under:
- *
+ * <p>
  * src/main/resources/templates/
- *
+ * <p>
  * Example:
  * password-reset.html
  * order-confirmation.html
@@ -45,9 +45,9 @@ public class EmailService {
 
     /**
      * Default sender email.
-     *
+     * <p>
      * Configure in application.properties:
-     *
+     * <p>
      * app.mail.from=your-email@gmail.com
      */
     @Value("${app.mail.from:no-reply@example.com}")

@@ -1,6 +1,5 @@
 package com.e_commerce.eCommerce.dto;
 
-import com.e_commerce.eCommerce.entity.VendorStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

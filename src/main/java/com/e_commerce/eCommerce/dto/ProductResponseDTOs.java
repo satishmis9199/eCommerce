@@ -47,9 +47,9 @@ public class ProductResponseDTOs {
     /**
      * JSON format:
      * [
-     *   ["Brand", "Kumar Traders"],
-     *   ["Grade", "A"],
-     *   ["Weight", "50 KG"]
+     * ["Brand", "Kumar Traders"],
+     * ["Grade", "A"],
+     * ["Weight", "50 KG"]
      * ]
      */
     private List<ProductSpecificationResponeDto> productSpecificationResponeDtos;

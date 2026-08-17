@@ -25,7 +25,6 @@ import java.time.LocalDateTime;
 public class Banner {
 
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

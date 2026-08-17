@@ -1,6 +1,5 @@
 package com.e_commerce.eCommerce.entity;
 
-import com.e_commerce.eCommerce.entity.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -55,7 +54,6 @@ public class OrderTracking {
     // Optional Location
     @Column(length = 150)
     private String location;
-
 
 
     // Who changed the status

@@ -18,7 +18,7 @@
 -->
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <title th:text="'Invoice - ' + ${invoice.invoiceNumber}">Invoice</title>
 
     <style>
@@ -512,20 +512,23 @@
                 <img th:if="${invoice.company.logoUrl != null and !invoice.company.logoUrl.isEmpty()}"
                      th:src="${invoice.company.logoUrl}"
                      class="company-logo"
-                     alt="Company Logo" />
+                     alt="Company Logo"/>
 
                 <div class="company-name" th:text="${invoice.company.companyName}">Company Name</div>
 
                 <div class="company-meta-line"
                      th:if="${invoice.company.gstin != null}"
-                     th:text="'GSTIN: ' + ${invoice.company.gstin}">GSTIN</div>
+                     th:text="'GSTIN: ' + ${invoice.company.gstin}">GSTIN
+                </div>
 
                 <div class="company-meta-line"
-                     th:text="${invoice.company.addressLine1}">Address Line 1</div>
+                     th:text="${invoice.company.addressLine1}">Address Line 1
+                </div>
 
                 <div class="company-meta-line"
                      th:if="${invoice.company.addressLine2 != null and !invoice.company.addressLine2.isEmpty()}"
-                     th:text="${invoice.company.addressLine2}">Address Line 2</div>
+                     th:text="${invoice.company.addressLine2}">Address Line 2
+                </div>
 
                 <div class="company-meta-line"
                      th:text="${invoice.company.city + ', ' + invoice.company.state + ' - ' + invoice.company.pincode}">
@@ -533,13 +536,15 @@
                 </div>
 
                 <div class="company-meta-line">
-                    <span th:if="${invoice.company.phone != null}" th:text="'Phone: ' + ${invoice.company.phone}">Phone</span>
+                    <span th:if="${invoice.company.phone != null}"
+                          th:text="'Phone: ' + ${invoice.company.phone}">Phone</span>
                     <span th:if="${invoice.company.email != null}" th:text="' | Email: ' + ${invoice.company.email}">Email</span>
                 </div>
 
                 <div class="company-meta-line"
                      th:if="${invoice.company.website != null and !invoice.company.website.isEmpty()}"
-                     th:text="${invoice.company.website}">Website</div>
+                     th:text="${invoice.company.website}">Website
+                </div>
             </td>
 
             <!-- Right: Invoice Meta -->
@@ -554,7 +559,8 @@
                     <tr class="invoice-meta-row">
                         <td class="invoice-meta-key text-right">Invoice Date</td>
                         <td class="invoice-meta-value"
-                            th:text="${#temporals.format(invoice.invoiceDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                            th:text="${#temporals.format(invoice.invoiceDate, 'dd MMM yyyy')}">01 Jan 2026
+                        </td>
                     </tr>
                     <tr class="invoice-meta-row">
                         <td class="invoice-meta-key text-right">Order No.</td>
@@ -594,12 +600,14 @@
                     <span class="label">Phone: </span><span th:text="${invoice.customer.phone}">+91 00000 00000</span>
                 </div>
                 <div class="info-line" th:if="${invoice.customer.email != null}">
-                    <span class="label">Email: </span><span th:text="${invoice.customer.email}">customer@email.com</span>
+                    <span class="label">Email: </span><span
+                        th:text="${invoice.customer.email}">customer@email.com</span>
                 </div>
                 <div class="info-line" th:text="${invoice.billingAddress.line1}">Billing Address Line 1</div>
                 <div class="info-line"
                      th:if="${invoice.billingAddress.line2 != null and !invoice.billingAddress.line2.isEmpty()}"
-                     th:text="${invoice.billingAddress.line2}">Billing Address Line 2</div>
+                     th:text="${invoice.billingAddress.line2}">Billing Address Line 2
+                </div>
                 <div class="info-line"
                      th:text="${invoice.billingAddress.city + ', ' + invoice.billingAddress.state + ' - ' + invoice.billingAddress.pincode}">
                     City, State - Pincode
@@ -613,13 +621,16 @@
                 <div class="info-line" th:text="${invoice.shippingAddress.line1}">Shipping Address Line 1</div>
                 <div class="info-line"
                      th:if="${invoice.shippingAddress.line2 != null and !invoice.shippingAddress.line2.isEmpty()}"
-                     th:text="${invoice.shippingAddress.line2}">Shipping Address Line 2</div>
+                     th:text="${invoice.shippingAddress.line2}">Shipping Address Line 2
+                </div>
                 <div class="info-line"
                      th:text="${invoice.shippingAddress.city + ', ' + invoice.shippingAddress.state + ' - ' + invoice.shippingAddress.pincode}">
                     City, State - Pincode
                 </div>
-                <div class="info-line" th:if="${invoice.shippingAddress.landmark != null and !invoice.shippingAddress.landmark.isEmpty()}">
-                    <span class="label">Landmark: </span><span th:text="${invoice.shippingAddress.landmark}">Landmark</span>
+                <div class="info-line"
+                     th:if="${invoice.shippingAddress.landmark != null and !invoice.shippingAddress.landmark.isEmpty()}">
+                    <span class="label">Landmark: </span><span
+                        th:text="${invoice.shippingAddress.landmark}">Landmark</span>
                 </div>
             </td>
 
@@ -680,7 +691,7 @@
                     <img th:if="${item.imageUrl != null and !item.imageUrl.isEmpty()}"
                          th:src="${item.imageUrl}"
                          class="product-thumb"
-                         alt="Product" />
+                         alt="Product"/>
                 </td>
 
                 <td>
@@ -742,47 +753,66 @@
                     <tr>
                         <td class="summary-label">Subtotal</td>
                         <td class="summary-value"
-                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.subtotal, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.subtotal, 1, 'COMMA', 2, 'POINT')}">
+                            0.00
+                        </td>
                     </tr>
                     <tr th:if="${invoice.summary.totalDiscount != null and invoice.summary.totalDiscount > 0}">
                         <td class="summary-label">Discount</td>
                         <td class="summary-value"
-                            th:text="'- ' + ${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.totalDiscount, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            th:text="'- ' + ${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.totalDiscount, 1, 'COMMA', 2, 'POINT')}">
+                            0.00
+                        </td>
                     </tr>
                     <tr th:if="${invoice.summary.shippingCharge != null}">
                         <td class="summary-label">Shipping Charge</td>
                         <td class="summary-value"
-                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.shippingCharge, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.shippingCharge, 1, 'COMMA', 2, 'POINT')}">
+                            0.00
+                        </td>
                     </tr>
                     <tr th:if="${invoice.summary.platformCharge != null}">
                         <td class="summary-label">Platform Charge</td>
                         <td class="summary-value"
-                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.platformCharge, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.platformCharge, 1, 'COMMA', 2, 'POINT')}">
+                            0.00
+                        </td>
                     </tr>
                     <tr th:if="${invoice.summary.totalTax != null}">
                         <td class="summary-label">Tax (GST)</td>
                         <td class="summary-value"
-                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.totalTax, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.totalTax, 1, 'COMMA', 2, 'POINT')}">
+                            0.00
+                        </td>
                     </tr>
 
-                    <tr class="summary-divider"><td colspan="2"></td></tr>
+                    <tr class="summary-divider">
+                        <td colspan="2"></td>
+                    </tr>
 
                     <tr class="grand-total-row">
                         <td>Grand Total</td>
                         <td class="text-right"
-                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.grandTotal, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.grandTotal, 1, 'COMMA', 2, 'POINT')}">
+                            0.00
+                        </td>
                     </tr>
 
                     <tr class="amount-paid-row">
                         <td class="summary-label">Amount Paid</td>
                         <td class="summary-value"
-                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.amountPaid, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.amountPaid, 1, 'COMMA', 2, 'POINT')}">
+                            0.00
+                        </td>
                     </tr>
 
-                    <tr class="amount-due-row" th:if="${invoice.summary.amountDue != null and invoice.summary.amountDue > 0}">
+                    <tr class="amount-due-row"
+                        th:if="${invoice.summary.amountDue != null and invoice.summary.amountDue > 0}">
                         <td>Amount Due</td>
                         <td class="text-right"
-                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.amountDue, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+                            th:text="${invoice.currencySymbol} + ${#numbers.formatDecimal(invoice.summary.amountDue, 1, 'COMMA', 2, 'POINT')}">
+                            0.00
+                        </td>
                     </tr>
                 </table>
             </td>
@@ -805,7 +835,8 @@
             <td>
                 <div class="payment-info-label">Reference Number</div>
                 <div class="payment-info-value"
-                     th:text="${invoice.referenceNumber != null ? invoice.referenceNumber : '-'}">REF000000</div>
+                     th:text="${invoice.referenceNumber != null ? invoice.referenceNumber : '-'}">REF000000
+                </div>
             </td>
         </tr>
     </table>
@@ -855,7 +886,8 @@
                  th:text="'Generated on ' + ${#temporals.format(invoice.generatedAt, 'dd MMM yyyy, hh:mm a')}">
                 Generated on 01 Jan 2026, 10:00 AM
             </div>
-            <div class="system-footer" th:text="${invoice.company.companyName} + ' — This is a system-generated invoice.'">
+            <div class="system-footer"
+                 th:text="${invoice.company.companyName} + ' — This is a system-generated invoice.'">
                 Company Name — This is a system-generated invoice.
             </div>
         </div>

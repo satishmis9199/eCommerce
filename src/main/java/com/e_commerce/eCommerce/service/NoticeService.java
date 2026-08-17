@@ -13,8 +13,6 @@ import com.e_commerce.eCommerce.repository.NoticeRepository;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Profile;
-import org.springframework.data.annotation.AccessType;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -31,12 +29,12 @@ public class NoticeService {
     private final VendorRepository vendorRepository;
 
     public String addNotices(NoticeRequestDto noticeRequestDto, CustomUserDetail userDetail) {
-        String tenantId= TenantContext.getTenantId();
-       Long vendorid= globalService.validateVendors(tenantId,userDetail.getId());
-        if(userDetail.getRole()!= Roles.ADMIN){
+        String tenantId = TenantContext.getTenantId();
+        Long vendorid = globalService.validateVendors(tenantId, userDetail.getId());
+        if (userDetail.getRole() != Roles.ADMIN) {
             throw new RuntimeException("Unauthorized Access");
         }
-        Notice notice=Notice.builder()
+        Notice notice = Notice.builder()
                 .tenantId(tenantId)
                 .vendorId(vendorid)
                 .noticeText(noticeRequestDto.getNoticeText())
@@ -51,17 +49,17 @@ public class NoticeService {
 
                 .build();
         noticeRepository.save(notice);
-        return noticeRequestDto.getTitle()+"  Added Successfuly";
+        return noticeRequestDto.getTitle() + "  Added Successfuly";
     }
 
     public List<NoticeListDto> findAllNotices(CustomUserDetail userDetail) {
 
         String tenantId = TenantContext.getTenantId();
 
-        Long v1id=globalService.validateVendors(tenantId, userDetail.getId());
+        Long v1id = globalService.validateVendors(tenantId, userDetail.getId());
 
         List<Notice> notices = noticeRepository.findByTenantId(tenantId);
-       List<NoticeListDto> noticeListDto=new ArrayList<>();
+        List<NoticeListDto> noticeListDto = new ArrayList<>();
 
         return notices.stream()
                 .map(notice -> new NoticeListDto(
@@ -109,10 +107,10 @@ public class NoticeService {
 
         Optional<Notice> notice1 = noticeRepository
                 .findByIdAndTenantId(noticeId, tenantId);
-        if(notice1==null){
-            throw  new RuntimeException("Notice not found");
+        if (notice1 == null) {
+            throw new RuntimeException("Notice not found");
         }
-        Notice notice=notice1.get();
+        Notice notice = notice1.get();
 
         notice.setTitle(dto.getTitle());
         notice.setNoticeText(dto.getNoticeText());
@@ -128,6 +126,7 @@ public class NoticeService {
 
         return "Notice updated successfully";
     }
+
     @Transactional
     public String deleteNotice(
             Long noticeId,
@@ -147,6 +146,7 @@ public class NoticeService {
 
         return "Notice deleted successfully";
     }
+
     @Transactional
     public String changeNoticeStatus(
             Long noticeId,

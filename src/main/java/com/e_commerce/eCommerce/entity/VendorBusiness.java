@@ -69,7 +69,7 @@ public class VendorBusiness {
     public void prePersist() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        businessType=BusinessType.PRIVATE_LIMITED;
+        businessType = BusinessType.PRIVATE_LIMITED;
     }
 
     @PreUpdate

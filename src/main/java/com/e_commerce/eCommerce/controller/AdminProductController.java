@@ -1,11 +1,9 @@
 package com.e_commerce.eCommerce.controller;
 
 import com.e_commerce.eCommerce.dto.*;
-import com.e_commerce.eCommerce.dto.ProductRequestDTO;
 import com.e_commerce.eCommerce.service.AdminProductService;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.ProductService;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +36,7 @@ public class AdminProductController {
                 "message", message
         ));
     }
+
     @GetMapping("/s11/v1/product")
     public ResponseEntity<?> loadProductsForAdmin(
             @AuthenticationPrincipal CustomUserDetail userDetail) {
@@ -53,20 +51,20 @@ public class AdminProductController {
                 "products", products
         ));
     }
+
     @PutMapping("/s11/v1/product/{editingProductId}")
     public ResponseEntity<?> editProduct(
             @PathVariable Long editingProductId,
             @RequestBody ProductRequestDTO dto,
             @AuthenticationPrincipal CustomUserDetail userDetail) {
 
-        String message = productService.updateProduct(editingProductId,dto, userDetail);
+        String message = productService.updateProduct(editingProductId, dto, userDetail);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", message
         ));
     }
-
 
 
     @PostMapping("/s11/v11/create-Category")
@@ -104,6 +102,7 @@ public class AdminProductController {
                         : "Categories fetched successfully."
         ));
     }
+
     @PutMapping("/s11/v11/create-Category/{categoryId}")
     public ResponseEntity<?> updateCategory(
             @PathVariable Long categoryId,
@@ -122,18 +121,19 @@ public class AdminProductController {
                     "message", e.getMessage()));
         }
     }
-     @PatchMapping("/s11/v11/create-Category/status")
-    public ResponseEntity<?> updateStatus(@RequestBody UpdateCategoryDTO updateCategoryDTO, @AuthenticationPrincipal CustomUserDetail userDetail){
-        try{
-            adminProductService.updateCategoryStatus(updateCategoryDTO,userDetail);
+
+    @PatchMapping("/s11/v11/create-Category/status")
+    public ResponseEntity<?> updateStatus(@RequestBody UpdateCategoryDTO updateCategoryDTO, @AuthenticationPrincipal CustomUserDetail userDetail) {
+        try {
+            adminProductService.updateCategoryStatus(updateCategoryDTO, userDetail);
             return ResponseEntity.ok(Map.of(
-                    "success",true,
-                    "message","Status Upated Successfully"
+                    "success", true,
+                    "message", "Status Upated Successfully"
             ));
-        }catch(Exception e){
-            return  ResponseEntity.badRequest().body(Map.of(
-                    "success",false,
-                    "message",e.getMessage()
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
             ));
         }
 
@@ -141,57 +141,60 @@ public class AdminProductController {
 
 
     @DeleteMapping("/s11/v11/create-Category/{categoryId}")
-    public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId, @AuthenticationPrincipal CustomUserDetail userDetail){
-        try{
-          String message=  adminProductService.deleteCategory(categoryId,userDetail);
+    public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId, @AuthenticationPrincipal CustomUserDetail userDetail) {
+        try {
+            String message = adminProductService.deleteCategory(categoryId, userDetail);
             return ResponseEntity.ok(Map.of(
-                    "success",true,
-                    "message",message
+                    "success", true,
+                    "message", message
             ));
-        }catch(Exception e){
-            return  ResponseEntity.badRequest().body(Map.of(
-                    "success",false,
-                    "message",e.getMessage()
-            ));
-        }
-
-    }
-    @DeleteMapping("/s11/v1/product/{id}")
-    public ResponseEntity<?> deleteProduct(@AuthenticationPrincipal CustomUserDetail userDetail,@PathVariable Long id){
-        try{
-            String message=productService.deleteProduct(userDetail,id);
-           return ResponseEntity.ok(Map.of(
-                   "success",true,
-                   "message",message
-
-           ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "success",false,
-                    "message",e.getMessage()
+                    "success", false,
+                    "message", e.getMessage()
             ));
         }
-    }
-    @PutMapping("/s11/v1/category/move-and-delete")
-    public ResponseEntity<?> moveAndDelete(@AuthenticationPrincipal CustomUserDetail userDetail,@RequestBody MoveAndDeleteDto moveAndDeleteDto){
-        try{
-         String message=   adminProductService.moveAndDeleteCategory(userDetail,moveAndDeleteDto);
-         return ResponseEntity.ok(Map.of(
-                 "success",true,
-                 "message",message
-         ));
 
-        }catch (Exception e) {
+    }
+
+    @DeleteMapping("/s11/v1/product/{id}")
+    public ResponseEntity<?> deleteProduct(@AuthenticationPrincipal CustomUserDetail userDetail, @PathVariable Long id) {
+        try {
+            String message = productService.deleteProduct(userDetail, id);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", message
+
+            ));
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "success",false,
-                    "message",e.getMessage()
+                    "success", false,
+                    "message", e.getMessage()
             ));
         }
     }
+
+    @PutMapping("/s11/v1/category/move-and-delete")
+    public ResponseEntity<?> moveAndDelete(@AuthenticationPrincipal CustomUserDetail userDetail, @RequestBody MoveAndDeleteDto moveAndDeleteDto) {
+        try {
+            String message = adminProductService.moveAndDeleteCategory(userDetail, moveAndDeleteDto);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", message
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
     @GetMapping("/s11/v1/products/{id}")
-    public ResponseEntity<?> getProductById(@PathVariable Long id){
-        try{
-            ProductResponseDTO productResponseDTOS=productService.getProductById(id);
+    public ResponseEntity<?> getProductById(@PathVariable Long id) {
+        try {
+            ProductResponseDTO productResponseDTOS = productService.getProductById(id);
             return ResponseEntity.ok(
                     new ApiResponse<>(
                             true,
@@ -200,7 +203,7 @@ public class AdminProductController {
                     )
             );
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(
                     new ApiResponse<>(
@@ -212,15 +215,13 @@ public class AdminProductController {
         }
 
 
-
-
     }
 
-    @GetMapping(value="/s2/v1/allorders", produces=MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getAdminOrders(@AuthenticationPrincipal CustomUserDetail customUserDetail){
-        try{
+    @GetMapping(value = "/s2/v1/allorders", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getAdminOrders(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
+        try {
             logger.error("inside getAdminOrders");
-            List<OrderResponseDto> orderDetail=productService.getOrerdetail(customUserDetail);
+            List<OrderResponseDto> orderDetail = productService.getOrerdetail(customUserDetail);
             return ResponseEntity.ok(
                     new ApiResponse<>(
                             true,
@@ -230,7 +231,7 @@ public class AdminProductController {
                     )
             );
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(
                     new ApiResponse<>(
@@ -243,10 +244,10 @@ public class AdminProductController {
     }
 
 
-    @PostMapping(value="/s11/v1/flash-sale",produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<?>> createFlashSale(@AuthenticationPrincipal CustomUserDetail userDetail,@RequestBody FlashSaleRequestDto flashSaleRequestDto){
-        try{
-             productService.createFlashSale(userDetail,flashSaleRequestDto);
+    @PostMapping(value = "/s11/v1/flash-sale", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<?>> createFlashSale(@AuthenticationPrincipal CustomUserDetail userDetail, @RequestBody FlashSaleRequestDto flashSaleRequestDto) {
+        try {
+            productService.createFlashSale(userDetail, flashSaleRequestDto);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
                             new ApiResponse<>(
@@ -266,10 +267,11 @@ public class AdminProductController {
                     );
         }
     }
+
     @GetMapping(value = "/s11/v1/flash-sale")
-    public ResponseEntity<ApiResponse<List<FlashSaleResponseDto>>> getFlashSaleData(@AuthenticationPrincipal CustomUserDetail userDetail){
-        try{
-            List<FlashSaleResponseDto> flashSaleRequestDto1=productService.getAllFlashSales(userDetail);
+    public ResponseEntity<ApiResponse<List<FlashSaleResponseDto>>> getFlashSaleData(@AuthenticationPrincipal CustomUserDetail userDetail) {
+        try {
+            List<FlashSaleResponseDto> flashSaleRequestDto1 = productService.getAllFlashSales(userDetail);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
                             new ApiResponse<>(
@@ -289,13 +291,14 @@ public class AdminProductController {
                     );
         }
     }
-    @PutMapping(value = "/s11/v1/flash-sale/{flashSaleId}",produces = MediaType.APPLICATION_JSON_VALUE)
+
+    @PutMapping(value = "/s11/v1/flash-sale/{flashSaleId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<?>> getFlashSaleById(
             @AuthenticationPrincipal CustomUserDetail userDetail,
-            @PathVariable Long flashSaleId,@RequestBody FlashSaleRequestDto flashSaleRequestDto) {
-        try{
+            @PathVariable Long flashSaleId, @RequestBody FlashSaleRequestDto flashSaleRequestDto) {
+        try {
             String response =
-                    productService.updateFlashSale(userDetail, flashSaleId,flashSaleRequestDto);
+                    productService.updateFlashSale(userDetail, flashSaleId, flashSaleRequestDto);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
                             new ApiResponse<>(
@@ -314,14 +317,13 @@ public class AdminProductController {
         }
 
 
-
-
     }
-    @DeleteMapping(value = "/s11/v1/flash-sale/{flashSaleId}",produces = MediaType.APPLICATION_JSON_VALUE)
+
+    @DeleteMapping(value = "/s11/v1/flash-sale/{flashSaleId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<?>> getFlashSaleById(
             @AuthenticationPrincipal CustomUserDetail userDetail,
             @PathVariable Long flashSaleId) {
-        try{
+        try {
             String response =
                     productService.deleteFlashSale(userDetail, flashSaleId);
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -340,8 +342,6 @@ public class AdminProductController {
                             )
                     );
         }
-
-
 
 
     }

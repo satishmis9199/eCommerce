@@ -2,7 +2,6 @@ package com.e_commerce.eCommerce.service;
 
 import com.e_commerce.eCommerce.entity.Roles;
 import com.e_commerce.eCommerce.entity.User;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,7 +24,8 @@ public class CustomUserDetail implements UserDetails {
         this.email = user.getEmail();
         this.role = user.getRole();
     }
-//jwt
+
+    //jwt
     public CustomUserDetail(Long id, String email, String role) {
         this.id = id;
         this.email = email;

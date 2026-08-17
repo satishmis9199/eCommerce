@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AddressRepository extends JpaRepository<Address,Long> {
+public interface AddressRepository extends JpaRepository<Address, Long> {
     List<Address> findByUserIdAndTenantIdAndIsDefaultAndRowState(Long id, String tenantId, boolean b, int i);
 
     long countByUserIdAndTenantIdAndRowState(Long id, String tenantId, int i);

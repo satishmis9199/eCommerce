@@ -5,7 +5,6 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.controller.CartController;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.entity.*;
-import com.e_commerce.eCommerce.event.OrderDeliveredEvent;
 import com.e_commerce.eCommerce.event.OrderTrackingEvent;
 import com.e_commerce.eCommerce.repository.*;
 import com.razorpay.Payment;
@@ -14,11 +13,9 @@ import com.razorpay.RazorpayException;
 import com.razorpay.Utils;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -50,10 +47,10 @@ public class CartsService {
     private final CartTransactionalService cartTransactionalService;
 
 
+    private final String keySecret = "yg04Jq5QC2yDIvBMWCslo1VC";
 
-    private final String keySecret="yg04Jq5QC2yDIvBMWCslo1VC";
+    private final String keyId = "rzp_test_TFRosJx8RugKLp";
 
-    private final String keyId="rzp_test_TFRosJx8RugKLp";
     @Transactional
     public String addToCart(
             CustomUserDetail userDetail,
@@ -345,10 +342,11 @@ public class CartsService {
                         .build())
                 .toList();
     }
+
     @Transactional
     public CheckoutResponseDTO placeOrder(CustomUserDetail userDetail,
                                           CheckoutRequestDTO dto) {
-        List<OrderItem> orderItems=new ArrayList<>();
+        List<OrderItem> orderItems = new ArrayList<>();
         if (userDetail == null) {
             throw new RuntimeException("Please login first.");
         }
@@ -385,8 +383,8 @@ public class CartsService {
         if (cartItems.isEmpty()) {
             throw new RuntimeException("Cart is empty");
         }
-        int canceled=cancelPendingOrder(user,tenantId);
-        logger.error("--Previous Order with Pending has been cancelled and New Ordder hs been Created ---- with Count --- "+canceled);
+        int canceled = cancelPendingOrder(user, tenantId);
+        logger.error("--Previous Order with Pending has been cancelled and New Ordder hs been Created ---- with Count --- " + canceled);
         Order order = new Order();
 
         order.setTenantId(tenantId);
@@ -493,7 +491,7 @@ public class CartsService {
 
             orderItemRepository.save(item);
         }
-        productSalesAsyncService.updateSoldCount(orderItems,tenantId);
+        productSalesAsyncService.updateSoldCount(orderItems, tenantId);
         String businessName = Optional.ofNullable(vendor.getBussinessName())
                 .orElse("SHOP")
                 .replaceAll("[^A-Za-z]", "")
@@ -615,7 +613,7 @@ public class CartsService {
 
         cartRepository.delete(cart);
         eventPublisher.publishEvent(
-                new OrderTrackingEvent(order.getId(),tenantId,vendor.getId())
+                new OrderTrackingEvent(order.getId(), tenantId, vendor.getId())
         );
 
         return CheckoutResponseDTO.builder()
@@ -628,11 +626,11 @@ public class CartsService {
     }
 
     private int cancelPendingOrder(User user, String tenantId) {
-        List<Order> order=orderRepository.findByTenantIdAndUserIdAndOrderStatus(tenantId,user.getId(),OrderStatus.PAYMENT_PENDING);
-        List<Order> orderList=new ArrayList<>();
-        int count=0;
-        if(order.size()>0){
-            for(Order orders:order){
+        List<Order> order = orderRepository.findByTenantIdAndUserIdAndOrderStatus(tenantId, user.getId(), OrderStatus.PAYMENT_PENDING);
+        List<Order> orderList = new ArrayList<>();
+        int count = 0;
+        if (order.size() > 0) {
+            for (Order orders : order) {
                 orders.setOrderStatus(OrderStatus.CANCELLED);
                 orders.setPaymentStatus(PaymentStatus.FAILED);
                 orders.setUpdatedAt(LocalDateTime.now());
@@ -642,13 +640,13 @@ public class CartsService {
             }
         }
         orderRepository.saveAll(orderList);
-return count;
+        return count;
     }
 
 
     @Transactional
     public void verifyOrderPayment(VerifyPaymentRequestDto dto) {
-        String status="";
+        String status = "";
 
         String tenantId = TenantContext.getTenantId();
 
@@ -678,22 +676,22 @@ return count;
             throw new RuntimeException("Invalid payment signature");
         }
         try {
-            RazorpayClient razorpayClient = new RazorpayClient( keyId,keySecret);
+            RazorpayClient razorpayClient = new RazorpayClient(keyId, keySecret);
             Payment payment =
                     razorpayClient.payments.fetch(
                             dto.getRazorpayPaymentId()
                     );
 
-             status = payment.get("status");
+            status = payment.get("status");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        if(status.equalsIgnoreCase("captured")){
+        if (status.equalsIgnoreCase("captured")) {
             order.setPaymentReferenceId(dto.getRazorpayPaymentId());
             order.setPaymentStatus(PaymentStatus.PAID);
             order.setOrderStatus(OrderStatus.PLACED);
 
-        }else if(status.equalsIgnoreCase("refunded")){
+        } else if (status.equalsIgnoreCase("refunded")) {
 
             order.setPaymentStatus(PaymentStatus.REFUNDED);
 
@@ -702,18 +700,16 @@ return count;
             throw new RuntimeException(
                     "Refund initiated. Amount will be credited within 2-3 business days."
             );
-        }else if(status.equalsIgnoreCase("failed")){
+        } else if (status.equalsIgnoreCase("failed")) {
             order.setPaymentReferenceId(dto.getRazorpayPaymentId());
             order.setPaymentStatus(PaymentStatus.FAILED);
             order.setOrderStatus(OrderStatus.CANCELLED);
             orderRepository.save(order);
             throw new RuntimeException("Payment  failed");
 
-        }
-        else{
+        } else {
             throw new RuntimeException("Payment not completed.");
         }
-
 
 
         orderRepository.save(order);

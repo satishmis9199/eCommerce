@@ -14,7 +14,7 @@ import software.amazon.awssdk.annotations.NotNull;
 public class UpdateCategoryDTO {
 
 
-   private Long id;
+    private Long id;
 
     @NotNull
     private CategoryStatus status;

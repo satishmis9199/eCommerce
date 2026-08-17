@@ -24,7 +24,7 @@ public class UserAuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService service;
 
-    public String registerUser(RegisterRequestDTO registerRequestDTO,String url) {
+    public String registerUser(RegisterRequestDTO registerRequestDTO, String url) {
 
         String tenantId = TenantContext.getTenantId();
 
@@ -87,7 +87,7 @@ public class UserAuthService {
                 .templateName("welcome")
                 .templateVariables(Map.of(
                         "name", user.getFirstName(),
-                        "loginLink", "https://"+url,
+                        "loginLink", "https://" + url,
                         "supportEmail", "support@yourapp.com"
                 ))
                 .build();

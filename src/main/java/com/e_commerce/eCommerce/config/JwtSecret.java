@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+
 @AllArgsConstructor
 @Service
 @Slf4j
@@ -24,8 +25,9 @@ public class JwtSecret {
                     SECRET.getBytes(StandardCharsets.UTF_8)
             );
     private final VendorRepository vendorRepository;
-    @Cacheable(value="jwtSecret",key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
-    public  SecretKey getTenantKey() {
+
+    @Cacheable(value = "jwtSecret", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
+    public SecretKey getTenantKey() {
 
         String tenantId = TenantContext.getTenantId();
 
