@@ -24,12 +24,9 @@ public class OnboardingController {
             LoggerFactory.getLogger(OnboardingController.class);
     private final OnboardingService onboardingService;
     private final VendorOnnBRepo vendorOnnBRepo;
-
-
     @GetMapping("/s1/v1/getOnBoardDetail")
     public VendorOnboardingResponseDTO getOnBoardDetail(
             @AuthenticationPrincipal CustomUserDetail user) {
-
         return onboardingService.getOnboarding(user.getUser().getVendorId());
     }
 

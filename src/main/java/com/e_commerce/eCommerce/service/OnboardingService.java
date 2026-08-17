@@ -35,17 +35,9 @@ public class OnboardingService {
     private final VendorBrandingRepository vendorBrandingRepository;
     private final VendorAddresss vendorAddressRepo;
 
-//    private final VendorOnnBRepo vendorOnnBRepos;
-
-
     public VendorOnboardingResponseDTO getOnboarding(Long vendorId) {
-
-        log.info("Fetching onboarding details for vendor : {}", vendorId);
-
         VendorOnboardingResponseDTO response = new VendorOnboardingResponseDTO();
-
         if (vendorId == null) {
-            log.warn("vendorId is null, cannot fetch onboarding data.");
             response.setSuccess(false);
             return response;
         }
@@ -54,8 +46,6 @@ public class OnboardingService {
                 vendorOnnBRepo.findByVendorId(vendorId);
 
         if (optionalApplication.isEmpty()) {
-
-            log.warn("Onboarding application not found for vendor : {}", vendorId);
             response.setSuccess(false);
             response.setData(buildEmptyData());
             return response;
@@ -126,10 +116,6 @@ public class OnboardingService {
 
         return dto;
     }
-
-    //===========================================================
-    // Business Details
-    //===========================================================
 
     private BusinessDetailsDTO getBusinessDetails(Long vendorId) {
 

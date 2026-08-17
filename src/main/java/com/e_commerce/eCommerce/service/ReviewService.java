@@ -32,12 +32,6 @@ public class ReviewService {
             ReviewStatus status,
             Pageable pageable) {
 
-        log.info("========================================================");
-        log.info("START :: ReviewService.getAllReviewForAdmin()");
-        log.info("Requested Status : {}", status);
-        log.info("Requested Page   : {}", pageable.getPageNumber());
-        log.info("Requested Size   : {}", pageable.getPageSize());
-
         String tenantId = TenantContext.getTenantId();
         log.info("Tenant Id : {}", tenantId);
 
@@ -51,14 +45,10 @@ public class ReviewService {
             throw new RuntimeException("Tenant Does Not Exist");
         }
 
-        log.info("Vendor Id : {}", vendor.get().getId());
 
         if (userDetail == null) {
             throw new RuntimeException("Please Login First");
         }
-
-        log.info("Logged In User Id : {}", userDetail.getId());
-        log.info("Logged In Role    : {}", userDetail.getRole());
 
         if (userDetail.getRole() != Roles.ADMIN) {
             throw new RuntimeException("Unauthorized");
@@ -72,17 +62,12 @@ public class ReviewService {
                         pageable
                 );
 
-        log.info("Total Elements : {}", page.getTotalElements());
-        log.info("Total Pages    : {}", page.getTotalPages());
-        log.info("Returned Count : {}", page.getContent().size());
+
 
         if (!page.getContent().isEmpty()) {
             log.info("First Object Class : {}", page.getContent().get(0).getClass().getName());
-            log.info("First Object       : {}", page.getContent().get(0));
-        }
 
-        log.info("END :: ReviewService.getAllReviewForAdmin()");
-        log.info("========================================================");
+        }
 
         return page;
     }
@@ -92,11 +77,9 @@ public class ReviewService {
             CustomUserDetail userDetail,
             Long id) {
 
-        log.info("========================================================");
-        log.info("START :: ReviewService.updateReviewStatus()");
 
         String tenantId = TenantContext.getTenantId();
-        log.info("Tenant Id : {}", tenantId);
+
 
         if (tenantId == null) {
             throw new RuntimeException("No tenant");
@@ -108,14 +91,10 @@ public class ReviewService {
             throw new RuntimeException("Tenant Does Not Exist");
         }
 
-        log.info("Vendor Id : {}", vendor.get().getId());
 
         if (userDetail == null) {
             throw new RuntimeException("Please Login First");
         }
-
-        log.info("User Id : {}", userDetail.getId());
-        log.info("Role    : {}", userDetail.getRole());
 
         if (userDetail.getRole() != Roles.ADMIN) {
             throw new RuntimeException("Unauthorized");
@@ -123,8 +102,6 @@ public class ReviewService {
 
         ReviewStatus reviewStatus = action.get("action");
 
-        log.info("Review Id      : {}", id);
-        log.info("Requested Status : {}", reviewStatus);
 
         ProductReview productReview =
                 productReviewRepository.findByIdAndTenantId(id, tenantId);
@@ -133,17 +110,11 @@ public class ReviewService {
             throw new RuntimeException("Review Does Not Exist");
         }
 
-        log.info("Old Status : {}", productReview.getStatus());
 
         productReview.setStatus(reviewStatus);
         productReview.setUpdatedBy(userDetail.getId());
 
         productReviewRepository.save(productReview);
-
-        log.info("New Status : {}", productReview.getStatus());
-        log.info("Review Updated Successfully.");
-        log.info("END :: ReviewService.updateReviewStatus()");
-        log.info("========================================================");
 
         return reviewStatus + " Successfully";
     }
@@ -165,7 +136,7 @@ public class ReviewService {
             userIds.add(productReview.getUserId());
         }
         Map<Long, String> userNames = findUserNameWithUserIdInTenant(tenantId, userIds);
-        log.error("All Username Wit id For Review {}", userNames);
+
         List<UserReviewResponseDTO> userReviewResponseDTOS = new ArrayList<>();
         for (ProductReview productReview : pro) {
             UserReviewResponseDTO userReviewResponseDTO = new UserReviewResponseDTO();

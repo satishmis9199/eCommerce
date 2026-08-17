@@ -8,5 +8,6 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     Cart findByTenantIdAndVendorIdAndUserIdAndRowState(String tenant, Long id, Long id1, int rowstate);
 
-    Cart findByVendorIdAndUserId(Long id, Long id1);
+
+    Cart findByVendorIdAndUserIdAndTenantId(Long id, Long id1, String tenantId);
 }

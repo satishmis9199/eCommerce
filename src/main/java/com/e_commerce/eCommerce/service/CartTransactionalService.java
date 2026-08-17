@@ -74,17 +74,16 @@ public class CartTransactionalService {
                     .build();
 
             cart = cartRepository.save(cart);
-
-            // Force INSERT now
             cartRepository.flush();
         }
 
         Optional<CartItem> existing =
                 cartItemRepository
-                        .findByCartIdAndProductIdAndRowState(
+                        .findByCartIdAndProductIdAndRowStateAndTenantId(
                                 cart.getId(),
                                 product.getId(),
-                                ACTIVE
+                                ACTIVE,
+                                tenantId
                         );
 
         if (existing.isPresent()) {

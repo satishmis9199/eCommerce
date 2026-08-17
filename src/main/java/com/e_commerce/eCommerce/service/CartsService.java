@@ -109,7 +109,7 @@ public class CartsService {
 
         Vendor vendor = optionalVendor.get();
 
-        Cart cart = cartRepository.findByVendorIdAndUserId(vendor.getId(), user.getId());
+        Cart cart = cartRepository.findByVendorIdAndUserIdAndTenantId(vendor.getId(), user.getId(),tenantId);
 
         if (cart == null) {
             cartResponseDTO.setItems(new ArrayList<>());

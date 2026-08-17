@@ -8,12 +8,25 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "cart")
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(
+        name = "cart",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_cart_tenant_vendor_user",
+                        columnNames = {
+                                "tenantId",
+                                "vendorId",
+                                "userId"
+                        }
+                )
+        }
+)
 public class Cart {
 
     @Id
