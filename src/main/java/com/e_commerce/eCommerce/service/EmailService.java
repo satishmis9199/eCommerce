@@ -6,6 +6,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -16,25 +17,7 @@ import org.thymeleaf.context.Context;
 
 import java.util.Map;
 
-/**
- * Generic email sending service.
- * <p>
- * Supports:
- * 1. Thymeleaf HTML templates
- * 2. Direct HTML email
- * 3. Direct plain-text email
- * 4. CC / BCC
- * 5. Async email sending
- * <p>
- * Templates should be placed under:
- * <p>
- * src/main/resources/templates/
- * <p>
- * Example:
- * password-reset.html
- * order-confirmation.html
- * welcome.html
- */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -42,14 +25,6 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
-
-    /**
-     * Default sender email.
-     * <p>
-     * Configure in application.properties:
-     * <p>
-     * app.mail.from=your-email@gmail.com
-     */
     @Value("${app.mail.from:no-reply@example.com}")
     private String defaultFrom;
 
@@ -77,8 +52,6 @@ public class EmailService {
             }
 
             String body = resolveBody(request);
-
-            // Template email is always HTML
             boolean html = request.getTemplateName() != null
                     && !request.getTemplateName().isBlank()
                     || request.isHtmlEnabled();
@@ -86,13 +59,6 @@ public class EmailService {
             helper.setText(body, html);
 
             mailSender.send(message);
-
-            log.info(
-                    "Email sent successfully to {} with subject '{}'",
-                    request.getTo(),
-                    request.getSubject()
-            );
-
         } catch (MessagingException | MailException ex) {
 
             log.error(

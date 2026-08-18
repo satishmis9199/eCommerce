@@ -103,5 +103,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findTop4ByTenantIdAndVendorIdAndCategoryIdAndStatusAndIdNotOrderByTotalSoldDesc(String tenantId, Long id, Long categoryId, ProductStatus productStatus, Long id1);
 
     Product findByIdAndTenantId(Long productId, String tenantId);
+
+    List<Product> findTop5ByTenantIdAndStatusAndProductNameContainingIgnoreCase(
+            String tenantId, ProductStatus status, String productName);
 }
 

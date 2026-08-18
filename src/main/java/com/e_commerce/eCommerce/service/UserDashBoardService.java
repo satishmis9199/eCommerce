@@ -126,7 +126,6 @@ public class UserDashBoardService {
         Vendor v1 = vendor.get();
 
         List<Product> products = productRepository.findAllByTenantIdAndStatusAndFeatured(tenant, ProductStatus.ACTIVE, true);
-        System.out.println("Featired Prod size" + products.size());
         for (Product product : products) {
             ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
             productCardResponseDTO.setProductId(product.getId());
@@ -182,13 +181,12 @@ public class UserDashBoardService {
         }
         Vendor v1 = vendor.get();
         List<Product> products = productRepository.findAllByTenantIdAndStatus(tenant, ProductStatus.ACTIVE);
-        System.out.println("All Prod " + products.size());
+
         for (Product product : products) {
             ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url" + r2Properties.getPublicUrl());
             productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
@@ -234,7 +232,6 @@ public class UserDashBoardService {
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url" + r2Properties.getPublicUrl());
             productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
@@ -276,7 +273,6 @@ public class UserDashBoardService {
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url" + r2Properties.getPublicUrl());
             productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
@@ -324,7 +320,6 @@ public class UserDashBoardService {
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url" + r2Properties.getPublicUrl());
             productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
@@ -372,7 +367,6 @@ public class UserDashBoardService {
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            System.out.println("Public url" + r2Properties.getPublicUrl());
             productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);

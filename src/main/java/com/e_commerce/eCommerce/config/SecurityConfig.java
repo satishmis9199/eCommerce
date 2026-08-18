@@ -112,6 +112,7 @@ public class SecurityConfig {
                                 "/images/**",
 
                                 "/uploads/**",
+                                "/support-chat-widget.js",
 
                                 "/firebase-messaging-sw.js",
 
