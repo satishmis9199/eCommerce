@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,13 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
-
-/**
- * Customer-facing support chatbot, backed by Spring AI + Gemini.
- * Scope: product availability/price/stock questions and order-status
- * lookups for the CURRENT tenant only (see SupportChatClientConfig /
- * SupportAssistantTools).
- */
 @RestController
 @RequestMapping("/api/chat")
 @AllArgsConstructor
@@ -31,20 +25,16 @@ public class SupportChatController {
 
     private final ChatClient supportChatClient;
 
-    @PostMapping("/support")
+    @PostMapping(value = "/support",consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<ChatResponseDto>> chat(
             @Valid @RequestBody ChatRequestDto request,
             @AuthenticationPrincipal CustomUserDetail userDetail) {
 
         try {
-            // Keep the same conversation memory going if the client already
-            // has an id; otherwise start a fresh one (tie it to the logged-in
-            // user when available, purely as a convenience default).
             String conversationId = (request.conversationId() != null && !request.conversationId().isBlank())
                     ? request.conversationId()
                     : (userDetail != null ? "user-" + userDetail.getId() + "-" + UUID.randomUUID()
                         : UUID.randomUUID().toString());
-
             String reply = supportChatClient.prompt()
                     .user(request.message())
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))

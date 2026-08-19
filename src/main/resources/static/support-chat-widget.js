@@ -1,18 +1,3 @@
-/**
- * Support Chat Widget
- * -----------------------------------------------------------------------
- * Ek self-contained floating chat bubble jo Spring AI backed customer
- * support chatbot (POST /api/chat/support) se baat karta hai.
- *
- * USAGE: Kisi bhi HTML/Thymeleaf page ke </body> se pehle ye line daal do:
- *
- *   <script src="/support-chat-widget.js"></script>
- *
- * Bas itna hi — koi aur setup nahi chahiye. Widget khud apna CSS aur
- * HTML inject kar leta hai, isliye kisi existing page ke saath conflict
- * nahi karega.
- * -----------------------------------------------------------------------
- */
 (function () {
     'use strict';
 

@@ -24,6 +24,8 @@ public class SupportChatClientConfig {
             - order status / tracking (use the getOrderStatus tool, ask for the order
               number if the customer hasn't given one)
             - general questions about shipping, returns and how to use the store
+            -Information About store like general Info 
+            -Provide a Response with complete Structured Manner
 
             Rules you must always follow:
             1. Stay strictly within the scope of this store. If the customer asks

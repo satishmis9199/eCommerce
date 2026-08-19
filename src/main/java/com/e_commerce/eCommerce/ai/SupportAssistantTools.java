@@ -1,31 +1,27 @@
 package com.e_commerce.eCommerce.ai;
 
 import com.e_commerce.eCommerce.config.TenantContext;
-import com.e_commerce.eCommerce.entity.Order;
-import com.e_commerce.eCommerce.entity.Product;
-import com.e_commerce.eCommerce.entity.ProductStatus;
-import com.e_commerce.eCommerce.repository.OrderRepository;
-import com.e_commerce.eCommerce.repository.ProductRepository;
+import com.e_commerce.eCommerce.dto.StoreInfoResponseDTO;
+import com.e_commerce.eCommerce.entity.*;
+import com.e_commerce.eCommerce.repository.*;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-
-/**
- * Tools exposed to the support chatbot's LLM. Every tool is deliberately
- * READ-ONLY and scoped to the current tenant (resolved from the request's
- * subdomain via {@link TenantContext}), so the bot can never see or leak
- * another store's data and can never mutate anything.
- */
+@Slf4j
 @Component
 @AllArgsConstructor
 public class SupportAssistantTools {
 
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
-
+    private final VendorRepository vendorRepository;
+    private final vendorBussinesss vendorBussinesss;
+    private final VendorBrandingRepository vendorBrandingRepository;
+    private final VendorAddresss vendorAddresssl;
     @Tool(description = "Search this store's active products by name/keyword and get their price and stock. " +
             "Use this whenever a customer asks if a product is available, how much it costs, or if it's in stock.")
     public List<ProductSearchResult> searchProducts(
@@ -73,6 +69,75 @@ public class SupportAssistantTools {
                 order.getTotalItems(),
                 order.getTotal());
     }
+
+    @Tool(description = "Provide general information about the current store/tenant. Use this whenever a customer asks about the store itself, such as the store name, address, phone number, email, business hours, delivery areas, or other basic store information.")
+    public StoreInfoResponseDTO getStoreInfo() {
+        log.error("Collecting Store Info");
+
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new RuntimeException("Tenant ID is missing");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new RuntimeException("Vendor does not exist"));
+        VendorBusiness vendorBusiness = vendorBussinesss.findByVendorId(vendor.getId());
+
+        VendorBranding branding = vendorBrandingRepository.findByVendorId(vendor.getId());
+
+        StoreInfoResponseDTO dto = new StoreInfoResponseDTO();
+
+        dto.setVendorId(vendor.getId());
+
+        dto.setTenantId(vendor.getTenantId());
+        dto.setBusinessName(vendor.getBussinessName());
+        dto.setStoreName(vendor.getStoreName());
+
+        if (branding != null) {
+            dto.setStoreType(vendorBusiness.getBusinessCategory());
+            dto.setTagline(branding.getStoreTagline());
+            dto.setAboutUs(branding.getStoreDescription());
+
+            dto.setLogoUrl(branding.getLogoUrl());
+            dto.setBannerUrl(branding.getBannerUrl());
+
+            dto.setThemeColor(branding.getPrimaryColor());
+
+            dto.setSupportEmail(branding.getSupportEmail());
+            dto.setSupportPhone(branding.getSupportPhone());
+        }
+
+        VendorAddress address = vendorAddresssl.findByVendorId(vendor.getId());
+        if (address != null) {
+            StringBuilder sb = new StringBuilder();
+
+            if (address.getAddressLine1() != null)
+                sb.append(address.getAddressLine1());
+
+            if (address.getAddressLine2() != null && !address.getAddressLine2().isBlank())
+                sb.append(", ").append(address.getAddressLine2());
+
+            if (address.getCity() != null)
+                sb.append(", ").append(address.getCity());
+
+            if (address.getState() != null)
+                sb.append(", ").append(address.getState());
+
+            if (address.getCountry() != null)
+                sb.append(", ").append(address.getCountry());
+
+            if (address.getPostalCode() != null)
+                sb.append(" - ").append(address.getPostalCode());
+
+            dto.setAddress(sb.toString());
+
+        }
+        return dto;
+    }
+
+
+
+
 
     public record ProductSearchResult(
             Long productId,
