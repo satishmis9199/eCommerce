@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Know the Team | Project Contributors</title>
+    <meta name="description" content="The people behind this project — backend engineering, quality assurance, and delivery." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* =========================================================
+           1. THEME VARIABLES
+           Edit these to re-skin the whole page from one place.
+           ========================================================= */
+        :root{
+          /* Base surfaces */
+          --bg:            #0a0e17;
+          --bg-soft:       #0d1320;
+          --surface:       #121a2b;
+          --surface-2:     #182238;
+          --border:        #232f47;
+          --border-soft:   #1a2438;
+
+          /* Text */
+          --text-primary:  #eef1f7;
+          --text-secondary:#aab4c8;
+          --text-muted:    #6c7893;
+
+          /* Role accent colors — each contributor's domain gets one */
+          --accent-backend:  #4f8cff;  /* Backend & Microservices */
+          --accent-backend-soft: rgba(79,140,255,0.12);
+          --accent-qa:       #34d399;  /* QA & Quality */
+          --accent-qa-soft:  rgba(52,211,153,0.12);
+          --accent-delivery: #f5a623;  /* Sign-off & Delivery */
+          --accent-delivery-soft: rgba(245,166,35,0.12);
+
+          /* Fonts */
+          --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+          --font-body:    'Inter', 'Segoe UI', sans-serif;
+          --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+
+          /* Layout */
+          --radius-lg: 20px;
+          --radius-md: 14px;
+          --radius-sm: 8px;
+          --max-width: 1180px;
+          --shadow-soft: 0 20px 60px -20px rgba(0,0,0,0.6);
+        }
+
+        /* =========================================================
+           2. RESET & BASE
+           ========================================================= */
+        *, *::before, *::after{ box-sizing: border-box; }
+        html{ scroll-behavior: smooth; }
+        body{
+          margin: 0;
+          background: var(--bg);
+          color: var(--text-primary);
+          font-family: var(--font-body);
+          line-height: 1.6;
+          -webkit-font-smoothing: antialiased;
+          overflow-x: hidden;
+        }
+        img{ max-width: 100%; display: block; }
+        h1,h2,h3,h4{ font-family: var(--font-display); margin: 0; color: var(--text-primary); }
+        p{ margin: 0; }
+        ul{ margin: 0; padding: 0; list-style: none; }
+
+        /* background: quiet vertical gradient + faint grid, evokes an infrastructure diagram */
+        body{
+          background-image:
+            radial-gradient(1200px 500px at 50% -10%, rgba(79,140,255,0.08), transparent 60%),
+            linear-gradient(var(--bg-soft), var(--bg));
+          background-attachment: fixed;
+        }
+
+        a{ color: inherit; }
+        :focus-visible{
+          outline: 2px solid var(--accent-backend);
+          outline-offset: 3px;
+          border-radius: 4px;
+        }
+
+        .container{
+          max-width: var(--max-width);
+          margin: 0 auto;
+          padding: 0 24px;
+        }
+
+        .eyebrow{
+          font-family: var(--font-mono);
+          font-size: 0.72rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .eyebrow::before{
+          content: "";
+          width: 18px;
+          height: 1px;
+          background: currentColor;
+          display: inline-block;
+        }
+
+        section{ padding: 96px 0; }
+        @media (max-width: 768px){ section{ padding: 64px 0; } }
+        @media (max-width: 480px){ section{ padding: 48px 0; } .container{ padding: 0 18px; } }
+
+        /* =========================================================
+           2b. SITE HEADER / NAV
+           ========================================================= */
+        .site-header{
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          background: rgba(10,14,23,0.72);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border-bottom: 1px solid var(--border-soft);
+        }
+        .site-header .container{
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          height: 68px;
+        }
+        .brand{
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-family: var(--font-display);
+          font-weight: 700;
+          font-size: 1.02rem;
+          letter-spacing: -0.01em;
+          text-decoration: none;
+          color: var(--text-primary);
+        }
+        .brand .brand-mark{
+          width: 30px; height: 30px;
+          border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          background: linear-gradient(135deg, var(--accent-backend), var(--accent-qa));
+          color: #0a0e17;
+          font-family: var(--font-mono);
+          font-size: 0.76rem;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+        .brand .brand-sub{
+          font-family: var(--font-mono);
+          font-size: 0.66rem;
+          color: var(--text-muted);
+          font-weight: 500;
+          letter-spacing: 0.04em;
+          display: block;
+          margin-top: 1px;
+        }
+        .site-nav ul{
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .site-nav a{
+          text-decoration: none;
+          font-size: 0.86rem;
+          color: var(--text-secondary);
+          padding: 9px 14px;
+          border-radius: 100px;
+          transition: color 0.2s ease, background 0.2s ease;
+          display: inline-block;
+        }
+        .site-nav a:hover, .site-nav a:focus-visible{
+          color: var(--text-primary);
+          background: var(--surface);
+        }
+        .nav-toggle{
+          display: none;
+          background: none;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          width: 40px; height: 40px;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-primary);
+          cursor: pointer;
+          flex-shrink: 0;
+        }
+        .nav-toggle:hover{ border-color: var(--accent-backend); color: var(--accent-backend); }
+        .nav-toggle .icon-close{ display: none; }
+        .nav-toggle[aria-expanded="true"] .icon-menu{ display: none; }
+        .nav-toggle[aria-expanded="true"] .icon-close{ display: flex; }
+
+        @media (max-width: 720px){
+          .site-nav{
+            position: absolute;
+            top: 68px; left: 0; right: 0;
+            background: var(--bg-soft);
+            border-bottom: 1px solid var(--border-soft);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.28s ease;
+          }
+          .site-nav.open{ max-height: 320px; }
+          .site-nav ul{
+            flex-direction: column;
+            align-items: stretch;
+            padding: 8px 20px 16px;
+            gap: 2px;
+          }
+          .site-nav a{ padding: 12px 10px; border-radius: var(--radius-sm); }
+          .nav-toggle{ display: flex; }
+          .brand-sub{ display: none; }
+        }
+        @media (max-width: 360px){
+          .site-header .container{ padding: 0 14px; }
+        }
+
+        /* =========================================================
+           3. HERO
+           ========================================================= */
+        .hero{
+          padding: 120px 0 80px;
+          text-align: center;
+          position: relative;
+        }
+        .hero .eyebrow{ justify-content: center; margin-bottom: 22px; }
+        .hero .eyebrow::after{
+          content: "";
+          width: 18px; height: 1px; background: currentColor;
+        }
+        .hero h1{
+          font-size: clamp(2.1rem, 4.4vw, 3.4rem);
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          max-width: 780px;
+          margin: 0 auto;
+          line-height: 1.15;
+        }
+        .hero p.subhead{
+          margin: 22px auto 0;
+          max-width: 620px;
+          color: var(--text-secondary);
+          font-size: 1.05rem;
+        }
+        .hero-badges{
+          margin-top: 40px;
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .hero-badge{
+          font-family: var(--font-mono);
+          font-size: 0.72rem;
+          letter-spacing: 0.04em;
+          padding: 8px 14px;
+          border-radius: 100px;
+          border: 1px solid var(--border);
+          background: var(--surface);
+          color: var(--text-secondary);
+        }
+        .hero-badge b{ color: var(--text-primary); font-weight: 600; }
+
+        @media (max-width: 480px){
+          .hero{ padding: 72px 0 56px; }
+          .hero-badge{ font-size: 0.68rem; padding: 7px 12px; }
+        }
+
+        /* =========================================================
+           4. FEATURED CONTRIBUTOR — deliberately oversized
+           ========================================================= */
+        .featured-wrap{ padding-top: 20px; }
+        .featured-card{
+          position: relative;
+          background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          padding: 4px;
+          box-shadow: var(--shadow-soft);
+          overflow: hidden;
+        }
+        .featured-card::before{
+          /* signature glow ring — signals "this is the primary node" */
+          content:"";
+          position: absolute; inset: -1px;
+          border-radius: inherit;
+          padding: 1px;
+          background: linear-gradient(135deg, var(--accent-backend), transparent 40%, transparent 60%, var(--accent-backend));
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0.6;
+          pointer-events: none;
+        }
+        .featured-inner{
+          display: grid;
+          grid-template-columns: 340px 1fr;
+          gap: 0;
+          border-radius: calc(var(--radius-lg) - 4px);
+          overflow: hidden;
+          background: var(--surface);
+        }
+        .featured-media{
+          position: relative;
+          min-height: 420px;
+          background: var(--surface-2);
+        }
+        .featured-media img{
+          width: 100%; height: 100%;
+          object-fit: cover;
+          object-position: center top;
+        }
+        .featured-media .role-tag{
+          position: absolute;
+          left: 20px; bottom: 20px;
+          font-family: var(--font-mono);
+          font-size: 0.7rem;
+          letter-spacing: 0.05em;
+          padding: 7px 12px;
+          border-radius: 100px;
+          background: rgba(10,14,23,0.75);
+          backdrop-filter: blur(6px);
+          border: 1px solid rgba(79,140,255,0.4);
+          color: #cfe0ff;
+          max-width: calc(100% - 40px);
+        }
+        .featured-content{
+          padding: 44px 44px 40px;
+          display: flex;
+          flex-direction: column;
+          gap: 22px;
+          min-width: 0;
+        }
+        .featured-content .eyebrow{ color: var(--accent-backend); }
+        .featured-content .eyebrow::before{ background: var(--accent-backend); }
+        .featured-name{
+          font-size: clamp(1.7rem, 2.6vw, 2.3rem);
+          font-weight: 700;
+          letter-spacing: -0.01em;
+          word-break: break-word;
+        }
+        .featured-role{
+          font-family: var(--font-mono);
+          font-size: 0.92rem;
+          color: var(--accent-backend);
+          margin-top: 6px;
+        }
+        .featured-meta{
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px 28px;
+          font-size: 0.92rem;
+          color: var(--text-secondary);
+          border-top: 1px solid var(--border-soft);
+          border-bottom: 1px solid var(--border-soft);
+          padding: 16px 0;
+        }
+        .featured-meta div{ display:flex; flex-direction:column; gap: 3px; }
+        .featured-meta span.label{
+          font-family: var(--font-mono);
+          font-size: 0.66rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+        }
+        .featured-meta span.value{ color: var(--text-primary); font-weight: 500; }
+
+        .featured-contribution p{ color: var(--text-secondary); font-size: 1rem; }
+
+        .featured-resp h3{
+          font-family: var(--font-mono);
+          font-size: 0.72rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          margin-bottom: 12px;
+          font-weight: 500;
+        }
+        .resp-grid{
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        .resp-chip{
+          display: flex;
+          align-items: flex-start;
+          gap: 9px;
+          padding: 10px 12px;
+          background: var(--accent-backend-soft);
+          border: 1px solid rgba(79,140,255,0.22);
+          border-radius: var(--radius-sm);
+          font-size: 0.88rem;
+          color: var(--text-primary);
+        }
+        .resp-chip svg{ flex-shrink: 0; margin-top: 2px; color: var(--accent-backend); }
+
+        @media (max-width: 860px){
+          .featured-inner{ grid-template-columns: 1fr; }
+          .featured-media{ min-height: 280px; }
+          .featured-content{ padding: 32px 24px 30px; }
+          .resp-grid{ grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px){
+          .featured-content{ padding: 26px 18px 26px; gap: 18px; }
+          .featured-media{ min-height: 220px; }
+        }
+
+        /* =========================================================
+           5. OTHER CONTRIBUTORS
+           ========================================================= */
+        .section-heading{ text-align: center; margin-bottom: 48px; }
+        .section-heading h2{
+          font-size: clamp(1.5rem, 2.6vw, 2rem);
+          margin-top: 14px;
+          letter-spacing: -0.01em;
+        }
+        .section-heading p{
+          color: var(--text-secondary);
+          max-width: 560px;
+          margin: 12px auto 0;
+        }
+
+        .contrib-grid{
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 28px;
+        }
+        @media (max-width: 760px){
+          .contrib-grid{ grid-template-columns: 1fr; }
+        }
+
+        .contrib-card{
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          padding: 30px;
+          transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+          min-width: 0;
+        }
+        .contrib-card:hover{
+          transform: translateY(-4px);
+          border-color: var(--card-accent, var(--accent-qa));
+          box-shadow: 0 24px 50px -28px rgba(0,0,0,0.7);
+        }
+        .contrib-top{
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .contrib-avatar{
+          width: 76px; height: 76px;
+          border-radius: 50%;
+          overflow: hidden;
+          flex-shrink: 0;
+          border: 2px solid var(--card-accent, var(--accent-qa));
+          background: var(--surface-2);
+        }
+        .contrib-avatar img{ width: 100%; height: 100%; object-fit: cover; }
+        .contrib-name{ font-size: 1.15rem; font-weight: 700; word-break: break-word; }
+        .contrib-role{
+          font-family: var(--font-mono);
+          font-size: 0.78rem;
+          color: var(--card-accent, var(--accent-qa));
+          margin-top: 4px;
+        }
+        .contrib-meta{
+          display: flex;
+          gap: 20px;
+          margin-top: 20px;
+          padding-top: 18px;
+          border-top: 1px solid var(--border-soft);
+          font-size: 0.86rem;
+          flex-wrap: wrap;
+        }
+        .contrib-meta div{ display:flex; flex-direction:column; gap: 3px; }
+        .contrib-meta span.label{
+          font-family: var(--font-mono);
+          font-size: 0.63rem;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+        }
+        .contrib-meta span.value{ color: var(--text-primary); font-weight: 500; }
+
+        .contrib-contribution{
+          margin-top: 18px;
+          color: var(--text-secondary);
+          font-size: 0.94rem;
+        }
+
+        .contrib-resp{
+          margin-top: 18px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .contrib-resp li{
+          font-size: 0.8rem;
+          padding: 6px 11px;
+          border-radius: 100px;
+          background: var(--card-accent-soft, var(--accent-qa-soft));
+          color: var(--text-primary);
+          border: 1px solid var(--border-soft);
+        }
+
+        @media (max-width: 480px){
+          .contrib-card{ padding: 22px; }
+        }
+
+        /* =========================================================
+           6. CONTRIBUTION OVERVIEW — pipeline / request-lifecycle diagram
+           ========================================================= */
+        .overview{
+          background: var(--bg-soft);
+          border-top: 1px solid var(--border-soft);
+          border-bottom: 1px solid var(--border-soft);
+        }
+        .pipeline{
+          display: grid;
+          grid-template-columns: 1fr auto 1fr auto 1fr;
+          align-items: center;
+          gap: 0;
+          margin-top: 56px;
+        }
+        .pipeline-node{
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 26px 22px;
+          text-align: center;
+          position: relative;
+          min-width: 0;
+        }
+        .pipeline-node .stage-label{
+          font-family: var(--font-mono);
+          font-size: 0.66rem;
+          letter-spacing: 0.1em;
+          color: var(--text-muted);
+          display: block;
+          margin-bottom: 10px;
+        }
+        .pipeline-node .icon{
+          width: 46px; height: 46px;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 14px;
+          background: var(--node-accent-soft);
+          color: var(--node-accent);
+          border: 1px solid var(--node-accent);
+        }
+        .pipeline-node h4{ font-size: 1.02rem; font-weight: 700; }
+        .pipeline-node .owner{
+          margin-top: 8px;
+          font-size: 0.82rem;
+          color: var(--text-secondary);
+          word-break: break-word;
+        }
+        .pipeline-node .owner b{ color: var(--text-primary); }
+
+        .pipeline-connector{
+          height: 2px;
+          width: 100%;
+          min-width: 36px;
+          background: repeating-linear-gradient(90deg, var(--border) 0 6px, transparent 6px 12px);
+          position: relative;
+        }
+        .pipeline-connector::after{
+          content: "";
+          position: absolute; right: -1px; top: 50%;
+          width: 8px; height: 8px;
+          border-right: 2px solid var(--text-muted);
+          border-bottom: 2px solid var(--text-muted);
+          transform: translateY(-50%) rotate(-45deg);
+        }
+
+        @media (max-width: 900px){
+          .pipeline{ grid-template-columns: 1fr; gap: 18px; }
+          .pipeline-connector{ width: 2px; height: 26px; margin: 0 auto; }
+          .pipeline-connector::after{
+            right: 50%; top: auto; bottom: -2px;
+            transform: translateX(50%) rotate(45deg);
+          }
+        }
+
+        /* =========================================================
+           7. FOOTER
+           ========================================================= */
+        .site-footer{
+          border-top: 1px solid var(--border-soft);
+          padding: 64px 0 0;
+        }
+        .footer-top{
+          display: grid;
+          grid-template-columns: 1.3fr 1fr 1fr 1fr;
+          gap: 40px;
+          padding-bottom: 44px;
+        }
+        .footer-brand .brand{ margin-bottom: 14px; }
+        .footer-brand p{
+          color: var(--text-secondary);
+          font-size: 0.9rem;
+          max-width: 320px;
+        }
+        .footer-col h5{
+          font-family: var(--font-mono);
+          font-size: 0.68rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          margin-bottom: 14px;
+          font-weight: 500;
+        }
+        .footer-col ul{ display: flex; flex-direction: column; gap: 10px; }
+        .footer-col a{
+          color: var(--text-secondary);
+          text-decoration: none;
+          font-size: 0.9rem;
+          transition: color 0.2s ease;
+        }
+        .footer-col a:hover, .footer-col a:focus-visible{ color: var(--text-primary); }
+        .footer-col p{ color: var(--text-secondary); font-size: 0.9rem; line-height: 1.7; }
+
+        .footer-bottom{
+          border-top: 1px solid var(--border-soft);
+          padding: 22px 0 32px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        footer p.credo{
+          font-family: var(--font-display);
+          font-size: 0.98rem;
+          color: var(--text-primary);
+          text-align: center;
+          padding: 6px 0 26px;
+        }
+        footer p.fine{
+          font-size: 0.78rem;
+          color: var(--text-muted);
+          font-family: var(--font-mono);
+        }
+        .footer-socials{ display: flex; gap: 10px; }
+        .footer-socials a{
+          width: 34px; height: 34px;
+          border-radius: 50%;
+          border: 1px solid var(--border);
+          display: flex; align-items: center; justify-content: center;
+          color: var(--text-secondary);
+          text-decoration: none;
+          transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .footer-socials a:hover, .footer-socials a:focus-visible{
+          color: var(--accent-backend);
+          border-color: var(--accent-backend);
+        }
+        .back-to-top{
+          font-family: var(--font-mono);
+          font-size: 0.76rem;
+          color: var(--text-secondary);
+          text-decoration: none;
+          border: 1px solid var(--border);
+          padding: 8px 14px;
+          border-radius: 100px;
+          transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .back-to-top:hover, .back-to-top:focus-visible{
+          color: var(--accent-backend);
+          border-color: var(--accent-backend);
+        }
+
+        @media (max-width: 860px){
+          .footer-top{ grid-template-columns: 1fr 1fr; }
+          .footer-brand{ grid-column: 1 / -1; }
+        }
+        @media (max-width: 520px){
+          .footer-top{ grid-template-columns: 1fr; gap: 32px; }
+          .footer-bottom{ flex-direction: column; text-align: center; }
+          .site-footer{ padding-top: 48px; }
+        }
+
+        /* =========================================================
+           8. MOTION — subtle, respectful of user preference
+           ========================================================= */
+        @media (prefers-reduced-motion: no-preference){
+          .fade-up{
+            animation: fadeUp 0.7s ease both;
+          }
+          @keyframes fadeUp{
+            from{ opacity: 0; transform: translateY(16px); }
+            to{ opacity: 1; transform: translateY(0); }
+          }
+        }
+        @media (prefers-reduced-motion: reduce){
+          html{ scroll-behavior: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- =========================================================
+     SITE HEADER / NAV
+     Nav links are rendered from SITE_CONFIG.navLinks in the script.
+     ========================================================= -->
+<header class="site-header">
+    <div class="container">
+        <a href="#top" class="brand" id="brandLink">
+            <span class="brand-mark" id="brandMark">TM</span>
+            <span>
+        <span id="brandName">Project Team</span>
+        <span class="brand-sub" id="brandSub">CONTRIBUTOR SHOWCASE</span>
+      </span>
+        </a>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="siteNav">
+            <svg class="icon-menu" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            <svg class="icon-close" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <nav class="site-nav" id="siteNav" aria-label="Primary">
+            <ul id="navLinks"><!-- filled by JS from SITE_CONFIG.navLinks --></ul>
+        </nav>
+    </div>
+</header>
+
+<!-- =========================================================
+     HERO
+     ========================================================= -->
+<div class="hero" id="top">
+    <div class="container">
+        <span class="eyebrow">Project Team</span>
+        <h1>Know the People Behind This Project</h1>
+        <p class="subhead">
+            This project came together through focused work across three areas:
+            backend engineering, quality assurance, and final validation &amp; delivery.
+            Here's a closer look at who did what.
+        </p>
+        <div class="hero-badges" id="heroBadges"><!-- filled by JS from teamMembers --></div>
+    </div>
+</div>
+
+<!-- =========================================================
+     FEATURED CONTRIBUTOR SECTION
+     ========================================================= -->
+<section class="featured-wrap" id="featured">
+    <div class="container">
+        <div id="featuredContributor"><!-- filled by JS --></div>
+    </div>
+</section>
+
+<!-- =========================================================
+     OTHER CONTRIBUTORS
+     ========================================================= -->
+<section id="team">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow" style="justify-content:center;">Also On This Project</span>
+            <h2>Quality &amp; Delivery</h2>
+            <p>Two more contributors made sure what got built was correct, validated, and ready to ship.</p>
+        </div>
+        <div class="contrib-grid" id="otherContributors"><!-- filled by JS --></div>
+    </div>
+</section>
+
+<!-- =========================================================
+     CONTRIBUTION OVERVIEW
+     ========================================================= -->
+<section class="overview" id="overview">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow" style="justify-content:center;">How It Fit Together</span>
+            <h2>Three Roles, One Outcome</h2>
+            <p>Each contributor owned a distinct stage — together they cover the project end to end.</p>
+        </div>
+        <div class="pipeline" id="pipeline"><!-- filled by JS --></div>
+    </div>
+</section>
+
+<!-- =========================================================
+     SITE FOOTER
+     Content is rendered from SITE_CONFIG.footer in the script below —
+     edit that object to change columns, links, or copyright text.
+     ========================================================= -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-top">
+            <div class="footer-brand">
+                <a href="#top" class="brand">
+                    <span class="brand-mark" id="footerBrandMark">TM</span>
+                    <span>
+            <span id="footerBrandName">Project Team</span>
+            <span class="brand-sub" id="footerBrandSub">CONTRIBUTOR SHOWCASE</span>
+          </span>
+                </a>
+                <p id="footerAbout">A quick look at the people who designed, tested, and shipped this project together.</p>
+            </div>
+            <div id="footerColumns" style="display:contents;"><!-- filled by JS from SITE_CONFIG.footer.columns --></div>
+        </div>
+
+        <p class="credo">Built through collaboration, ownership and teamwork.</p>
+
+        <div class="footer-bottom">
+            <p class="fine" id="footerCopyright"><!-- filled by JS --></p>
+            <div class="footer-socials" id="footerSocials"><!-- filled by JS --></div>
+            <button type="button" id="backButton" class="back-to-top" style="background:none; border:none; cursor:pointer; font:inherit;">← Back</button>
+            <a href="#top" class="back-to-top">Back to top ↑</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    /* =========================================================================
+       EDITABLE SITE CONFIG — header brand, nav links, and footer content.
+       Change anything here to update the header and footer everywhere.
+       -------------------------------------------------------------------------
+       navLinks: label + section id to scroll to (ids already exist on the
+                 page: "top", "featured", "team", "overview")
+       footer.columns: each column is { title, links: [{label, href}] }
+                       or { title, text } for a plain paragraph column
+       footer.socials: [{ label, href, icon }] — icon is raw SVG markup
+       ========================================================================= */
+  const SITE_CONFIG = {
+  brandInitials: "KS",
+  brandName: "Kumar Store Online",
+  brandSub: "Project Team",
+
+  footerAbout:
+    "A quick look at the people who designed, tested, and delivered Kumar Store Online together.",
+
+  navLinks: [
+    { label: "Overview", target: "top" },
+    { label: "Featured", target: "featured" },
+    { label: "Team", target: "team" },
+    { label: "How It Fits", target: "overview" }
+  ],
+
+  footer: {
+    columns: [
+      {
+        title: "Sections",
+        links: [
+          { label: "Overview", href: "#top" },
+          { label: "Featured Contributor", href: "#featured" },
+          { label: "Team", href: "#team" },
+          { label: "How It Fits Together", href: "#overview" }
+        ]
+      },
+
+      {
+        title: "Project",
+        links: [
+          { label: "Kumar Store Online", href: "#" },
+
+          // Replace # with the actual live website URL
+          { label: "Kumar Store Online Website", href: "#" },
+
+          // Replace # with actual documentation URL if available
+          { label: "Documentation", href: "#" }
+        ]
+      },
+
+      {
+        title: "Contact",
+        text:
+          "satishmis9199@gmail.com<br>" +
+          "+91 9229299776<br>" +
+          "Kumar Store Online"
+      }
+    ],
+
+    socials: [
+      {
+        label: "Email",
+        href: "mailto:satishmis9199@gmail.com",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16v16H4z"/>
+          <path d="M4 6l8 7 8-7"/>
+        </svg>`
+      },
+
+      {
+        label: "LinkedIn",
+        href: "https://www.linkedin.com/in/satish-kumar-mishra-9913a2232/",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M8 11v5M8 8v.01M12 16v-5M12 11c0-1.5 3-2 3 0v5"/>
+        </svg>`
+      },
+
+      {
+        label: "GitHub",
+        href: "https://github.com/know/about-developer",
+        icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2
+          2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2
+          4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3
+          a12.3 12.3 0 0 0-6.2 0C6.7 2.8 5.6 3.1 5.6 3.1
+          a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.2 9.5
+          c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>
+        </svg>`
+      }
+    ],
+
+    copyrightHolder: "Kumar Store Online"
+  }
+};
+
+    /* =========================================================================
+       EDITABLE TEAM DATA
+       -------------------------------------------------------------------------
+       This is the ONLY place you should need to edit to update names, photos,
+       roles, organizations, or responsibilities. Everything on the page is
+       rendered from this array.
+
+       Fields:
+         name            - Full name
+         role            - Public-facing title/role phrase shown on the page
+         area            - One of: "backend" | "qa" | "delivery"
+                            (controls which accent color / icon / pipeline
+                             stage this person is associated with — do not
+                             remove, just keep it matching the person's role)
+         designation     - Their job title / designation
+         organization    - Their current organization
+         imageUrl        - Profile photo URL (replace with real photo later)
+         featured        - true for the single most-prominent contributor
+         responsibilities- Array of short responsibility strings
+         contribution    - 1-3 sentence description of their contribution
+                            to THIS project specifically
+       ========================================================================= */
+   let teamMembers = [
+  {
+    name: "Satish Mishra",
+    role: "Core Backend & Microservices Contributor",
+    area: "backend",
+    designation: "Backend & Microservices Architecture Developer",
+    organization: "Tata Consultancy Services",
+    imageUrl: "https://erp.psit.ac.in/assets/img/Simages_secure/dcedbdf91cba50850a4019a7324bf24c.jpg",
+    featured: true,
+    responsibilities: [
+      "Backend architecture and service-oriented design",
+      "Multi-tenant SaaS architecture and tenant isolation",
+      "Spring Boot backend development",
+      "REST API design and integration",
+      "Authentication, authorization and security",
+      "Vendor onboarding and lifecycle management",
+      "Product and catalog management",
+      "Cart, checkout and order workflows",
+      "Banners, flash sales and promotional systems",
+      "Notice and announcement management",
+      "Database architecture and JPA/Hibernate",
+      "Transaction management and data consistency",
+      "Redis caching and performance optimization",
+      "Cloudflare R2 media integration",
+      "Email, password reset and notification workflows",
+      "Excel-based bulk product processing",
+      "Spring AI integration and controlled AI tooling",
+      "Docker, AWS EC2 and Nginx deployment",
+      "Production troubleshooting and release support"
+    ],
+    contribution:
+      "Satish designed and developed the core backend foundation of the multi-tenant e-commerce SaaS platform, covering tenant-aware architecture, Spring Boot services, REST APIs, security, vendor onboarding, product and catalog management, cart and order workflows, promotional systems, notifications, database design, caching, cloud media integration, AI-ready architecture, and production deployment."
+  },
+
+  {
+    name: "Nikhil Reddy",
+    role: "QA & Quality Contributor",
+    area: "qa",
+    designation: "QA Engineer",
+    organization: "Blue Yonder",
+    imageUrl: "no-photo",
+    featured: false,
+    responsibilities: [
+      "End-to-end quality assurance",
+      "Functional and integration testing",
+      "Multi-tenant workflow validation",
+      "Authentication and authorization testing",
+      "Vendor onboarding testing",
+      "Product and catalog testing",
+      "Excel bulk-upload validation",
+      "Cart and order workflow testing",
+      "Banner and flash-sale testing",
+      "Notice and notification testing",
+      "API testing and response validation",
+      "Regression and release testing",
+      "Defect identification and triaging",
+      "Retesting and defect verification",
+      "Production smoke testing",
+      "Release readiness validation"
+    ],
+    contribution:
+      "Nikhil owned quality across the platform's critical user journeys, validating customer, vendor, and administrative workflows through functional, integration, regression, API, and release testing. He identified and documented defects, coordinated retesting, validated fixes, and helped ensure that new features and releases met the expected quality standards."
+  },
+
+  {
+    name: "Divya Krishnan",
+    role: "Sign-off & Delivery Contributor",
+    area: "delivery",
+    designation: "Delivery Lead",
+    organization: "ZEPTO",
+    imageUrl: "no-photo",
+    featured: false,
+    responsibilities: [
+      "Final feature sign-off",
+      "Business requirement validation",
+      "Functional acceptance validation",
+      "Stakeholder communication",
+      "Requirement-to-feature verification",
+      "Delivery coordination",
+      "Release readiness assessment",
+      "Business outcome validation",
+      "Cross-functional coordination",
+      "Production delivery sign-off"
+    ],
+    contribution:
+      "Divya focused on validating that implemented features met the agreed business requirements and expected user outcomes. She coordinated with technical and QA teams, communicated with stakeholders, reviewed end-to-end functionality, and supported final release readiness and delivery sign-off."
+  }
+];
+    const AREA_CONFIG = {
+      backend: {
+        color: "var(--accent-backend)",
+        soft:  "var(--accent-backend-soft)",
+        hex:   "#4f8cff",
+        tag:   "CORE BACKEND & MICROSERVICES",
+        stageLabel: "STAGE 01 — BUILD",
+        stageTitle: "Backend & Microservices",
+        icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="5" rx="1.2"/><rect x="3" y="10.5" width="18" height="5" rx="1.2"/><rect x="3" y="17" width="18" height="3.5" rx="1.2"/></svg>`
+      },
+      qa: {
+        color: "var(--accent-qa)",
+        soft:  "var(--accent-qa-soft)",
+        hex:   "#34d399",
+        tag:   "QA & QUALITY",
+        stageLabel: "STAGE 02 — VALIDATE",
+        stageTitle: "QA & Quality",
+        icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>`
+      },
+      delivery: {
+        color: "var(--accent-delivery)",
+        soft:  "var(--accent-delivery-soft)",
+        hex:   "#f5a623",
+        tag:   "SIGN-OFF & DELIVERY",
+        stageLabel: "STAGE 03 — DELIVER",
+        stageTitle: "Sign-off & Delivery",
+        icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg>`
+      }
+    };
+
+    /* =========================================================================
+       IMAGE FALLBACK
+       Generates a simple initials avatar (as an inline SVG data URI) so the
+       page never shows a broken image icon if imageUrl fails to load.
+       ========================================================================= */
+    function initials(name){
+      return name.split(" ").filter(Boolean).map(w => w[0]).slice(0,2).join("").toUpperCase();
+    }
+    function fallbackAvatar(name, hexColor){
+      const label = initials(name || "?");
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300">
+        <rect width="300" height="300" fill="#182238"/>
+        <circle cx="150" cy="150" r="90" fill="${hexColor}22" stroke="${hexColor}" stroke-width="3"/>
+        <text x="150" y="168" font-family="Arial, sans-serif" font-size="86" font-weight="700"
+              fill="${hexColor}" text-anchor="middle">${label}</text>
+      </svg>`;
+      return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+    }
+    function attachImageFallback(imgEl, name, hexColor){
+      imgEl.addEventListener("error", function handler(){
+        imgEl.removeEventListener("error", handler);
+        imgEl.src = fallbackAvatar(name, hexColor);
+      }, { once: true });
+    }
+
+    /* =========================================================================
+       RENDER: header brand (from SITE_CONFIG)
+       ========================================================================= */
+    function renderBrand(){
+      document.getElementById("brandMark").textContent = SITE_CONFIG.brandInitials;
+      document.getElementById("brandName").textContent = SITE_CONFIG.brandName;
+      document.getElementById("brandSub").textContent = SITE_CONFIG.brandSub.toUpperCase();
+
+      document.getElementById("footerBrandMark").textContent = SITE_CONFIG.brandInitials;
+      document.getElementById("footerBrandName").textContent = SITE_CONFIG.brandName;
+      document.getElementById("footerBrandSub").textContent = SITE_CONFIG.brandSub.toUpperCase();
+      document.getElementById("footerAbout").textContent = SITE_CONFIG.footerAbout;
+    }
+
+    /* =========================================================================
+       RENDER + WIRE: primary nav (desktop + mobile), from SITE_CONFIG.navLinks
+       ========================================================================= */
+    function renderNav(){
+      const list = document.getElementById("navLinks");
+      list.innerHTML = SITE_CONFIG.navLinks.map(link =>
+        `<li><a href="#${escapeAttr(link.target)}" data-nav-link>${escapeHtml(link.label)}</a></li>`
+      ).join("");
+
+      const nav = document.getElementById("siteNav");
+      const toggle = document.getElementById("navToggle");
+
+      function closeMenu(){
+        nav.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+      function openMenu(){
+        nav.classList.add("open");
+        toggle.setAttribute("aria-expanded", "true");
+      }
+
+      toggle.addEventListener("click", () => {
+        const isOpen = nav.classList.contains("open");
+        isOpen ? closeMenu() : openMenu();
+      });
+
+      // Close the mobile menu whenever a nav link is tapped
+      list.querySelectorAll("[data-nav-link]").forEach(a => {
+        a.addEventListener("click", closeMenu);
+      });
+
+      // Close the mobile menu if the viewport is resized back to desktop
+      window.addEventListener("resize", () => {
+        if (window.innerWidth > 720) closeMenu();
+      });
+
+      // Close on outside click (mobile)
+      document.addEventListener("click", (e) => {
+        if (!nav.classList.contains("open")) return;
+        if (nav.contains(e.target) || toggle.contains(e.target)) return;
+        closeMenu();
+      });
+    }
+
+    /* =========================================================================
+       RENDER: hero badges (one per contributor, quick-glance summary)
+       ========================================================================= */
+    function renderHeroBadges(){
+      const wrap = document.getElementById("heroBadges");
+      wrap.innerHTML = teamMembers.map(m => {
+        const cfg = AREA_CONFIG[m.area];
+        return `<span class="hero-badge" style="border-color:${cfg.hex}55;">
+          <b>${escapeHtml(m.name)}</b> · ${cfg.tag}
+        </span>`;
+      }).join("");
+    }
+
+    /* =========================================================================
+       RENDER: Featured contributor section
+       ========================================================================= */
+    function renderFeatured(){
+      const person = teamMembers.find(m => m.featured) || teamMembers[0];
+      const cfg = AREA_CONFIG[person.area];
+      const host = document.getElementById("featuredContributor");
+
+      const respChips = person.responsibilities.map(r => `
+        <li class="resp-chip">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          <span>${escapeHtml(r)}</span>
+        </li>
+      `).join("");
+
+      host.innerHTML = `
+        <div class="section-heading" style="margin-bottom:28px;">
+          <span class="eyebrow" style="justify-content:center; color:${cfg.color};">Featured Technical Contribution</span>
+        </div>
+        <div class="featured-card fade-up">
+          <div class="featured-inner">
+            <div class="featured-media">
+              <img id="featuredImg" src="${escapeAttr(person.imageUrl)}"
+                   alt="Photo of ${escapeAttr(person.name)}, ${escapeAttr(person.role)}"
+                   loading="eager" width="340" height="420" />
+              <span class="role-tag">${cfg.tag}</span>
+            </div>
+            <div class="featured-content">
+              <div>
+                <span class="eyebrow">Lead Technical Contributor</span>
+                <h2 class="featured-name">${escapeHtml(person.name)}</h2>
+                <p class="featured-role">${escapeHtml(person.role)}</p>
+              </div>
+
+              <div class="featured-meta">
+                <div>
+                  <span class="label">Designation</span>
+                  <span class="value">${escapeHtml(person.designation)}</span>
+                </div>
+                <div>
+                  <span class="label">Organization</span>
+                  <span class="value">${escapeHtml(person.organization)}</span>
+                </div>
+              </div>
+
+              <div class="featured-contribution">
+                <h3 style="font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); font-weight:500; margin-bottom:8px;">Contribution to this project</h3>
+                <p>${escapeHtml(person.contribution)}</p>
+              </div>
+
+              <div class="featured-resp">
+                <h3>Key responsibilities</h3>
+                <ul class="resp-grid" style="list-style:none; padding:0; margin:0;">
+                  ${respChips}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const img = document.getElementById("featuredImg");
+      attachImageFallback(img, person.name, cfg.hex);
+    }
+
+    /* =========================================================================
+       RENDER: The other two contributor cards
+       ========================================================================= */
+    function renderOtherContributors(){
+      const others = teamMembers.filter(m => !m.featured);
+      const host = document.getElementById("otherContributors");
+
+      host.innerHTML = others.map((person, i) => {
+        const cfg = AREA_CONFIG[person.area];
+        const respTags = person.responsibilities.map(r => `<li>${escapeHtml(r)}</li>`).join("");
+        return `
+          <article class="contrib-card fade-up" style="--card-accent:${cfg.color}; --card-accent-soft:${cfg.soft}; animation-delay:${i * 0.08}s;">
+            <div class="contrib-top">
+              <div class="contrib-avatar">
+                <img data-name="${escapeAttr(person.name)}" data-color="${cfg.hex}"
+                     src="${escapeAttr(person.imageUrl)}"
+                     alt="Photo of ${escapeAttr(person.name)}, ${escapeAttr(person.role)}"
+                     loading="lazy" width="76" height="76" />
+              </div>
+              <div>
+                <h3 class="contrib-name">${escapeHtml(person.name)}</h3>
+                <p class="contrib-role">${escapeHtml(person.role)}</p>
+              </div>
+            </div>
+
+            <div class="contrib-meta">
+              <div>
+                <span class="label">Designation</span>
+                <span class="value">${escapeHtml(person.designation)}</span>
+              </div>
+              <div>
+                <span class="label">Organization</span>
+                <span class="value">${escapeHtml(person.organization)}</span>
+              </div>
+            </div>
+
+            <p class="contrib-contribution">${escapeHtml(person.contribution)}</p>
+
+            <ul class="contrib-resp">${respTags}</ul>
+          </article>
+        `;
+      }).join("");
+
+      // wire up fallback avatars after insertion
+      host.querySelectorAll("img[data-name]").forEach(img => {
+        attachImageFallback(img, img.dataset.name, img.dataset.color);
+      });
+    }
+
+    /* =========================================================================
+       RENDER: Contribution overview pipeline (Backend -> QA -> Delivery)
+       ========================================================================= */
+    function renderPipeline(){
+      const order = ["backend", "qa", "delivery"];
+      const host = document.getElementById("pipeline");
+      const nodesByArea = {};
+      teamMembers.forEach(m => { nodesByArea[m.area] = m; });
+
+      let html = "";
+      order.forEach((area, idx) => {
+        const cfg = AREA_CONFIG[area];
+        const person = nodesByArea[area];
+        html += `
+          <div class="pipeline-node" style="--node-accent:${cfg.color}; --node-accent-soft:${cfg.soft};">
+            <span class="stage-label">${cfg.stageLabel}</span>
+            <div class="icon">${cfg.icon}</div>
+            <h4>${cfg.stageTitle}</h4>
+            <p class="owner">${person ? `<b>${escapeHtml(person.name)}</b>` : "Unassigned"}</p>
+          </div>
+        `;
+        if (idx < order.length - 1){
+          html += `<div class="pipeline-connector" aria-hidden="true"></div>`;
+        }
+      });
+
+      host.innerHTML = html;
+    }
+
+    /* =========================================================================
+       RENDER: Footer columns, socials, and copyright — from SITE_CONFIG.footer
+       ========================================================================= */
+    function renderFooter(){
+      const columnsHost = document.getElementById("footerColumns");
+      columnsHost.innerHTML = SITE_CONFIG.footer.columns.map(col => {
+        let body;
+        if (col.links){
+          body = `<ul>${col.links.map(l => `<li><a href="${escapeAttr(l.href)}">${escapeHtml(l.label)}</a></li>`).join("")}</ul>`;
+        } else {
+          // col.text may contain a deliberate <br> for address-style formatting
+          body = `<p>${col.text}</p>`;
+        }
+        return `<div class="footer-col"><h5>${escapeHtml(col.title)}</h5>${body}</div>`;
+      }).join("");
+
+      const socialsHost = document.getElementById("footerSocials");
+      socialsHost.innerHTML = SITE_CONFIG.footer.socials.map(s =>
+        `<a href="${escapeAttr(s.href)}" aria-label="${escapeAttr(s.label)}">${s.icon}</a>`
+      ).join("");
+
+      const year = new Date().getFullYear();
+      document.getElementById("footerCopyright").textContent =
+        `© ${year} ${SITE_CONFIG.footer.copyrightHolder}. All rights reserved.`;
+    }
+
+    /* =========================================================================
+       Small escaping helpers (data is trusted/local, but this keeps the
+       rendering safe if the data source is ever swapped for user input)
+       ========================================================================= */
+    function escapeHtml(str){
+      return String(str ?? "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+    function escapeAttr(str){ return escapeHtml(str); }
+
+    /* =========================================================================
+       BACK BUTTON — sends the visitor back to whatever page/tab they came
+       from, exactly like the browser's own Back button.
+       - If there's history to go back to AND it came from the same site
+         (document.referrer matches our origin), use history.back().
+       - If it came from an external site (e.g. a Google search result or a
+         link on another domain), also use history.back() — that's still
+         "where they came from", and is safe because we're not navigating
+         them anywhere ourselves, just replaying browser history.
+       - Only if there's no usable history entry (e.g. this page was opened
+         directly in a new tab, so history.length is 1) do we fall back to
+         scrolling to the top of this page, since there's nowhere else to go.
+       ========================================================================= */
+    function initBackButton(){
+      const btn = document.getElementById("backButton");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        if (window.history.length > 1){
+          window.history.back();
+        } else {
+          document.getElementById("top").scrollIntoView({ behavior: "smooth" });
+        }
+      });
+    }
+    initBackButton();
+    renderBrand();
+    renderNav();
+    renderHeroBadges();
+    renderFeatured();
+    renderOtherContributors();
+    renderPipeline();
+    renderFooter();
+
+    /* =========================================================================
+       LOAD TEAM DATA FROM API
+       -------------------------------------------------------------------------
+       Fetches the live team list from /api/team/info. If the request
+       succeeds, teamMembers is replaced with the API data and the page is
+       re-rendered. If it fails (offline, endpoint down, etc.), the page
+       simply keeps showing the hardcoded fallback data above.
+       ========================================================================= */
+    async function loadTeamFromApi(){
+      try{
+        const res = await fetch("/api/team/info");
+        if (!res.ok) throw new Error(`API responded with ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data) && data.length){
+          teamMembers = data;
+        } else if (Array.isArray(data.teamMembers) && data.teamMembers.length){
+          teamMembers = data.teamMembers;
+        } else {
+          return;
+        }
+        renderHeroBadges();
+        renderFeatured();
+        renderOtherContributors();
+        renderPipeline();
+      } catch (err){
+        console.warn("Could not load team data from /api/team/info, showing fallback data:", err);
+      }
+    }
+    loadTeamFromApi();
+
+</script>
+
+</body>
+</html>

@@ -166,6 +166,32 @@
           .btn-lg{padding:13px 18px;font-size:14px;}
           .brand-name{font-size:14.5px;}
         }
+
+        /* =====================================================================
+           TEAM INFO POPUP
+        ===================================================================== */
+        .team-overlay{
+          display:none;position:fixed;inset:0;z-index:200;
+          background:rgba(18,24,31,.55);backdrop-filter:blur(2px);
+          align-items:center;justify-content:center;padding:20px;
+        }
+        .team-overlay.show{display:flex;}
+        .team-modal{
+          background:var(--surface);border-radius:var(--radius-lg);
+          max-width:400px;width:100%;padding:28px 26px 24px;
+          box-shadow:0 20px 50px rgba(18,24,31,.25);
+          text-align:left;position:relative;
+        }
+        .team-modal h3{font-size:19px;margin-bottom:8px;color:var(--ink);}
+        .team-modal-body{font-size:14px;line-height:1.6;color:var(--ink-soft);min-height:24px;}
+        .team-modal-body.loading{color:var(--ink-soft);font-style:italic;}
+        .team-modal-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+        .team-modal-actions .btn{flex:1;min-width:130px;padding:10px 14px;font-size:13.5px;}
+        .team-modal-close{
+          position:absolute;top:14px;right:14px;background:none;border:none;
+          color:var(--ink-soft);font-size:20px;line-height:1;padding:4px;
+        }
+        .team-modal-close:hover{color:var(--ink);}
     </style>
 </head>
 <body>
@@ -219,12 +245,23 @@
     <div class="container footer-row">
         <span id="footerCopyright">&nbsp;</span>
         <div class="footer-links">
-            <a href="/know/about-developer">Know the Developer</a>
+            <a href="/api/team/info">The People Behind the Project</a>
             <span class="dot-sep">·</span>
             <span>Vendor? <a href="/api/vendor/v1/login" style="color:#fff;font-weight:600;">Sign in here</a></span>
         </div>
     </div>
 </footer>
+<div class="team-overlay" id="teamOverlay">
+    <div class="team-modal">
+        <button class="team-modal-close" id="teamPopupCloseX" type="button" aria-label="Close">&times;</button>
+        <h3>Meet the Team</h3>
+        <div class="team-modal-body" id="teamPopupBody">Curious who built this? Check out the team behind this page.</div>
+        <div class="team-modal-actions">
+            <button class="btn btn-outline" id="teamPopupLater" type="button">Remind me later</button>
+            <button class="btn btn-primary" id="teamPopupView" type="button">View Team</button>
+        </div>
+    </div>
+</div>
 
 <script>
     (function(){
@@ -384,8 +421,50 @@
       loadAll();
 
       /* -----------------------------------------------------------------
+         TEAM INFO POPUP
+           "View Team" -> plain redirect to /api/team/info (no fetch/load,
+           full navigation just like goToShop below)
+           Rules:
+             - "View Team" click -> navigates to /api/team/info
+             - "Remind me later" / close (×) -> hidden for 5 hours, then reappears
+             - Fresh visitor (no localStorage yet) -> popup shows
+      ----------------------------------------------------------------- */
+      const TEAM_PAGE_URL = "/api/team/info";
+      const TEAM_HIDE_UNTIL_KEY = "teamPopupHideUntil"; // temporary (5h)
+      const TEAM_FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
+
+      const teamOverlay = document.getElementById("teamOverlay");
+
+      function shouldShowTeamPopup(){
+        const hideUntil = localStorage.getItem(TEAM_HIDE_UNTIL_KEY);
+        if (hideUntil && Date.now() < Number(hideUntil)) return false;
+        return true;
+      }
+
+      function showTeamPopup(){ teamOverlay.classList.add("show"); }
+      function hideTeamPopup(){ teamOverlay.classList.remove("show"); }
+
+      function remindTeamPopupLater(){
+        localStorage.setItem(TEAM_HIDE_UNTIL_KEY, String(Date.now() + TEAM_FIVE_HOURS_MS));
+        hideTeamPopup();
+      }
+
+      function goToTeamPage(){
+        window.location.href = TEAM_PAGE_URL;
+      }
+
+      document.getElementById("teamPopupView").addEventListener("click", goToTeamPage);
+      document.getElementById("teamPopupLater").addEventListener("click", remindTeamPopupLater);
+      document.getElementById("teamPopupCloseX").addEventListener("click", remindTeamPopupLater);
+
+      if (shouldShowTeamPopup()){
+        showTeamPopup();
+      }
+
+      /* -----------------------------------------------------------------
          SHOP NAVIGATION — plain redirect to shopUrl (employee.html or
-         home.html, resolved from vendor.storeType in applyShopDestination).
+         home.html, resolved from
+          vendor.storeType in applyShopDestination).
          (A fetch()+DOM-inject approach was tried, but it only swaps
          document.body — the target page's own <link>/<script> tags live
          in its <head> and never get loaded that way, so its CSS/JS broke.
