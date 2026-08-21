@@ -25,6 +25,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Service
@@ -787,5 +790,166 @@ public class CartsService {
         }
 
         return "Item not available";
+    }
+    public void raceTest(
+            Long userId,
+            int threadCount
+    ) throws InterruptedException {
+
+        ExecutorService executor =
+                Executors.newFixedThreadPool(threadCount);
+
+        CountDownLatch readyLatch =
+                new CountDownLatch(threadCount);
+
+        CountDownLatch startLatch =
+                new CountDownLatch(1);
+
+        CountDownLatch doneLatch =
+                new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+
+            final int threadNumber = i + 1;
+
+            executor.submit(() -> {
+
+                try {
+
+                    System.out.println(
+                            "Thread-" + threadNumber + " READY"
+                    );
+
+                    // Sabhi threads ready hone tak wait
+                    readyLatch.countDown();
+
+                    // 🔥 Yahan sab wait karenge
+                    startLatch.await();
+
+                    System.out.println(
+                            "Thread-" + threadNumber
+                                    + " -> addToCart START"
+                    );
+
+                    // Yahan tumhara actual test operation
+                    testCartCreation(userId);
+
+                    System.out.println(
+                            "Thread-" + threadNumber
+                                    + " -> addToCart END"
+                    );
+
+                } catch (Exception e) {
+
+                    System.err.println(
+                            "Thread-" + threadNumber
+                                    + " FAILED: "
+                                    + e.getMessage()
+                    );
+
+                } finally {
+
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        // 🔥 Pehle ensure karo ki saare 10 threads ready hain
+        readyLatch.await();
+
+        System.out.println();
+        System.out.println("**************************************");
+        System.out.println("ALL 10 THREADS ARE READY");
+        System.out.println("RELEASING ALL THREADS TOGETHER...");
+        System.out.println("**************************************");
+        System.out.println();
+
+        // 🔥🔥🔥 ALL THREADS RELEASED AT ONCE
+        startLatch.countDown();
+
+        // Sabhi threads complete hone ka wait
+        doneLatch.await();
+
+        executor.shutdown();
+
+        System.out.println();
+        System.out.println("**************************************");
+        System.out.println("RACE CONDITION TEST COMPLETED");
+        System.out.println("**************************************");
+    }
+
+    private void testCartCreation(Long userId) {
+
+        String tenantId =
+                "4507c2a8-1f49-4622-bb7b-6bd9f0c0ce93";
+
+        Long vendorId = 1L;
+
+        ReentrantLock lock =
+                cartLockManager.getLock(
+                        tenantId,
+                        vendorId,
+                        userId
+                );
+
+        lock.lock();
+
+        try {
+
+            System.out.println(
+                    Thread.currentThread().getName()
+                            + " ACQUIRED LOCK"
+            );
+
+            Optional<Cart> existingCart =
+                    cartRepository
+                            .findByTenantIdAndVendorIdAndUserId(
+                                    tenantId,
+                                    vendorId,
+                                    userId
+                            );
+
+            if (existingCart.isPresent()) {
+
+                System.out.println(
+                        Thread.currentThread().getName()
+                                + " -> CART ALREADY EXISTS: "
+                                + existingCart.get().getId()
+                );
+
+                return;
+            }
+
+            // Race window ko visible banane ke liye
+            Thread.sleep(1000);
+
+            Cart cart = new Cart();
+
+            cart.setTenantId(tenantId);
+            cart.setVendorId(vendorId);
+            cart.setUserId(userId);
+            cart.setRowState(1);
+
+            cartRepository.save(cart);
+
+            System.out.println(
+                    Thread.currentThread().getName()
+                            + " -> CART CREATED: "
+                            + cart.getId()
+            );
+
+        } catch (InterruptedException e) {
+
+            Thread.currentThread().interrupt();
+
+        } finally {
+
+            lock.unlock();
+
+            System.out.println(
+                    Thread.currentThread().getName()
+                            + " RELEASED LOCK"
+            );
+        }
     }
 }

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Center — We're Here to Help</title>
+    <style>
+        :root{
+          --bg:#0b1020; --card:#141c38; --border:rgba(99,102,241,.18);
+          --text:#f1f5f9; --muted:#94a3b8; --primary:#6366f1; --primary2:#818cf8; --accent:#22d3ee;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6}
+
+        .hero{padding:64px 20px 40px;text-align:center;background:radial-gradient(ellipse at top, rgba(99,102,241,.18), transparent 60%)}
+        .hero h1{font-size:34px;margin:0 0 10px;background:linear-gradient(135deg,#fff,var(--primary2));
+          -webkit-background-clip:text;background-clip:text;color:transparent}
+        .hero p{color:var(--muted);font-size:15.5px;max-width:520px;margin:0 auto}
+        .search-box{max-width:480px;margin:26px auto 0;display:flex;gap:8px;background:var(--card);
+          border:1px solid var(--border);border-radius:14px;padding:6px}
+        .search-box input{flex:1;background:none;border:none;outline:none;color:var(--text);padding:10px 12px;font-size:14px}
+        .search-box button{background:var(--primary);border:none;color:#fff;border-radius:10px;padding:0 18px;font-weight:600;cursor:pointer}
+
+        .wrap{max-width:960px;margin:0 auto;padding:10px 20px 80px}
+
+        .topics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:30px 0 50px}
+        @media (max-width:800px){.topics{grid-template-columns:repeat(2,1fr)}}
+        .topic-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 16px;
+          text-align:center;cursor:pointer;transition:transform .15s ease, border-color .15s ease}
+        .topic-card:hover{transform:translateY(-3px);border-color:var(--primary)}
+        .topic-card .emoji{font-size:26px;margin-bottom:8px}
+        .topic-card h4{margin:0 0 4px;font-size:14px}
+        .topic-card p{margin:0;font-size:11.5px;color:var(--muted)}
+
+        h2.section-title{font-size:20px;margin:44px 0 18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+        details{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+        summary{list-style:none;cursor:pointer;padding:16px 18px;font-size:14.5px;font-weight:600;display:flex;
+          justify-content:space-between;align-items:center}
+        summary::-webkit-details-marker{display:none}
+        summary::after{content:'+';font-size:20px;color:var(--muted);font-weight:400;transition:transform .2s ease}
+        details[open] summary::after{transform:rotate(45deg)}
+        details[open] summary{border-bottom:1px solid var(--border)}
+        .faq-body{padding:4px 18px 18px;color:#dbe1ee;font-size:13.5px}
+        .faq-body ol,.faq-body ul{margin:8px 0;padding-left:20px}
+        .faq-body li{margin-bottom:4px}
+
+        .cta{margin-top:56px;background:linear-gradient(135deg, rgba(99,102,241,.14), rgba(34,211,238,.08));
+          border:1px solid var(--border);border-radius:18px;padding:36px 28px;text-align:center}
+        .cta h3{margin:0 0 8px;font-size:19px}
+        .cta p{color:var(--muted);margin:0 0 18px;font-size:13.5px}
+        .cta button{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:12px 24px;
+          font-weight:600;font-size:14px;cursor:pointer}
+        .cta button:hover{background:var(--primary2)}
+
+        footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 20px}
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>How can we help you today?</h1>
+    <p>Find answers about your orders, shipping, returns and payments — or just chat with us.</p>
+    <div class="search-box">
+        <input id="faqSearch" type="text" placeholder="Search for an answer, e.g. &quot;track my order&quot;">
+        <button onclick="document.getElementById('faqSearch').focus()">Search</button>
+    </div>
+</div>
+
+<div class="wrap">
+
+    <div class="topics">
+        <div class="topic-card" onclick="scrollToSection('orders')">
+            <div class="emoji">📦</div><h4>Orders &amp; Tracking</h4><p>Where's my order?</p>
+        </div>
+        <div class="topic-card" onclick="scrollToSection('payments')">
+            <div class="emoji">💳</div><h4>Payments</h4><p>Payment methods &amp; issues</p>
+        </div>
+        <div class="topic-card" onclick="scrollToSection('returns')">
+            <div class="emoji">↩️</div><h4>Returns &amp; Refunds</h4><p>How to return an item</p>
+        </div>
+        <div class="topic-card" onclick="scrollToSection('shopping')">
+            <div class="emoji">🛍️</div><h4>Shopping</h4><p>Cart, sizes &amp; availability</p>
+        </div>
+    </div>
+
+    <h2 class="section-title" id="orders">📦 Orders &amp; Tracking</h2>
+
+    <details open>
+        <summary>How do I track my order? <span></span></summary>
+        <div class="faq-body">
+            Go to <b>My Orders</b> from your account menu, choose the order, and tap <b>Track Order</b>.
+            You'll see live status updates: Placed → Packed → Shipped → Out for Delivery → Delivered.
+        </div>
+    </details>
+
+    <details>
+        <summary>Can I cancel my order?</summary>
+        <div class="faq-body">
+            Yes — as long as the order hasn't shipped yet. Open <b>My Orders</b>, select the order and tap
+            <b>Cancel Order</b>. Once it's shipped, cancellation isn't possible, but you can request a return
+            after delivery.
+        </div>
+    </details>
+
+    <details>
+        <summary>My order is delayed. What do I do?</summary>
+        <div class="faq-body">
+            Delays sometimes happen due to weather or courier volume. Check the tracking page first — if there's
+            no update for over 2 days, chat with our support assistant (bottom-right corner) with your order
+            number and we'll look into it right away.
+        </div>
+    </details>
+
+    <h2 class="section-title" id="payments">💳 Payments</h2>
+
+    <details>
+        <summary>What payment methods do you accept?</summary>
+        <div class="faq-body">
+            We accept major debit/credit cards, UPI, net banking, and Cash on Delivery (where available).
+            You'll see all valid options at checkout.
+        </div>
+    </details>
+
+    <details>
+        <summary>My payment failed but money was deducted — what now?</summary>
+        <div class="faq-body">
+            Don't worry, this is usually a temporary bank-side hold. It's auto-reversed within 5-7 business days.
+            If it isn't, chat with our support assistant with your payment reference and we'll help you sort it out.
+        </div>
+    </details>
+
+    <h2 class="section-title" id="returns">↩️ Returns &amp; Refunds</h2>
+
+    <details>
+        <summary>What is your return policy?</summary>
+        <div class="faq-body">
+            Most items can be returned within a set number of days of delivery, as long as they're unused and
+            in original packaging. Check the specific policy on the product page, or ask our support assistant.
+        </div>
+    </details>
+
+    <details>
+        <summary>How do I start a return?</summary>
+        <div class="faq-body">
+            <ol>
+                <li>Go to <b>My Orders</b> and open the delivered order</li>
+                <li>Tap <b>Return Item</b> and choose a reason</li>
+                <li>Schedule a pickup or drop-off, as shown</li>
+                <li>Refund is issued once the item passes a quality check</li>
+            </ol>
+        </div>
+    </details>
+
+    <details>
+        <summary>When will I get my refund?</summary>
+        <div class="faq-body">
+            Refunds are usually processed within a few business days after the returned item is received and
+            checked, and then reflect in your original payment method per your bank's timeline.
+        </div>
+    </details>
+
+    <h2 class="section-title" id="shopping">🛍️ Shopping</h2>
+
+    <details>
+        <summary>How do I know if an item is in stock?</summary>
+        <div class="faq-body">
+            The product page shows real-time stock status. If it's sold out, you can still ask our support
+            assistant to check availability or restock timing.
+        </div>
+    </details>
+
+    <details>
+        <summary>Can I change my cart or address before checkout?</summary>
+        <div class="faq-body">
+            Absolutely — open your cart anytime before payment to update quantities, remove items, or change
+            the delivery address.
+        </div>
+    </details>
+
+    <div class="cta">
+        <h3>Still need help?</h3>
+        <p>Our support assistant is right here and can check your order status or product availability instantly.</p>
+        <button onclick="openSupportChat()">💬 Chat with Support</button>
+    </div>
+
+</div>
+
+<footer>We're always happy to help — just ask.</footer>
+
+<script>
+    function scrollToSection(id){
+      document.getElementById(id).scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    function openSupportChat(){
+      var bubble = document.getElementById('sc-bubble');
+      if (bubble) { bubble.click(); }
+      else { alert('Support chat is loading — please try again in a moment.'); }
+    }
+</script>
+
+<!-- Floating support chat bubble (bottom-right on every page) -->
+<script src="/support-chat-widget.js"></script>
+
+</body>
+</html>

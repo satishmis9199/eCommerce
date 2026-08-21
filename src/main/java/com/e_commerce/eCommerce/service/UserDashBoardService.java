@@ -5,6 +5,7 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -33,6 +34,7 @@ public class UserDashBoardService {
     private final vendorBussinesss vendorBussinesss;
     private final UserRepos userRepos;
     private final BannerRepository bannerRepository;
+    private final EmailSubscriberRepository newsletterSubscriberRepository;
 
     public StoreInfoResponseDTO getStoreInfo() {
 
@@ -429,5 +431,40 @@ public class UserDashBoardService {
         List<UserBannerResponseDTo> userBannerResponseDTo = bannerRepository.findActiveBanners(tenaantId, v1.getId(), LocalDateTime.now());
         return userBannerResponseDTo;
 
+    }
+
+    @Transactional
+    public void saveSubscribedEmail(String email) {
+        log.error("Inside Subscribed Email");
+
+        String tenantId = TenantContext.getTenantId();
+
+        Optional<EmailSubscriber> existingSubscriber =
+                newsletterSubscriberRepository
+                        .findByTenantIdAndEmail(tenantId, email);
+
+        if (existingSubscriber.isPresent()) {
+
+            EmailSubscriber subscriber =
+                    existingSubscriber.get();
+            if (!subscriber.isSubscribed()) {
+                subscriber.setSubscribed(true);
+                subscriber.setUpdatedAt(LocalDateTime.now());
+                newsletterSubscriberRepository.save(subscriber);
+            }
+
+            return;
+        }
+
+        EmailSubscriber subscriber =
+                EmailSubscriber.builder()
+                        .tenantId(tenantId)
+                        .email(email)
+                        .subscribed(true)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+
+        newsletterSubscriberRepository.save(subscriber);
     }
 }

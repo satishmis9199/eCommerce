@@ -4265,12 +4265,46 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
     document.getElementById("cartBtn").addEventListener("click", ()=> requireAuth(()=>showCartView()));
     document.getElementById("wishlistBtn").addEventListener("click", ()=> requireAuth(()=>navigateAccount("wishlist")));
 
-    document.getElementById("newsletterForm").addEventListener("submit", (e)=>{
-      e.preventDefault();
-      toast("Subscribed! Check your inbox for a welcome offer.", "success");
-      document.getElementById("newsletterEmail").value="";
-      // MOCK -> apiRequest(API_ENDPOINTS.newsletterSubscribe, {method:"POST", body: JSON.stringify({email})})
-    });
+   document.getElementById("newsletterForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const emailInput = document.getElementById("newsletterEmail");
+    const email = emailInput.value.trim();
+
+    if (!email) {
+        toast("Please enter your email address.", "error");
+        return;
+    }
+
+    try {
+
+        await apiRequest(
+            API_ENDPOINTS.newsletterSubscribe,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    email: email
+                })
+            }
+        );
+
+        toast(
+            "Subscribed! Check your inbox for a welcome offer.",
+            "success"
+        );
+
+        emailInput.value = "";
+
+    } catch (error) {
+
+        console.error("Newsletter subscription failed:", error);
+
+        toast(
+            error.message || "Unable to subscribe. Please try again.",
+            "error"
+        );
+    }
+});
     document.getElementById("heroPrev").addEventListener("click", ()=>goToSlide(AppState.heroIndex-1, document.querySelectorAll(".hero-slide").length));
     document.getElementById("heroNext").addEventListener("click", ()=>goToSlide(AppState.heroIndex+1, document.querySelectorAll(".hero-slide").length));
     document.getElementById("heroDots").addEventListener("click", (e)=>{

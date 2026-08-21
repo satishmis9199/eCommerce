@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/u1/v1")
@@ -270,5 +271,41 @@ public class UserDashBoardController {
                     ));
         }
     }
+    @PostMapping("/marketing/newsletter/subscribe")
+    public ResponseEntity<ApiResponse<Void>> saveSubscribedEmail(
+            @RequestBody Map<String, String> request) {
 
+        try {
+
+            String email = request.get("email");
+
+            if (email == null || email.trim().isEmpty()) {
+
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse<>(
+                                false,
+                                "Email is required."
+                        ));
+            }
+
+            email = email.trim().toLowerCase();
+
+            userDashBoardService.saveSubscribedEmail(email);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "Successfully subscribed to newsletter."
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(
+                            false,
+                            e.getMessage()
+                    ));
+        }
+    }
 }

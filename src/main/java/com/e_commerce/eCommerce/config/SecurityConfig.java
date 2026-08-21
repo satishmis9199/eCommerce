@@ -117,6 +117,7 @@ public class SecurityConfig {
                                 "/firebase-messaging-sw.js",
 
                                 "/ws/**",
+                                "/api/product-document",
 
                                 "/favicon.ico",
                                 "/tenant-not-found",
