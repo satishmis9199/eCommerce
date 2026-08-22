@@ -7,6 +7,7 @@ import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -122,5 +123,12 @@ public class CaffeineConfig {
         ));
 
         return cacheManager;
+    }
+
+    @Bean
+    public RestClient geoapifyRestClient() {
+        return RestClient.builder()
+                .baseUrl("https://api.geoapify.com")
+                .build();
     }
 }

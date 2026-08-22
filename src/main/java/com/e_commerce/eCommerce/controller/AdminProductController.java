@@ -220,7 +220,7 @@ public class AdminProductController {
     @GetMapping(value = "/s2/v1/allorders", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getAdminOrders(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
         try {
-            logger.error("inside getAdminOrders");
+
             List<OrderResponseDto> orderDetail = productService.getOrerdetail(customUserDetail);
             return ResponseEntity.ok(
                     new ApiResponse<>(

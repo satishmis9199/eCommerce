@@ -82,7 +82,6 @@ public class VendorAuthController {
                                     dto.getEmail(),
 
                                     dto.getPassword()));
-            logger.info("ADMIN successfully verified");
             String loginIp = getClientIp(request);
             String loginDevice = request.getHeader("User-Agent");
 

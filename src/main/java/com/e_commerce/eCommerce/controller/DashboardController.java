@@ -36,11 +36,7 @@ public class DashboardController {
 
         try {
             User user = user1.getUser();
-
-            logger.info("Logged In User : {}", user.getLastName());
-
             VendorProfileDTO vendorProfileDTO = dashBoardService.loadDashBoardData(user);
-
             response.setSuccess(true);
             response.setMessage("Vendor Profile has been successfully loaded.");
             response.setVendorProfile(vendorProfileDTO);
