@@ -31,8 +31,9 @@ public class TenantFilter extends OncePerRequestFilter {
 
         try {
             String host = request.getServerName();
-
+            logger.error("Inside Tenat domain check @@@@  "+host);
             if (superAdminDomain.equalsIgnoreCase(host)) {
+                logger.error("Inside Tenat domain @@@@  "+host);
                 TenantContext.setTenantId("0");
 
                 filterChain.doFilter(request, response);
