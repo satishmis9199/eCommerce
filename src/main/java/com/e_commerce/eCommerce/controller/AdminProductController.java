@@ -40,7 +40,6 @@ public class AdminProductController {
     @GetMapping("/s11/v1/product")
     public ResponseEntity<?> loadProductsForAdmin(
             @AuthenticationPrincipal CustomUserDetail userDetail) {
-        logger.info("Inside Product Load");
 
         List<ProductResponseDTO> products =
                 productService.loadAllProductsAdmin(userDetail);
