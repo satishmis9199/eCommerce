@@ -665,6 +665,8 @@
 
                 <li data-page="reviews"><a href="#"><i class="fa-solid fa-star"></i><span>Reviews</span><span
                         class="badge-pill" id="reviewsBadge" style="background:var(--orange);">0</span></a></li>
+                <li data-page="tickets"><a href="#"><i class="fa-solid fa-headset"></i><span>Support Tickets</span><span
+                        class="badge-pill" id="ticketsBadge" style="background:var(--orange);">0</span></a></li>
             </ul>
             <p class="menu-label">Account</p>
             <ul>
@@ -1456,6 +1458,41 @@
                 </div>
             </section>
 
+            <!-- ================= SUPPORT TICKETS ================= -->
+            <section class="page-section" id="page-tickets">
+                <div class="section-header fade-up">
+                    <div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Support Tickets</span></div>
+                        <h1>Support Tickets</h1>
+                        <p>Respond to customer issues about orders, products, payments and your store.</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid" style="grid-template-columns: 340px 1fr; gap:20px; align-items:flex-start;">
+                    <div class="table-card fade-up fade-up-1" style="padding:14px;">
+                        <div class="table-actions" style="margin-bottom:10px;">
+                            <select id="ticketStatusFilter" onchange="loadTickets()">
+                                <option value="">All Statuses</option>
+                                <option value="OPEN">Open</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="WAITING_FOR_CUSTOMER">Waiting on Customer</option>
+                                <option value="RESOLVED">Resolved</option>
+                                <option value="CLOSED">Closed</option>
+                            </select>
+                        </div>
+                        <div id="ticketListBody"></div>
+                    </div>
+
+                    <div class="table-card fade-up fade-up-2" id="ticketDetailCard" style="padding:20px;">
+                        <div id="ticketDetailEmpty" style="color:var(--text-muted);text-align:center;padding:60px 0;">
+                            Select a ticket to view the conversation.
+                        </div>
+                        <div id="ticketDetailBody" style="display:none;"></div>
+                    </div>
+                </div>
+            </section>
+
         </section>
         <!-- ================= SETTINGS ================= -->
         <section class="page-section" id="page-settings">
@@ -1906,6 +1943,27 @@
                 class="fa-solid fa-right-from-bracket"></i>Logout
         </li>
     </ul>
+</div>
+
+<!-- Resolve Ticket Modal -->
+<div class="modal-overlay" id="resolveTicketModal">
+    <div class="modal">
+        <div class="modal-header"><h2><i class="fa-solid fa-circle-check"></i>Mark Ticket Resolved</h2>
+            <button class="modal-close-btn" onclick="closeModal('resolveTicketModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <label style="display:block;font-size:12.5px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Describe how this issue was resolved</label>
+            <textarea id="resolveTicketNote" rows="4" placeholder="e.g. Refund processed and replacement shipped."
+                      style="width:100%;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text-primary);font-size:13.5px;font-family:inherit;outline:none;transition:border-color var(--transition);"
+                      onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <div id="resolveTicketError" style="display:none;color:var(--red);font-size:12px;margin-top:8px;">Please describe the resolution.</div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('resolveTicketModal')">Cancel</button>
+            <button class="success-btn" id="resolveTicketConfirmBtn" onclick="confirmResolveTicket()">Mark Resolved</button>
+        </div>
+    </div>
 </div>
 
 <!-- Confirm Modal -->
@@ -3292,7 +3350,11 @@ async function changeNoticeStatus(id) {
       updateOrderStatus: '/vendor/s2/v1/order/status',
       customers: '/vendor/customer',
       reviews: '/vendor/s2/v1/reviews',
-      reviewStatus: '/vendor/s2/v1/reviews/{id}/status'
+      reviewStatus: '/vendor/s2/v1/reviews/{id}/status',
+      tickets: '/vendor/s2/v1/tickets',
+      ticketDetail: (id) => `/vendor/s2/v1/tickets/${id}`,
+      ticketMessages: (id) => `/vendor/s2/v1/tickets/${id}/messages`,
+      ticketStatus: (id) => `/vendor/s2/v1/tickets/${id}/status`
     };
     const CATEGORY_API = '/vendor/s11/v11/create-Category';
     const CATEGORY_IMAGE_UPLOAD_API = '/vendor/file/upload/category';
@@ -5122,6 +5184,10 @@ if (page === 'banners' && bannerList.length === 0) {   // ← ye naya add karo
 
     if (page === 'reviews') {
         loadReviews();
+    }
+
+    if (page === 'tickets') {
+        loadTickets();
     }
 
     if (isMobile()) {
@@ -7025,6 +7091,244 @@ console.error(error);
 showToast('error', 'Security', 'Something went wrong while logging out from all devices.');
 }
 });
+}
+
+/* ============================================================
+   SUPPORT TICKETS
+============================================================ */
+let ticketList = [];
+let currentTicketId = null;
+
+function ticketStatusLabel(s){ return (s || '').replace(/_/g, ' '); }
+
+function ticketStatusColor(s){
+  switch(s){
+    case 'OPEN': return 'var(--primary, #6366f1)';
+    case 'IN_PROGRESS': return 'var(--orange)';
+    case 'WAITING_FOR_CUSTOMER': return '#0e7c8c';
+    case 'RESOLVED': return 'var(--green, #16a34a)';
+    case 'CLOSED': return 'var(--text-muted)';
+    default: return 'var(--text-muted)';
+  }
+}
+
+async function loadTickets(){
+  const listEl = document.getElementById('ticketListBody');
+  listEl.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:30px 0;">Loading...</div>`;
+  try{
+    const status = document.getElementById('ticketStatusFilter').value;
+    const url = status ? `${API_ENDPOINTS.tickets}?status=${status}` : API_ENDPOINTS.tickets;
+    const response = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+    const result = await response.json();
+    if (!response.ok || !result.success){
+      showToast('error', 'Tickets', result.message || 'Unable to fetch tickets.');
+      listEl.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:30px 0;">Couldn't load tickets.</div>`;
+      return;
+    }
+    ticketList = result.data || [];
+
+    const openCount = ticketList.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
+    const badge = document.getElementById('ticketsBadge');
+    if (badge) badge.textContent = openCount;
+
+    if (!ticketList.length){
+      listEl.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:30px 0;">No tickets here.</div>`;
+      return;
+    }
+
+    listEl.innerHTML = ticketList.map(t => `
+      <div class="ticket-row-item" data-ticket-id="${t.id}"
+           style="padding:12px;border:1px solid var(--border-color, #e5e7eb);border-radius:10px;margin-bottom:8px;cursor:pointer;${t.id===currentTicketId ? 'border-color:var(--primary,#6366f1);' : ''}"
+           onclick="openTicketDetail(${t.id})">
+        <div style="font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlSafe(t.subject)}</div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">
+          ${escapeHtmlSafe(t.ticketNumber)} · ${escapeHtmlSafe(t.category)}${t.orderNumber ? ' · ' + escapeHtmlSafe(t.orderNumber) : ''}
+        </div>
+        <span style="display:inline-block;margin-top:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:999px;background:${ticketStatusColor(t.status)}22;color:${ticketStatusColor(t.status)};">
+          ${ticketStatusLabel(t.status)}
+        </span>
+      </div>
+    `).join('');
+
+  }catch(error){
+    console.error(error);
+    showToast('error', 'Tickets', 'Something went wrong while loading tickets.');
+    listEl.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:30px 0;">Couldn't load tickets.</div>`;
+  }
+}
+
+async function openTicketDetail(ticketId){
+  currentTicketId = ticketId;
+  document.getElementById('ticketDetailEmpty').style.display = 'none';
+  const bodyEl = document.getElementById('ticketDetailBody');
+  bodyEl.style.display = 'block';
+  bodyEl.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:40px 0;">Loading...</div>`;
+
+  try{
+    const response = await fetch(API_ENDPOINTS.ticketDetail(ticketId), { credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+    const result = await response.json();
+    if (currentTicketId !== ticketId) return; // a newer ticket was opened meanwhile
+    if (!response.ok || !result.success){
+      showToast('error', 'Tickets', result.message || 'Unable to load this ticket.');
+      return;
+    }
+    renderTicketDetail(result.data);
+    document.querySelectorAll('.ticket-row-item').forEach(row => {
+      row.style.borderColor = (Number(row.dataset.ticketId) === ticketId) ? 'var(--primary,#6366f1)' : 'var(--border-color, #e5e7eb)';
+    });
+  }catch(error){
+    console.error(error);
+    showToast('error', 'Tickets', 'Something went wrong while loading this ticket.');
+  }
+}
+
+function renderTicketDetail(t){
+  const resolutionBlock = t.status === 'RESOLVED' ? `
+    <div style="background:#ecfdf5;border:1px solid #bfe8cf;border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+      <div style="font-weight:600;font-size:13px;color:var(--green,#16a34a);margin-bottom:4px;">You marked this as resolved</div>
+      <div style="font-size:13px;">${escapeHtmlSafe(t.resolutionNote || '')}</div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-top:6px;">Waiting for the customer to confirm.</div>
+    </div>` : '';
+
+  const messagesHtml = (t.messages || []).map(m => {
+    if (m.senderType === 'SYSTEM'){
+      return `<div style="text-align:center;font-size:11.5px;color:var(--text-muted);font-style:italic;margin:6px 0;">${escapeHtmlSafe(m.message)}</div>`;
+    }
+    const isVendor = m.senderType === 'VENDOR';
+    return `
+      <div style="max-width:78%;margin-bottom:8px;${isVendor ? 'margin-left:auto;text-align:right;' : ''}">
+        <div style="font-size:10.5px;color:var(--text-muted);margin-bottom:3px;">${isVendor ? 'You' : 'Customer'} · ${formatDateTime(m.createdAt)}</div>
+        <div style="display:inline-block;text-align:left;padding:9px 12px;border-radius:12px;font-size:13.5px;white-space:pre-wrap;
+          background:${isVendor ? 'var(--primary,#6366f1)' : '#f3f4f6'};color:${isVendor ? '#fff' : '#111'};">
+          ${escapeHtmlSafe(m.message)}
+        </div>
+      </div>`;
+  }).join('');
+
+  const statusActions = t.status !== 'CLOSED' ? `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      ${t.status !== 'IN_PROGRESS' ? `<button class="secondary-btn" onclick="updateTicketStatus('IN_PROGRESS')">Mark In Progress</button>` : ''}
+      ${t.status !== 'WAITING_FOR_CUSTOMER' ? `<button class="secondary-btn" onclick="updateTicketStatus('WAITING_FOR_CUSTOMER')">Waiting on Customer</button>` : ''}
+      ${t.status !== 'RESOLVED' ? `<button class="secondary-btn" onclick="openResolveTicketPrompt()">Mark Resolved</button>` : ''}
+      <button class="secondary-btn" style="color:#dc2626;" onclick="updateTicketStatus('CLOSED')">Close Ticket</button>
+    </div>` : '';
+
+  const replyBlock = t.status !== 'CLOSED' ? `
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <input type="text" id="ticketReplyInput" placeholder="Reply to the customer..." style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();sendTicketReply();}">
+      <button class="secondary-btn" id="ticketReplyBtn" onclick="sendTicketReply()">Send</button>
+    </div>` : `<div style="color:var(--text-muted);font-size:12.5px;margin-top:14px;">This ticket is closed.</div>`;
+
+  document.getElementById('ticketDetailBody').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+      <h3 style="margin:0;">${escapeHtmlSafe(t.subject)}</h3>
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:4px 9px;border-radius:999px;background:${ticketStatusColor(t.status)}22;color:${ticketStatusColor(t.status)};">
+        ${ticketStatusLabel(t.status)}
+      </span>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+      ${escapeHtmlSafe(t.ticketNumber)} · ${escapeHtmlSafe(t.category)}${t.orderNumber ? ' · Order ' + escapeHtmlSafe(t.orderNumber) : ''} · Raised ${formatDateTime(t.createdAt)}
+    </div>
+    ${resolutionBlock}
+    ${statusActions}
+    <div style="max-height:320px;overflow-y:auto;padding:4px;">${messagesHtml}</div>
+    ${replyBlock}
+  `;
+}
+
+async function sendTicketReply(){
+  const input = document.getElementById('ticketReplyInput');
+  const btn = document.getElementById('ticketReplyBtn');
+  const message = input.value.trim();
+  if (!message) return;
+  if (btn) btn.disabled = true;
+  try{
+    const response = await fetch(API_ENDPOINTS.ticketMessages(currentTicketId), {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success){
+      showToast('error', 'Tickets', result.message || 'Unable to send reply.');
+      return;
+    }
+    renderTicketDetail(result.data);
+    scrollTicketMessagesToBottom();
+  }catch(error){
+    console.error(error);
+    showToast('error', 'Tickets', 'Something went wrong while sending your reply.');
+  }finally{
+    if (btn) btn.disabled = false;
+  }
+}
+
+function scrollTicketMessagesToBottom(){
+  const el = document.querySelector('#ticketDetailBody > div[style*="overflow-y:auto"]');
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+async function updateTicketStatus(status, resolutionNote){
+  if (updateTicketStatus._busy) return false;
+  updateTicketStatus._busy = true;
+  try{
+    const response = await fetch(API_ENDPOINTS.ticketStatus(currentTicketId), {
+      method: 'PATCH', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, resolutionNote })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success){
+      showToast('error', 'Tickets', result.message || 'Unable to update ticket status.');
+      return false;
+    }
+    showToast('success', 'Tickets', 'Ticket status updated.');
+    renderTicketDetail(result.data);
+    loadTickets();
+    return true;
+  }catch(error){
+    console.error(error);
+    showToast('error', 'Tickets', 'Something went wrong while updating the ticket.');
+    return false;
+  }finally{
+    updateTicketStatus._busy = false;
+  }
+}
+
+function openResolveTicketPrompt(){
+  const textarea = document.getElementById('resolveTicketNote');
+  const errorEl = document.getElementById('resolveTicketError');
+  textarea.value = '';
+  errorEl.style.display = 'none';
+  textarea.style.borderColor = 'var(--border)';
+  openModal('resolveTicketModal');
+  setTimeout(() => textarea.focus(), 50);
+}
+
+async function confirmResolveTicket(){
+  const textarea = document.getElementById('resolveTicketNote');
+  const errorEl = document.getElementById('resolveTicketError');
+  const note = textarea.value.trim();
+  if (!note){
+    errorEl.style.display = 'block';
+    textarea.style.borderColor = 'var(--red)';
+    textarea.focus();
+    return;
+  }
+  const btn = document.getElementById('resolveTicketConfirmBtn');
+  btn.disabled = true;
+  try{
+    const ok = await updateTicketStatus('RESOLVED', note);
+    if (ok) closeModal('resolveTicketModal');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function escapeHtmlSafe(str){
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
 }
 
 </script>

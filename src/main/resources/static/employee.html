@@ -667,6 +667,24 @@
         .status-badge.delivered{background:var(--success-bg);color:var(--success);}
         .status-badge.transit{background:#FEF3E2;color:var(--amber-dark);}
         .status-badge.cancelled{background:var(--danger-bg);color:var(--danger);}
+        .status-badge.ticket-OPEN{background:var(--brand-primary-light);color:var(--brand-primary-dark);}
+        .status-badge.ticket-IN_PROGRESS{background:#FEF3E2;color:var(--amber-dark);}
+        .status-badge.ticket-WAITING_FOR_CUSTOMER{background:#E6F7FA;color:#0E7C8C;}
+        .status-badge.ticket-RESOLVED{background:var(--success-bg);color:var(--success);}
+        .status-badge.ticket-CLOSED{background:var(--paper);color:var(--muted);}
+
+        .ticket-thread{display:flex;flex-direction:column;gap:10px;margin:16px 0;max-height:360px;overflow-y:auto;padding:4px;}
+        .ticket-msg{max-width:80%;padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;}
+        .ticket-msg-CUSTOMER{align-self:flex-end;background:var(--brand-primary);color:#fff;border-bottom-right-radius:4px;}
+        .ticket-msg-VENDOR{align-self:flex-start;background:var(--paper);border:1px solid var(--border);border-bottom-left-radius:4px;}
+        .ticket-msg-SYSTEM{align-self:center;background:none;color:var(--muted);font-size:11.5px;font-style:italic;}
+        .ticket-msg .who{font-size:10.5px;opacity:.7;margin-bottom:3px;font-weight:600;}
+        .ticket-reply-row{display:flex;gap:8px;margin-top:12px;}
+        .ticket-reply-row input{flex:1;}
+        .ticket-resolution-box{background:var(--success-bg);border:1px solid #bfe8cf;border-radius:12px;padding:14px 16px;margin:14px 0;}
+        .ticket-resolution-box h4{margin:0 0 6px;font-size:13px;color:var(--success);}
+        .ticket-confirm-row{display:flex;gap:10px;margin-top:12px;}
+        .ticket-confirm-row button{flex:1;}
 
         /* Cart page */
         .cart-shell{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;padding:28px 0 60px;}
@@ -1842,7 +1860,10 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       notifications:         `${API_BASE}/notifications`,
       coupons:               `${API_BASE}/coupons`,
       wallet:                `${API_BASE}/wallet`,
-      supportTicket:         `${API_BASE}/support/tickets`,
+      supportTicket:         `${API_BASE}/tickets`,
+      supportTicketDetail:   (ticketId) => `${API_BASE}/tickets/${ticketId}`,
+      supportTicketMessages: (ticketId) => `${API_BASE}/tickets/${ticketId}/messages`,
+      supportTicketConfirm:  (ticketId) => `${API_BASE}/tickets/${ticketId}/confirm-resolution`,
       faqs:                  `${API_BASE}/support/faqs`,
       contactVendor:         `${API_BASE}/support/contact-vendor`,
       newsletterSubscribe:   `${API_BASE}/marketing/newsletter/subscribe`,
@@ -4265,46 +4286,12 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
     document.getElementById("cartBtn").addEventListener("click", ()=> requireAuth(()=>showCartView()));
     document.getElementById("wishlistBtn").addEventListener("click", ()=> requireAuth(()=>navigateAccount("wishlist")));
 
-   document.getElementById("newsletterForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const emailInput = document.getElementById("newsletterEmail");
-    const email = emailInput.value.trim();
-
-    if (!email) {
-        toast("Please enter your email address.", "error");
-        return;
-    }
-
-    try {
-
-        await apiRequest(
-            API_ENDPOINTS.newsletterSubscribe,
-            {
-                method: "POST",
-                body: JSON.stringify({
-                    email: email
-                })
-            }
-        );
-
-        toast(
-            "Subscribed! Check your inbox for a welcome offer.",
-            "success"
-        );
-
-        emailInput.value = "";
-
-    } catch (error) {
-
-        console.error("Newsletter subscription failed:", error);
-
-        toast(
-            error.message || "Unable to subscribe. Please try again.",
-            "error"
-        );
-    }
-});
+    document.getElementById("newsletterForm").addEventListener("submit", (e)=>{
+      e.preventDefault();
+      toast("Subscribed! Check your inbox for a welcome offer.", "success");
+      document.getElementById("newsletterEmail").value="";
+      // MOCK -> apiRequest(API_ENDPOINTS.newsletterSubscribe, {method:"POST", body: JSON.stringify({email})})
+    });
     document.getElementById("heroPrev").addEventListener("click", ()=>goToSlide(AppState.heroIndex-1, document.querySelectorAll(".hero-slide").length));
     document.getElementById("heroNext").addEventListener("click", ()=>goToSlide(AppState.heroIndex+1, document.querySelectorAll(".hero-slide").length));
     document.getElementById("heroDots").addEventListener("click", (e)=>{
@@ -4529,11 +4516,7 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
           wallet.transactions.map(t=>`<div class="order-row"><div style="flex:1;">${t.desc}<div style="font-size:11.5px;color:var(--muted-2);">${t.date}</div></div><span class="mono" style="color:${t.amount>0?'var(--success)':'var(--danger)'};font-weight:600;">${t.amount>0?'+':''}${fmtPrice(t.amount)}</span></div>`).join("");
       }
       else if (pageId==="support"){
-        panel.innerHTML = `<h3 style="margin-bottom:14px;">Support Tickets</h3>
-          <div class="empty-state"><div class="es-icon">🎧</div>No open tickets.</div>
-          <div class="field"><label>Subject</label><input placeholder="Briefly describe the issue"></div>
-          <div class="field"><label>Message</label><input placeholder="Tell us more" style="height:80px;"></div>
-          <button class="btn btn-primary">Submit Ticket</button>`;
+        await renderSupportTicketsPanel(panel);
       }
       else if (pageId==="help"){
         panel.innerHTML = `<h3 style="margin-bottom:14px;">Help Center</h3><p style="color:var(--muted);font-size:14px;">Browse FAQs or contact support for order, payment and delivery issues.</p><button class="btn btn-primary" data-account="faqs" style="margin-top:10px;">Browse FAQs</button>`;
@@ -5613,8 +5596,212 @@ function renderReturnSection(track){
       }
     }
 
+    /* ---------------------------------------------------------------------
+       SUPPORT TICKETS — customer account panel (real backend, replaces the
+       old static placeholder). Uses the same apiRequest/toast/escapeHtml
+       helpers as the rest of the account area.
+    --------------------------------------------------------------------- */
+    let currentTicketView = "list";   // "list" | "new" | "detail"
+    let currentTicketId = null;
+
+    function ticketStatusLabel(s){ return (s||"").replace(/_/g," "); }
+
+    function fmtTicketDate(iso){
+      if(!iso) return "";
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined,{day:"2-digit",month:"short"}) + " " +
+             d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+    }
+
+    async function renderSupportTicketsPanel(panel){
+      currentTicketView = "list";
+      await renderTicketListView(panel);
+    }
+
+    async function renderTicketListView(panel){
+      panel.innerHTML = `<div class="skeleton" style="height:160px;"></div>`;
+      try{
+        const res = await apiRequest(API_ENDPOINTS.supportTicket, {}, { silentError:true });
+        const tickets = res && res.data ? res.data : [];
+
+        panel.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h3 style="margin:0;">Support Tickets</h3>
+            <button class="btn btn-primary btn-sm" id="newTicketBtn">+ New Ticket</button>
+          </div>
+          <div id="ticketListBody">
+            ${tickets.length ? tickets.map(t => `
+              <div class="order-row" style="cursor:pointer;" data-ticket-id="${t.id}">
+                <div style="flex:1;min-width:0;">
+                  <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(t.subject)}</div>
+                  <div style="font-size:12px;color:var(--muted);margin-top:3px;">
+                    ${escapeHtml(t.ticketNumber)} · ${escapeHtml(t.category)}${t.orderNumber ? " · " + escapeHtml(t.orderNumber) : ""} · ${fmtTicketDate(t.createdAt)}
+                  </div>
+                </div>
+                <span class="status-badge ticket-${t.status}">${ticketStatusLabel(t.status)}</span>
+              </div>
+            `).join("") : `<div class="empty-state"><div class="es-icon">🎧</div>No support tickets yet.<br>Facing an issue with an order, product, payment or the store? Raise a ticket and we'll help you out.</div>`}
+          </div>
+        `;
+
+        const newBtn = document.getElementById("newTicketBtn");
+        if (newBtn) newBtn.addEventListener("click", () => renderNewTicketView(panel));
+
+        panel.querySelectorAll("[data-ticket-id]").forEach(row => {
+          row.addEventListener("click", () => renderTicketDetailView(panel, row.dataset.ticketId));
+        });
+
+      }catch(e){
+        panel.innerHTML = `<h3 style="margin-bottom:14px;">Support Tickets</h3>
+          <div class="empty-state"><div class="es-icon">🎧</div>Couldn't load your tickets right now.</div>`;
+      }
+    }
+
+    function renderNewTicketView(panel){
+      panel.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <button class="btn btn-ghost btn-sm" id="backToTicketListBtn">← Back</button>
+          <h3 style="margin:0;">New Support Ticket</h3>
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <select id="ticketCategory">
+            <option value="ORDER">Order issue</option>
+            <option value="PRODUCT">Product issue</option>
+            <option value="PAYMENT">Payment issue</option>
+            <option value="VENDOR">Vendor / store issue</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Order Number (optional)</label><input id="ticketOrderNumber" placeholder="e.g. ORD-2024-00123"></div>
+        <div class="field"><label>Subject</label><input id="ticketSubject" placeholder="Briefly describe the issue"></div>
+        <div class="field"><label>Description</label><input id="ticketDescription" placeholder="Tell us more" style="height:90px;"></div>
+        <button class="btn btn-primary" id="submitTicketBtn">Submit Ticket</button>
+      `;
+
+      document.getElementById("backToTicketListBtn").addEventListener("click", () => renderTicketListView(panel));
+
+      document.getElementById("submitTicketBtn").addEventListener("click", async () => {
+        const subject = document.getElementById("ticketSubject").value.trim();
+        const description = document.getElementById("ticketDescription").value.trim();
+        if (!subject || !description){
+          toast("Subject and description are required.", "error");
+          return;
+        }
+        const btn = document.getElementById("submitTicketBtn");
+        btn.disabled = true;
+        try{
+          await apiRequest(API_ENDPOINTS.supportTicket, {
+            method: "POST",
+            body: JSON.stringify({
+              category: document.getElementById("ticketCategory").value,
+              subject,
+              description,
+              orderNumber: document.getElementById("ticketOrderNumber").value.trim() || null
+            })
+          });
+          toast("Ticket submitted successfully", "success");
+          await renderTicketListView(panel);
+        }catch(e){
+          btn.disabled = false;
+        }
+      });
+    }
+
+    async function renderTicketDetailView(panel, ticketId){
+      currentTicketId = ticketId;
+      panel.innerHTML = `<div class="skeleton" style="height:220px;"></div>`;
+      try{
+        const res = await apiRequest(API_ENDPOINTS.supportTicketDetail(ticketId), {}, { silentError:true });
+        const t = res.data;
+        renderTicketDetailHtml(panel, t);
+      }catch(e){
+        panel.innerHTML = `<div class="empty-state"><div class="es-icon">🎧</div>Couldn't load this ticket.</div>`;
+      }
+    }
+
+    function renderTicketDetailHtml(panel, t){
+      const resolutionBlock = t.status === "RESOLVED" ? `
+        <div class="ticket-resolution-box">
+          <h4>The vendor marked this as resolved</h4>
+          <p style="margin:0;font-size:13px;">${escapeHtml(t.resolutionNote || "")}</p>
+          <div class="ticket-confirm-row">
+            <button class="btn btn-primary btn-sm" id="ticketConfirmYes">Yes, it's resolved</button>
+            <button class="btn btn-ghost btn-sm" id="ticketConfirmNo">No, still an issue</button>
+          </div>
+        </div>` : "";
+
+      const messagesHtml = (t.messages || []).map(m => {
+        if (m.senderType === "SYSTEM"){
+          return `<div class="ticket-msg ticket-msg-SYSTEM">${escapeHtml(m.message)}</div>`;
+        }
+        const who = m.senderType === "CUSTOMER" ? "You" : "Support";
+        return `<div class="ticket-msg ticket-msg-${m.senderType}">
+                  <div class="who">${who} · ${fmtTicketDate(m.createdAt)}</div>${escapeHtml(m.message)}
+                </div>`;
+      }).join("");
+
+      const replyBlock = t.status !== "CLOSED" ? `
+        <div class="ticket-reply-row">
+          <input id="ticketReplyInput" placeholder="Type a message...">
+          <button class="btn btn-primary btn-sm" id="ticketReplyBtn">Send</button>
+        </div>` : `<div style="color:var(--muted);font-size:12.5px;margin-top:10px;">This ticket is closed. Raise a new ticket if the issue comes up again.</div>`;
+
+      panel.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <button class="btn btn-ghost btn-sm" id="backToTicketListBtn2">← Back</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+          <h3 style="margin:0;">${escapeHtml(t.subject)}</h3>
+          <span class="status-badge ticket-${t.status}">${ticketStatusLabel(t.status)}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">
+          ${escapeHtml(t.ticketNumber)} · ${escapeHtml(t.category)}${t.orderNumber ? " · " + escapeHtml(t.orderNumber) : ""}
+        </div>
+        ${resolutionBlock}
+        <div class="ticket-thread">${messagesHtml}</div>
+        ${replyBlock}
+      `;
+
+      document.getElementById("backToTicketListBtn2").addEventListener("click", () => renderTicketListView(panel));
+
+      const replyBtn = document.getElementById("ticketReplyBtn");
+      if (replyBtn){
+        replyBtn.addEventListener("click", async () => {
+          const input = document.getElementById("ticketReplyInput");
+          const message = input.value.trim();
+          if (!message) return;
+          replyBtn.disabled = true;
+          try{
+            const res = await apiRequest(API_ENDPOINTS.supportTicketMessages(t.id), {
+              method: "POST",
+              body: JSON.stringify({ message })
+            });
+            renderTicketDetailHtml(panel, res.data);
+          }catch(e){
+            replyBtn.disabled = false;
+          }
+        });
+      }
+
+      const yesBtn = document.getElementById("ticketConfirmYes");
+      const noBtn = document.getElementById("ticketConfirmNo");
+      if (yesBtn) yesBtn.addEventListener("click", () => submitTicketConfirmation(panel, t.id, true));
+      if (noBtn) noBtn.addEventListener("click", () => submitTicketConfirmation(panel, t.id, false));
+    }
+
+    async function submitTicketConfirmation(panel, ticketId, confirmed){
+      try{
+        const res = await apiRequest(API_ENDPOINTS.supportTicketConfirm(ticketId), {
+          method: "POST",
+          body: JSON.stringify({ confirmed })
+        });
+        toast(confirmed ? "Thanks! Ticket closed." : "Marked as still unresolved — the vendor has been notified.", "success");
+        renderTicketDetailHtml(panel, res.data);
+      }catch(e){ /* toast already shown by apiRequest on failure */ }
+    }
+
     init();
 </script>
-<script src="/support-chat-widget.js"></script>
 </body>
 </html>

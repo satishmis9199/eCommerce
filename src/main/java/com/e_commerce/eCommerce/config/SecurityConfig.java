@@ -123,7 +123,9 @@ public class SecurityConfig {
                                 "/tenant-not-found",
                                 "/tenant-not-found.html",
                                 "/employee.html",
-
+                                    "/swagger-ui/index.html",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
 
                                 "/api/access-denied",
                                 "/know/about-developer",
