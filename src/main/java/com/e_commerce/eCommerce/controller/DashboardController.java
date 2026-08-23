@@ -63,7 +63,6 @@ public class DashboardController {
         try {
             User user = userDetail.getUser();
 
-            logger.info("Loading profile for user: {}", user.getEmail());
 
             MyProfileDTO profile = dashBoardService.getPrrofileData(user);
 
