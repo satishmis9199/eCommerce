@@ -102,7 +102,7 @@ public class DashboardController {
 
     @PostMapping("/s2/v1/change-password")
     public ResponseEntity<?> updatePassword(@RequestBody PasswordChangeDto pas, @AuthenticationPrincipal CustomUserDetail userDetail) {
-        logger.info("Inside chnage Pw");
+
         try {
 
             String message = vendorService.changeCurrentUserPassword(pas, userDetail);
