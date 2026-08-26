@@ -80,9 +80,6 @@ public class AuthController {
                     );
             String loginIp = getClientIp(request);
             String loginDevice = request.getHeader("User-Agent");
-            logger.info("Loginn Ip --- :: {}", loginIp);
-            logger.info("Loginn Device --- :: {}", loginDevice);
-            logger.info("Requet data --- :: {}", request);
             CustomUserDetail user =
 
                     (CustomUserDetail) auth.getPrincipal();
