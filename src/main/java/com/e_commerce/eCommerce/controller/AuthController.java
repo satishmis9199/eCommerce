@@ -139,7 +139,7 @@ public class AuthController {
             Roles role = user.getRole();
             logger.info("Authentic Person role is :: " + role);
             String currentTenat = TenantContext.getTenantId();
-            logger.info(" tenant id is " + currentTenat);
+            
             if (role != Roles.SUPER_ADMIN) {
                 return ResponseEntity.status(401)
                         .body(Map.of(
