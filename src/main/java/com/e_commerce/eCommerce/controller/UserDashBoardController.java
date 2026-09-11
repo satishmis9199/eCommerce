@@ -272,7 +272,7 @@ public class UserDashBoardController {
         }
     }
     @PostMapping("/marketing/newsletter/subscribe")
-    public ResponseEntity<ApiResponse<Void>> saveSubscribedEmail(
+    public ResponseEntity<ApiResponse<?>> saveSubscribedEmail(
             @RequestBody Map<String, String> request) {
 
         try {
@@ -289,7 +289,7 @@ public class UserDashBoardController {
             }
 
             email = email.trim().toLowerCase();
-
+           log.error("Email Subscribed Request Recieve  -- "+email);
             userDashBoardService.saveSubscribedEmail(email);
 
             return ResponseEntity.ok(

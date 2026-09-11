@@ -3,6 +3,7 @@ package com.e_commerce.eCommerce.service;
 import com.e_commerce.eCommerce.config.R2Properties;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
@@ -17,6 +18,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -35,6 +37,7 @@ public class UserDashBoardService {
     private final UserRepos userRepos;
     private final BannerRepository bannerRepository;
     private final EmailSubscriberRepository newsletterSubscriberRepository;
+    private final EmailService emailService;
 
     public StoreInfoResponseDTO getStoreInfo() {
 
@@ -435,15 +438,18 @@ public class UserDashBoardService {
 
     @Transactional
     public void saveSubscribedEmail(String email) {
-        log.error("Inside Subscribed Email");
-
         String tenantId = TenantContext.getTenantId();
-
+        Optional<Vendor> vendor=vendorRepository.findByTenantId(tenantId);
+        if(vendor.isEmpty()){
+            throw new RuntimeException("Vendor Does Not Exist");
+        }
+      Vendor v1=vendor.get();
         Optional<EmailSubscriber> existingSubscriber =
                 newsletterSubscriberRepository
                         .findByTenantIdAndEmail(tenantId, email);
 
         if (existingSubscriber.isPresent()) {
+            log.error("Already Present email");
 
             EmailSubscriber subscriber =
                     existingSubscriber.get();
@@ -464,7 +470,25 @@ public class UserDashBoardService {
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
                         .build();
+        log.error("Email Sibscribed");
 
         newsletterSubscriberRepository.save(subscriber);
+        String storeUrl="https://"+v1.getSubDomain();
+
+
+        EmailRequestDto emailRequest = EmailRequestDto.builder()
+                .to(email)
+                .subject("Welcome to Our Newsletter — Enjoy Your Exclusive Offer")
+                .templateName("subscribed-welcome")
+                .templateVariables(Map.of(
+                        "tenantName",v1.getStoreName() ,
+                        "email", v1.getEmail(),
+                        "storeUrl",storeUrl
+
+                ))
+                .build();
+        emailService.sendEmailAsync(emailRequest
+        );
+
     }
 }

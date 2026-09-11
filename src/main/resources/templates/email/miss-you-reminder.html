@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>We miss you</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f5;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .wrapper {
+            width: 100%;
+            padding: 30px 0;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .header {
+            background-color: #1c1c1e;
+            padding: 24px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            font-size: 20px;
+            margin: 0;
+        }
+        .body {
+            padding: 28px 24px;
+            color: #3a3a3c;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .body p {
+            margin: 0 0 16px;
+        }
+        .cta {
+            text-align: center;
+            margin: 24px 0 8px;
+        }
+        .cta a {
+            display: inline-block;
+            background-color: #1c1c1e;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #9a9a9e;
+            padding: 18px 24px 28px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="container">
+        <div class="header">
+            <h1 th:text="${tenantName}">Your Store</h1>
+        </div>
+        <div class="body">
+            <p>Hi there,</p>
+            <p>
+                It's been a while since your last visit to
+                <strong th:text="${tenantName}">Your Store</strong>!
+                We've added some new products we think you'll love, and
+                we didn't want you to miss out.
+            </p>
+            <p>Come take a look and see what's fresh — we'd love to have you back.</p>
+
+
+            <div class="cta">
+                <a href="https://yourstore.com"
+                   th:href="${storeUrl}">
+                    Explore What's New
+                </a>
+            </div>
+
+            <div class="cta">
+                <a href="https://yourstore.com" th:href="@{https://yourstore.com}">Explore What's New</a>
+            </div>
+        </div>
+        <div class="footer">
+            You're receiving this because you subscribed to updates from
+            <span th:text="${tenantName}">Your Store</span>.
+            <br>
+            <span th:if="${email != null}" th:text="${email}"></span>
+        </div>
+    </div>
+</div>
+</body>
+</html>

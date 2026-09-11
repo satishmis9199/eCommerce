@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.entity;
 
+import com.e_commerce.eCommerce.enums.ReminderType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,4 +39,9 @@ public class EmailSubscriber {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    private LocalDateTime lastReminderSentAt;
+
+    /** MISS_YOU ya SPECIAL_OFFER — konsa template last bheja gaya tha */
+    @Enumerated(EnumType.STRING)
+    private ReminderType lastReminderType;
 }

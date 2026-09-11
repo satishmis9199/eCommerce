@@ -1,6 +1,7 @@
 package com.e_commerce.eCommerce.service;
 
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
+import com.e_commerce.eCommerce.enums.ReminderType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -27,6 +29,12 @@ public class EmailService {
     private final TemplateEngine templateEngine;
     @Value("${app.mail.from:no-reply@example.com}")
     private String defaultFrom;
+
+    // --- Reminder email tuning — templates niche resolveReminderTemplate() me set hain ---
+    private static final String MISS_YOU_TEMPLATE = "email/miss-you-reminder";
+    private static final String SPECIAL_OFFER_TEMPLATE = "email/special-offer-reminder";
+    private static final String SPECIAL_OFFER_DISCOUNT_CODE = "WELCOME15";
+    private static final int SPECIAL_OFFER_DISCOUNT_PERCENTAGE = 15;
 
 
     public void sendEmail(EmailRequestDto request) {
@@ -137,6 +145,44 @@ public class EmailService {
         }
 
         return request.getText();
+    }
+
+    public void sendReminderEmail(String email, String tenantName, ReminderType typeToSend,String subdomain) {
+
+        if (typeToSend == null) {
+            log.warn("sendReminderEmail called with null ReminderType for {}, skipping", email);
+            return;
+        }
+        String storeUrl= "https://"+subdomain;
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("tenantName", tenantName);
+        variables.put("email", email);
+        variables.put("storeUrl",storeUrl);
+
+        String subject;
+        String templateName;
+
+        if (typeToSend == ReminderType.SPECIAL_OFFER) {
+
+            subject = tenantName + " — We miss you! Here's " + SPECIAL_OFFER_DISCOUNT_PERCENTAGE + "% off, just for you";
+            templateName = SPECIAL_OFFER_TEMPLATE;
+            variables.put("discountCode", SPECIAL_OFFER_DISCOUNT_CODE);
+            variables.put("discountPercentage", SPECIAL_OFFER_DISCOUNT_PERCENTAGE);
+
+        } else {
+
+            subject = "It's been a while — see what's new at " + tenantName;
+            templateName = MISS_YOU_TEMPLATE;
+        }
+
+        EmailRequestDto request = EmailRequestDto.builder()
+                .to(email)
+                .subject(subject)
+                .templateName(templateName)
+                .templateVariables(variables)
+                .build();
+
+        sendEmailAsync(request);
     }
 
     public static class EmailSendException extends RuntimeException {

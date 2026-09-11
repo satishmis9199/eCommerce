@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>A special offer for you</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f5;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .wrapper {
+            width: 100%;
+            padding: 30px 0;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .header {
+            background: linear-gradient(135deg, #b8433a, #d9695f);
+            padding: 24px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            font-size: 20px;
+            margin: 0;
+        }
+        .body {
+            padding: 28px 24px;
+            color: #3a3a3c;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .body p {
+            margin: 0 0 16px;
+        }
+        .discount-box {
+            border: 2px dashed #b8433a;
+            border-radius: 8px;
+            text-align: center;
+            padding: 16px;
+            margin: 20px 0;
+            background-color: #fdf3f2;
+        }
+        .discount-box .code {
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #b8433a;
+        }
+        .discount-box .percent {
+            font-size: 13px;
+            color: #6b6b6f;
+            margin-top: 6px;
+        }
+        .cta {
+            text-align: center;
+            margin: 24px 0 8px;
+        }
+        .cta a {
+            display: inline-block;
+            background-color: #b8433a;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #9a9a9e;
+            padding: 18px 24px 28px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="container">
+        <div class="header">
+            <h1 th:text="${tenantName}">Your Store</h1>
+        </div>
+        <div class="body">
+            <p>Hi there,</p>
+            <p>
+                We really miss having you around at
+                <strong th:text="${tenantName}">Your Store</strong>!
+                As a thank-you for being part of our community, here's a
+                special discount just for you.
+            </p>
+
+            <div class="discount-box">
+                <div class="code" th:text="${discountCode}">WELCOME15</div>
+                <div class="percent">
+                    Use this code for
+                    <strong th:text="${discountPercentage} + '% off'">15% off</strong>
+                    your next order
+                </div>
+            </div>
+
+            <p>This offer is valid for the next 7 days — don't miss it!</p>
+
+            <div class="cta">
+                <a href="https://yourstore.com" th:href="@{https://yourstore.com}">Shop Now &amp; Save</a>
+            </div>
+        </div>
+        <div class="footer">
+            You're receiving this because you subscribed to updates from
+            <span th:text="${tenantName}">Your Store</span>.
+            <br>
+            <span th:if="${email != null}" th:text="${email}"></span>
+        </div>
+    </div>
+</div>
+</body>
+</html>
