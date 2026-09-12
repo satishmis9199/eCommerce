@@ -4,10 +4,7 @@ import com.e_commerce.eCommerce.config.JwtUtil;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.controller.VendorController;
 import com.e_commerce.eCommerce.dto.*;
-import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
-import com.e_commerce.eCommerce.dto.request.VendorBrandingRequestDTO;
-import com.e_commerce.eCommerce.dto.request.VendorBusinessAddressDTO;
-import com.e_commerce.eCommerce.dto.request.VendorContactSocialRequestDTO;
+import com.e_commerce.eCommerce.dto.request.*;
 import com.e_commerce.eCommerce.dto.response.VenodorBusinessProfile;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.*;
@@ -43,7 +40,7 @@ public class VendorService {
     private final EmailService emailService;
     private final VendorAddresss vendorAddresssRepo;
     private final VendorBrandingRepository vendorBrandingRepository;
-
+    private final VendorBankRepository vendorBankRepository;
     @CacheEvict(value = "AllVendors", allEntries = true)
     @Transactional
     public Boolean createVendor(VendorRequestDto vendorRequestDto, String requesst) {
@@ -654,5 +651,151 @@ public class VendorService {
                         new RuntimeException("Vendor not found"));
         VendorContactSocialRequestDTO vendorContactSocialRequestDTO=vendorBrandingRepository.loadVendorContactInfo(vendor.getId());
         return vendorContactSocialRequestDTO;
+    }
+
+
+    public BankAccountRequestDto loadBankVendorData(CustomUserDetail userDetail) {
+
+        // Validate logged-in user
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        // Validate user role
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        // Get tenant ID
+        String tenantId = TenantContext.getTenantId();
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        // Fetch vendor
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        // Fetch vendor bank details
+        Optional<VendorBank> vendorBank1 = vendorBankRepository.findByVendor(vendor);
+        if(vendorBank1.isEmpty()){
+            throw new RuntimeException("Bank Detail not exist ...Please Add");
+        }
+        VendorBank vendorBank=vendorBank1.get();
+
+
+        // Build response DTO
+        return BankAccountRequestDto.builder()
+                .accountHolderName(vendorBank.getAccountHolderName())
+                .bankName(vendorBank.getBankName())
+                .accountNumber(vendorBank.getAccountNumber())
+                .ifscCode(vendorBank.getIfscCode())
+                .branchName(vendorBank.getBranchName())
+                .upiId(vendorBank.getUpiId())
+                .build();
+    }
+
+
+    public BankAccountRequestDto updateBankVendorData(
+            CustomUserDetail userDetail,
+            BankAccountRequestDto request) {
+
+        String tenantId = TenantContext.getTenantId();
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+        if (request == null) {
+            throw new RuntimeException("Bank details are required");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        VendorBank vendorBank =
+                vendorBankRepository.findByVendorId(vendor.getId());
+        if(vendorBank==null){
+            throw new RuntimeException("Bank Details Not found");
+        }
+
+        if (request.getAccountHolderName() == null ||
+                request.getAccountHolderName().isBlank()) {
+
+            throw new RuntimeException(
+                    "Account holder name is required");
+        }
+
+        if (request.getBankName() == null ||
+                request.getBankName().isBlank()) {
+
+            throw new RuntimeException(
+                    "Bank name is required");
+        }
+
+        if (request.getAccountNumber() == null ||
+                request.getAccountNumber().isBlank()) {
+
+            throw new RuntimeException(
+                    "Account number is required");
+        }
+
+        if (request.getIfscCode() == null ||
+                request.getIfscCode().isBlank()) {
+
+            throw new RuntimeException(
+                    "IFSC code is required");
+        }
+
+
+        vendorBank.setAccountHolderName(
+                request.getAccountHolderName().trim());
+
+        vendorBank.setBankName(
+                request.getBankName().trim());
+
+        vendorBank.setAccountNumber(
+                request.getAccountNumber().trim());
+
+        vendorBank.setIfscCode(
+                request.getIfscCode().trim().toUpperCase());
+
+        vendorBank.setBranchName(
+                request.getBranchName() != null
+                        ? request.getBranchName().trim()
+                        : null);
+
+        vendorBank.setUpiId(
+                request.getUpiId() != null
+                        ? request.getUpiId().trim()
+                        : null);
+        vendorBank.setUpdatedAt(LocalDateTime.now());
+
+        VendorBank savedBank =
+                vendorBankRepository.save(vendorBank);
+
+        return BankAccountRequestDto.builder()
+                .accountHolderName(
+                        savedBank.getAccountHolderName())
+                .bankName(
+                        savedBank.getBankName())
+                .accountNumber(
+                        savedBank.getAccountNumber())
+                .ifscCode(
+                        savedBank.getIfscCode())
+                .branchName(
+                        savedBank.getBranchName())
+                .upiId(
+                        savedBank.getUpiId())
+                .build();
     }
 }

@@ -1230,15 +1230,45 @@
 
     // ── STORE INFO ─────────────────────────────────────────────────
     // GET /api/v1/store/info → branding for this vendor portal instance
-    // (multi-tenant: each store gets its own name/logo/accent color on
-    // this same login page). Falls back to the static "SellerHub" demo
+    // (multi-tenant: each store gets its own name/logo/favicon/accent color
+    // on this same login page). Falls back to the static "SellerHub" demo
     // branding already in the markup if the call fails or is offline.
-    const STORE_INFO_ENDPOINT = "/api/u1/v1/store/info"
+    // ── R2 PUBLIC IMAGE URL ────────────────────────────────────────
+    // All store images (logo, favicon, etc.) can be returned either as
+    // an R2-relative path or as an already complete HTTP/HTTPS URL.
+    const R2_PUBLIC_URL =
+      "https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev";
+
+    function getImageUrl(path) {
+      if (!path) return "";
+
+      // Already a complete URL
+      if (/^https?:\/\//i.test(path)) {
+        return path;
+      }
+
+      // Prevent double slash when backend returns /folder/file.png
+      const cleanPath = path.replace(/^\/+/, "");
+
+      return `${R2_PUBLIC_URL}/${cleanPath}`;
+    }
+
+    const STORE_INFO_ENDPOINT = "/api/u1/v1/store/info";
+
+    // Expected store info fields:
+    // {
+    //   "storeName": "Kuma Bricks",
+    //   "tagline": "Vendor Portal",
+    //   "logoUrl": "stores/kuma-bricks/logo.png",
+    //   "faviconUrl": "stores/kuma-bricks/favicon.png",
+    //   "themeColor": "#D97706"
+    // }
 
     const DEFAULT_STORE_INFO = {
       storeName:  'SellerHub',
       tagline:    'Vendor Portal',
       logoUrl:    '',
+      faviconUrl: '',
       themeColor: '#4F46E5',
     };
 
@@ -1259,7 +1289,13 @@
         return {
           storeName:  info.storeName,
           tagline:    info.tagline || DEFAULT_STORE_INFO.tagline,
-          logoUrl:    info.logoUrl || '',
+
+          // Convert R2-relative path to complete public URL.
+          // If backend already sends a complete URL, getImageUrl()
+          // returns it unchanged.
+          logoUrl:    getImageUrl(info.logoUrl),
+          faviconUrl: getImageUrl(info.faviconUrl),
+
           themeColor: info.themeColor || DEFAULT_STORE_INFO.themeColor,
         };
       } catch (err) {
@@ -1289,6 +1325,7 @@
       ['brandMark', 'mobileBrandMark'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
+
         if (info.logoUrl) {
           el.style.backgroundImage = `url("${info.logoUrl}")`;
           el.style.backgroundSize = 'cover';
@@ -1299,6 +1336,21 @@
           el.textContent = initial;
         }
       });
+
+      // ── STORE FAVICON ───────────────────────────────────────────
+      // Favicon comes from store info and is also resolved through
+      // getImageUrl(), so every store can have its own R2 favicon.
+      if (info.faviconUrl) {
+        let favicon = document.querySelector('link[rel="icon"]');
+
+        if (!favicon) {
+          favicon = document.createElement('link');
+          favicon.rel = 'icon';
+          document.head.appendChild(favicon);
+        }
+
+        favicon.href = info.faviconUrl;
+      }
 
       if (info.themeColor) {
         document.documentElement.style.setProperty('--indigo', info.themeColor);

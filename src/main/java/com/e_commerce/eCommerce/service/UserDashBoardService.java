@@ -89,6 +89,8 @@ public class UserDashBoardService {
                     branding.getStoreTagline()
             );
 
+            dto.setFaviconUrl(branding.getFaviconUrl());
+
             dto.setAboutUs(
                     branding.getStoreDescription()
             );

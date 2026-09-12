@@ -448,8 +448,9 @@
 .settings-panel.active{display:block;animation:fadeUp .3s ease both;}
 .color-field{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
 .color-field input[type="color"]{width:48px;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);cursor:pointer;padding:2px;}
-.branding-preview-box{display:flex;align-items:center;gap:14px;padding:16px;background:var(--bg-input);border-radius:var(--radius);border:1px dashed var(--border);}
-.branding-preview-box img{width:56px;height:56px;object-fit:cover;border-radius:10px;background:var(--bg-card);}
+.branding-preview-box{display:flex;align-items:center;gap:14px;padding:16px;background:var(--bg-input);border-radius:var(--radius);border:1px dashed var(--border);flex-wrap:wrap;}
+.branding-preview-box img{width:56px;height:56px;object-fit:cover;border-radius:10px;background:var(--bg-card);flex-shrink:0;}
+.branding-preview-box input[type="file"]{flex:1 1 200px;min-width:0;max-width:100%;}
 .session-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
 .session-row:last-child{border-bottom:none;}
 .settings-panel .form-group textarea{min-height:80px;}
@@ -537,6 +538,10 @@
   .txn-row h4{font-size:12px;} .txn-row small{font-size:10px;}
   .fs-badge{font-size:9px;padding:2px 7px;}
   .summary-card h3{font-size:22px;}
+  /* Upload rows (Logo/Banner/Favicon/Signature/Seal) — stack image above
+     the file picker instead of squeezing both into one row */
+  .branding-preview-box{flex-direction:column;align-items:flex-start;}
+  .branding-preview-box input[type="file"]{width:100%;flex-basis:auto;}
 }
 
 @media (max-width:380px){
@@ -2788,7 +2793,7 @@ function renderBanners(list = bannerList) {
 
     tbody.innerHTML = list.map((b, index) => {
         const imgSrc = b.imageUrl
-            ? (b.imageUrl.startsWith('http') ? b.imageUrl : FILE_BASE_URL + b.imageUrl)
+            ? getImageUrl(b.imageUrl)
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(b.title)}&background=6366f1&color=fff`;
         const state = computeBannerState(b);
         const schedule = b.startDate || b.endDate
@@ -2889,7 +2894,7 @@ async function uploadBannerImage(file) {
 
         if (response.ok && data.success && data.objectKey) {
             uploadedBannerImageUrl = data.objectKey;
-            document.getElementById('bannerImagePreview').src = FILE_BASE_URL + data.objectKey;
+            document.getElementById('bannerImagePreview').src = getImageUrl(data.objectKey);
             showToast('success', 'Banner Image Updated', data.message || 'Image uploaded.');
         } else {
             showToast('error', 'Upload Failed', data.message || 'Could not upload banner image.');
@@ -2996,7 +3001,7 @@ function editBanner(id) {
 
     document.getElementById('bannerImage').value = '';
     document.getElementById('bannerImagePreview').src = b.imageUrl
-        ? (b.imageUrl.startsWith('http') ? b.imageUrl : FILE_BASE_URL + b.imageUrl)
+        ? getImageUrl(b.imageUrl)
         : `https://ui-avatars.com/api/?name=${encodeURIComponent(b.title)}&background=6366f1&color=fff`;
     document.getElementById('bannerEyebrow').value = b.eyebrow || '';
     document.getElementById('bannerDisplayOrder').value = b.displayOrder ?? 0;
@@ -3366,7 +3371,13 @@ async function changeNoticeStatus(id) {
     };
     const CATEGORY_API = '/vendor/s11/v11/create-Category';
     const CATEGORY_IMAGE_UPLOAD_API = '/vendor/file/upload/category';
-    const FILE_BASE_URL = 'https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev/';
+    const R2_PUBLIC_URL = "https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev";
+    function getImageUrl(path) {
+        if (!path) return "";
+        if (path.startsWith("http")) return path;
+        return `${R2_PUBLIC_URL}/${path}`;
+    }
+    const FILE_BASE_URL = R2_PUBLIC_URL + '/'; // kept for any code path not yet migrated to getImageUrl()
     const PRODUCT_API = '/vendor/s11/v1/product';
 const PRODUCT_IMAGE_UPLOAD_API = '/vendor/file/upload/product';
 const MOVE_DELETE_API = '/vendor/s11/v1/category/move-and-delete';
@@ -3626,9 +3637,7 @@ function renderCategories(categories = []) {
     categories.forEach((category, index) => {
 
         const imageUrl = category.imageUrl
-            ? (category.imageUrl.startsWith("http")
-                ? category.imageUrl
-                : FILE_BASE_URL + category.imageUrl)
+            ? getImageUrl(category.imageUrl)
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(category.categoryName)}&background=6366f1&color=fff`;
 
         const status = (category.status || "ACTIVE").toUpperCase();
@@ -3938,7 +3947,7 @@ async function uploadCategoryImage(file) {
             uploadedCategoryImageUrl = data.objectKey;
 
             document.getElementById("categoryImagePreview").src =
-                `${FILE_BASE_URL}/${data.objectKey}`;
+                getImageUrl(data.objectKey);
 
             showToast(
                 "success",
@@ -4045,7 +4054,7 @@ async function uploadCategoryImage(file) {
         document.getElementById('categoryStatus').value = category.status || 'ACTIVE';
         document.getElementById('categoryImage').value = '';
         document.getElementById('categoryImagePreview').src = category.imageUrl
-            ? (category.imageUrl.startsWith('http') ? category.imageUrl : FILE_BASE_URL + category.imageUrl)
+            ? getImageUrl(category.imageUrl)
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(category.categoryName)}&background=6366f1&color=fff`;
 
         // Load existing specifications (if any) into the editable rows
@@ -4988,7 +4997,7 @@ async function uploadCategoryImage(file) {
 
         if (response.ok && data.success && data.objectKey) {
           uploadedProfileImageUrl = data.objectKey;
-          document.getElementById('profileImage').src = FILE_BASE_URL + data.objectKey;
+          document.getElementById('profileImage').src = getImageUrl(data.objectKey);
           if (currentProfileData) currentProfileData.profileImage = data.objectKey;
           showToast('success', 'Photo Updated', 'Your profile photo has been uploaded.');
         } else {
@@ -5972,7 +5981,7 @@ async function uploadProductImage(file) {
 
         if (response.ok && data.success && data.objectKey) {
             uploadedProductImageUrl = data.objectKey;
-            document.getElementById('productImagePreview').src = FILE_BASE_URL + data.objectKey;
+            document.getElementById('productImagePreview').src = getImageUrl(data.objectKey);
         } else {
             showToast('error', 'Upload Failed', data.message || 'Could not upload product image.');
         }
@@ -6165,11 +6174,7 @@ async function editProduct(id) {
 
         document.getElementById('productImagePreview').src =
             product.productImage
-                ? (
-                    product.productImage.startsWith('http')
-                        ? product.productImage
-                        : FILE_BASE_URL + product.productImage
-                )
+                ? getImageUrl(product.productImage)
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                     product.productName || 'Product'
                 )}&background=6366f1&color=fff`;
@@ -6286,9 +6291,7 @@ function renderProducts(list = productList) {
     grid.innerHTML = list.map(p => {
 
         const imgSrc = p.productImage
-            ? (p.productImage.startsWith("http")
-                ? p.productImage
-                : FILE_BASE_URL + p.productImage)
+            ? getImageUrl(p.productImage)
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.productName)}&background=6366f1&color=fff`;
 
         const statusText =
@@ -6517,6 +6520,7 @@ function renderProducts(list = productList) {
       loadOrders();
       loadCustomers();
       loadVendorData();
+      loadAndApplyStoreTheme();
       buildSalesChart('12');
       buildStatusChart();
       buildEarningsChart();
@@ -6551,6 +6555,63 @@ sessions:        '/vendor/settings/sessions',
 logoutAll:       '/vendor/settings/logout-all-devices'
 };
 
+// Used only to read theme color + favicon and apply them to this page's own look.
+// Branding tab (logo/banner/theme/favicon) still fully loads/saves via SETTINGS_API.branding, unchanged.
+const STORE_INFO_API = {
+base: '/api/u1/v1/store/info'
+};
+
+function hexToRgba(hex, alpha) {
+let h = (hex || '').replace('#', '');
+if (h.length === 3) h = h.split('').map(c => c + c).join('');
+if (h.length !== 6) return `rgba(99, 102, 241, ${alpha})`; // fallback to default accent
+const r = parseInt(h.substring(0, 2), 16);
+const g = parseInt(h.substring(2, 4), 16);
+const b = parseInt(h.substring(4, 6), 16);
+return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function applyThemeColor(hexColor) {
+if (!hexColor) return;
+const root = document.documentElement;
+root.style.setProperty('--accent', hexColor);
+root.style.setProperty('--accent-glow', hexToRgba(hexColor, 0.25));
+root.style.setProperty('--accent-soft', hexToRgba(hexColor, 0.12));
+}
+
+function applyFavicon(faviconUrl) {
+if (!faviconUrl) return;
+let link = document.querySelector("link[rel~='icon']");
+if (!link) {
+link = document.createElement('link');
+link.rel = 'icon';
+document.head.appendChild(link);
+}
+link.href = getImageUrl(faviconUrl);
+}
+
+async function loadAndApplyStoreTheme() {
+    try {
+        const response = await fetch(STORE_INFO_API.base, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            const si = result || {};
+
+            applyThemeColor(si.themeColor);
+            applyFavicon(si.faviconUrl);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
 let settingsLoadedTabs = new Set(); // avoid re-fetching a tab every click
 
 /* ============================================================
@@ -6706,9 +6767,9 @@ const result = await response.json();
 if (!response.ok || !result.success) { showToast('error', 'Branding', result.message || 'Unable to load branding.'); return; }
 
 const d = result.data || {};
-if (d.logoUrl) document.getElementById('settingsLogoPreview').src = d.logoUrl.startsWith('http') ? d.logoUrl : FILE_BASE_URL + d.logoUrl;
-if (d.bannerUrl) document.getElementById('settingsBannerPreview').src = d.bannerUrl.startsWith('http') ? d.bannerUrl : FILE_BASE_URL + d.bannerUrl;
-if (d.faviconUrl) document.getElementById('settingsFaviconPreview').src = d.faviconUrl.startsWith('http') ? d.faviconUrl : FILE_BASE_URL + d.faviconUrl;
+if (d.logoUrl) document.getElementById('settingsLogoPreview').src = getImageUrl(d.logoUrl);
+if (d.bannerUrl) document.getElementById('settingsBannerPreview').src = getImageUrl(d.bannerUrl);
+if (d.faviconUrl) document.getElementById('settingsFaviconPreview').src = getImageUrl(d.faviconUrl);
 document.getElementById('setPrimaryColor').value = d.primaryColor || '#6366f1';
 document.getElementById('setSecondaryColor').value = d.secondaryColor || '#8b5cf6';
 document.getElementById('setPrimaryColorVal').textContent = d.primaryColor || '#6366f1';
@@ -6756,7 +6817,7 @@ const data = await response.json();
 
 if (response.ok && data.success && data.objectKey) {
 onSuccess(data.objectKey);
-document.getElementById(previewId).src = FILE_BASE_URL + data.objectKey;
+document.getElementById(previewId).src = getImageUrl(data.objectKey);
 showToast('success', 'Image Uploaded', data.message || 'Image uploaded successfully.');
 } else {
 showToast('error', 'Upload Failed', data.message || 'Could not upload image.');
@@ -6934,8 +6995,8 @@ if (!response.ok || !result.success) { showToast('error', 'Invoice Settings', re
 const d = result.data || {};
 document.getElementById('setInvPrefix').value = d.invoicePrefix || '';
 document.getElementById('setInvFooter').value = d.invoiceFooter || '';
-if (d.signatureUrl) document.getElementById('settingsSignaturePreview').src = d.signatureUrl.startsWith('http') ? d.signatureUrl : FILE_BASE_URL + d.signatureUrl;
-if (d.sealUrl) document.getElementById('settingsSealPreview').src = d.sealUrl.startsWith('http') ? d.sealUrl : FILE_BASE_URL + d.sealUrl;
+if (d.signatureUrl) document.getElementById('settingsSignaturePreview').src = getImageUrl(d.signatureUrl);
+if (d.sealUrl) document.getElementById('settingsSealPreview').src = getImageUrl(d.sealUrl);
 document.getElementById('setShowGst').checked = d.showGst !== false;
 document.getElementById('setShowBank').checked = d.showBankDetails !== false;
 } catch (error) {

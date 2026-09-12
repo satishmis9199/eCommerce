@@ -1,6 +1,7 @@
 package com.e_commerce.eCommerce.controller;
 
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.request.BankAccountRequestDto;
 import com.e_commerce.eCommerce.dto.request.VendorBrandingRequestDTO;
 import com.e_commerce.eCommerce.dto.request.VendorBusinessAddressDTO;
 import com.e_commerce.eCommerce.dto.request.VendorContactSocialRequestDTO;
@@ -403,6 +404,71 @@ public class DashboardController {
 
                             "Contact  has been edited Successfully",
                             vendorContactSocialRequestDTO1
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/settings/bank")
+    public ResponseEntity<ApiResponse<BankAccountRequestDto>> loadBankDdata(
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+
+        try {
+
+            BankAccountRequestDto bankAccountRequestDto=vendorService.loadBankVendorData(userDetail);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Contact  has been edited Successfully",
+                            bankAccountRequestDto
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/settings/bank")
+    public ResponseEntity<ApiResponse<BankAccountRequestDto>> editBankData(
+            @AuthenticationPrincipal CustomUserDetail userDetail,@RequestBody BankAccountRequestDto bankAccountRequestDto1 ) {
+
+        try {
+
+            BankAccountRequestDto bankAccountRequestDto=vendorService.updateBankVendorData(userDetail,bankAccountRequestDto1);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Bank detail has been edited Successfully",
+                            bankAccountRequestDto
 
                     )
             );

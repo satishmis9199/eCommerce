@@ -15,6 +15,8 @@ public class StoreInfoResponseDTO {
     private String tagline;
     private String storeType;
 
+    private String faviconUrl;
+
     private String logoUrl;
     private String bannerUrl;
 
