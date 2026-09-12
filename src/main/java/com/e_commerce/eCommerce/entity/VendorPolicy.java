@@ -45,19 +45,16 @@ public class VendorPolicy {
     private String title;
 
     @Lob
-    @Column(nullable = false)
+    @Column(
+            nullable = false,
+            columnDefinition = "LONGTEXT"
+    )
     private String content;
 
-    /**
-     * Publish Status
-     */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     private PolicyStatus status;
 
-    /**
-     * Audit
-     */
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

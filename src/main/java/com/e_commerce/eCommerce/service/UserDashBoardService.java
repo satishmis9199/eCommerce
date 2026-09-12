@@ -5,6 +5,8 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.entity.*;
+import com.e_commerce.eCommerce.enums.PolicyStatus;
+import com.e_commerce.eCommerce.enums.PolicyType;
 import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -38,67 +40,224 @@ public class UserDashBoardService {
     private final BannerRepository bannerRepository;
     private final EmailSubscriberRepository newsletterSubscriberRepository;
     private final EmailService emailService;
+    private final VendorPolicyRepository vendorPolicyRepository;
 
     public StoreInfoResponseDTO getStoreInfo() {
 
         String tenantId = TenantContext.getTenantId();
-        if (tenantId == null) {
+
+        if (tenantId == null || tenantId.isBlank()) {
             throw new RuntimeException("Tenant ID is missing");
         }
 
         Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> new RuntimeException("Vendor does not exist"));
-        VendorBusiness vendorBusiness = vendorBussinesss.findByVendorId(vendor.getId());
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor does not exist"));
 
-        VendorBranding branding = vendorBrandingRepository.findByVendorId(vendor.getId());
+        VendorBusiness vendorBusiness =
+                vendorBussinesss.findByVendorId(vendor.getId());
+
+        VendorBranding branding =
+                vendorBrandingRepository.findByVendorId(vendor.getId());
+
+        VendorAddress address =
+                vendorAddresssRepo.findByVendorId(vendor.getId());
 
         StoreInfoResponseDTO dto = new StoreInfoResponseDTO();
 
-        dto.setVendorId(vendor.getId());
+        SocialMediaDTO socialMediaDTO = new SocialMediaDTO();
 
+        StorePolicyDTO storePolicyDTO = new StorePolicyDTO();
+        dto.setVendorId(vendor.getId());
         dto.setTenantId(vendor.getTenantId());
         dto.setBusinessName(vendor.getBussinessName());
+
         dto.setStoreName(vendor.getStoreName());
 
-        if (branding != null) {
-            dto.setStoreType(vendorBusiness.getBusinessCategory());
-            dto.setTagline(branding.getStoreTagline());
-            dto.setAboutUs(branding.getStoreDescription());
+        if (vendorBusiness != null) {
 
-            dto.setLogoUrl(branding.getLogoUrl());
-            dto.setBannerUrl(branding.getBannerUrl());
-
-            dto.setThemeColor(branding.getPrimaryColor());
-
-            dto.setSupportEmail(branding.getSupportEmail());
-            dto.setSupportPhone(branding.getSupportPhone());
+            dto.setStoreType(
+                    vendorBusiness.getBusinessCategory()
+            );
         }
 
-        VendorAddress address = vendorAddresssRepo.findByVendorId(vendor.getId());
+
+
+        if (branding != null) {
+
+            dto.setTagline(
+                    branding.getStoreTagline()
+            );
+
+            dto.setAboutUs(
+                    branding.getStoreDescription()
+            );
+
+            socialMediaDTO.setFacebook(
+                    branding.getFacebookUrl()
+            );
+
+            socialMediaDTO.setInstagram(
+                    branding.getInstagramUrl()
+            );
+
+            socialMediaDTO.setLinkedin(
+                    branding.getLinkedinUrl()
+            );
+
+            socialMediaDTO.setYoutube(
+                    branding.getYoutubeUrl()
+            );
+
+            socialMediaDTO.setWhatsapp(
+                    branding.getWhatsApp()
+            );
+
+            dto.setLogoUrl(
+                    branding.getLogoUrl()
+            );
+
+            dto.setBannerUrl(
+                    branding.getBannerUrl()
+            );
+
+            dto.setThemeColor(
+                    branding.getPrimaryColor()
+            );
+
+            dto.setSupportEmail(
+                    branding.getSupportEmail()
+            );
+
+            dto.setSupportPhone(
+                    branding.getSupportPhone()
+            );
+        }
+
         if (address != null) {
+
             StringBuilder sb = new StringBuilder();
 
-            if (address.getAddressLine1() != null)
+            if (address.getAddressLine1() != null
+                    && !address.getAddressLine1().isBlank()) {
+
                 sb.append(address.getAddressLine1());
+            }
 
-            if (address.getAddressLine2() != null && !address.getAddressLine2().isBlank())
-                sb.append(", ").append(address.getAddressLine2());
+            if (address.getAddressLine2() != null
+                    && !address.getAddressLine2().isBlank()) {
 
-            if (address.getCity() != null)
-                sb.append(", ").append(address.getCity());
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
 
-            if (address.getState() != null)
-                sb.append(", ").append(address.getState());
+                sb.append(address.getAddressLine2());
+            }
 
-            if (address.getCountry() != null)
-                sb.append(", ").append(address.getCountry());
+            if (address.getCity() != null
+                    && !address.getCity().isBlank()) {
 
-            if (address.getPostalCode() != null)
-                sb.append(" - ").append(address.getPostalCode());
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+
+                sb.append(address.getCity());
+            }
+
+            if (address.getState() != null
+                    && !address.getState().isBlank()) {
+
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+
+                sb.append(address.getState());
+            }
+
+            if (address.getCountry() != null
+                    && !address.getCountry().isBlank()) {
+
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+
+                sb.append(address.getCountry());
+            }
+
+            if (address.getPostalCode() != null
+                    && !address.getPostalCode().isBlank()) {
+
+                if (sb.length() > 0) {
+                    sb.append(" - ");
+                }
+
+                sb.append(address.getPostalCode());
+            }
 
             dto.setAddress(sb.toString());
-
         }
+
+        dto.setSocialMedia(socialMediaDTO);
+
+        List<VendorPolicy> policies =
+                vendorPolicyRepository
+                        .findByTenantIdAndVendorIdAndStatus(
+                                tenantId,
+                                vendor.getId(),
+                                PolicyStatus.PUBLISHED
+                        );
+
+
+        for (VendorPolicy policy : policies) {
+
+            if (policy.getPolicyType() == PolicyType.ABOUT_US) {
+
+                dto.setAboutUs(
+                        policy.getContent()
+                );
+
+            } else if (policy.getPolicyType() == PolicyType.CONTACT_US) {
+                continue;
+            } else if (policy.getPolicyType() == PolicyType.PRIVACY_POLICY) {
+
+                storePolicyDTO.setPrivacyPolicy(
+                        policy.getContent()
+                );
+
+            } else if (policy.getPolicyType() == PolicyType.TERMS_AND_CONDITIONS) {
+
+                storePolicyDTO.setTermsAndConditions(
+                        policy.getContent()
+                );
+
+            } else if (policy.getPolicyType() == PolicyType.RETURN_POLICY) {
+
+                storePolicyDTO.setReturnPolicy(
+                        policy.getContent()
+                );
+
+            } else if (policy.getPolicyType() == PolicyType.REFUND_POLICY) {
+                continue;
+            } else if (policy.getPolicyType() == PolicyType.SHIPPING_POLICY) {
+
+                storePolicyDTO.setShippingPolicy(
+                        policy.getContent()
+                );
+
+            } else if (policy.getPolicyType() == PolicyType.CANCELLATION_POLICY) {
+
+                storePolicyDTO.setCancellationPolicy(
+                        policy.getContent()
+                );
+
+            } else if (policy.getPolicyType() == PolicyType.WARRANTY_POLICY) {
+
+
+            } else if (policy.getPolicyType() == PolicyType.EXCHANGE_POLICY) {
+
+            }
+        }
+        dto.setPolicies(storePolicyDTO);
         return dto;
     }
 

@@ -1,6 +1,7 @@
 package com.e_commerce.eCommerce.repository;
 
 import com.e_commerce.eCommerce.entity.VendorPolicy;
+import com.e_commerce.eCommerce.enums.PolicyStatus;
 import com.e_commerce.eCommerce.enums.PolicyType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,11 @@ public interface VendorPolicyRepository extends JpaRepository<VendorPolicy, Long
 
     void deleteByTenantIdAndVendorIdAndPolicyType(
             String tenantId, Long vendorId, PolicyType policyType);
+
+
+    List<VendorPolicy> findByTenantIdAndVendorIdAndStatus(
+            String tenantId,
+            Long vendorId,
+            PolicyStatus status
+    );
 }

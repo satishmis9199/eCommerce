@@ -12,6 +12,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
           rel="stylesheet">
+    <!-- Google Identity Services — powers the "Continue with Google" button
+         in the login/register modal. Needs a real Client ID (see GOOGLE_CLIENT_ID
+         near API_ENDPOINTS below) before it will actually sign anyone in. -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root{
           --brand-primary:#4F46E5;
@@ -555,10 +559,12 @@
         .about-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:36px;align-items:center;}
         .about-grid img{border-radius:var(--radius-lg);width:100%;object-fit:cover;height:320px;}
         .contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;}
-        .contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;display:flex;gap:14px;align-items:flex-start;}
-        .contact-card .ci-icon{width:40px;height:40px;border-radius:10px;background:var(--brand-primary-light);color:var(--brand-primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;display:flex;gap:14px;align-items:flex-start;transition:border-color .15s,transform .15s;}
+        .contact-card .ci-icon{width:40px;height:40px;border-radius:10px;background:var(--brand-primary-light);color:var(--brand-primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
         .contact-card h4{font-size:14px;margin-bottom:4px;}
-        .contact-card p{margin:0;font-size:13px;color:var(--muted);}
+        .contact-card p{margin:0;font-size:13px;color:var(--muted);word-break:break-word;}
+        a.contact-card:hover{border-color:var(--brand-primary);transform:translateY(-2px);}
+        a.contact-card:active{transform:scale(.98);}
 
         /* ---------- Footer ---------- */
         .site-footer{background:var(--ink);color:rgba(255,255,255,.7);margin-top:40px;}
@@ -569,9 +575,15 @@
         .footer-col a:hover{color:#fff;}
         .footer-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:19px;color:#fff;margin-bottom:12px;}
         .footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding:20px 0;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;flex-wrap:wrap;gap:10px;}
-        .social-row{display:flex;gap:10px;}
-        .social-row a{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;transition:background .15s;}
+        .social-row{display:flex;gap:10px;flex-wrap:wrap;}
+        .social-row a{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s;color:#fff;}
         .social-row a:hover{background:var(--brand-primary);}
+        .social-row a:active{transform:scale(.92);}
+        @media (max-width:640px){
+          .footer-col:first-child{text-align:center;}
+          .footer-brand{justify-content:center;}
+          .social-row{justify-content:center;width:100%;}
+        }
 
         /* ---------- Modal / Overlay system ---------- */
         .overlay{
@@ -611,6 +623,17 @@
         /* Auth modal (login/register) */
         .auth-modal{padding:36px 34px;position:relative;}
         .auth-tabs{display:flex;gap:4px;background:var(--paper);border-radius:999px;padding:4px;margin-bottom:24px;}
+        .auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted-2);font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+        .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--border);}
+        .btn-google{
+          width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+          padding:11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+          background:var(--surface);font-weight:600;font-size:14px;color:var(--ink-soft);
+          transition:background .15s,border-color .15s;min-height:44px;
+        }
+        .btn-google:hover{background:var(--paper);border-color:var(--muted-2);}
+        .btn-google:active{transform:scale(.98);}
+        .btn-google svg{flex-shrink:0;}
         .auth-tab{flex:1;border:none;background:transparent;padding:9px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--muted);transition:all .15s;}
         .auth-tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm);}
         .field{margin-bottom:16px;}
@@ -792,6 +815,7 @@
         .filter-row{display:flex;align-items:center;gap:9px;font-size:13.5px;margin-bottom:10px;color:var(--ink-soft);}
         .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;}
         .listing-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+        .filter-toggle-btn{display:none;}
 
         /* Demo control bar (for evaluating this frontend before backend is wired) */
         .demo-bar{
@@ -846,7 +870,23 @@
           .about-grid img{height:220px;}
           .account-shell,.listing-shell{grid-template-columns:1fr;}
           .account-nav{position:static;}
+          #accountNav{
+            display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;padding:10px;
+            -webkit-overflow-scrolling:touch;scrollbar-width:none;
+          }
+          #accountNav::-webkit-scrollbar{display:none;}
+          #accountNav a{
+            flex:0 0 auto;white-space:nowrap;border:1.5px solid var(--border);border-radius:999px;padding:9px 14px;
+          }
+          #accountNav a.active{border-color:var(--brand-primary);background:var(--brand-primary-light);}
           .qv-body{grid-template-columns:1fr;}
+
+          /* Filters on the listing page: collapsed by default on mobile,
+             toggled open via #filterToggleBtn, instead of a long block of
+             checkboxes always pushing the product grid down the page. */
+          .filter-toggle-btn{display:inline-flex !important;align-items:center;gap:6px;}
+          .listing-shell .filter-nav{display:none;margin-bottom:16px;}
+          .listing-shell .filter-nav.open{display:block;}
         }
         @media (max-width: 640px){
           .hero-title{font-size:28px;}
@@ -1375,7 +1415,7 @@
 <!-- ================= LISTING / SEARCH RESULTS VIEW ================= -->
 <main id="listingView" style="display:none;">
     <div class="container listing-shell">
-        <aside class="account-nav filter-nav">
+        <aside class="account-nav filter-nav" id="filterNav">
             <h4 style="padding:10px 14px 4px;font-size:13px;text-transform:uppercase;color:var(--muted);">Filters</h4>
             <div style="padding:10px 14px;" id="filterPanel"></div>
         </aside>
@@ -1385,15 +1425,21 @@
                     <h2 class="section-title" id="listingTitle" style="font-size:20px;">Results</h2>
                     <p class="section-sub" id="listingCount"></p>
                 </div>
-                <select id="sortSelect" class="field"
-                        style="width:auto;height:38px;border:1.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;">
-                    <option value="popularity">Popularity</option>
-                    <option value="newest">Newest First</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="rating">Customer Rating</option>
-                    <option value="discount">Discount</option>
-                </select>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button type="button" class="btn btn-ghost filter-toggle-btn" id="filterToggleBtn" aria-expanded="false" aria-controls="filterNav">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                        Filters
+                    </button>
+                    <select id="sortSelect" class="field"
+                            style="width:auto;height:38px;border:1.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;">
+                        <option value="popularity">Popularity</option>
+                        <option value="newest">Newest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating">Customer Rating</option>
+                        <option value="discount">Discount</option>
+                    </select>
+                </div>
             </div>
             <div class="product-grid" id="listingGrid"></div>
         </div>
@@ -1530,6 +1576,17 @@
 </footer>
 
 <!-- ================= LOGIN REQUIRED POPUP (reusable) ================= -->
+<!-- ================= POLICY MODAL (Cancellation/Privacy/Return/Shipping/Terms) ================= -->
+<div class="overlay" id="policyOverlay">
+    <div class="modal">
+        <div style="padding:30px 28px;position:relative;">
+            <button class="modal-close" id="closePolicyModal" aria-label="Close">✕</button>
+            <h3 id="policyModalTitle" style="margin-bottom:14px;font-size:19px;"></h3>
+            <div id="policyModalBody" style="font-size:14px;color:var(--ink-soft);line-height:1.65;white-space:pre-line;max-height:60vh;overflow-y:auto;"></div>
+        </div>
+    </div>
+</div>
+
 <div class="overlay" id="loginRequiredOverlay">
     <div class="modal">
         <div class="login-popup">
@@ -1609,6 +1666,11 @@
                     <button type="button" id="forgotPasswordBtn">Forgot password?</button>
                 </div>
                 <button class="btn btn-primary btn-block" type="submit">Login</button>
+                <div class="auth-divider">or</div>
+                <button type="button" class="btn-google" id="googleLoginBtn">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"/></svg>
+                    Continue with Google
+                </button>
             </form>
 
             <form id="forgotPasswordForm" style="display:none;">
@@ -1652,6 +1714,11 @@
                     <div class="field-error">Password must be at least 6 characters.</div>
                 </div>
                 <button class="btn btn-primary btn-block" type="submit">Create Account</button>
+                <div class="auth-divider">or</div>
+                <button type="button" class="btn-google" id="googleRegisterBtn">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"/></svg>
+                    Continue with Google
+                </button>
             </form>
         </div>
     </div>
@@ -1819,6 +1886,10 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
 
       login:                 `${API_BASE}/auth/login`,
       register:              `${API_BASE}/user/register`,
+      // Send Google's idToken here once you build this endpoint — verify
+      // it server-side with Google, then log the user in / create the
+      // account and respond exactly like /auth/login does.
+      googleAuth:            `${API_BASE}/auth/google`,
       me:                    `${API_BASE}/auth/me`,
       forgotPassword:        `${API_BASE}/auth/forgot-password`,
       passwordResetRequest:  `${API_BASE}/auth/password-reset/request`,
@@ -2168,6 +2239,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       cartPricing: null,
       wishlistCount: 0,
       wishlistIds: new Set(),
+      wishlistItems: [], // full product objects for whatever /wishlist returns, used to render the Wishlist page without depending on the product being in PRODUCT_POOL
       recentlyViewed: [],
       heroIndex: 0,
       heroTimer: null,
@@ -2208,24 +2280,43 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
     };
 
     function mockVendorDetails() {
+      // Mirrors the real GET /store/info response shape exactly — swap this
+      // for the live fetch whenever the backend endpoint is ready. Keys
+      // (facebook/instagram/twitter/youtube/linkedin/whatsapp inside
+      // socialMedia) must match 1:1 with what the backend sends.
       return Promise.resolve({
-        vendorId: "v_4417",
+        tenantId: "4507c2a8-1f49-4622-bb7b-6bd9f0c0ce93",
+        vendorId: 1,
         businessName: "Kumar Bricks",
         storeName: "Kumar Bricks",
-        tagline: "Construction materials, delivered to your site on time.",
-        logoUrl: "",
-        themeColor: "#C0392B",
-        supportEmail: "support@kumarbricks.com",
-        supportPhone: "+91 98765 43210",
-        address: "Plot 14, Industrial Area Phase 2, Lucknow, UP 226012",
-        aboutUs: "Kumar Bricks supplies cement, TMT steel, bricks, tiles, paints and hardware directly from manufacturers to contractors, builders and homeowners — with site delivery, bulk pricing and quality certification on every batch.",
-        socialMedia: { instagram: "#", facebook: "#", twitter: "#" },
-        policies: [
-          { label: "Delivery & Site Logistics Policy", url: "#" },
-          { label: "Returns & Damage Claims Policy", url: "#" },
-          { label: "Terms of Service", url: "#" },
-          { label: "Privacy Policy", url: "#" },
-        ],
+        storeType: "Electronics",
+        tagline: "Kumar Bricks",
+        logoUrl: "logo/ChatGPT%20Image%20Aug%209%2C%202026%2C%2005_58_26%20PM.png",
+        bannerUrl: "logo/ChatGPT%20Image%20Aug%2013%2C%202026%2C%2010_23_27%20AM.png",
+        themeColor: "#4F46E5",
+        supportEmail: "kumarsupport@gmail.com",
+        supportPhone: "7366948743",
+        address: "Gudri Bazar, Mogalpura, Laheriasarai, Darbhanga, Bihar, India - 846001",
+        aboutUs: "**Kumar Bricks Udyog** is a trusted supplier of quality bricks and construction materials, committed to delivering durable products at competitive prices.\nWe focus on reliable service, consistent quality, and timely delivery for every construction project.\n",
+        // Fill in real links from the DB here — whatsapp can be a plain
+        // 10-digit number OR a full wa.me link, both are handled below.
+        socialMedia: {
+          facebook: "http://kumar.localhost:8086/vendor/s1/v1/dashboard#",
+          instagram: "http://kumar.localhost:8086/vendor/s1/v1/dashboard#",
+          linkedin: "http://kumar.localhost:8086/vendor/s1/v1/dashboard#",
+          twitter: "",
+          whatsapp: "7366948743",
+          youtube: "http://kumar.localhost:8086/vendor/s1/v1/dashboard#"
+        },
+        // Each policy can be a URL (opens in a new tab) or plain text
+        // (opens in the in-page Policy modal). null = not shown at all.
+        policies: {
+          cancellationPolicy: null,
+          privacyPolicy: null,
+          returnPolicy: null,
+          shippingPolicy: null,
+          termsAndConditions: null
+        },
       });
     }
 
@@ -2399,6 +2490,42 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       d.textContent = str;
       return d.innerHTML;
     }
+    /* Sanitizes rich-text that comes from the DB (aboutUs, policies, etc.)
+       so tags like <p>/<br>/<b>/<ul> render properly, while <script>,
+       event-handler attributes (onclick...), and non-http(s) links are
+       stripped. Use this (with innerHTML) instead of textContent whenever
+       a field is expected to contain basic HTML formatting. */
+    function sanitizeHtml(str){
+      if(!str) return "";
+      const ALLOWED_TAGS = new Set(["P","BR","B","STRONG","I","EM","U","UL","OL","LI","A","SPAN","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","HR"]);
+      const ALLOWED_ATTR = { A: ["href","target","rel"] };
+      const tmp = document.createElement("div");
+      tmp.innerHTML = str;
+      (function clean(node){
+        Array.from(node.childNodes).forEach(child => {
+          if (child.nodeType === 1){
+            if (!ALLOWED_TAGS.has(child.tagName)){
+              while (child.firstChild) node.insertBefore(child.firstChild, child);
+              node.removeChild(child);
+              return;
+            }
+            const allowed = ALLOWED_ATTR[child.tagName] || [];
+            Array.from(child.attributes).forEach(attr => {
+              if (!allowed.includes(attr.name.toLowerCase())) child.removeAttribute(attr.name);
+            });
+            if (child.tagName === "A"){
+              const href = child.getAttribute("href") || "";
+              if (!/^https?:\/\//i.test(href)) child.removeAttribute("href");
+              else { child.setAttribute("target","_blank"); child.setAttribute("rel","noopener noreferrer"); }
+            }
+            clean(child);
+          } else if (child.nodeType !== 3){
+            node.removeChild(child);
+          }
+        });
+      })(tmp);
+      return tmp.innerHTML;
+    }
     function initials(name){
       return name.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
     }
@@ -2523,8 +2650,8 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
         document.getElementById("footerCopyright").textContent =
             `© ${new Date().getFullYear()} ${vendor.businessName || ""}. All rights reserved.`;
 
-        document.getElementById("aboutText").textContent =
-            vendor.aboutUs || "";
+        document.getElementById("aboutText").innerHTML =
+            sanitizeHtml(vendor.aboutUs || "");
 
         // ==========================
         // Brand Logo
@@ -2594,32 +2721,55 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
 
             if (vendor.socialMedia) {
 
+                // Real line-icon SVGs instead of text abbreviations —
+                // inherits currentColor so hover/theme colors keep working.
                 const icons = {
-                    facebook: "FB",
-                    instagram: "IG",
-                    twitter: "X",
-                    youtube: "YT",
-                    linkedin: "IN",
-                    whatsapp: "WA"
+                    facebook: `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.89h2.78l-.44 2.91h-2.34V22c4.78-.79 8.44-4.94 8.44-9.94Z"/></svg>`,
+                    instagram: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>`,
+                    twitter: `<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23 22h-7l-5.5-6.9L3.9 22H1l8.1-9.3L1.5 2h7.2l5 6.3L18.9 2Zm-1.2 18h1.7L7.4 3.9H5.6L17.7 20Z"/></svg>`,
+                    youtube: `<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M22 12s0-3.2-.4-4.7a2.8 2.8 0 0 0-2-2C17.9 5 12 5 12 5s-5.9 0-7.6.3a2.8 2.8 0 0 0-2 2C2 8.8 2 12 2 12s0 3.2.4 4.7a2.8 2.8 0 0 0 2 2C6.1 19 12 19 12 19s5.9 0 7.6-.3a2.8 2.8 0 0 0 2-2C22 15.2 22 12 22 12ZM10 15.5v-7l6 3.5-6 3.5Z"/></svg>`,
+                    linkedin: `<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.7h.1c.5-1 1.9-2 3.8-2 4 0 4.8 2.6 4.8 6v6.3h-4v-5.6c0-1.3 0-3-1.9-3s-2.2 1.4-2.2 2.9V21h-4V9Z"/></svg>`,
+                    whatsapp: `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.5A10 10 0 1 0 12 2Zm5.7 14.2c-.2.7-1.4 1.4-2 1.5-.5.1-1.2.1-1.9-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5.1-4.5-.1-.2-1.2-1.6-1.2-3s.8-2.2 1-2.5c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.9.8 2 .1.2.1.3 0 .5-.1.2-.1.3-.3.5l-.4.5c-.1.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.9.3.1.5.2.5.3.1.2.1.7 0 1.3Z"/></svg>`
+                };
+
+                // Normalise raw DB values into real, clickable URLs so the
+                // vendor can save a bare phone number / handle instead of
+                // a full link and it still works on mobile.
+                const toHref = (key, value) => {
+                    const v = String(value).trim();
+                    if (/^https?:\/\//i.test(v)) return v;
+                    if (key === "whatsapp") {
+                        const digits = v.replace(/\D/g, "");
+                        const withCountry = digits.length === 10 ? "91" + digits : digits;
+                        return `https://wa.me/${withCountry}`;
+                    }
+                    if (key === "twitter") return `https://x.com/${v.replace(/^@/, "")}`;
+                    if (["facebook","instagram","linkedin","youtube"].includes(key)) return `https://${key}.com/${v.replace(/^@/, "")}`;
+                    return v;
                 };
 
                 Object.entries(vendor.socialMedia)
-                    .filter(([key, value]) => value)
+                    .filter(([key, value]) => value && String(value).trim())
                     .forEach(([key, value]) => {
 
                         social.innerHTML += `
-                            <a href="${value}"
+                            <a href="${toHref(key, value)}"
                                target="_blank"
                                rel="noopener noreferrer"
-                               aria-label="${key}">
-                                ${icons[key] || key.toUpperCase()}
+                               aria-label="${key}"
+                               title="${key.charAt(0).toUpperCase()+key.slice(1)}">
+                                ${icons[key] || key.slice(0,2).toUpperCase()}
                             </a>`;
                     });
             }
         }
 
         // ==========================
-        // Policies (null-safe — many vendors won't have this set)
+        // Policies — object shape from /store/info:
+        // { cancellationPolicy, privacyPolicy, returnPolicy,
+        //   shippingPolicy, termsAndConditions }
+        // Each value can be a URL (opens in a new tab) or plain policy
+        // text (opens in the in-page Policy modal). null/empty = hidden.
         // ==========================
         const policyList = document.getElementById("footerPolicyLinks");
 
@@ -2627,30 +2777,67 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
 
             policyList.innerHTML = "";
 
-            if (vendor.policies && Array.isArray(vendor.policies)) {
+            const policyLabels = {
+                cancellationPolicy: "Cancellation Policy",
+                privacyPolicy: "Privacy Policy",
+                returnPolicy: "Return Policy",
+                shippingPolicy: "Shipping Policy",
+                termsAndConditions: "Terms & Conditions"
+            };
 
-                vendor.policies.forEach(policy => {
+            if (vendor.policies && typeof vendor.policies === "object") {
 
-                    policyList.innerHTML += `
-                        <li>
-                            <a href="${policy.url}">
-                                ${escapeHtml(policy.label)}
-                            </a>
-                        </li>`;
+                Object.entries(policyLabels).forEach(([key, label]) => {
+                    const value = vendor.policies[key];
+                    if (!value || !String(value).trim()) return;
+
+                    const isUrl = /^https?:\/\//i.test(value);
+                    if (isUrl) {
+                        policyList.innerHTML += `
+                            <li><a href="${value}" target="_blank" rel="noopener noreferrer">${label}</a></li>`;
+                    } else {
+                        policyList.innerHTML += `
+                            <li><a href="#" data-policy-key="${key}" data-policy-label="${label}">${label}</a></li>`;
+                    }
+                });
+
+                policyList.querySelectorAll("[data-policy-key]").forEach(a => {
+                    a.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        const key = a.getAttribute("data-policy-key");
+                        openPolicyModal(a.getAttribute("data-policy-label"), vendor.policies[key]);
+                    });
                 });
             }
         }
     }
 
+    function openPolicyModal(title, content){
+        document.getElementById("policyModalTitle").textContent = title;
+        document.getElementById("policyModalBody").innerHTML = sanitizeHtml(content);
+        openOverlay("policyOverlay");
+    }
+
     /* Builds the "Get in Touch" contact cards directly from the vendor
        object returned by /store/info — no separate endpoint needed. */
     function getContactData(vendor) {
-        return [
+        const items = [
             { icon:"📍", title:"Visit Us", text: vendor.address || "Address not available" },
-            { icon:"✉️", title:"Email Us", text: vendor.supportEmail || "Not available" },
-            { icon:"📞", title:"Call Us", text: vendor.supportPhone || "Not available" },
-            { icon:"🕐", title:"Support Hours", text: "Mon–Sat, 8:00 AM – 7:00 PM" },
+            { icon:"✉️", title:"Email Us", text: vendor.supportEmail || "Not available",
+              href: vendor.supportEmail ? `mailto:${vendor.supportEmail}` : null },
+            { icon:"📞", title:"Call Us", text: vendor.supportPhone || "Not available",
+              href: vendor.supportPhone ? `tel:${vendor.supportPhone.replace(/\s+/g,"")}` : null },
         ];
+        const wa = vendor.socialMedia && vendor.socialMedia.whatsapp;
+        if (wa) {
+            const digits = String(wa).replace(/\D/g, "");
+            const withCountry = digits.length === 10 ? "91" + digits : digits;
+            items.push({ icon:"💬", title:"WhatsApp Us", text: vendor.supportPhone || "Chat with us",
+                         href: /^https?:\/\//i.test(wa) ? wa : `https://wa.me/${withCountry}` });
+        } else {
+            items.push({ icon:"🕐", title:"Support Hours", text: "Mon–Sat, 8:00 AM – 7:00 PM" });
+        }
+        return items;
     }
 
 
@@ -2785,11 +2972,15 @@ function renderCategoryGrid(categories) {
     }
 
     function renderContact(items){
-      document.getElementById("contactGrid").innerHTML = items.map(c=>`
-        <div class="contact-card">
+      document.getElementById("contactGrid").innerHTML = items.map(c=>{
+        const tag = c.href ? "a" : "div";
+        const hrefAttr = c.href ? `href="${c.href}" target="_blank" rel="noopener noreferrer"` : "";
+        return `
+        <${tag} class="contact-card" ${hrefAttr}>
           <div class="ci-icon">${c.icon}</div>
           <div><h4>${escapeHtml(c.title)}</h4><p>${escapeHtml(c.text)}</p></div>
-        </div>`).join("");
+        </${tag}>`;
+      }).join("");
     }
 
     /* ---------------------------------------------------------------------
@@ -3549,10 +3740,14 @@ function refreshCartBadge(){
 /* ---- Load wishlist (real backend, cookie-authenticated) ----
    Populates AppState.wishlistIds/wishlistCount from the server so the
    heart icon on every product card reflects saved state on login/reload,
-   instead of only ever tracking clicks made during the current session. */
+   instead of only ever tracking clicks made during the current session.
+   Also captures full product objects (AppState.wishlistItems) when the
+   backend includes them, so the Wishlist page can render real product
+   cards even for a product that isn't already cached in PRODUCT_POOL. */
 async function loadWishlist(){
   if (!isAuthenticated){
     AppState.wishlistIds = new Set();
+    AppState.wishlistItems = [];
     AppState.wishlistCount = 0;
     document.getElementById("wishlistBadge").textContent = "0";
     return;
@@ -3560,11 +3755,34 @@ async function loadWishlist(){
   try{
     const res = await apiRequest(API_ENDPOINTS.wishlist, { method:"GET" }, { silentError:true });
     const data = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
-    const ids = (Array.isArray(data) ? data : []).map(item => item.productId || item.id).filter(Boolean);
+    const list = Array.isArray(data) ? data : [];
+
+    // Each entry can come back a few different ways depending on the
+    // backend: a full product object, { product: {...} } / { item: {...} },
+    // or (older/lighter responses) a bare productId string or { productId }.
+    const productOf = (entry) => {
+      if (!entry) return null;
+      if (typeof entry === "string" || typeof entry === "number") return null;
+      if (entry.product && typeof entry.product === "object") return entry.product;
+      if (entry.item && typeof entry.item === "object") return entry.item;
+      if (entry.name || entry.image) return entry; // looks like a full product already
+      return null;
+    };
+    const idOf = (entry) => {
+      if (typeof entry === "string" || typeof entry === "number") return entry;
+      const p = productOf(entry);
+      return (p && p.productId) || entry.productId || entry.id;
+    };
+
+    const ids = list.map(idOf).filter(Boolean);
+    const items = list.map(productOf).filter(Boolean);
+
     AppState.wishlistIds = new Set(ids);
+    AppState.wishlistItems = items;
     AppState.wishlistCount = ids.length;
   }catch(e){
     AppState.wishlistIds = new Set();
+    AppState.wishlistItems = [];
     AppState.wishlistCount = 0;
   }
   document.getElementById("wishlistBadge").textContent = AppState.wishlistCount;
@@ -3626,17 +3844,38 @@ async function handleToggleWishlist(pid, btnEl){
 
       if (alreadyWishlisted){
         AppState.wishlistIds.delete(pid);
+        AppState.wishlistItems = AppState.wishlistItems.filter(p => p.productId !== pid);
         AppState.wishlistCount = Math.max(0, AppState.wishlistCount - 1);
       } else {
         AppState.wishlistIds.add(pid);
+        const p = findProduct(pid);
+        if (p && !AppState.wishlistItems.some(x => x.productId === pid)) AppState.wishlistItems.push(p);
         AppState.wishlistCount++;
       }
 
       document.getElementById("wishlistBadge").textContent = AppState.wishlistCount;
-      if (btnEl){
-        btnEl.classList.toggle("active", !alreadyWishlisted);
-        btnEl.textContent = !alreadyWishlisted ? "♥" : "♡";
+
+      // A product can be rendered in more than one place at once (a home
+      // rail AND the wishlist grid, say) — reflect the new state on every
+      // matching heart button on screen, not just the one that was clicked.
+      document.querySelectorAll(`[data-action="wishlist"][data-pid="${pid}"]`).forEach(b=>{
+        b.classList.toggle("active", !alreadyWishlisted);
+        b.textContent = !alreadyWishlisted ? "♥" : "♡";
+      });
+
+      // Removing an item while actually looking at the Wishlist page should
+      // drop its card immediately, not wait for a manual refresh.
+      if (alreadyWishlisted){
+        const grid = document.getElementById("wishlistGrid");
+        const card = btnEl && btnEl.closest ? btnEl.closest(".pcard") : null;
+        if (grid && card && grid.contains(card)){
+          card.remove();
+          if (!grid.children.length){
+            grid.outerHTML = `<div class="empty-state"><div class="es-icon">♡</div>Your wishlist is empty.<br>Tap the heart on any product to save it here.</div>`;
+          }
+        }
       }
+
       toast(response.message || (alreadyWishlisted ? "Removed from wishlist" : "Added to wishlist"), "success");
 
     } catch (error) {
@@ -4103,8 +4342,9 @@ async function removeCartItem(itemId){
     document.getElementById("loginRequiredContinueBtn").addEventListener("click", ()=>closeOverlay("loginRequiredOverlay"));
     document.getElementById("closeLoginRequired").addEventListener("click", ()=>closeOverlay("loginRequiredOverlay"));
     document.getElementById("closeAuth").addEventListener("click", ()=>closeOverlay("authOverlay"));
+    document.getElementById("closePolicyModal").addEventListener("click", ()=>closeOverlay("policyOverlay"));
     document.getElementById("closeQuickView").addEventListener("click", ()=>closeOverlay("quickViewOverlay"));
-   [["loginRequiredOverlay"],["authOverlay"],["quickViewOverlay"],["addressOverlay"],["trackOrderOverlay"],["reasonOverlay"],["reviewOverlay"]].forEach(([id])=>{
+   [["loginRequiredOverlay"],["authOverlay"],["quickViewOverlay"],["addressOverlay"],["trackOrderOverlay"],["reasonOverlay"],["reviewOverlay"],["policyOverlay"]].forEach(([id])=>{
   document.getElementById(id).addEventListener("click", (e)=>{ if(e.target.id===id) closeOverlay(id); });
 });
 document.getElementById("closeReasonModal").addEventListener("click", ()=>closeOverlay("reasonOverlay"));
@@ -4202,6 +4442,64 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
       }
     });
 
+    /* ---------------------------------------------------------------------
+       GOOGLE SIGN-IN (frontend wired, backend endpoint TODO)
+       1. Create an OAuth Client ID (type: Web application) in Google Cloud
+          Console → paste it below in GOOGLE_CLIENT_ID.
+       2. Add this page's exact origin (e.g. https://yourstore.com) to
+          "Authorized JavaScript origins" for that Client ID.
+       3. Build POST API_ENDPOINTS.googleAuth on the backend: verify the
+          idToken with Google, then log in / create the user and reply the
+          same way /auth/login does (Set-Cookie JWT + { message }).
+       Nothing else on this page needs to change once that endpoint exists —
+       handleGoogleCredential() below already posts idToken and reuses the
+       normal post-login flow.
+    --------------------------------------------------------------------- */
+    const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
+    async function handleGoogleCredential(response){
+      try{
+        const res = await fetch(API_ENDPOINTS.googleAuth, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken: response.credential }),
+        });
+        const data = await res.json().catch(()=>({}));
+        if (!res.ok){
+          toast(data.message || "Google sign-in failed.", "error");
+          return;
+        }
+        closeOverlay("authOverlay");
+        await updateAuthUI();
+        toast(data.message || "Logged in with Google.", "success");
+      }catch(e){
+        toast("Unable to sign in with Google right now.", "error");
+      }
+    }
+
+    function initGoogleSignIn(){
+      if (!window.google || !google.accounts || !google.accounts.id) return;
+      if (GOOGLE_CLIENT_ID.startsWith("YOUR_")) return; // not configured yet
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+      });
+    }
+
+    ["googleLoginBtn","googleRegisterBtn"].forEach(id=>{
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener("click", ()=>{
+        if (GOOGLE_CLIENT_ID.startsWith("YOUR_")){
+          toast("Google sign-in is not configured yet.", "error");
+          return;
+        }
+        initGoogleSignIn();
+        google.accounts.id.prompt();
+      });
+    });
+
     document.getElementById("forgotPasswordBtn").addEventListener("click", ()=>{
       // Show the "enter your email" panel instead of firing the request blind.
       document.getElementById("loginForm").style.display = "none";
@@ -4286,6 +4584,17 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
     document.getElementById("cartBtn").addEventListener("click", ()=> requireAuth(()=>showCartView()));
     document.getElementById("wishlistBtn").addEventListener("click", ()=> requireAuth(()=>navigateAccount("wishlist")));
 
+    // Mobile-only "Filters" toggle — expands/collapses the filter panel
+    // instead of it always sitting above the product grid.
+    const filterToggleBtn = document.getElementById("filterToggleBtn");
+    const filterNav = document.getElementById("filterNav");
+    if (filterToggleBtn && filterNav){
+      filterToggleBtn.addEventListener("click", ()=>{
+        const isOpen = filterNav.classList.toggle("open");
+        filterToggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      });
+    }
+
 
 document.getElementById("newsletterForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -4345,6 +4654,7 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
           AppState.cart = [];
           AppState.cartCount = 0;
           AppState.wishlistIds.clear();
+          AppState.wishlistItems = [];
           AppState.wishlistCount = 0;
           document.getElementById("cartBadge").textContent = "0";
           document.getElementById("wishlistBadge").textContent = "0";
@@ -4502,9 +4812,14 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
       }
       else if (pageId==="wishlist"){
         await loadWishlist();
-        const items = [...AppState.wishlistIds].map(findProduct).filter(Boolean);
-        panel.innerHTML = `<h3 style="margin-bottom:14px;">Wishlist</h3>` + (items.length
-          ? `<div class="product-grid">${items.map(productCardHtml).join("")}</div>`
+        const byId = new Map(AppState.wishlistItems.map(p => [p.productId, p]));
+        const items = [...AppState.wishlistIds].map(id => byId.get(id) || findProduct(id)).filter(Boolean);
+        panel.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+            <h3 style="margin:0;">Wishlist</h3>
+            ${items.length ? `<span style="font-size:12.5px;color:var(--muted);">${items.length} item${items.length===1?"":"s"}</span>` : ""}
+          </div>` + (items.length
+          ? `<div class="product-grid" id="wishlistGrid">${items.map(productCardHtml).join("")}</div>`
           : `<div class="empty-state"><div class="es-icon">♡</div>Your wishlist is empty.<br>Tap the heart on any product to save it here.</div>`);
       }
       else if (pageId==="notifications"){

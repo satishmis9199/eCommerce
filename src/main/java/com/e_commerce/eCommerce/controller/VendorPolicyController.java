@@ -1,10 +1,13 @@
 package com.e_commerce.eCommerce.controller;
 
 
+import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.VendorPolicyRequestDto;
 import com.e_commerce.eCommerce.dto.VendorPolicyResponseDto;
+import com.e_commerce.eCommerce.entity.Vendor;
 import com.e_commerce.eCommerce.enums.PolicyType;
+import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.service.VendorPolicyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +23,21 @@ import java.util.List;
 public class VendorPolicyController {
 
     private final VendorPolicyService vendorPolicyService;
+    private final VendorRepository vendorRepository;
 
 
     private String getTenantId() {
-        return "tenant_id_from_context";
+        String tenanid= TenantContext.getTenantId();
+        return tenanid;
     }
 
     private Long getVendorId() {
-        return 1L;
+        String tenantId=TenantContext.getTenantId();
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor does not exist"));
+        return vendor.getId();
     }
 
     @PostMapping

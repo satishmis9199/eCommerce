@@ -9,36 +9,48 @@
           rel="stylesheet">
     <style>
         :root{
-          --ink:#14161F;
-          --ink-soft:#3A3D4D;
-          --muted:#68708A;
-          --muted-2:#9AA1B7;
-          --paper:#F4F5F8;
-          --surface:#FFFFFF;
-          --border:#E4E6EE;
-          --border-soft:#EDEEF4;
-          --primary:#4F46E5;
-          --primary-dark:#4038C7;
-          --primary-light:#EEEDFC;
-          --draft:#B7791F;
-          --draft-bg:#FBF3E2;
-          --published:#15803D;
-          --published-bg:#E8F7ED;
-          --archived:#6B7280;
-          --archived-bg:#F0F1F4;
-          --danger:#DC2626;
-          --danger-bg:#FDECEC;
+          --ink:#F3F5FA;
+          --ink-soft:#C9D0E0;
+          --muted:#93A0B8;
+          --muted-2:#6C7893;
+          --paper:#0A1420;
+          --surface:rgba(255,255,255,.05);
+          --surface-solid:#141F30;
+          --border:rgba(255,255,255,.12);
+          --border-soft:rgba(255,255,255,.08);
+          --primary:#7C6FF0;
+          --primary-dark:#6558E6;
+          --primary-light:rgba(124,111,240,.18);
+          --accent:#F5A524;
+          --accent-dark:#C9820A;
+          --draft:#F5A524;
+          --draft-bg:rgba(245,165,36,.15);
+          --published:#34D399;
+          --published-bg:rgba(52,211,153,.15);
+          --archived:#94A3B8;
+          --archived-bg:rgba(148,163,184,.14);
+          --danger:#F87171;
+          --danger-bg:rgba(248,113,113,.15);
           --radius-sm:8px;
           --radius-md:12px;
           --radius-lg:18px;
-          --shadow-sm:0 1px 2px rgba(20,22,31,.05);
-          --shadow-md:0 10px 30px rgba(20,22,31,.08), 0 2px 8px rgba(20,22,31,.04);
+          --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+          --shadow-md:0 14px 36px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3);
           --font-display:'Space Grotesk','Inter',sans-serif;
           --font-body:'Inter',-apple-system,sans-serif;
           --font-mono:'JetBrains Mono',monospace;
         }
         *,*::before,*::after{box-sizing:border-box;}
-        body{margin:0;font-family:var(--font-body);background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;}
+        html{background:var(--paper);}
+        body{
+          margin:0;font-family:var(--font-body);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+          background:
+            radial-gradient(900px 500px at 10% -10%, rgba(124,111,240,.22), transparent 60%),
+            radial-gradient(700px 480px at 100% 0%, rgba(245,165,36,.14), transparent 55%),
+            linear-gradient(165deg,#0A1420 0%,#0E1F30 45%,#0A1826 100%);
+          background-attachment:fixed;
+          min-height:100vh;
+        }
         h1,h2,h3{font-family:var(--font-display);margin:0;letter-spacing:-.01em;}
         button{font-family:inherit;cursor:pointer;}
         input,textarea,select{font-family:inherit;}
@@ -49,7 +61,10 @@
         @media (max-width:900px){.shell{grid-template-columns:1fr;}}
 
         /* ---------- Sidebar ---------- */
-        .sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+        .sidebar{
+          background:rgba(12,20,32,.55);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+          border-right:1px solid var(--border-soft);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
+        }
         .sidebar-head{padding:26px 22px 18px;border-bottom:1px solid var(--border-soft);}
         .sidebar-head .eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
         .sidebar-head h1{font-size:19px;}
@@ -73,7 +88,7 @@
           display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:none;background:transparent;
           padding:11px 12px;border-radius:10px;margin-bottom:2px;transition:background .12s;
         }
-        .policy-item:hover{background:var(--paper);}
+        .policy-item:hover{background:rgba(255,255,255,.06);}
         .policy-item.active{background:var(--primary-light);}
         .policy-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--muted-2);}
         .policy-dot.draft{background:var(--draft);}
@@ -81,8 +96,61 @@
         .policy-dot.archived{background:var(--archived);}
         .policy-item-text{flex:1;min-width:0;}
         .policy-item-name{font-size:13.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .policy-item.active .policy-item-name{color:var(--primary-dark);}
+        .policy-item.active .policy-item-name{color:#C9BFFF;}
         .policy-item-status{font-size:11px;color:var(--muted-2);margin-top:1px;}
+
+        /* ---------- Store branding (fetched from /store/info) ---------- */
+        .sidebar-brand{
+          display:flex;align-items:center;gap:12px;margin-top:14px;
+          padding:11px 13px;border-radius:var(--radius-md);
+          background:rgba(255,255,255,.05);
+          border:1px solid var(--border-soft);
+          box-shadow:var(--shadow-sm);
+          transition:box-shadow .15s, transform .15s, background .15s;
+        }
+        .sidebar-brand:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);background:rgba(255,255,255,.08);}
+        .sidebar-brand .logo{
+          width:38px;height:38px;border-radius:11px;
+          background:linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);color:#fff;
+          display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
+          background-size:cover;background-position:center;flex-shrink:0;
+          box-shadow:0 3px 10px rgba(124,111,240,.35);
+        }
+        .sidebar-brand .brand-text{flex:1;min-width:0;}
+        .sidebar-brand .name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .sidebar-brand .sub{
+          font-size:10.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;
+          color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;
+        }
+        .prefill-hint{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--primary-light);border:1px solid var(--border-soft);border-radius:var(--radius-sm);font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;}
+
+        /* ---------- Mobile: sidebar becomes a compact horizontal tab
+           strip instead of a full-height 100vh list, so the actual policy
+           editor is visible immediately without scrolling past a full
+           screen of navigation first. ---------- */
+        @media (max-width:900px){
+          .sidebar{
+            position:static;height:auto;overflow:visible;
+            border-right:none;border-bottom:1px solid var(--border);
+          }
+          .sidebar-head{padding:18px 16px 14px;}
+          .sidebar-head p{display:none;}
+          .progress-block{padding:12px 16px;}
+          .progress-ring{width:40px;height:40px;}
+          .progress-ring svg{width:40px;height:40px;}
+          .progress-label{font-size:12px;}
+          .policy-nav{
+            display:flex;gap:8px;padding:10px 14px 14px;overflow-x:auto;
+            -webkit-overflow-scrolling:touch;scrollbar-width:none;
+          }
+          .policy-nav::-webkit-scrollbar{display:none;}
+          .policy-item{
+            flex:0 0 auto;width:auto;margin-bottom:0;
+            border:1.5px solid var(--border);border-radius:999px;padding:9px 14px;white-space:nowrap;
+          }
+          .policy-item.active{border-color:var(--primary);}
+          .policy-item-status{display:none;}
+        }
 
         /* ---------- Main ---------- */
         .main{padding:34px 40px 60px;max-width:900px;}
@@ -100,7 +168,7 @@
         .status-chip.archived{background:var(--archived-bg);color:var(--archived);}
         .status-chip.new{background:var(--border-soft);color:var(--muted);}
 
-        .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+        .card{background:rgba(255,255,255,.04);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);}
         .field-group{padding:26px;}
         .field{margin-bottom:20px;}
         .field:last-child{margin-bottom:0;}
@@ -108,15 +176,15 @@
         .field .field-hint{font-size:12px;color:var(--muted-2);margin-top:6px;}
         .field input[type=text]{
           width:100%;height:46px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 15px;
-          font-size:14.5px;outline:none;transition:border-color .15s, box-shadow .15s;background:var(--surface);
+          font-size:14.5px;outline:none;transition:border-color .15s, box-shadow .15s;background:rgba(255,255,255,.04);color:var(--ink);
         }
         .field input[type=text]:focus{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-light);}
         .status-select-row{display:flex;gap:10px;flex-wrap:wrap;}
         .status-option{
           flex:1;min-width:130px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;
-          cursor:pointer;transition:all .15s;
+          cursor:pointer;transition:all .15s;background:rgba(255,255,255,.02);
         }
-        .status-option:hover{border-color:var(--primary);}
+        .status-option:hover{border-color:var(--primary);background:rgba(255,255,255,.05);}
         .status-option.selected{border-color:var(--primary);background:var(--primary-light);}
         .status-option .so-title{font-size:13.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px;}
         .status-option .so-dot{width:8px;height:8px;border-radius:50%;}
@@ -124,20 +192,23 @@
 
         /* Editor */
         .editor-toolbar{
-          display:flex;gap:4px;padding:8px;border:1.5px solid var(--border);border-bottom:none;
-          border-radius:var(--radius-sm) var(--radius-sm) 0 0;background:var(--paper);flex-wrap:wrap;
+          display:flex;align-items:center;gap:5px;padding:9px 10px;border:1.5px solid var(--border);border-bottom:none;
+          border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+          background:rgba(255,255,255,.03);flex-wrap:wrap;
         }
         .editor-toolbar button{
-          width:32px;height:32px;border:none;background:transparent;border-radius:7px;color:var(--ink-soft);
-          display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;transition:background .12s;
+          width:32px;height:32px;border:1px solid var(--border-soft);background:rgba(255,255,255,.04);border-radius:7px;color:var(--ink-soft);
+          display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+          box-shadow:0 1px 2px rgba(0,0,0,.25);transition:background .12s,border-color .12s,box-shadow .12s,transform .1s;
         }
-        .editor-toolbar button:hover{background:var(--surface);box-shadow:var(--shadow-sm);}
-        .editor-toolbar button.active{background:var(--primary-light);color:var(--primary-dark);}
-        .editor-toolbar .sep{width:1px;background:var(--border);margin:4px 4px;}
+        .editor-toolbar button:hover{border-color:var(--primary);color:#fff;background:rgba(124,111,240,.18);transform:translateY(-1px);box-shadow:0 3px 6px rgba(0,0,0,.3);}
+        .editor-toolbar button:active{transform:translateY(0);}
+        .editor-toolbar button.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:none;}
+        .editor-toolbar .sep{width:1.5px;align-self:stretch;background:var(--border);margin:2px 5px;border-radius:1px;}
         .editor-body{
           min-height:280px;max-height:520px;overflow-y:auto;border:1.5px solid var(--border);border-top:none;
           border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:18px 20px;font-size:14.5px;line-height:1.7;
-          outline:none;transition:border-color .15s, box-shadow .15s;background:var(--surface);color:var(--ink-soft);
+          outline:none;transition:border-color .15s, box-shadow .15s;background:rgba(255,255,255,.02);color:var(--ink-soft);
         }
         .editor-body:focus{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-light);}
         .editor-body[data-empty="true"]:before{content:attr(data-placeholder);color:var(--muted-2);pointer-events:none;}
@@ -155,33 +226,33 @@
         .btn{border:none;border-radius:999px;font-weight:700;font-size:13.5px;padding:11px 22px;transition:all .12s;}
         .btn:active{transform:scale(.97);}
         .btn:disabled{opacity:.55;cursor:not-allowed;}
-        .btn-primary{background:var(--primary);color:#fff;}
-        .btn-primary:hover:not(:disabled){background:var(--primary-dark);}
+        .btn-primary{background:linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);color:#fff;box-shadow:0 6px 18px rgba(124,111,240,.35);}
+        .btn-primary:hover:not(:disabled){box-shadow:0 8px 22px rgba(124,111,240,.5);transform:translateY(-1px);}
         .btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--ink-soft);}
-        .btn-ghost:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+        .btn-ghost:hover:not(:disabled){border-color:var(--primary);color:var(--ink);}
         .btn-danger-text{background:transparent;border:none;color:var(--danger);font-weight:700;font-size:13px;padding:8px 6px;}
         .btn-danger-text:hover{text-decoration:underline;}
 
-        .empty-hint{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--primary-light);border-radius:var(--radius-sm);font-size:13px;color:var(--primary-dark);margin-bottom:22px;}
+        .empty-hint{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--primary-light);border:1px solid var(--border-soft);border-radius:var(--radius-sm);font-size:13px;color:var(--ink-soft);margin-bottom:22px;}
 
         /* Toasts */
         .toast-stack{position:fixed;bottom:22px;right:22px;z-index:400;display:flex;flex-direction:column;gap:9px;max-width:320px;}
-        .toast{background:var(--ink);color:#fff;padding:12px 15px;border-radius:10px;box-shadow:var(--shadow-md);font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;animation:toastIn .22s ease;}
-        .toast.success{background:var(--published);}
-        .toast.error{background:var(--danger);}
+        .toast{background:#182338;border:1px solid var(--border-soft);color:#fff;padding:12px 15px;border-radius:10px;box-shadow:var(--shadow-md);font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;animation:toastIn .22s ease;}
+        .toast.success{background:#12362B;border-color:rgba(52,211,153,.35);}
+        .toast.error{background:#3A1616;border-color:rgba(248,113,113,.35);}
         @keyframes toastIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
         .toast.leaving{animation:toastOut .18s ease forwards;}
         @keyframes toastOut{to{opacity:0;transform:translateY(8px);}}
 
         /* Confirm dialog */
-        .confirm-overlay{position:fixed;inset:0;background:rgba(20,22,31,.45);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .15s;padding:20px;}
+        .confirm-overlay{position:fixed;inset:0;background:rgba(4,8,14,.65);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .15s;padding:20px;}
         .confirm-overlay.open{opacity:1;pointer-events:auto;}
-        .confirm-box{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);max-width:380px;width:100%;padding:26px;}
-        .confirm-box h3{font-size:17px;margin-bottom:8px;}
+        .confirm-box{background:#101B2B;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);max-width:380px;width:100%;padding:26px;}
+        .confirm-box h3{font-size:17px;margin-bottom:8px;color:var(--ink);}
         .confirm-box p{font-size:13.5px;color:var(--muted);margin:0 0 20px;line-height:1.55;}
         .confirm-actions{display:flex;gap:10px;justify-content:flex-end;}
 
-        .skeleton{background:linear-gradient(90deg,#ECECE8 25%,#F5F5F2 37%,#ECECE8 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-radius:8px;}
+        .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 37%,rgba(255,255,255,.04) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-radius:8px;}
         @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
     </style>
 </head>
@@ -194,6 +265,13 @@
             <div class="eyebrow">Vendor Admin</div>
             <h1>Store Policies</h1>
             <p>Manage the legal &amp; informational pages shown on your storefront.</p>
+            <div class="sidebar-brand" id="sidebarBrand" style="display:none;">
+                <span class="logo" id="sidebarLogo"></span>
+                <div class="brand-text">
+                    <span class="name" id="sidebarStoreName"></span>
+                    <div class="sub" id="sidebarStoreSub"></div>
+                </div>
+            </div>
         </div>
 
         <div class="progress-block">
@@ -242,6 +320,18 @@
       deleteByType:    (type) => `${API_BASE}/${type}`,
     };
 
+    // Same store profile the storefront reads — used here only to (a) show
+    // the vendor's own store name/logo in the sidebar instead of a generic
+    // label, and (b) pre-fill a starting draft for About Us / Contact Us so
+    // the admin isn't typing their address and support email from scratch.
+    const STORE_INFO_URL = "/api/u1/v1/store/info";
+    const R2_PUBLIC_URL = "https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev";
+    function getImageUrl(path){
+      if (!path) return "";
+      if (path.startsWith("http")) return path;
+      return `${R2_PUBLIC_URL}/${path}`;
+    }
+
     /* Policy types, in the order they should appear in the sidebar, with
        human-readable labels and short hints so the admin knows what each
        page is for without guessing. Order mirrors your PolicyType enum. */
@@ -267,6 +357,7 @@
       policiesByType: {},   // type -> policy object from backend (or undefined if never created)
       activeType: POLICY_TYPES[0].type,
       dirty: false,
+      vendor: null,         // store profile from /store/info, used for branding + prefill drafts
     };
 
     /* =========================================================================
@@ -303,6 +394,16 @@
       d.textContent = str ?? "";
       return d.innerHTML;
     }
+
+    // Remove DIV wrappers before saving.
+    // Other formatting tags such as <p>, <h3>, <ul>, <ol>, <b>, <i>, <u>
+    // are preserved.
+    function removeDivTags(html){
+      return (html ?? "")
+        .replace(/<div\b[^>]*>/gi, "")
+        .replace(/<\/div>/gi, "")
+        .trim();
+    }
     function toast(message, type="default"){
       const stack = document.getElementById("toastStack");
       const el = document.createElement("div");
@@ -319,6 +420,83 @@
     }
     function policyMeta(type){
       return POLICY_TYPES.find(p => p.type === type);
+    }
+
+    /* =========================================================================
+       STORE BRANDING (from /store/info) — same tenant, just used to show the
+       real store name/logo instead of the generic "Vendor Admin" label.
+       ========================================================================= */
+    async function loadVendorProfile(){
+      try{
+        const res = await fetch(STORE_INFO_URL, { credentials:"include" });
+        const body = await res.json().catch(()=>({}));
+        if (!res.ok) return;
+        State.vendor = body.data || body;
+        renderSidebarBrand(State.vendor);
+        // If the admin is still looking at a never-created type and hasn't
+        // typed anything yet, refresh so the prefill draft can appear —
+        // this fetch usually resolves a beat after the first paint.
+        if (!State.dirty && !State.policiesByType[State.activeType]){
+          renderMain();
+        }
+      }catch(e){
+        // Branding is a nice-to-have here, not critical — fail silently.
+      }
+    }
+
+    function renderSidebarBrand(vendor){
+      if (!vendor) return;
+      const brand = document.getElementById("sidebarBrand");
+      const nameEl = document.getElementById("sidebarStoreName");
+      const subEl = document.getElementById("sidebarStoreSub");
+      const logoEl = document.getElementById("sidebarLogo");
+      nameEl.textContent = vendor.storeName || vendor.businessName || "";
+      subEl.textContent =
+        (vendor.storeName && vendor.businessName && vendor.businessName !== vendor.storeName)
+          ? vendor.businessName
+          : "Storefront Admin";
+      const logoUrl = getImageUrl(vendor.logoUrl);
+      if (logoUrl){
+        logoEl.style.backgroundImage = `url('${logoUrl}')`;
+        logoEl.textContent = "";
+      } else {
+        logoEl.style.backgroundImage = "";
+        logoEl.textContent = (vendor.storeName || "S").charAt(0).toUpperCase();
+      }
+      brand.style.display = "flex";
+    }
+
+    /* =========================================================================
+       DRAFT PRE-FILL — only ever used for a type that hasn't been created
+       yet, and only fills the editor, it never auto-saves. The admin still
+       has to hit "Save changes" (or edit first) before anything goes live.
+       ========================================================================= */
+    function buildAboutUsDraft(vendor){
+      if (!vendor || !vendor.aboutUs) return null;
+      const paragraphs = String(vendor.aboutUs)
+        .split(/\n+/)
+        .map(line => line.replace(/\*\*(.*?)\*\*/g, "$1").trim())
+        .filter(Boolean)
+        .map(line => `<p>${escapeHtml(line)}</p>`)
+        .join("");
+      return paragraphs || null;
+    }
+
+    function buildContactUsDraft(vendor){
+      if (!vendor) return null;
+      const rows = [];
+      if (vendor.address) rows.push(`<p><b>Address:</b> ${escapeHtml(vendor.address)}</p>`);
+      if (vendor.supportEmail) rows.push(`<p><b>Email:</b> ${escapeHtml(vendor.supportEmail)}</p>`);
+      if (vendor.supportPhone) rows.push(`<p><b>Phone:</b> ${escapeHtml(vendor.supportPhone)}</p>`);
+      const wa = vendor.socialMedia && vendor.socialMedia.whatsapp;
+      if (wa) rows.push(`<p><b>WhatsApp:</b> ${escapeHtml(String(wa))}</p>`);
+      return rows.length ? rows.join("") : null;
+    }
+
+    function getDraftFor(type, vendor){
+      if (type === "ABOUT_US") return buildAboutUsDraft(vendor);
+      if (type === "CONTACT_US") return buildContactUsDraft(vendor);
+      return null;
     }
 
     /* =========================================================================
@@ -389,7 +567,11 @@
           <span class="status-chip ${status.toLowerCase()}">${isNew ? "Not created" : capitalize(status)}</span>
         </div>
 
-        ${isNew ? `<div class="empty-hint">This policy hasn't been created yet. Fill in the details below and save to publish it — or keep it as a draft.</div>` : ""}
+        ${isNew && getDraftFor(meta.type, State.vendor)
+            ? `<div class="prefill-hint">✨ Pre-filled from your store profile — review, tweak, then save.</div>`
+            : isNew
+              ? `<div class="empty-hint">This policy hasn't been created yet. Fill in the details below and save to publish it — or keep it as a draft.</div>`
+              : ""}
 
         <div class="card">
           <div class="field-group">
@@ -439,9 +621,13 @@
         </div>
       `;
 
-      // Populate the editor body (contenteditable can't take value= like an input)
+      // Populate the editor body (contenteditable can't take value= like an input).
+      // For a never-created About Us / Contact Us page, offer a prefilled
+      // draft built from the vendor's own profile instead of a blank box.
       const editor = document.getElementById("policyEditorBody");
-      editor.innerHTML = policy?.content || "";
+      const draft = isNew ? getDraftFor(State.activeType, State.vendor) : null;
+      editor.innerHTML = removeDivTags(policy?.content || draft || "");
+      if (draft && isNew) State.dirty = false; // prefill isn't a user edit yet — don't nag on tab switch
       updateEditorEmptyState();
       updateWordCount();
 
@@ -511,7 +697,9 @@
        ========================================================================= */
     async function handleSave(){
       const title = document.getElementById("policyTitle").value.trim();
-      const content = document.getElementById("policyEditorBody").innerHTML.trim();
+      // Get editor HTML and remove all <div> / </div> tags before sending.
+      const rawContent = document.getElementById("policyEditorBody").innerHTML.trim();
+      const content = removeDivTags(rawContent);
 
       if (!title){ toast("Please add a title.", "error"); return; }
       if (!document.getElementById("policyEditorBody").textContent.trim()){ toast("Please add some content before saving.", "error"); return; }
@@ -594,6 +782,7 @@
        then show the first type's panel.
        ========================================================================= */
     async function init(){
+      loadVendorProfile(); // fire-and-forget — doesn't block the policy list from loading
       try{
         const response = await apiRequest(API.list(), { method:"GET" }, { silentError:true });
         const list = response.data || [];
