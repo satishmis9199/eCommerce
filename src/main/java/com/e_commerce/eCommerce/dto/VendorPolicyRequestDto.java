@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class VendorPolicyRequestDto {
 
-    @NotNull(message = "Policy type is required")
+    @NotNull(message = "Policy type is require")
     private PolicyType policyType;
 
     @NotBlank(message = "Title is required")
