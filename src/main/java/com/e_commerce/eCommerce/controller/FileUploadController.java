@@ -132,5 +132,19 @@ public class FileUploadController {
 
         return ResponseEntity.ok(dto);
     }
+    @PostMapping("/upload/favicon")
+    public ResponseEntity<?> uploadFavicon(@RequestParam("file") MultipartFile file) {
+        logger.error("Inside favicon Image Upload");
+        String url = storageService.upload(file, "favicon");
+
+        UploadResponseDTO dto = new UploadResponseDTO();
+
+        dto.setSuccess(true);
+        dto.setMessage("Favicon Uploaded Successfully");
+
+        dto.setObjectKey(url);
+
+        return ResponseEntity.ok(dto);
+    }
 
 }

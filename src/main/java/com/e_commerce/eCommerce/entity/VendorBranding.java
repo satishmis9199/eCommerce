@@ -22,11 +22,6 @@ public class VendorBranding {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    //========================================
-    // Vendor
-    //========================================
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "vendor_id",
@@ -34,10 +29,6 @@ public class VendorBranding {
             unique = true
     )
     private Vendor vendor;
-
-    //========================================
-    // Branding
-    //========================================
 
     @Column(length = 1000)
     private String logoUrl;
@@ -57,6 +48,19 @@ public class VendorBranding {
     @Column(length = 200)
     private String storeTagline;
 
+    @Column(length = 200)
+    private String facebookUrl;
+    @Column(length = 200)
+    private String instagramUrl;
+    @Column(length = 200)
+    private String youtubeUrl;
+    @Column(length = 200)
+    private String linkedinUrl;
+    @Column(length = 200)
+    private String whatsApp;
+    @Column(length = 200)
+    private String website;
+
     @Column(length = 2000)
     private String storeDescription;
 
@@ -66,10 +70,6 @@ public class VendorBranding {
     @Column(length = 1000)
     private String supportPhone;
 
-    //========================================
-    // SEO
-    //========================================
-
     @Column(length = 200)
     private String metaTitle;
 
@@ -78,11 +78,6 @@ public class VendorBranding {
 
     @Column(length = 1000)
     private String metaKeywords;
-
-    //========================================
-    // Audit
-    //========================================
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

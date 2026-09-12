@@ -114,31 +114,17 @@ public class Vendor {
     @PrePersist
     public void prePersist() {
         reSubmit = false;
-
         tenantId = UUID.randomUUID().toString();
-
         createdAt = LocalDateTime.now();
-
-
         updatedAt = LocalDateTime.now();
-
         active = false;
-
         deleted = false;
-
         emailVerified = false;
-
         mobileVerified = false;
-
         completeVerified = false;
-
         role = "VENDOR";
-
         status = VendorStatus.ONBOARDING;
-
     }
-
-
     @PreUpdate
     public void preUpdate() {
 

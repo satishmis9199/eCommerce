@@ -1,6 +1,10 @@
 package com.e_commerce.eCommerce.controller;
 
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.request.VendorBrandingRequestDTO;
+import com.e_commerce.eCommerce.dto.request.VendorBusinessAddressDTO;
+import com.e_commerce.eCommerce.dto.request.VendorContactSocialRequestDTO;
+import com.e_commerce.eCommerce.dto.response.VenodorBusinessProfile;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.DashBoardService;
@@ -95,7 +99,7 @@ public class DashboardController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "Errir While Profile Edit"
+                    "message", "Error While Profile Edit"
             ));
         }
     }
@@ -145,4 +149,277 @@ public class DashboardController {
                     );
         }
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/settings/business-profile")
+    public ResponseEntity<ApiResponse<VenodorBusinessProfile>> getVendorBussinesProfile(
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+
+        try {
+
+
+            VenodorBusinessProfile venodorBusinessProfile =
+                    vendorService.loadVendorBusinessProfile(userDetail);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Business Data Loaded",
+                            venodorBusinessProfile
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/settings/business-profile")
+    public ResponseEntity<ApiResponse<VenodorBusinessProfile>> SaveVendorBussinesProfile(
+            @AuthenticationPrincipal CustomUserDetail userDetail,@RequestBody VenodorBusinessProfile venodorBusinessProfiles) {
+
+        try {
+
+
+            VenodorBusinessProfile venodorBusinessProfile =
+                    vendorService.updatevendorBusinessProfile(userDetail, venodorBusinessProfiles);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Business Data Loaded",
+                            venodorBusinessProfile
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/settings/address")
+    public ResponseEntity<ApiResponse<VendorBusinessAddressDTO>> loadAddress(
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+
+        try {
+
+
+            VendorBusinessAddressDTO venodorBusinessProfile=vendorService.loadVendorAddress(userDetail);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Address Data Loaded",
+                            venodorBusinessProfile
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/settings/address")
+    public ResponseEntity<ApiResponse<VendorBusinessAddressDTO>> editVendorAddress(
+            @AuthenticationPrincipal CustomUserDetail userDetail,@RequestBody VendorBusinessAddressDTO vendorBusinessAddressDTO) {
+
+        try {
+
+
+            VendorBusinessAddressDTO venodorBusinessProfile=vendorService.editVendorAddress(userDetail,vendorBusinessAddressDTO);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Vendor Address Successfully loaded and Edited",
+                            venodorBusinessProfile
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/settings/branding")
+    public ResponseEntity<ApiResponse<VendorBrandingRequestDTO>> loadBrandingDetail(
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+
+        try {
+
+
+            VendorBrandingRequestDTO vendorBrandingRequestDTO=vendorService.loadBrandingDetails(userDetail);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Branded Data Loaded Successfully",
+                            vendorBrandingRequestDTO
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/settings/branding")
+    public ResponseEntity<ApiResponse<VendorBrandingRequestDTO>> editBranding(
+            @AuthenticationPrincipal CustomUserDetail userDetail,@RequestBody VendorBrandingRequestDTO vendorBrandingRequestDTO) {
+
+        try {
+
+
+            VendorBrandingRequestDTO vendorBrandingRequestDTO1=vendorService.editBranding(userDetail,vendorBrandingRequestDTO);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Branding has been Successfully Loaded",
+                            vendorBrandingRequestDTO1
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/settings/contact")
+    public ResponseEntity<ApiResponse<VendorContactSocialRequestDTO>> saveContactInfo(
+            @AuthenticationPrincipal CustomUserDetail userDetail,@RequestBody VendorContactSocialRequestDTO vendorContactSocialRequestDTO) {
+
+        try {
+
+            VendorContactSocialRequestDTO vendorContactSocialRequestDTO1=vendorService.editContactDetails(userDetail,vendorContactSocialRequestDTO);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Contact  has been edited Successfully",
+                            vendorContactSocialRequestDTO1
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/settings/contact")
+    public ResponseEntity<ApiResponse<VendorContactSocialRequestDTO>> loadContact(
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+
+        try {
+
+            VendorContactSocialRequestDTO vendorContactSocialRequestDTO1=vendorService.loadContactInfo(userDetail);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Contact  has been edited Successfully",
+                            vendorContactSocialRequestDTO1
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+
 }

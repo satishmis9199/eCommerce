@@ -4,6 +4,6 @@ import com.e_commerce.eCommerce.entity.VendorBusiness;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface vendorBussinesss extends JpaRepository<VendorBusiness, Long> {
-    VendorBusiness findByVendorId(Long vendorId);
+     VendorBusiness findByVendorId(Long vendorId);
 
 }

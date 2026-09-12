@@ -1,10 +1,13 @@
 package com.e_commerce.eCommerce.dto;
 
+import jakarta.persistence.NamedEntityGraph;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+
 public class ApiResponse<T> {
 
     private boolean success;

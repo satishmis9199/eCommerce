@@ -1090,10 +1090,6 @@
       document.getElementById("footerBrandSub").textContent = SITE_CONFIG.brandSub.toUpperCase();
       document.getElementById("footerAbout").textContent = SITE_CONFIG.footerAbout;
     }
-
-    /* =========================================================================
-       RENDER + WIRE: primary nav (desktop + mobile), from SITE_CONFIG.navLinks
-       ========================================================================= */
     function renderNav(){
       const list = document.getElementById("navLinks");
       list.innerHTML = SITE_CONFIG.navLinks.map(link =>
@@ -1330,19 +1326,7 @@
     }
     function escapeAttr(str){ return escapeHtml(str); }
 
-    /* =========================================================================
-       BACK BUTTON — sends the visitor back to whatever page/tab they came
-       from, exactly like the browser's own Back button.
-       - If there's history to go back to AND it came from the same site
-         (document.referrer matches our origin), use history.back().
-       - If it came from an external site (e.g. a Google search result or a
-         link on another domain), also use history.back() — that's still
-         "where they came from", and is safe because we're not navigating
-         them anywhere ourselves, just replaying browser history.
-       - Only if there's no usable history entry (e.g. this page was opened
-         directly in a new tab, so history.length is 1) do we fall back to
-         scrolling to the top of this page, since there's nowhere else to go.
-       ========================================================================= */
+
     function initBackButton(){
       const btn = document.getElementById("backButton");
       if (!btn) return;
@@ -1363,14 +1347,6 @@
     renderPipeline();
     renderFooter();
 
-    /* =========================================================================
-       LOAD TEAM DATA FROM API
-       -------------------------------------------------------------------------
-       Fetches the live team list from /api/team/info. If the request
-       succeeds, teamMembers is replaced with the API data and the page is
-       re-rendered. If it fails (offline, endpoint down, etc.), the page
-       simply keeps showing the hardcoded fallback data above.
-       ========================================================================= */
     async function loadTeamFromApi(){
       try{
         const res = await fetch("/api/team/info");

@@ -38,6 +38,8 @@ public class PdfInvoiceService {
     private final OrderAddressRepository orderAddressRepository;
     private final R2Properties r2Properties;
     private final FileStorageService fileStorageService;
+    private final vendorBussinesss vendorBussinesssRepository;
+    private final VendorBrandingRepository vendorBrandingRepository;
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -75,6 +77,9 @@ public class PdfInvoiceService {
                 invoiceRepository.findByOrderId(orderId);
         VendorAddress vendorAddress = vendorAddresss.findByVendorId(vendor.getId());
         OrderAddress orderAddress = orderAddressRepository.findByOrderIdAndTenantId(order.getId(), tenantId);
+        VendorBusiness vendorBusiness=vendorBussinesssRepository.findByVendorId(vendor.getId());
+        VendorBranding vendorBranding=vendorBrandingRepository.findByVendorId(vendor.getId());
+
         if (orderAddress == null) {
             throw new RuntimeException("Order Adress Not Found");
         }
@@ -217,10 +222,24 @@ public class PdfInvoiceService {
         companyDetailDTO.setCity(vendorAddress.getCity());
         companyDetailDTO.setState(vendorAddress.getCity());
         companyDetailDTO.setPincode(vendorAddress.getPostalCode());
-        companyDetailDTO.setPhone("N/A");
-        companyDetailDTO.setGstin("");
-        companyDetailDTO.setEmail(vendor.getEmail());
-        companyDetailDTO.setWebsite("www.kumar.com");
+        if(vendorBranding!=null){
+            companyDetailDTO.setPhone(vendorBranding.getSupportPhone());
+            companyDetailDTO.setEmail(vendorBranding.getSupportEmail());
+
+        }else{
+            companyDetailDTO.setPhone("N/A");
+            companyDetailDTO.setEmail(vendor.getEmail());
+        }
+
+
+
+        if(vendorBusiness==null){
+            companyDetailDTO.setWebsite("N/A");
+            companyDetailDTO.setGstin("N/A");
+        }else{
+            companyDetailDTO.setWebsite(vendorBusiness.getWebsite());
+            companyDetailDTO.setGstin(vendorBusiness.getGstNumber());
+        }
 
         customerDetailDTo.setName(user.getFirstName() + " " + user.getLastName());
         customerDetailDTo.setPhone(user.getPhone());
@@ -304,12 +323,6 @@ public class PdfInvoiceService {
                     e
             );
         }
-
-
-        // =========================================================
-        // 16. HTML -> PDF
-        // =========================================================
-
         try (
                 ByteArrayOutputStream os =
                         new ByteArrayOutputStream()

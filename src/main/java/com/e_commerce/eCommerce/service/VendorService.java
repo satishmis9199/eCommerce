@@ -5,11 +5,12 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.controller.VendorController;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
+import com.e_commerce.eCommerce.dto.request.VendorBrandingRequestDTO;
+import com.e_commerce.eCommerce.dto.request.VendorBusinessAddressDTO;
+import com.e_commerce.eCommerce.dto.request.VendorContactSocialRequestDTO;
+import com.e_commerce.eCommerce.dto.response.VenodorBusinessProfile;
 import com.e_commerce.eCommerce.entity.*;
-import com.e_commerce.eCommerce.repository.UserRepos;
-import com.e_commerce.eCommerce.repository.VendorOnnBRepo;
-import com.e_commerce.eCommerce.repository.VendorRepository;
-import com.e_commerce.eCommerce.repository.vendorBussinesss;
+import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -40,6 +41,8 @@ public class VendorService {
     private final vendorBussinesss vendorBussinessAddress;
     private final PasswordResetServiceImpl passwordResetService;
     private final EmailService emailService;
+    private final VendorAddresss vendorAddresssRepo;
+    private final VendorBrandingRepository vendorBrandingRepository;
 
     @CacheEvict(value = "AllVendors", allEntries = true)
     @Transactional
@@ -268,5 +271,388 @@ public class VendorService {
         List<CustomerListResponseDTO> customerListResponseDTOS = userRepos.getCustomerList(tenantid, vendor.get().getId());
         return customerListResponseDTOS;
 
+    }
+
+
+    public VenodorBusinessProfile loadVendorBusinessProfile(
+            CustomUserDetail userDetail) {
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        String tenantId = TenantContext.getTenantId();
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        return vendorRepository
+                .findVendorBusinessProfile(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Vendor business profile not found"
+                        ));
+    }
+
+
+
+    public VenodorBusinessProfile updatevendorBusinessProfile(
+            CustomUserDetail userDetail,
+            VenodorBusinessProfile venodorBusinessProfiles) {
+
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        VendorBusiness vendorBusiness =
+                vendorBussinessAddress.findByVendorId(vendor.getId());
+        VendorBranding vendorBranding=vendorBrandingRepository.findByVendorId(vendor.getId());
+        if(vendorBranding!=null){
+            vendorBranding.setStoreDescription(venodorBusinessProfiles.getDescription());
+            vendorBranding.setUpdatedAt(LocalDateTime.now());
+            vendorBrandingRepository.save(vendorBranding);
+
+        }
+
+        vendor.setBussinessName(
+                venodorBusinessProfiles.getBusinessName()
+        );
+
+        vendor.setFirstName(
+                venodorBusinessProfiles.getOwnerName()
+        );
+
+        vendorBusiness.setGstNumber(
+                venodorBusinessProfiles.getGstNumber()
+        );
+
+        vendorBusiness.setPanNumber(
+                venodorBusinessProfiles.getPanNumber()
+        );
+
+        vendorBusiness.setBusinessDescription(
+                venodorBusinessProfiles.getDescription()
+        );
+
+        vendorBusiness.setCinNumber(
+                venodorBusinessProfiles.getRegistrationNumber()
+        );
+        vendor.setUpdatedAt(LocalDateTime.now());
+        vendorBusiness.setUpdatedAt(LocalDateTime.now());
+        vendor.setUpdatedBy(userDetail.getId());
+
+        vendorRepository.save(vendor);
+        vendorBussinessAddress.save(vendorBusiness);
+
+        return VenodorBusinessProfile.builder()
+                .businessName(vendor.getBussinessName())
+                .ownerName(vendor.getFirstName())
+                .gstNumber(vendorBusiness.getGstNumber())
+                .panNumber(vendorBusiness.getPanNumber())
+                .description(vendorBusiness.getBusinessDescription())
+                .registrationNumber(vendorBusiness.getCinNumber())
+                .build();
+    }
+
+    public VendorBusinessAddressDTO loadVendorAddress(CustomUserDetail userDetail) {
+        String tenantId=TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+        Optional<VendorBusinessAddressDTO> vendorAddress=vendorAddresssRepo.findVendorBusiness(vendor.getId());
+        if(vendorAddress==null){
+            throw new RuntimeException("Address Could not Found");
+        }
+        VendorBusinessAddressDTO v1=vendorAddress.get();
+        return v1;
+
+    }
+
+    public VendorBusinessAddressDTO editVendorAddress(CustomUserDetail userDetail, VendorBusinessAddressDTO vendorBusinessAddressDTO) {
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+        VendorAddress vendorAddress=vendorAddresssRepo.findByVendorId(vendor.getId());
+        if(vendorAddress==null){
+            throw new RuntimeException("Address Could not Found");
+        }
+        if (vendorBusinessAddressDTO.getAddressLine1() != null) {
+            vendorAddress.setAddressLine1(vendorBusinessAddressDTO.getAddressLine1());
+        }
+
+        if (vendorBusinessAddressDTO.getAddressLine2() != null) {
+            vendorAddress.setAddressLine2(vendorBusinessAddressDTO.getAddressLine2());
+        }
+
+        if (vendorBusinessAddressDTO.getCity() != null) {
+            vendorAddress.setCity(vendorBusinessAddressDTO.getCity());
+        }
+
+        if (vendorBusinessAddressDTO.getState() != null) {
+            vendorAddress.setState(vendorBusinessAddressDTO.getState());
+        }
+
+        if (vendorBusinessAddressDTO.getCountry() != null) {
+            vendorAddress.setCountry(vendorBusinessAddressDTO.getCountry());
+        }
+
+        if (vendorBusinessAddressDTO.getPincode() != null) {
+            vendorAddress.setPostalCode(vendorBusinessAddressDTO.getPincode());
+        }
+           vendorAddresssRepo.save(vendorAddress);
+
+        VendorBusinessAddressDTO vendorBusinessAddressDTOs=VendorBusinessAddressDTO.builder()
+                .addressLine1(vendorBusinessAddressDTO.getAddressLine1())
+                .addressLine2(vendorBusinessAddressDTO.getAddressLine2())
+                .pincode(vendorBusinessAddressDTO.getPincode())
+                .city(vendorBusinessAddressDTO.getCity())
+                .state(vendorBusinessAddressDTO.getState())
+                .country(vendorBusinessAddressDTO.getCountry())
+                .build();
+        return vendorBusinessAddressDTOs;
+    }
+
+    public VendorBrandingRequestDTO loadBrandingDetails(CustomUserDetail userDetail) {
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+
+        Optional<VendorBrandingRequestDTO> vendorBrandingRequestDTO=vendorBrandingRepository.loaddBrandingDetail(vendor.getId());
+        if(vendorBrandingRequestDTO.isEmpty()){
+            throw new RuntimeException("Branding data doesn't esist for "+vendor.getStoreName());
+        }
+        VendorBrandingRequestDTO vendorBrandingRequestDTO1=vendorBrandingRequestDTO.get();;
+        return vendorBrandingRequestDTO1;
+    }
+
+    public VendorBrandingRequestDTO editBranding(CustomUserDetail userDetail, VendorBrandingRequestDTO vendorBrandingRequestDTO) {
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+        VendorBranding vendorBranding1=vendorBrandingRepository.findByVendorId(vendor.getId());
+        if(vendorBranding1==null){
+            throw new RuntimeException("Brandding data is Not availble for Vendor");
+        }
+
+
+        if (vendorBrandingRequestDTO.getPrimaryColor() != null) {
+            vendorBranding1.setPrimaryColor(
+                    vendorBrandingRequestDTO.getPrimaryColor()
+            );
+        }
+
+        if (vendorBrandingRequestDTO.getSecondaryColor() != null) {
+            vendorBranding1.setSecondaryColor(
+                    vendorBrandingRequestDTO.getSecondaryColor()
+            );
+        }
+
+        if (vendorBrandingRequestDTO.getFaviconUrl() != null) {
+            vendorBranding1.setFaviconUrl(
+                    vendorBrandingRequestDTO.getFaviconUrl()
+            );
+        }
+
+        if (vendorBrandingRequestDTO.getBannerUrl() != null) {
+            vendorBranding1.setBannerUrl(
+                    vendorBrandingRequestDTO.getBannerUrl()
+            );
+        }
+
+        if (vendorBrandingRequestDTO.getLogoUrl() != null) {
+            vendorBranding1.setLogoUrl(
+                    vendorBrandingRequestDTO.getLogoUrl()
+            );
+        }
+        vendorBranding1.setUpdatedAt(LocalDateTime.now());
+        vendorBrandingRepository.save(vendorBranding1);
+        return VendorBrandingRequestDTO.builder()
+                .bannerUrl(vendorBrandingRequestDTO.getBannerUrl())
+                .logoUrl(vendorBrandingRequestDTO.getLogoUrl())
+                .faviconUrl(vendorBrandingRequestDTO.getFaviconUrl())
+                .primaryColor(vendorBrandingRequestDTO.getSecondaryColor())
+                .secondaryColor(vendorBrandingRequestDTO.getSecondaryColor())
+                .build();
+
+    }
+
+    public VendorContactSocialRequestDTO editContactDetails(CustomUserDetail userDetail, VendorContactSocialRequestDTO vendorContactSocialRequestDTO) {
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+        VendorBranding vendorBranding1=vendorBrandingRepository.findByVendorId(vendor.getId());
+        if(vendorBranding1==null){
+            throw new RuntimeException("Brandding data is Not availble for Vendor");
+        }
+        if (vendorContactSocialRequestDTO.getSupportEmail() != null
+                && !vendorContactSocialRequestDTO.getSupportEmail().isBlank()) {
+            vendorBranding1.setSupportEmail(
+                    vendorContactSocialRequestDTO.getSupportEmail()
+            );
+        }
+
+        if (vendorContactSocialRequestDTO.getSupportPhone() != null
+                && !vendorContactSocialRequestDTO.getSupportPhone().isBlank()) {
+            vendorBranding1.setSupportPhone(
+                    vendorContactSocialRequestDTO.getSupportPhone()
+            );
+        }
+
+        if (vendorContactSocialRequestDTO.getWebsite() != null
+                && !vendorContactSocialRequestDTO.getWebsite().isBlank()) {
+            vendorBranding1.setWebsite(
+                    vendorContactSocialRequestDTO.getWebsite()
+            );
+        }
+
+        if (vendorContactSocialRequestDTO.getWhatsappNumber() != null
+                && !vendorContactSocialRequestDTO.getWhatsappNumber().isBlank()) {
+            vendorBranding1.setWhatsApp(
+                    vendorContactSocialRequestDTO.getWhatsappNumber()
+            );
+        }
+
+        if (vendorContactSocialRequestDTO.getFacebook() != null
+                && !vendorContactSocialRequestDTO.getFacebook().isBlank()) {
+            vendorBranding1.setFacebookUrl(
+                    vendorContactSocialRequestDTO.getFacebook()
+            );
+        }
+
+        if (vendorContactSocialRequestDTO.getInstagram() != null
+                && !vendorContactSocialRequestDTO.getInstagram().isBlank()) {
+            vendorBranding1.setInstagramUrl(
+                    vendorContactSocialRequestDTO.getInstagram()
+            );
+        }
+
+        if (vendorContactSocialRequestDTO.getYoutube() != null
+                && !vendorContactSocialRequestDTO.getYoutube().isBlank()) {
+            vendorBranding1.setYoutubeUrl(
+                    vendorContactSocialRequestDTO.getYoutube()
+            );
+        }
+
+        if (vendorContactSocialRequestDTO.getLinkedin() != null
+                && !vendorContactSocialRequestDTO.getLinkedin().isBlank()) {
+            vendorBranding1.setLinkedinUrl(
+                    vendorContactSocialRequestDTO.getLinkedin()
+            );
+        }
+        vendorBrandingRepository.save(vendorBranding1);
+        return vendorContactSocialRequestDTO;
+
+
+    }
+
+    public VendorContactSocialRequestDTO loadContactInfo(CustomUserDetail userDetail) {
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+        VendorContactSocialRequestDTO vendorContactSocialRequestDTO=vendorBrandingRepository.loadVendorContactInfo(vendor.getId());
+        return vendorContactSocialRequestDTO;
     }
 }
