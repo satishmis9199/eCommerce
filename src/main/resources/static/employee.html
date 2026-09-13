@@ -634,18 +634,6 @@
         .btn-google:hover{background:var(--paper);border-color:var(--muted-2);}
         .btn-google:active{transform:scale(.98);}
         .btn-google svg{flex-shrink:0;}
-        /* Google renders its real (accessible, always-clickable) button
-           invisibly on top of our styled one, so the click that lands on
-           the pixels is a genuine user gesture on Google's own button —
-           this is what makes it reliably open the account picker instead
-           of depending on One Tap's flaky auto-prompt. */
-        .gbtn-stack{position:relative;}
-        .gbtn-real{
-          position:absolute;inset:0;opacity:0;overflow:hidden;
-          border-radius:var(--radius-sm);
-        }
-        .gbtn-real,.gbtn-real *{cursor:pointer;}
-        .gbtn-real iframe{width:100% !important;}
         .auth-tab{flex:1;border:none;background:transparent;padding:9px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--muted);transition:all .15s;}
         .auth-tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm);}
         .field{margin-bottom:16px;}
@@ -1679,13 +1667,10 @@
                 </div>
                 <button class="btn btn-primary btn-block" type="submit">Login</button>
                 <div class="auth-divider">or</div>
-                <div class="gbtn-stack">
-                    <button type="button" class="btn-google" id="googleLoginBtn" tabindex="-1">
-                        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"/></svg>
-                        Continue with Google
-                    </button>
-                    <div class="gbtn-real" id="googleLoginBtnReal"></div>
-                </div>
+                <button type="button" class="btn-google" id="googleLoginBtn">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"/></svg>
+                    Continue with Google
+                </button>
             </form>
 
             <form id="forgotPasswordForm" style="display:none;">
@@ -1730,13 +1715,10 @@
                 </div>
                 <button class="btn btn-primary btn-block" type="submit">Create Account</button>
                 <div class="auth-divider">or</div>
-                <div class="gbtn-stack">
-                    <button type="button" class="btn-google" id="googleRegisterBtn" tabindex="-1">
-                        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"/></svg>
-                        Continue with Google
-                    </button>
-                    <div class="gbtn-real" id="googleRegisterBtnReal"></div>
-                </div>
+                <button type="button" class="btn-google" id="googleRegisterBtn">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"/></svg>
+                    Continue with Google
+                </button>
             </form>
         </div>
     </div>
@@ -4344,7 +4326,6 @@ async function removeCartItem(itemId){
       closeOverlay("loginRequiredOverlay");
       openOverlay("authOverlay");
       switchAuthTab(tab);
-      initGoogleSignIn();
     }
     function switchAuthTab(tab){
       document.getElementById("tabLogin").classList.toggle("active", tab==="login");
@@ -4462,23 +4443,16 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
     });
 
     /* ---------------------------------------------------------------------
-       GOOGLE SIGN-IN
-       1. GOOGLE_CLIENT_ID below is the real OAuth Client ID for this site.
-       2. That Client ID's "Authorized JavaScript origins" (Google Cloud
-          Console) must include this page's exact origin, or Google will
-          reject the request.
-       3. Backend: POST API_ENDPOINTS.googleAuth verifies the idToken with
-          Google, then logs in / creates the user and replies the same way
-          /auth/login does (Set-Cookie JWT + { message }).
-
-       Rather than only using One Tap's prompt() — which Google can
-       silently refuse to show (recently dismissed, no Google session in
-       the browser, third-party cookies blocked, etc.) — we render Google's
-       own real button invisibly, exactly on top of our styled button
-       (see .gbtn-stack/.gbtn-real). The user still sees and clicks our
-       branded "Continue with Google" button, but the actual click lands on
-       Google's button, so it reliably opens the account picker every time.
-       handleGoogleCredential() below then posts the idToken and reuses the
+       GOOGLE SIGN-IN (frontend wired, backend endpoint TODO)
+       1. Create an OAuth Client ID (type: Web application) in Google Cloud
+          Console → paste it below in GOOGLE_CLIENT_ID.
+       2. Add this page's exact origin (e.g. https://yourstore.com) to
+          "Authorized JavaScript origins" for that Client ID.
+       3. Build POST API_ENDPOINTS.googleAuth on the backend: verify the
+          idToken with Google, then log in / create the user and reply the
+          same way /auth/login does (Set-Cookie JWT + { message }).
+       Nothing else on this page needs to change once that endpoint exists —
+       handleGoogleCredential() below already posts idToken and reuses the
        normal post-login flow.
     --------------------------------------------------------------------- */
     const GOOGLE_CLIENT_ID =
@@ -4505,39 +4479,14 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
       }
     }
 
-    let googleSignInReady = false;
-
-    function renderRealGoogleButton(containerId){
-      const el = document.getElementById(containerId);
-      if (!el || el.dataset.rendered) return;
-      // A fixed pixel width is required by the API; match the field width
-      // the button sits in (auth modal content column).
-      const width = Math.min(360, Math.max(240, el.parentElement.offsetWidth || 320));
-      google.accounts.id.renderButton(el, {
-        type: "standard", theme: "outline", size: "large",
-        text: "continue_with", shape: "rectangular", width,
-      });
-      el.dataset.rendered = "1";
-    }
-
     function initGoogleSignIn(){
-      if (googleSignInReady) return;
       if (!window.google || !google.accounts || !google.accounts.id) return;
       if (GOOGLE_CLIENT_ID.startsWith("YOUR_")) return; // not configured yet
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleCredential,
-        ux_mode: "popup",
       });
-      renderRealGoogleButton("googleLoginBtnReal");
-      renderRealGoogleButton("googleRegisterBtnReal");
-      googleSignInReady = true;
     }
-
-    // Try as soon as the GIS script is available (openAuthModal() also
-    // calls this right before showing the modal, covering a slow-loading
-    // script or a modal opened before window "load" fires).
-    window.addEventListener("load", initGoogleSignIn);
 
     ["googleLoginBtn","googleRegisterBtn"].forEach(id=>{
       const btn = document.getElementById(id);
@@ -4547,15 +4496,8 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
           toast("Google sign-in is not configured yet.", "error");
           return;
         }
-        if (!googleSignInReady){
-          // Real button isn't rendered yet (GIS script still loading) —
-          // fall back to One Tap so the click isn't wasted.
-          initGoogleSignIn();
-          if (window.google?.accounts?.id) google.accounts.id.prompt();
-          else toast("Google sign-in is still loading — please try again in a moment.", "error");
-        }
-        // If it's ready, the real (invisible) Google button positioned over
-        // this one has already received the actual click — nothing more to do.
+        initGoogleSignIn();
+        google.accounts.id.prompt();
       });
     });
 
@@ -4801,8 +4743,7 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
 
     panel.innerHTML =
         `<h3 style="margin-bottom:14px;">My Orders</h3>` +
-        (orders.length
-        ? orders.map(o => `
+        orders.map(o => `
             <div class="order-row">
 
                 <img
@@ -4833,8 +4774,7 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
                 </button>
 
             </div>
-        `).join("")
-        : `<div class="empty-state"><div class="es-icon">📦</div>You haven't placed any orders yet.<br>Your order history will show up here once you order something.</div>`);
+        `).join("");
 
     panel.querySelectorAll("[data-order-detail]").forEach(btn => {
 
