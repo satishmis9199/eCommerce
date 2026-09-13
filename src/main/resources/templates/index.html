@@ -192,6 +192,43 @@
           color:var(--ink-soft);font-size:20px;line-height:1;padding:4px;
         }
         .team-modal-close:hover{color:var(--ink);}
+
+        /* =====================================================================
+           FESTIVE PROMO POPUP (full-screen image)
+        ===================================================================== */
+        .festive-overlay{
+          display:none;position:fixed;inset:0;z-index:300;
+          background:rgba(18,24,31,.78);backdrop-filter:blur(4px);
+          align-items:center;justify-content:center;padding:20px;
+        }
+        .festive-overlay.show{display:flex;}
+        .festive-modal{
+          position:relative;width:100%;max-width:420px;
+          border-radius:var(--radius-lg);overflow:hidden;
+          box-shadow:0 24px 60px rgba(0,0,0,.45);
+          animation:festivePop .35s cubic-bezier(.2,.8,.3,1.2);
+        }
+        @keyframes festivePop{
+          from{opacity:0;transform:scale(.92) translateY(10px);}
+          to{opacity:1;transform:scale(1) translateY(0);}
+        }
+        .festive-modal img{
+          width:100%;aspect-ratio:4/5;object-fit:cover;display:block;
+          background:var(--concrete-100);
+        }
+        .festive-close{
+          position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;
+          background:rgba(18,24,31,.55);color:#fff;border:none;font-size:19px;line-height:1;
+          display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+          transition:background .15s;z-index:2;
+        }
+        .festive-close:hover{background:rgba(18,24,31,.8);}
+        .festive-cta{
+          position:absolute;left:16px;right:16px;bottom:16px;z-index:2;
+        }
+        .festive-cta .btn{width:100%;box-shadow:0 6px 18px rgba(0,0,0,.25);}
+        @media (prefers-reduced-motion:reduce){ .festive-modal{animation:none;} }
+        @media (max-width:480px){ .festive-modal{max-width:100%;} }
     </style>
 </head>
 <body>
@@ -254,6 +291,15 @@
 
     </div>
 </footer>
+<div class="festive-overlay" id="festiveOverlay">
+    <div class="festive-modal">
+        <button class="festive-close" id="festiveCloseX" type="button" aria-label="Close">&times;</button>
+        <img id="festiveImage" src="" alt="Festive sale">
+        <div class="festive-cta">
+            <button class="btn btn-primary btn-lg" id="festiveShopBtn" type="button">Shop the Sale</button>
+        </div>
+    </div>
+</div>
 <div class="team-overlay" id="teamOverlay">
     <div class="team-modal">
         <button class="team-modal-close" id="teamPopupCloseX" type="button" aria-label="Close">&times;</button>
@@ -319,6 +365,14 @@
         }
       }
       function unskel(el){ el.classList.remove("skel"); }
+      function stripHtml(html){
+        // aboutUs (and similar rich-text fields) can come back as HTML
+        // like "<p>...</p>" — this renders only the plain text of it,
+        // so tags never show up literally in the hero lede.
+        const tmp = document.createElement("div");
+        tmp.innerHTML = html;
+        return (tmp.textContent || tmp.innerText || "").replace(/\s+/g, " ").trim();
+      }
 
       function applyTheme(vendor){
         const primary = vendor.themeColor;
@@ -383,12 +437,15 @@
 
         const ledeEl = document.getElementById("heroLede");
         unskel(ledeEl); ledeEl.style.width = "";
-        ledeEl.textContent = vendor.aboutUs
-          ? (vendor.aboutUs.length > 160 ? vendor.aboutUs.slice(0,157) + "…" : vendor.aboutUs)
+        const aboutText = vendor.aboutUs ? stripHtml(vendor.aboutUs) : "";
+        ledeEl.textContent = aboutText
+          ? (aboutText.length > 160 ? aboutText.slice(0,157) + "…" : aboutText)
           : "Browse the full catalogue, or sign in if you're part of the team.";
 
         document.getElementById("footerCopyright").textContent =
           `© ${new Date().getFullYear()} ${vendor.businessName || vendor.storeName || "This store"}. All rights reserved.`;
+
+        handleFestivePopup(vendor);
       }
 
       function showHeroError(message){
@@ -408,6 +465,9 @@
         document.getElementById("heroLede").textContent = "We're having trouble loading store details right now — you can still shop or sign in below.";
         document.getElementById("heroEyebrow").textContent = "Welcome";
         document.getElementById("footerCopyright").textContent = `© ${new Date().getFullYear()} All rights reserved.`;
+
+        // No vendor data to check isFestive against, so just fall through to the Team popup.
+        maybeShowTeamPopup();
       }
 
       async function loadAll(){
@@ -424,6 +484,73 @@
       loadAll();
 
       /* -----------------------------------------------------------------
+         FESTIVE PROMO POPUP (full-screen image)
+           Driven entirely by the existing /store/info response — no
+           separate API call, no static/dummy URL. Add these two fields
+           to that endpoint's vendor object:
+             - isFestive       (boolean true/false, or "yes"/"no")
+             - festiveImageUrl (string — same style as logoUrl/bannerUrl:
+                                 either a full https:// URL or an R2-relative
+                                 path, both get resolved via getImageUrl())
+           Rules:
+             - Shown only when isFestive is truthy AND festiveImageUrl is set.
+             - Once shown and dismissed, hidden for FESTIVE_HIDE_MS (24h),
+               tracked in localStorage — won't re-show on every load even
+               while isFestive stays true.
+             - Close (×) or tapping the dark backdrop -> hides it (for that window).
+             - "Shop the Sale" -> closes the popup, then reuses goToShop()
+               so it lands on the same employee.html/home.html shopUrl
+               resolved from vendor.storeType.
+             - Called from renderStoreInfo(vendor) once /store/info resolves;
+               on close (or if isFestive isn't set), falls through to
+               maybeShowTeamPopup() so the two never show stacked.
+      ----------------------------------------------------------------- */
+      const FESTIVE_HIDE_KEY = "festivePopupHideUntil";
+      const FESTIVE_HIDE_MS = 24 * 60 * 60 * 1000; // 24h
+
+      const festiveOverlay = document.getElementById("festiveOverlay");
+
+      function isFestiveFlagOn(vendor){
+        const v = vendor.isFestive;
+        return v === true || v === "yes" || v === "true" || v === 1;
+      }
+
+      function shouldShowFestivePopup(vendor){
+        if (!isFestiveFlagOn(vendor) || !vendor.festiveImageUrl) return false;
+        const hideUntil = localStorage.getItem(FESTIVE_HIDE_KEY);
+        if (hideUntil && Date.now() < Number(hideUntil)) return false;
+        return true;
+      }
+
+      function showFestivePopup(imageUrl){
+        document.getElementById("festiveImage").src = getImageUrl(imageUrl);
+        festiveOverlay.classList.add("show");
+      }
+
+      function hideFestivePopup(){
+        localStorage.setItem(FESTIVE_HIDE_KEY, String(Date.now() + FESTIVE_HIDE_MS));
+        festiveOverlay.classList.remove("show");
+        maybeShowTeamPopup();
+      }
+
+      function handleFestivePopup(vendor){
+        if (shouldShowFestivePopup(vendor)){
+          showFestivePopup(vendor.festiveImageUrl);
+        } else {
+          maybeShowTeamPopup();
+        }
+      }
+
+      document.getElementById("festiveCloseX").addEventListener("click", hideFestivePopup);
+      document.getElementById("festiveShopBtn").addEventListener("click", function(){
+        hideFestivePopup();
+        goToShop();
+      });
+      festiveOverlay.addEventListener("click", function(e){
+        if (e.target === festiveOverlay) hideFestivePopup();
+      });
+
+      /* -----------------------------------------------------------------
          TEAM INFO POPUP
            "View Team" -> plain redirect to /api/team/info (no fetch/load,
            full navigation just like goToShop below)
@@ -431,6 +558,8 @@
              - "View Team" click -> navigates to /api/team/info
              - "Remind me later" / close (×) -> hidden for 5 hours, then reappears
              - Fresh visitor (no localStorage yet) -> popup shows
+             - Only auto-shown via maybeShowTeamPopup(), so it never
+               stacks on top of the festive popup.
       ----------------------------------------------------------------- */
       const TEAM_PAGE_URL = "/api/team/info";
       const TEAM_HIDE_UNTIL_KEY = "teamPopupHideUntil"; // temporary (5h)
@@ -451,33 +580,19 @@
         localStorage.setItem(TEAM_HIDE_UNTIL_KEY, String(Date.now() + TEAM_FIVE_HOURS_MS));
         hideTeamPopup();
       }
-
       function goToTeamPage(){
         window.location.href = TEAM_PAGE_URL;
       }
-
+      function maybeShowTeamPopup(){
+        if (shouldShowTeamPopup()) showTeamPopup();
+      }
       document.getElementById("teamPopupView").addEventListener("click", goToTeamPage);
       document.getElementById("teamPopupLater").addEventListener("click", remindTeamPopupLater);
       document.getElementById("teamPopupCloseX").addEventListener("click", remindTeamPopupLater);
-
-      if (shouldShowTeamPopup()){
-        showTeamPopup();
-      }
-
-      /* -----------------------------------------------------------------
-         SHOP NAVIGATION — plain redirect to shopUrl (employee.html or
-         home.html, resolved from
-          vendor.storeType in applyShopDestination).
-         (A fetch()+DOM-inject approach was tried, but it only swaps
-         document.body — the target page's own <link>/<script> tags live
-         in its <head> and never get loaded that way, so its CSS/JS broke.
-         Full navigation is what actually loads the shop page correctly.)
-      ----------------------------------------------------------------- */
       function goToShop(e){
         if (e) e.preventDefault();
         window.location.href = shopUrl;
       }
-
       ["shopHeaderBtn","shopNowHeroBtn"].forEach(id=>{
         const el = document.getElementById(id);
         if (el) el.addEventListener("click", goToShop);

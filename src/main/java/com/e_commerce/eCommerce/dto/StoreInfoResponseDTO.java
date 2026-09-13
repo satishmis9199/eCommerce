@@ -9,19 +9,14 @@ public class StoreInfoResponseDTO {
 
     private Long vendorId;
     private String tenantId;
-
     private String businessName;
     private String storeName;
     private String tagline;
     private String storeType;
-
     private String faviconUrl;
-
     private String logoUrl;
     private String bannerUrl;
-
     private String themeColor;
-
     private String supportEmail;
     private String supportPhone;
 
@@ -32,4 +27,6 @@ public class StoreInfoResponseDTO {
     private SocialMediaDTO socialMedia;
 
     private StorePolicyDTO policies;
+    private String festiveImageUrl;
+    private boolean isFestive;
 }
