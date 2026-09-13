@@ -1,7 +1,10 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.response.FestivalBannerResponseDto;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
+import com.e_commerce.eCommerce.service.FestivalBannerService;
 import com.e_commerce.eCommerce.service.ProductService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +19,58 @@ import java.util.List;
 @RequestMapping("/api/u1/v1/")
 public class ProductController {
     private final ProductService productService;
+    private final FestivalBannerService festivalBannerService;
+    @GetMapping("festival-banner/active")
+    public ResponseEntity<ApiResponse<FestivalBannerResponseDto>> getActiveFestivalBanner() {
+
+        try {
+
+            String tenantId = TenantContext.getTenantId();
+
+            if (tenantId == null || tenantId.isBlank()) {
+
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(
+                                false,
+                                "Tenant information not found",
+                                null
+                        ));
+            }
+
+            FestivalBannerResponseDto response =
+                    festivalBannerService.getActiveFestivalBanner(tenantId);
+
+            if (response == null) {
+
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(
+                                false,
+                                "No active festival banner found",
+                                null
+                        ));
+            }
+
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(new ApiResponse<>(
+                            true,
+                            "Active festival banner fetched successfully",
+                            response
+                    ));
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(
+                            false,
+                            e.getMessage(),
+                            null
+                    ));
+        }
+    }
 
     @GetMapping("products/{productId}")
     public ResponseEntity<ApiResponse<ProductResponseDTOs>> getProductByProductId(@PathVariable Long productId) {

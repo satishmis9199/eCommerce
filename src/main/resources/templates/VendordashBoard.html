@@ -672,6 +672,7 @@
                 </li>
                 <li data-page="banners"><a href="#"><i class="fa-solid fa-images"></i><span>Banners</span></a></li>
                 <li data-page="notices"><a href="#"><i class="fa-solid fa-bullhorn"></i><span>Notices</span></a></li>
+                <li data-page="festivalBanners"><a href="#"><i class="fa-solid fa-star"></i><span>Festival Banners</span></a></li>
                 <li data-page="flashsales"><a href="#"><i class="fa-solid fa-bolt"></i><span>Flash Sales</span><span
                         class="badge-pill" id="flashSalesBadge" style="background:var(--orange);">0</span></a></li>
                 <li data-page="upload"><a href="#"><i class="fa-solid fa-file-arrow-up"></i><span>Bulk Upload</span></a>
@@ -1171,6 +1172,56 @@
                             </tr>
                             </thead>
                             <tbody id="noticeTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= FESTIVAL BANNERS ================= -->
+            <section class="page-section" id="page-festivalBanners">
+                <div class="section-header fade-up">
+                    <div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Festival Banners</span></div>
+                        <h1>Festival Banners</h1>
+                        <p>Manage festival/seasonal promotional banners shown to customers, with image, message, and schedule.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="primary-btn" onclick="openAddFestivalBannerModal()"><i class="fa-solid fa-plus"></i>Add
+                            Festival Banner
+                        </button>
+                    </div>
+                </div>
+                <div class="table-card fade-up fade-up-1">
+                    <div class="card-header">
+                        <div><h2>All Festival Banners</h2>
+                            <p id="festivalBannersCount">Loading...</p></div>
+                    </div>
+                    <div class="table-actions">
+                        <input type="text" id="festivalBannerSearchInput" placeholder="Search festival banners..."
+                               oninput="filterFestivalBanners(this.value)">
+                        <select id="festivalBannerStatusFilter" onchange="filterFestivalBannersByStatus(this.value)">
+                            <option value="all">All Status</option>
+                            <option value="live">Live</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="ended">Ended</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th style="width:60px;">#</th>
+                                <th style="width:110px;">Image</th>
+                                <th>Title</th>
+                                <th>Message</th>
+                                <th>Schedule</th>
+                                <th>Status</th>
+                                <th style="width:180px;">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="festivalBannerTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -2231,6 +2282,70 @@
         </div>
     </div>
 </div>
+<!-- Add/Edit Festival Banner Modal -->
+<div class="modal-overlay" id="festivalBannerModal">
+    <div class="modal large">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-star"></i><span id="festivalBannerModalTitle">Add Festival Banner</span></h2>
+            <button class="modal-close-btn" onclick="closeModal('festivalBannerModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="festivalBannerUploadLoader" class="upload-loader hidden">
+            <div class="loader-box">
+                <div class="spinner"></div>
+                <p>Uploading banner image...</p></div>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Banner Image <span style="color:red;">*</span></label>
+                <div style="display:flex;align-items:center;gap:15px;">
+                    <img id="festivalBannerImagePreview"
+                         src="https://ui-avatars.com/api/?name=Festival&background=6366f1&color=fff"
+                         style="width:110px;height:47px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;">
+                    <input id="festivalBannerImage" type="file" accept="image/png,image/jpeg,image/webp"
+                           onchange="handleFestivalBannerImageSelect(event)" style="flex:1;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Title <span style="color:red;">*</span></label>
+                <input id="festivalBannerTitle" type="text" maxlength="150" placeholder="e.g. Diwali Dhamaka Sale">
+            </div>
+
+            <div class="form-group">
+                <label>Message</label>
+                <textarea id="festivalBannerMessage" rows="3" maxlength="500"
+                          placeholder="e.g. Flat 50% off storewide, this festive season only."></textarea>
+            </div>
+
+            <div class="section-title">Schedule</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date & Time</label>
+                    <input id="festivalBannerStartAt" type="datetime-local">
+                </div>
+                <div class="form-group">
+                    <label>End Date & Time</label>
+                    <input id="festivalBannerEndAt" type="datetime-local">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Status</label>
+                <select id="festivalBannerActive">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive (Draft)</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('festivalBannerModal')">Cancel</button>
+            <button class="primary-btn" id="saveFestivalBannerBtn" onclick="saveFestivalBanner()"><i class="fa-solid fa-plus"></i>&nbsp;
+                Add Festival Banner
+            </button>
+        </div>
+    </div>
+</div>
 <!-- Create/Edit Notice Modal -->
 <div class="modal-overlay" id="noticeModal">
     <div class="modal large">
@@ -3107,6 +3222,331 @@ async function changeBannerStatus(id) {
         } catch (error) {
             console.error(error);
             showToast('error', 'Banner', 'Something went wrong while updating banner status.');
+        }
+    });
+}
+
+/* ============================================================
+   FESTIVAL BANNERS
+============================================================ */
+const FESTIVAL_BANNER_API = '/vendor/s11/v1/festival-banner';
+const FESTIVAL_BANNER_IMAGE_UPLOAD_API = '/vendor/file/upload/festival-banner';
+
+let festivalBannerList = [];
+let editingFestivalBannerId = null;
+let uploadedFestivalBannerImageUrl = null;
+
+function computeFestivalBannerState(banner) {
+    if (!banner.active) return 'inactive';
+    const now = new Date();
+    if (banner.startAt && now < new Date(banner.startAt)) return 'upcoming';
+    if (banner.endAt && now > new Date(banner.endAt)) return 'ended';
+    return 'live';
+}
+function festivalBannerStateLabel(state) {
+    return { live: 'Live', upcoming: 'Upcoming', ended: 'Ended', inactive: 'Inactive' }[state] || state;
+}
+
+async function loadFestivalBanners() {
+    try {
+        const response = await fetch(FESTIVAL_BANNER_API, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast('error', 'Festival Banners', result.message || 'Unable to load festival banners.');
+            return;
+        }
+
+        festivalBannerList = result.data || result.festivalBanners || [];
+        renderFestivalBanners(festivalBannerList);
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Festival Banners', 'Something went wrong while loading festival banners.');
+    }
+}
+
+function renderFestivalBanners(list = festivalBannerList) {
+    const tbody = document.getElementById('festivalBannerTableBody');
+    document.getElementById('festivalBannersCount').textContent = `${list.length} festival banner(s) found`;
+
+    if (!list.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="padding:60px;text-align:center;">
+                    <i class="fa-solid fa-star" style="font-size:55px;color:#94a3b8;margin-bottom:15px;"></i>
+                    <h3 style="margin-bottom:10px;color:var(--text-primary);">No Festival Banners Yet</h3>
+                    <p style="color:var(--text-muted);margin-bottom:20px;">Create your first festival/seasonal banner.</p>
+                    <button class="primary-btn" onclick="openAddFestivalBannerModal()"><i class="fa-solid fa-plus"></i>Add Festival Banner</button>
+                </td>
+            </tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((b, index) => {
+        const imgSrc = b.bannerImage
+            ? getImageUrl(b.bannerImage)
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(b.title)}&background=6366f1&color=fff`;
+        const state = computeFestivalBannerState(b);
+        const schedule = b.startAt || b.endAt
+            ? `${b.startAt ? formatDateTime(b.startAt) : 'Now'} → ${b.endAt ? formatDateTime(b.endAt) : 'No end'}`
+            : 'Always on';
+
+        return `<tr>
+            <td>${index + 1}</td>
+            <td><img src="${imgSrc}" alt="${escapeHtml(b.title)}" style="width:90px;height:38px;border-radius:6px;object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(b.title)}&background=6366f1&color=fff';"></td>
+            <td><span style="font-weight:600;color:var(--text-primary);">${escapeHtml(b.title)}</span></td>
+            <td><small style="color:var(--text-muted);">${escapeHtml(b.message || '')}</small></td>
+            <td style="font-size:12px;">${schedule}</td>
+            <td><span class="status ${state}">${festivalBannerStateLabel(state)}</span></td>
+            <td>
+                <button class="action-btn" title="Edit Festival Banner" onclick="editFestivalBanner(${b.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="action-btn success" title="Toggle Active/Inactive" onclick="changeFestivalBannerStatus(${b.id})"><i class="fa-solid fa-power-off"></i></button>
+                <button class="action-btn danger" title="Delete Festival Banner" onclick="deleteFestivalBanner(${b.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function filterFestivalBanners(q) {
+    const query = q.toLowerCase();
+    renderFestivalBanners(festivalBannerList.filter(b =>
+        (b.title || '').toLowerCase().includes(query) || (b.message || '').toLowerCase().includes(query)
+    ));
+}
+function filterFestivalBannersByStatus(s) {
+    if (s === 'all') { renderFestivalBanners(festivalBannerList); return; }
+    renderFestivalBanners(festivalBannerList.filter(b => computeFestivalBannerState(b) === s));
+}
+
+function openAddFestivalBannerModal() {
+    editingFestivalBannerId = null;
+    uploadedFestivalBannerImageUrl = null;
+
+    document.getElementById('festivalBannerModalTitle').textContent = 'Add Festival Banner';
+    document.getElementById('saveFestivalBannerBtn').innerHTML = '<i class="fa-solid fa-plus"></i>&nbsp; Add Festival Banner';
+
+    document.getElementById('festivalBannerImage').value = '';
+    document.getElementById('festivalBannerImagePreview').src = 'https://ui-avatars.com/api/?name=Festival&background=6366f1&color=fff';
+    document.getElementById('festivalBannerTitle').value = '';
+    document.getElementById('festivalBannerMessage').value = '';
+    document.getElementById('festivalBannerStartAt').value = '';
+    document.getElementById('festivalBannerEndAt').value = '';
+    document.getElementById('festivalBannerActive').value = 'true';
+
+    openModal('festivalBannerModal');
+}
+
+function handleFestivalBannerImageSelect(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('warning', 'Invalid File', 'Please select an image file (JPG, PNG, or WEBP).');
+        event.target.value = '';
+        return;
+    }
+    const maxSizeMB = 5;
+    if (file.size > maxSizeMB * 1024 * 1024) {
+        showToast('warning', 'File Too Large', `Please choose an image under ${maxSizeMB}MB.`);
+        event.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => { document.getElementById('festivalBannerImagePreview').src = e.target.result; };
+    reader.readAsDataURL(file);
+
+    uploadFestivalBannerImage(file);
+}
+
+async function uploadFestivalBannerImage(file) {
+    const loader = document.getElementById('festivalBannerUploadLoader');
+    loader.classList.remove('hidden');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch(FESTIVAL_BANNER_IMAGE_UPLOAD_API, {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success && data.objectKey) {
+            uploadedFestivalBannerImageUrl = data.objectKey;
+            document.getElementById('festivalBannerImagePreview').src = getImageUrl(data.objectKey);
+            showToast('success', 'Festival Banner Image Updated', data.message || 'Image uploaded.');
+        } else {
+            showToast('error', 'Upload Failed', data.message || 'Could not upload banner image.');
+        }
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Network Error', 'Could not reach the server.');
+    } finally {
+        loader.classList.add('hidden');
+    }
+}
+
+async function saveFestivalBanner() {
+    const title = document.getElementById('festivalBannerTitle').value.trim();
+    const startAt = document.getElementById('festivalBannerStartAt').value;
+    const endAt = document.getElementById('festivalBannerEndAt').value;
+
+    if (!title) {
+        showToast('warning', 'Validation', 'Title is required.');
+        return;
+    }
+    if (!uploadedFestivalBannerImageUrl && editingFestivalBannerId === null) {
+        showToast('warning', 'Validation', 'Please upload a banner image.');
+        return;
+    }
+    if (startAt && endAt && new Date(endAt) <= new Date(startAt)) {
+        showToast('warning', 'Validation', 'End date must be after the start date.');
+        return;
+    }
+
+    const request = {
+        title,
+        message: document.getElementById('festivalBannerMessage').value.trim() || null,
+        active: document.getElementById('festivalBannerActive').value === 'true',
+        startAt: startAt || null,
+        endAt: endAt || null,
+    };
+    if (uploadedFestivalBannerImageUrl) request.bannerImage = uploadedFestivalBannerImageUrl;
+
+    let url = FESTIVAL_BANNER_API;
+    let method = 'POST';
+    if (editingFestivalBannerId !== null) {
+        url = FESTIVAL_BANNER_API + '/' + editingFestivalBannerId;
+        method = 'PUT';
+    }
+
+    const saveBtn = document.getElementById('saveFestivalBannerBtn');
+    const originalHtml = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Saving...';
+
+    try {
+        const response = await fetch(url, {
+            method,
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request)
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast('error', 'Festival Banner', result.message || 'Unable to save festival banner.');
+            return;
+        }
+
+        showToast('success', 'Festival Banner', result.message || 'Festival banner saved successfully.');
+        closeModal('festivalBannerModal');
+        loadFestivalBanners();
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Festival Banner', 'Something went wrong.');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalHtml;
+    }
+}
+
+function toFestivalBannerDatetimeLocal(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function editFestivalBanner(id) {
+    const b = festivalBannerList.find(item => item.id === id);
+    if (!b) {
+        showToast('error', 'Festival Banner', 'Festival banner not found.');
+        return;
+    }
+
+    editingFestivalBannerId = id;
+    uploadedFestivalBannerImageUrl = null;
+
+    document.getElementById('festivalBannerModalTitle').textContent = 'Edit Festival Banner';
+    document.getElementById('saveFestivalBannerBtn').innerHTML = '<i class="fa-solid fa-check"></i>&nbsp; Save Changes';
+
+    document.getElementById('festivalBannerImage').value = '';
+    document.getElementById('festivalBannerImagePreview').src = b.bannerImage
+        ? getImageUrl(b.bannerImage)
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(b.title)}&background=6366f1&color=fff`;
+    document.getElementById('festivalBannerTitle').value = b.title || '';
+    document.getElementById('festivalBannerMessage').value = b.message || '';
+    document.getElementById('festivalBannerStartAt').value = toFestivalBannerDatetimeLocal(b.startAt);
+    document.getElementById('festivalBannerEndAt').value = toFestivalBannerDatetimeLocal(b.endAt);
+    document.getElementById('festivalBannerActive').value = b.active ? 'true' : 'false';
+
+    openModal('festivalBannerModal');
+}
+
+function deleteFestivalBanner(id) {
+    const b = festivalBannerList.find(item => item.id === id);
+    const confirmMsg = b ? `Delete festival banner "${b.title}"?` : 'Delete this festival banner?';
+
+    confirmAction(confirmMsg, async () => {
+        try {
+            const response = await fetch(FESTIVAL_BANNER_API + '/' + id, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                showToast('error', 'Festival Banner', result.message || 'Unable to delete festival banner.');
+                return;
+            }
+
+            showToast('success', 'Festival Banner', result.message || 'Festival banner deleted successfully.');
+            loadFestivalBanners();
+        } catch (error) {
+            console.error(error);
+            showToast('error', 'Festival Banner', 'Something went wrong while deleting the festival banner.');
+        }
+    });
+}
+
+async function changeFestivalBannerStatus(id) {
+    const b = festivalBannerList.find(item => item.id === id);
+    if (!b) {
+        showToast('error', 'Festival Banner', 'Festival banner not found.');
+        return;
+    }
+    const newActive = !b.active;
+
+    confirmAction(`${newActive ? 'Activate' : 'Deactivate'} festival banner "${b.title}"?`, async () => {
+        try {
+            const response = await fetch(FESTIVAL_BANNER_API + '/status', {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, active: newActive })
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                showToast('error', 'Festival Banner', result.message || 'Unable to update festival banner status.');
+                return;
+            }
+
+            showToast('success', 'Festival Banner', result.message || 'Festival banner status updated.');
+            loadFestivalBanners();
+        } catch (error) {
+            console.error(error);
+            showToast('error', 'Festival Banner', 'Something went wrong while updating festival banner status.');
         }
     });
 }
@@ -5239,6 +5679,10 @@ if (page === 'banners' && bannerList.length === 0) {   // ← ye naya add karo
 
     if (page === 'notices' && noticeList.length === 0) {
         loadNotices();
+    }
+
+    if (page === 'festivalBanners' && festivalBannerList.length === 0) {
+        loadFestivalBanners();
     }
 
     if (page === 'reviews') {

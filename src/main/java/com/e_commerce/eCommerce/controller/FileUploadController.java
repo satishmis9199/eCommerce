@@ -146,5 +146,18 @@ public class FileUploadController {
 
         return ResponseEntity.ok(dto);
     }
+    @PostMapping("/upload/festival-banner")
+    public ResponseEntity<?> uploadFestiveBanner(@RequestParam("file") MultipartFile file) {
+        String url = storageService.upload(file, "festiveImage");
+
+        UploadResponseDTO dto = new UploadResponseDTO();
+
+        dto.setSuccess(true);
+        dto.setMessage("Festive Image Uploaded Successfully");
+
+        dto.setObjectKey(url);
+
+        return ResponseEntity.ok(dto);
+    }
 
 }

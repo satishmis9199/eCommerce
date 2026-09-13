@@ -194,41 +194,68 @@
         .team-modal-close:hover{color:var(--ink);}
 
         /* =====================================================================
-           FESTIVE PROMO POPUP (full-screen image)
+           FESTIVE PROMO POPUP
+           - Poster shown in FULL (no crop) inside a scrollable media area,
+             so tall/portrait banners never get chopped off.
+           - CTA sits in its own solid bar BELOW the poster (not overlapping
+             it), so it never covers text/graphics on the banner itself.
+           - Close button floats over the media with its own contrast ring
+             so it stays legible on any banner artwork.
         ===================================================================== */
         .festive-overlay{
           display:none;position:fixed;inset:0;z-index:300;
-          background:rgba(18,24,31,.78);backdrop-filter:blur(4px);
+          background:rgba(15,19,26,.86);backdrop-filter:blur(8px);
           align-items:center;justify-content:center;padding:20px;
         }
         .festive-overlay.show{display:flex;}
         .festive-modal{
-          position:relative;width:100%;max-width:420px;
-          border-radius:var(--radius-lg);overflow:hidden;
-          box-shadow:0 24px 60px rgba(0,0,0,.45);
-          animation:festivePop .35s cubic-bezier(.2,.8,.3,1.2);
+          position:relative;width:100%;max-width:440px;max-height:88vh;
+          background:var(--surface);
+          border-radius:26px;overflow:hidden;
+          box-shadow:0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.08);
+          animation:festivePop .4s cubic-bezier(.2,.8,.3,1.2);
+          display:flex;flex-direction:column;
         }
         @keyframes festivePop{
-          from{opacity:0;transform:scale(.92) translateY(10px);}
+          from{opacity:0;transform:scale(.9) translateY(18px);}
           to{opacity:1;transform:scale(1) translateY(0);}
         }
-        .festive-modal img{
-          width:100%;aspect-ratio:4/5;object-fit:cover;display:block;
+        .festive-media{
+          flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
           background:var(--concrete-100);
+          scrollbar-width:none;
+        }
+        .festive-media::-webkit-scrollbar{display:none;}
+        .festive-modal img{
+          width:100%;height:auto;display:block;
         }
         .festive-close{
-          position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;
-          background:rgba(18,24,31,.55);color:#fff;border:none;font-size:19px;line-height:1;
-          display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);
-          transition:background .15s;z-index:2;
+          position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;
+          background:rgba(15,19,26,.5);color:#fff;
+          border:1.5px solid rgba(255,255,255,.35);font-size:20px;line-height:1;
+          display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);
+          transition:background .15s,transform .15s;z-index:3;
         }
-        .festive-close:hover{background:rgba(18,24,31,.8);}
+        .festive-close:hover{background:rgba(15,19,26,.78);transform:scale(1.07);}
+        .festive-close:active{transform:scale(.95);}
         .festive-cta{
-          position:absolute;left:16px;right:16px;bottom:16px;z-index:2;
+          flex-shrink:0;position:relative;z-index:2;
+          padding:16px 18px calc(16px + env(safe-area-inset-bottom,0px));
+          background:var(--surface);
+          box-shadow:0 -6px 18px rgba(20,22,31,.07);
         }
-        .festive-cta .btn{width:100%;box-shadow:0 6px 18px rgba(0,0,0,.25);}
+        .festive-cta .btn{
+          width:100%;padding:15px;font-size:15.5px;font-weight:700;
+          border-radius:13px;box-shadow:0 10px 24px rgba(0,0,0,.18);
+          transition:transform .15s ease,box-shadow .15s ease;
+        }
+        .festive-cta .btn:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(0,0,0,.24);}
+        .festive-cta .btn:active{transform:translateY(0);}
         @media (prefers-reduced-motion:reduce){ .festive-modal{animation:none;} }
-        @media (max-width:480px){ .festive-modal{max-width:100%;} }
+        @media (max-width:480px){
+          .festive-overlay{padding:12px;}
+          .festive-modal{max-width:100%;max-height:92vh;border-radius:22px;}
+        }
     </style>
 </head>
 <body>
@@ -294,7 +321,9 @@
 <div class="festive-overlay" id="festiveOverlay">
     <div class="festive-modal">
         <button class="festive-close" id="festiveCloseX" type="button" aria-label="Close">&times;</button>
-        <img id="festiveImage" src="" alt="Festive sale">
+        <div class="festive-media">
+            <img id="festiveImage" src="" alt="Festive sale">
+        </div>
         <div class="festive-cta">
             <button class="btn btn-primary btn-lg" id="festiveShopBtn" type="button">Shop the Sale</button>
         </div>
@@ -327,6 +356,7 @@
       ----------------------------------------------------------------- */
       const API_BASE = "/api/u1/v1";
       const STORE_INFO_URL = `${API_BASE}/store/info`;
+      const FESTIVAL_BANNER_URL = `${API_BASE}/festival-banner/active`;
       const SHOP_PAGE_URL = "/employee.html";
       const CAFE_HOME_URL = "/home.html";
       const CAFE_STORE_TYPE = "Cafe and Restaurant";
@@ -445,7 +475,8 @@
         document.getElementById("footerCopyright").textContent =
           `© ${new Date().getFullYear()} ${vendor.businessName || vendor.storeName || "This store"}. All rights reserved.`;
 
-        handleFestivePopup(vendor);
+        // Festival banner is loaded independently from its own endpoint
+        // (see loadFestivalBanner below) — /store/info no longer drives it.
       }
 
       function showHeroError(message){
@@ -466,8 +497,8 @@
         document.getElementById("heroEyebrow").textContent = "Welcome";
         document.getElementById("footerCopyright").textContent = `© ${new Date().getFullYear()} All rights reserved.`;
 
-        // No vendor data to check isFestive against, so just fall through to the Team popup.
-        maybeShowTeamPopup();
+        // Festival banner / Team popup flow is fully independent of
+        // store info now — it runs regardless via loadFestivalBanner().
       }
 
       async function loadAll(){
@@ -481,45 +512,52 @@
       }
 
       document.getElementById("retryBtn").addEventListener("click", loadAll);
+
+      // Both calls fire independently on page load. Festival banner
+      // failing/404-ing must never block or affect store info rendering,
+      // and vice versa.
       loadAll();
+      loadFestivalBanner();
 
       /* -----------------------------------------------------------------
          FESTIVE PROMO POPUP (full-screen image)
-           Driven entirely by the existing /store/info response — no
-           separate API call, no static/dummy URL. Add these two fields
-           to that endpoint's vendor object:
-             - isFestive       (boolean true/false, or "yes"/"no")
-             - festiveImageUrl (string — same style as logoUrl/bannerUrl:
-                                 either a full https:// URL or an R2-relative
-                                 path, both get resolved via getImageUrl())
+           Driven entirely by its own endpoint — NOT by /store/info:
+
+             GET /api/u1/v1/festival-banner/active
+
+           Expected shape (ApiResponse envelope):
+             { success:true, message:"...", data:{
+                 id, title, message, bannerImage, startAt, endAt, active
+               } }
+           No active banner right now -> backend returns 404 with
+           { success:false, data:null } — treated as "nothing to show".
+
            Rules:
-             - Shown only when isFestive is truthy AND festiveImageUrl is set.
+             - Shown only when the call succeeds AND data.active is true.
+             - bannerImage can be a full https:// URL or an R2-relative
+               path — resolved the same way as logoUrl/bannerUrl via
+               getImageUrl(). No new image-handling logic.
              - Once shown and dismissed, hidden for FESTIVE_HIDE_MS (24h),
                tracked in localStorage — won't re-show on every load even
-               while isFestive stays true.
+               while the banner stays active.
              - Close (×) or tapping the dark backdrop -> hides it (for that window).
              - "Shop the Sale" -> closes the popup, then reuses goToShop()
                so it lands on the same employee.html/home.html shopUrl
-               resolved from vendor.storeType.
-             - Called from renderStoreInfo(vendor) once /store/info resolves;
-               on close (or if isFestive isn't set), falls through to
-               maybeShowTeamPopup() so the two never show stacked.
+               resolved from vendor.storeType (from /store/info).
+             - Triggered from loadFestivalBanner() on page load, in
+               parallel with /store/info — never waits on it, never
+               blocks it, and a failure here never breaks the page.
+             - On close, or when no active banner exists, falls through
+               to maybeShowTeamPopup() so the two never show stacked.
       ----------------------------------------------------------------- */
       const FESTIVE_HIDE_KEY = "festivePopupHideUntil";
       const FESTIVE_HIDE_MS = 24 * 60 * 60 * 1000; // 24h
 
       const festiveOverlay = document.getElementById("festiveOverlay");
 
-      function isFestiveFlagOn(vendor){
-        const v = vendor.isFestive;
-        return v === true || v === "yes" || v === "true" || v === 1;
-      }
-
-      function shouldShowFestivePopup(vendor){
-        if (!isFestiveFlagOn(vendor) || !vendor.festiveImageUrl) return false;
+      function isFestiveHideActive(){
         const hideUntil = localStorage.getItem(FESTIVE_HIDE_KEY);
-        if (hideUntil && Date.now() < Number(hideUntil)) return false;
-        return true;
+        return !!(hideUntil && Date.now() < Number(hideUntil));
       }
 
       function showFestivePopup(imageUrl){
@@ -533,11 +571,24 @@
         maybeShowTeamPopup();
       }
 
-      function handleFestivePopup(vendor){
-        if (shouldShowFestivePopup(vendor)){
-          showFestivePopup(vendor.festiveImageUrl);
+      function handleFestivePopup(banner){
+        if (banner && banner.active && banner.bannerImage && !isFestiveHideActive()){
+          showFestivePopup(banner.bannerImage);
         } else {
           maybeShowTeamPopup();
+        }
+      }
+
+      // Independent call — resolved in parallel with /store/info.
+      // A 404 (no active banner) or any network/server error is treated
+      // as "nothing to show" and silently falls through to the Team
+      // popup; it never surfaces an error to the user.
+      async function loadFestivalBanner(){
+        try{
+          const result = await fetchJson(FESTIVAL_BANNER_URL);
+          handleFestivePopup(result && result.data);
+        }catch(e){
+          handleFestivePopup(null);
         }
       }
 

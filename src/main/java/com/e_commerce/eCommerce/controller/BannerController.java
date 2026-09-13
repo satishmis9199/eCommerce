@@ -64,4 +64,5 @@ public class BannerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Unable To fetch", e.getMessage()));
         }
     }
+
 }
