@@ -1,4 +1,12 @@
+
 package com.e_commerce.eCommerce.service;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.RegisterRequestDTO;
@@ -11,14 +19,6 @@ import com.e_commerce.eCommerce.repository.VendorRepository;
 
 import lombok.RequiredArgsConstructor;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserAuthService {
@@ -33,31 +33,42 @@ public class UserAuthService {
             String url) {
 
         if (registerRequestDTO == null) {
-            throw new RuntimeException("Registration data is required.");
+            throw new RuntimeException(
+                    "Registration data is required."
+            );
         }
 
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null || tenantId.isBlank()) {
-            throw new RuntimeException("Tenant does not exist.");
+            throw new RuntimeException(
+                    "Tenant does not exist."
+            );
         }
 
         String email = registerRequestDTO.getEmail();
 
         if (email == null || email.isBlank()) {
-            throw new RuntimeException("Email is required.");
+            throw new RuntimeException(
+                    "Email is required."
+            );
         }
 
         email = email.trim().toLowerCase();
 
         Vendor vendor = vendorRepository.findByTenantId(tenantId)
                 .orElseThrow(() ->
-                        new RuntimeException("Vendor does not exist."));
+                        new RuntimeException(
+                                "Vendor does not exist."
+                        )
+                );
 
         Long vendorId = vendor.getId();
 
         if (vendorId == null) {
-            throw new RuntimeException("Vendor does not exist.");
+            throw new RuntimeException(
+                    "Vendor does not exist."
+            );
         }
 
         String googleId = registerRequestDTO.getGoogleId();
@@ -79,11 +90,9 @@ public class UserAuthService {
             );
         }
 
-        log.info("========== EMAIL DUPLICATE CHECK START ==========");
-        log.info("email    = [{}]", email);
-        log.info("vendorId = [{}]", vendorId);
-        log.info("tenantId = [{}]", tenantId);
-
+        /*
+         * Duplicate email check
+         */
         User existingEmail =
                 userRepos.findByEmailAndVendorIdAndTenantId(
                         email,
@@ -92,19 +101,14 @@ public class UserAuthService {
                 );
 
         if (existingEmail != null) {
-
-            log.error("========== EMAIL FOUND ==========");
-            log.error("existingUser.id       = [{}]", existingEmail.getId());
-            log.error("existingUser.email    = [{}]", existingEmail.getEmail());
-            log.error("existingUser.vendorId = [{}]", existingEmail.getVendorId());
-            log.error("existingUser.tenantId = [{}]", existingEmail.getTenantId());
-            log.error("existingUser.googleId = [{}]", existingEmail.getGoogleId());
-
-            throw new RuntimeException("Email is already registered.");
+            throw new RuntimeException(
+                    "Email is already registered."
+            );
         }
 
-        log.info("========== EMAIL NOT FOUND ==========");
-
+        /*
+         * Google user validation
+         */
         if (isGoogleUser) {
 
             Optional<User> existingGoogleUser =
@@ -113,7 +117,7 @@ public class UserAuthService {
                             tenantId
                     );
 
-            if (existingGoogleUser != null) {
+            if (existingGoogleUser.isPresent()) {
                 throw new RuntimeException(
                         "Google account is already registered."
                 );
@@ -121,6 +125,9 @@ public class UserAuthService {
 
         } else {
 
+            /*
+             * Normal registration
+             */
             String mobileNumber =
                     registerRequestDTO.getMobileNumber();
 
@@ -153,6 +160,9 @@ public class UserAuthService {
             }
         }
 
+        /*
+         * Create new user
+         */
         User user = new User();
 
         user.setFirstName(
@@ -190,6 +200,7 @@ public class UserAuthService {
         user.setRole(Roles.USER);
 
         user.setTenantId(tenantId);
+
         user.setVendorId(vendorId);
 
         user.setActive(true);
@@ -205,6 +216,7 @@ public class UserAuthService {
         LocalDateTime now = LocalDateTime.now();
 
         user.setCreatedAt(now);
+
         user.setUpdatedAt(now);
 
         user.setCreatedBy(
@@ -219,8 +231,12 @@ public class UserAuthService {
                         : "SELF_REGISTER"
         );
 
-        User savedUser = userRepos.save(user);
+        User savedUser =
+                userRepos.save(user);
 
+        /*
+         * Send welcome email
+         */
         try {
 
             String loginLink =
@@ -261,6 +277,7 @@ public class UserAuthService {
             );
 
         } catch (Exception ignored) {
+            // Welcome email failure should not fail registration
         }
 
         return savedUser;
