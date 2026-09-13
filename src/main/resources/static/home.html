@@ -12,7 +12,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
           rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root{
           --brand-primary:#8B5E34;
@@ -612,9 +611,6 @@
         .auth-tabs{display:flex;gap:4px;background:var(--paper);border-radius:999px;padding:4px;margin-bottom:24px;}
         .auth-tab{flex:1;border:none;background:transparent;padding:9px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--muted);transition:all .15s;}
         .auth-tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm);}
-        .auth-divider{display:flex;align-items:center;gap:10px;margin:18px 0;font-size:12px;color:var(--muted-2);}
-        .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--border);}
-        #googleSignInBtn{display:flex;justify-content:center;margin-bottom:4px;}
         .field{margin-bottom:16px;}
         .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
         .field input,.field select{
@@ -960,15 +956,6 @@
             padding-bottom:env(safe-area-inset-bottom);
           }
           .demo-bar{left:8px;bottom:8px;padding:6px 6px 6px 12px;font-size:11.5px;}
-
-          /* Prevent iOS Safari from auto-zooming when a form field is
-             focused (it zooms on any input with font-size below 16px). */
-          .field input,.field select,
-          .search-box input,
-          .newsletter-form input,
-          .review-modal textarea{
-            font-size:16px;
-          }
         }
 
         @media (max-width:480px){
@@ -1430,26 +1417,6 @@
         </div>
     </div>
 </div>
-<!-- ================= GENERIC CONFIRM DIALOG (reusable "Are you sure?") ================= -->
-<div class="overlay" id="confirmOverlay">
-    <div class="modal">
-        <div class="login-popup">
-            <button class="modal-close" id="closeConfirmDialog" aria-label="Close">✕</button>
-            <div class="lock-badge" id="confirmDialogIcon">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M12 8v5"/>
-                    <path d="M12 16h.01"/>
-                </svg>
-            </div>
-            <h3 id="confirmDialogTitle">Are you sure?</h3>
-            <p id="confirmDialogMessage">This action cannot be undone.</p>
-            <button class="btn btn-primary" id="confirmDialogConfirmBtn">Yes, Continue</button>
-            <button class="link-btn" id="confirmDialogCancelBtn">Cancel</button>
-        </div>
-    </div>
-</div>
-
 <!-- ================= CANCEL / RETURN REASON MODAL ================= -->
 <div class="overlay" id="reasonOverlay">
     <div class="modal modal-medium">
@@ -1495,9 +1462,6 @@
                 <button class="auth-tab active" data-tab="login" id="tabLogin">Login</button>
                 <button class="auth-tab" data-tab="register" id="tabRegister">Register</button>
             </div>
-
-            <div id="googleSignInBtn"></div>
-            <div class="auth-divider">OR</div>
 
             <form id="loginForm">
                 <div class="field" id="loginEmailField">
@@ -1711,7 +1675,6 @@ const url_verify_payment = "/user/u1/v1/payments/verify";
       submitOrderItemReview: (orderId) => `${API_BASE}/orders/${orderId}/items/review`,
 
       login:                 `${API_BASE}/auth/login`,
-      googleLogin:           `${API_BASE}/auth/google`,
       register:              `${API_BASE}/user/register`,
       me:                    `${API_BASE}/auth/me`,
       forgotPassword:        `${API_BASE}/auth/forgot-password`,
@@ -2012,7 +1975,6 @@ const url_verify_payment = "/user/u1/v1/payments/verify";
         storeName: "Brew & Bite Cafe",
         tagline: "Freshly brewed coffee, all-day breakfast & comfort food.",
         logoUrl: "",
-        faviconUrl: "",
         themeColor: "#8B5E34",
         supportEmail: "hello@brewandbite.in",
         supportPhone: "+91 98765 43210",
@@ -2236,27 +2198,17 @@ const url_verify_payment = "/user/u1/v1/payments/verify";
 
       document.title = vendor.storeName || "My Cafe";
 
-      const faviconSrc = vendor.faviconUrl || vendor.logoUrl || "";
+      if (vendor.faviconUrl) {
 
-      let favicon = document.querySelector("link[rel='icon']");
+          let favicon = document.querySelector("link[rel='icon']");
 
-      if (!favicon) {
-          favicon = document.createElement("link");
-          favicon.rel = "icon";
-          document.head.appendChild(favicon);
-      }
+          if (!favicon) {
+              favicon = document.createElement("link");
+              favicon.rel = "icon";
+              document.head.appendChild(favicon);
+          }
 
-      if (faviconSrc) {
-          favicon.href = getImageUrl(faviconSrc);
-      } else {
-          // No favicon/logo from storeInfo yet — fall back to a simple
-          // brand-colored initial so the tab never shows a broken icon.
-          const initial = (vendor.storeName || "C").trim().charAt(0).toUpperCase();
-          const svgFavicon = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>`
-            + `<rect width='64' height='64' rx='14' fill='${primary}'/>`
-            + `<text x='32' y='42' font-family='Inter,Arial,sans-serif' font-size='32' font-weight='700' `
-            + `fill='#fff' text-anchor='middle'>${initial}</text></svg>`;
-          favicon.href = `data:image/svg+xml,${encodeURIComponent(svgFavicon)}`;
+          favicon.href = getImageUrl(vendor.faviconUrl);
       }
 
       let themeMeta = document.querySelector("meta[name='theme-color']");
@@ -3421,14 +3373,8 @@ function renderCartView(){
     });
   });
   listEl.querySelectorAll("[data-cart-remove]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
+    btn.addEventListener("click", ()=>{
       const line = btn.closest("[data-item-id]");
-      const ok = await confirmAction({
-        title: "Remove item?",
-        message: "Are you sure you want to remove this item from your cart?",
-        confirmLabel: "Yes, Remove",
-      });
-      if (!ok) return;
       removeCartItem(line.dataset.itemId);
     });
   });
@@ -3664,68 +3610,6 @@ async function removeCartItem(itemId){
       closeOverlay("loginRequiredOverlay");
       openOverlay("authOverlay");
       switchAuthTab(tab);
-      renderGoogleSignInButton();
-    }
-
-    /* ---------------------------------------------------------------------
-       12b. GOOGLE SIGN-IN (Google Identity Services)
-    --------------------------------------------------------------------- */
-    // TODO: replace with your real Google OAuth Client ID (Google Cloud Console -> Credentials).
-    const GOOGLE_CLIENT_ID = "404899412882-cagpb75mnc9r45itfp3cilpkq2rm5iu6.apps.googleusercontent.com";
-    let googleSignInInitialized = false;
-
-    function initGoogleSignIn(){
-      if (googleSignInInitialized) return;
-      if (!window.google || !google.accounts || !google.accounts.id) return; // GSI script not loaded yet
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredentialResponse,
-        auto_select: false,
-      });
-      googleSignInInitialized = true;
-    }
-
-    function renderGoogleSignInButton(){
-      initGoogleSignIn();
-      const container = document.getElementById("googleSignInBtn");
-      if (!container || !googleSignInInitialized) return;
-      container.innerHTML = "";
-      google.accounts.id.renderButton(container, {
-        theme: "outline",
-        size: "large",
-        shape: "pill",
-        text: "continue_with",
-        width: 300,
-      });
-    }
-
-    async function handleGoogleCredentialResponse(response){
-      const idToken = response && response.credential;
-      if (!idToken){
-        toast("Google sign-in failed. Please try again.", "error");
-        return;
-      }
-      try {
-        const res = await fetch(API_ENDPOINTS.googleLogin, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken }),
-        });
-
-        const data = await res.json().catch(()=>({}));
-
-        if (!res.ok) {
-          toast(data.message || "Google sign-in failed.", "error");
-          return;
-        }
-
-        closeOverlay("authOverlay");
-        await updateAuthUI();
-        toast(data.message || "Logged in with Google successfully.", "success");
-      } catch (error) {
-        toast("Unable to sign in with Google. Please try again.", "error");
-      }
     }
     function switchAuthTab(tab){
       document.getElementById("tabLogin").classList.toggle("active", tab==="login");
@@ -3745,34 +3629,9 @@ async function removeCartItem(itemId){
    [["loginRequiredOverlay"],["authOverlay"],["quickViewOverlay"],["addressOverlay"],["trackOrderOverlay"],["reasonOverlay"],["reviewOverlay"]].forEach(([id])=>{
   document.getElementById(id).addEventListener("click", (e)=>{ if(e.target.id===id) closeOverlay(id); });
 });
-document.getElementById("confirmOverlay").addEventListener("click", (e)=>{ if(e.target.id==="confirmOverlay") _resolveConfirm(false); });
 document.getElementById("closeReasonModal").addEventListener("click", ()=>closeOverlay("reasonOverlay"));
 document.getElementById("closeTrackOrder").addEventListener("click", ()=>closeOverlay("trackOrderOverlay"));
 document.getElementById("closeReviewModal").addEventListener("click", ()=>closeOverlay("reviewOverlay"));
-
-    /* ---------------------------------------------------------------------
-       GENERIC "ARE YOU SURE?" CONFIRM DIALOG (reusable across the app)
-       Usage: confirmAction({ title, message, confirmLabel }).then(ok => { if(ok) ... })
-    --------------------------------------------------------------------- */
-    let _confirmResolver = null;
-
-    function confirmAction({ title = "Are you sure?", message = "This action cannot be undone.", confirmLabel = "Yes, Continue" } = {}){
-      document.getElementById("confirmDialogTitle").textContent = title;
-      document.getElementById("confirmDialogMessage").textContent = message;
-      document.getElementById("confirmDialogConfirmBtn").textContent = confirmLabel;
-      openOverlay("confirmOverlay");
-      return new Promise((resolve)=>{ _confirmResolver = resolve; });
-    }
-
-    function _resolveConfirm(result){
-      closeOverlay("confirmOverlay");
-      if (_confirmResolver){ _confirmResolver(result); _confirmResolver = null; }
-    }
-
-    document.getElementById("confirmDialogConfirmBtn").addEventListener("click", ()=>_resolveConfirm(true));
-    document.getElementById("confirmDialogCancelBtn").addEventListener("click", ()=>_resolveConfirm(false));
-    document.getElementById("closeConfirmDialog").addEventListener("click", ()=>_resolveConfirm(false));
-
 
     function setFieldError(fieldId, invalid){
       document.getElementById(fieldId).classList.toggle("invalid", invalid);
@@ -3952,12 +3811,6 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
     function navigateAccount(pageId){
       requireAuth(async ()=>{
         if (pageId==="logout"){
-          const ok = await confirmAction({
-            title: "Log out?",
-            message: "Are you sure you want to log out of your account?",
-            confirmLabel: "Yes, Logout",
-          });
-          if (!ok) return;
           try{
             await apiRequest(API_ENDPOINTS.logout, { method:"POST" }, { silentError:true });
           }catch(e){ /* even if the call fails, clear local auth state below */ }
@@ -4228,15 +4081,7 @@ else if (pageId === "change-password") {
       if (trackBtn) trackBtn.addEventListener("click", ()=> openTrackOrder(trackBtn.dataset.trackOrder));
 
       const cancelBtn = panel.querySelector("[data-cancel-order]");
-      if (cancelBtn) cancelBtn.addEventListener("click", async ()=>{
-        const ok = await confirmAction({
-          title: "Cancel this order?",
-          message: "Are you sure you want to cancel this order? This cannot be undone.",
-          confirmLabel: "Yes, Cancel Order",
-        });
-        if (!ok) return;
-        openReasonModal("cancel", cancelBtn.dataset.cancelOrder);
-      });
+      if (cancelBtn) cancelBtn.addEventListener("click", ()=> openReasonModal("cancel", cancelBtn.dataset.cancelOrder));
 
       const returnBtn = panel.querySelector("[data-return-order]");
       if (returnBtn) returnBtn.addEventListener("click", ()=> openReasonModal("return", returnBtn.dataset.returnOrder));
