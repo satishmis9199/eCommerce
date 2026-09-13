@@ -12,7 +12,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
           rel="stylesheet">
-    <!-- Google Identity Services (Google Sign-In) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root{
@@ -961,6 +960,15 @@
             padding-bottom:env(safe-area-inset-bottom);
           }
           .demo-bar{left:8px;bottom:8px;padding:6px 6px 6px 12px;font-size:11.5px;}
+
+          /* Prevent iOS Safari from auto-zooming when a form field is
+             focused (it zooms on any input with font-size below 16px). */
+          .field input,.field select,
+          .search-box input,
+          .newsletter-form input,
+          .review-modal textarea{
+            font-size:16px;
+          }
         }
 
         @media (max-width:480px){
@@ -2004,6 +2012,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";
         storeName: "Brew & Bite Cafe",
         tagline: "Freshly brewed coffee, all-day breakfast & comfort food.",
         logoUrl: "",
+        faviconUrl: "",
         themeColor: "#8B5E34",
         supportEmail: "hello@brewandbite.in",
         supportPhone: "+91 98765 43210",
@@ -2227,17 +2236,27 @@ const url_verify_payment = "/user/u1/v1/payments/verify";
 
       document.title = vendor.storeName || "My Cafe";
 
-      if (vendor.faviconUrl) {
+      const faviconSrc = vendor.faviconUrl || vendor.logoUrl || "";
 
-          let favicon = document.querySelector("link[rel='icon']");
+      let favicon = document.querySelector("link[rel='icon']");
 
-          if (!favicon) {
-              favicon = document.createElement("link");
-              favicon.rel = "icon";
-              document.head.appendChild(favicon);
-          }
+      if (!favicon) {
+          favicon = document.createElement("link");
+          favicon.rel = "icon";
+          document.head.appendChild(favicon);
+      }
 
-          favicon.href = getImageUrl(vendor.faviconUrl);
+      if (faviconSrc) {
+          favicon.href = getImageUrl(faviconSrc);
+      } else {
+          // No favicon/logo from storeInfo yet — fall back to a simple
+          // brand-colored initial so the tab never shows a broken icon.
+          const initial = (vendor.storeName || "C").trim().charAt(0).toUpperCase();
+          const svgFavicon = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>`
+            + `<rect width='64' height='64' rx='14' fill='${primary}'/>`
+            + `<text x='32' y='42' font-family='Inter,Arial,sans-serif' font-size='32' font-weight='700' `
+            + `fill='#fff' text-anchor='middle'>${initial}</text></svg>`;
+          favicon.href = `data:image/svg+xml,${encodeURIComponent(svgFavicon)}`;
       }
 
       let themeMeta = document.querySelector("meta[name='theme-color']");
@@ -3652,7 +3671,7 @@ async function removeCartItem(itemId){
        12b. GOOGLE SIGN-IN (Google Identity Services)
     --------------------------------------------------------------------- */
     // TODO: replace with your real Google OAuth Client ID (Google Cloud Console -> Credentials).
-    const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+    const GOOGLE_CLIENT_ID = "404899412882-cagpb75mnc9r45itfp3cilpkq2rm5iu6.apps.googleusercontent.com";
     let googleSignInInitialized = false;
 
     function initGoogleSignIn(){
