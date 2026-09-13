@@ -11,13 +11,14 @@ import com.e_commerce.eCommerce.repository.VendorRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserAuthService {
@@ -78,6 +79,11 @@ public class UserAuthService {
             );
         }
 
+        log.info("========== EMAIL DUPLICATE CHECK START ==========");
+        log.info("email    = [{}]", email);
+        log.info("vendorId = [{}]", vendorId);
+        log.info("tenantId = [{}]", tenantId);
+
         User existingEmail =
                 userRepos.findByEmailAndVendorIdAndTenantId(
                         email,
@@ -86,10 +92,18 @@ public class UserAuthService {
                 );
 
         if (existingEmail != null) {
-            throw new RuntimeException(
-                    "Email is already registered."
-            );
+
+            log.error("========== EMAIL FOUND ==========");
+            log.error("existingUser.id       = [{}]", existingEmail.getId());
+            log.error("existingUser.email    = [{}]", existingEmail.getEmail());
+            log.error("existingUser.vendorId = [{}]", existingEmail.getVendorId());
+            log.error("existingUser.tenantId = [{}]", existingEmail.getTenantId());
+            log.error("existingUser.googleId = [{}]", existingEmail.getGoogleId());
+
+            throw new RuntimeException("Email is already registered.");
         }
+
+        log.info("========== EMAIL NOT FOUND ==========");
 
         if (isGoogleUser) {
 
