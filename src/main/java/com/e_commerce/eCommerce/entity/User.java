@@ -22,6 +22,11 @@ import java.time.LocalDateTime;
                 @UniqueConstraint(
                         name = "uk_users_email_tenant",
                         columnNames = {"email", "tenant_id"}
+                ),
+
+                @UniqueConstraint(
+                        name = "uk_users_google_id_tenant",
+                        columnNames = {"google_id", "tenant_id"}
                 )
         }
 )
@@ -34,10 +39,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Email is unique per tenant.
-     * Same email can exist in different tenants.
-     */
+
     @Column(nullable = false, length = 100)
     private String email;
 
@@ -48,49 +50,42 @@ public class User {
     @Column
     private String phone;
 
-    /**
-     * Every user belongs to a tenant.
-     */
-    @Column(name = "tenant_id", nullable = false, length = 255)
+    @Column(
+            name = "tenant_id",
+            nullable = false,
+            length = 255
+    )
     private String tenantId;
 
     @Column(name = "vendorid")
     private Long vendorId;
 
-    /**
-     * Google account unique ID (Google 'sub' claim).
-     *
-     * NULL for normal email/password users.
-     */
     @Column(
             name = "google_id",
-            unique = true,
             nullable = true,
             length = 255
     )
     private String googleId;
 
-    /**
-     * Authentication provider.
-     *
-     * Examples:
-     * GOOGLE
-     * LOCAL
-     */
-    @Column(name = "auth_provider", length = 30)
+    @Column(
+            name = "auth_provider",
+            length = 30
+    )
     private String authProvider;
 
-    /**
-     * Password is nullable because Google users
-     * may not have a local password.
-     */
     @Column(nullable = true)
     private String password;
 
-    @Column(nullable = true, length = 100)
+    @Column(
+            nullable = true,
+            length = 100
+    )
     private String firstName;
 
-    @Column(nullable = true, length = 100)
+    @Column(
+            nullable = true,
+            length = 100
+    )
     private String lastName;
 
     @Column(length = 20)
@@ -122,6 +117,7 @@ public class User {
 
     @Column(length = 255)
     private String lastLoginDevice;
+
     @Column(
             name = "credentials_setup_complete",
             nullable = false
@@ -140,3 +136,4 @@ public class User {
     @Column(length = 100)
     private String updatedBy;
 }
+
