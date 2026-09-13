@@ -25,6 +25,7 @@ public class User {
     @Column(nullable = false, length = 30)
     private Roles role;
 
+
     @Column
     private String phone;
 
@@ -40,6 +41,10 @@ public class User {
     private String tenantId;
     @Column(name = "vendorid")
     private Long vendorId;
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+    @Column(name = "auth_provider")
+    private String authProvider;
 
 
     @Column(nullable = false)

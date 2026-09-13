@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -80,4 +81,6 @@ public interface UserRepos extends JpaRepository<User, Long> {
     User findByTenantIdAndId(String tenantId, Long userId);
 
     User findByEmailAndTenantId(String email, String tenantId);
+
+    Optional<User> findByGoogleId(String googleId);
 }
