@@ -206,7 +206,7 @@ public class GoogleAuthService {
                 verifyToken(idToken);
 
         log.info(
-                "Searching user by Google ID. googleId={}",
+                "Searching user by Google IDs. googleId={}",
                 googleUser.getGoogleId()
         );
 
