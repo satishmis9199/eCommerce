@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.entity;
 
+import com.e_commerce.eCommerce.enums.ShopStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -89,8 +90,15 @@ public class Vendor {
 
     @Column(nullable = false)
     private boolean completeVerified;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ShopStatus shopStatus = ShopStatus.OPEN;
 
+    @Column(name = "is_gst_on_invoice", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isGstOnInvoice = false;
 
+    @Column(name = "bank_details_on_invoice", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean bankDetailsOnInvoice = false;
     private String role;
 
     private boolean active;
@@ -100,6 +108,17 @@ public class Vendor {
     private boolean mobileVerified;
 
     private boolean deleted;
+    @Column(nullable = false)
+    private boolean maintenanceMode = false;
+
+    @Column(length = 10)
+    private String currency = "INR";
+
+    @Column(length = 100)
+    private String timezone = "Asia/Kolkata";
+
+    @Column(length = 10)
+    private String language = "en";
 
     private Long createdBy;
 

@@ -232,6 +232,10 @@
         .dropdown-menu li:hover{background:var(--bg-input);color:var(--text-primary);}
         .dropdown-menu li.logout{color:var(--red);margin-top:4px;border-top:1px solid var(--border);padding-top:12px;}
         .dropdown-menu li.logout i{color:var(--red);} .dropdown-menu li.logout:hover{background:var(--red-soft);}
+        .theme-dropdown{position:absolute;top:calc(100% + 8px);right:0;left:auto;width:160px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:300;opacity:0;transform:translateY(-8px) scale(0.97);pointer-events:none;transition:all var(--transition);}
+        .theme-dropdown.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all;}
+        .theme-dropdown li.active{background:var(--accent-soft);color:var(--accent);}
+        .theme-dropdown li.active i{color:var(--accent);}
         .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:350;opacity:0;pointer-events:none;transition:opacity var(--transition);backdrop-filter:blur(2px);}
         .overlay.show{opacity:1;pointer-events:all;}
         .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity var(--transition);backdrop-filter:blur(4px);}
@@ -704,8 +708,15 @@
                 </div>
             </div>
             <div class="topbar__right">
-                <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i>
-                </button>
+                <div style="position:relative;">
+                    <button class="icon-btn" id="themeToggleBtn" title="Theme"><i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="dropdown-menu theme-dropdown" id="themeDropdown">
+                        <li data-mode="light" onclick="setThemeMode('light')"><i class="fa-solid fa-sun"></i>Light</li>
+                        <li data-mode="dark" onclick="setThemeMode('dark')"><i class="fa-solid fa-moon"></i>Dark</li>
+                        <li data-mode="system" onclick="setThemeMode('system')"><i class="fa-solid fa-desktop"></i>System</li>
+                    </div>
+                </div>
                 <button class="icon-btn" id="notifBtn" title="Notifications"><i class="fa-solid fa-bell"></i><span
                         class="badge">6</span></button>
                 <button class="icon-btn" title="Messages"><i class="fa-solid fa-envelope"></i><span
@@ -1778,26 +1789,6 @@
                                                                                             placeholder="e.g. Thank you for shopping with us!">
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>Authorized Signature</label>
-                                <div class="branding-preview-box">
-                                    <img id="settingsSignaturePreview"
-                                         src="https://ui-avatars.com/api/?name=Sign&background=6366f1&color=fff">
-                                    <input type="file" id="settingsSignatureInput" accept="image/png,image/jpeg"
-                                           onchange="handleSettingsImagePreview(event,'settingsSignaturePreview')"
-                                           style="flex:1;">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Company Seal</label>
-                                <div class="branding-preview-box">
-                                    <img id="settingsSealPreview"
-                                         src="https://ui-avatars.com/api/?name=Seal&background=6366f1&color=fff">
-                                    <input type="file" id="settingsSealInput" accept="image/png,image/jpeg"
-                                           onchange="handleSettingsImagePreview(event,'settingsSealPreview')"
-                                           style="flex:1;">
-                                </div>
-                            </div>
                             <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><input
                                     type="checkbox" id="setShowGst" checked> Show GST on Invoice</label>
                             <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><input
@@ -1808,54 +1799,111 @@
                         </div>
                     </div>
 
+
+
                     <!-- 7. STORE SETTINGS -->
                     <div class="settings-panel" id="tab-store-settings">
                         <div class="table-card" style="padding:24px;">
+
                             <div class="card-header" style="padding:0;margin-bottom:16px;">
-                                <div><h2>Store Settings</h2>
-                                    <p>Operational preferences for your storefront</p></div>
+                                <div>
+                                    <h2>Store Settings</h2>
+                                    <p>Operational preferences for your storefront</p>
+                                </div>
                             </div>
+
+                            <!-- Store Status -->
                             <div class="form-row">
-                                <div class="form-group"><label>Store Status</label>
-                                    <select id="setStoreStatus">
+                                <div class="form-group">
+                                    <label>Store Status</label>
+                                    <select id="setStoreStatus" onchange="toggleStoreCloseReason()">
                                         <option value="OPEN">Open</option>
                                         <option value="CLOSED">Closed</option>
                                     </select>
                                 </div>
-                                <div class="form-group"><label>Maintenance Mode</label>
+
+                                <div class="form-group" id="storeCloseReasonGroup" style="display:none;">
+                                    <label>Closing Reason</label>
+                                    <select id="setStoreCloseReason">
+                                        <option value="">Select reason</option>
+                                        <option value="WEEKLY_HOLIDAY">Weekly Holiday</option>
+                                        <option value="PUBLIC_HOLIDAY">Public Holiday</option>
+                                        <option value="MAINTENANCE">Maintenance</option>
+                                        <option value="INVENTORY">Inventory / Stock Taking</option>
+                                        <option value="STAFF_UNAVAILABLE">Staff Unavailable</option>
+                                        <option value="EMERGENCY">Emergency</option>
+                                        <option value="TEMPORARY_CLOSURE">Temporary Closure</option>
+                                        <option value="OWNER_DECISION">Owner Decision</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Maintenance Mode + Currency -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Maintenance Mode</label>
                                     <select id="setMaintenanceMode">
                                         <option value="false">Off</option>
                                         <option value="true">On</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group"><label>Currency</label>
+
+                                <div class="form-group">
+                                    <label>Currency</label>
                                     <select id="setCurrency">
                                         <option value="INR">INR (₹)</option>
                                         <option value="USD">USD ($)</option>
                                         <option value="EUR">EUR (€)</option>
                                     </select>
                                 </div>
-                                <div class="form-group"><label>Timezone</label>
+                            </div>
+
+                            <!-- Timezone -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Timezone</label>
                                     <select id="setTimezone">
                                         <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
                                         <option value="UTC">UTC</option>
                                     </select>
                                 </div>
+
+                                <div class="form-group">
+                                    <label>Language</label>
+                                    <select id="setLanguage">
+                                        <option value="en">English</option>
+                                        <option value="hi">Hindi</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>Language</label>
-                                <select id="setLanguage">
-                                    <option value="en">English</option>
-                                    <option value="hi">Hindi</option>
-                                </select>
-                            </div>
-                            <button class="primary-btn" onclick="saveStoreSettings()"><i class="fa-solid fa-check"></i>Save
-                                Store Settings
+
+                            <button class="primary-btn" onclick="saveStoreSettings()">
+                                <i class="fa-solid fa-check"></i>
+                                Save Store Settings
                             </button>
+
                         </div>
                     </div>
+
+                    <script>
+                        function toggleStoreCloseReason() {
+                            const status = document.getElementById('setStoreStatus').value;
+                            const reasonGroup = document.getElementById('storeCloseReasonGroup');
+                            const reason = document.getElementById('setStoreCloseReason');
+
+                            if (status === 'CLOSED') {
+                                reasonGroup.style.display = '';
+                                reason.required = true;
+                            } else {
+                                reasonGroup.style.display = 'none';
+                                reason.required = false;
+                                reason.value = '';
+                            }
+                        }
+                    </script>
+
+
 
                     <!-- 8. SECURITY -->
                     <div class="settings-panel" id="tab-security">
@@ -1879,20 +1927,6 @@
                             </button>
                         </div>
 
-                        <div class="table-card" style="padding:24px;">
-                            <div class="card-header" style="padding:0;margin-bottom:8px;">
-                                <div><h2>Active Sessions</h2>
-                                    <p>Devices currently logged into your account</p></div>
-                            </div>
-                            <div class="session-row">
-                                <div><h4 style="font-size:13px;font-weight:600;">Last Login</h4><span
-                                        style="font-size:12px;color:var(--text-muted);" id="setLastLoginVal">N/A</span>
-                                </div>
-                                <span class="status active">Current</span></div>
-                            <button class="danger-btn" style="margin-top:16px;" onclick="logoutAllDevices()"><i
-                                    class="fa-solid fa-right-from-bracket"></i>Logout From All Devices
-                            </button>
-                        </div>
                     </div>
 
                 </div>
@@ -1952,7 +1986,7 @@
             Change Password
         </li>
         <li onclick="openDrawer()"><i class="fa-solid fa-bell"></i>Notifications</li>
-        <li class="logout" onclick="showToast('info','Logout','Signing out...')"><i
+        <li class="logout" onclick="logout()"><i
                 class="fa-solid fa-right-from-bracket"></i>Logout
         </li>
     </ul>
@@ -3053,26 +3087,28 @@ async function changeBannerStatus(id) {
     }
     const newActive = !b.active;
 
-    try {
-        const response = await fetch(BANNER_API + '/status', {
-            method: 'PATCH',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, active: newActive })
-        });
-        const result = await response.json();
+    confirmAction(`${newActive ? 'Activate' : 'Deactivate'} banner "${b.title}"?`, async () => {
+        try {
+            const response = await fetch(BANNER_API + '/status', {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, active: newActive })
+            });
+            const result = await response.json();
 
-        if (!response.ok || !result.success) {
-            showToast('error', 'Banner', result.message || 'Unable to update banner status.');
-            return;
+            if (!response.ok || !result.success) {
+                showToast('error', 'Banner', result.message || 'Unable to update banner status.');
+                return;
+            }
+
+            showToast('success', 'Banner', result.message || 'Banner status updated.');
+            loadBanners();
+        } catch (error) {
+            console.error(error);
+            showToast('error', 'Banner', 'Something went wrong while updating banner status.');
         }
-
-        showToast('success', 'Banner', result.message || 'Banner status updated.');
-        loadBanners();
-    } catch (error) {
-        console.error(error);
-        showToast('error', 'Banner', 'Something went wrong while updating banner status.');
-    }
+    });
 }
 
 /* ============================================================
@@ -3327,6 +3363,7 @@ async function changeNoticeStatus(id) {
     }
     const newStatus = n.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
 
+    confirmAction(`${newStatus === 'ACTIVE' ? 'Activate' : 'Deactivate'} notice "${n.title || n.noticeText}"?`, async () => {
     try {
         const response = await fetch(NOTICE_API + '/status', {
             method: 'PATCH',
@@ -3347,6 +3384,7 @@ async function changeNoticeStatus(id) {
         console.error(error);
         showToast('error', 'Notice', 'Something went wrong while updating notice status.');
     }
+    });
 }
 
 
@@ -4121,6 +4159,7 @@ async function uploadCategoryImage(file) {
 
         const newStatus = category.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
 
+        confirmAction(`${newStatus === 'ACTIVE' ? 'Activate' : 'Deactivate'} category "${category.categoryName}"?`, async () => {
         try {
             const response = await fetch(CATEGORY_API + '/status', {
                 method: 'PATCH',
@@ -4141,6 +4180,7 @@ async function uploadCategoryImage(file) {
             console.error(error);
             showToast('error', 'Category', 'Something went wrong while updating category status.');
         }
+        });
     }
 
     function filterCategories(q) {
@@ -4650,6 +4690,7 @@ async function uploadCategoryImage(file) {
 
         const newStatus = (sale.status || 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
 
+        confirmAction(`${newStatus === 'ACTIVE' ? 'Activate' : 'Deactivate'} flash sale "${sale.saleName}"?`, async () => {
         try {
             const response = await fetch(FLASH_SALE_API + '/status', {
                 method: 'PATCH',
@@ -4670,6 +4711,7 @@ async function uploadCategoryImage(file) {
             console.error(error);
             showToast('error', 'Flash Sale', 'Something went wrong while updating flash sale status.');
         }
+        });
     }
 
     /* ============================================================
@@ -5675,7 +5717,7 @@ function viewOrder(id){
                 performUpdate
             );
         } else {
-            performUpdate();
+            confirmAction('Approve this review? It will become visible to customers.', performUpdate);
         }
     }
 
@@ -6234,6 +6276,9 @@ async function deleteProduct(id) {
 }
 
 async function changeProductStatus(id, newStatus) {
+    const product = productList.find(item => item.id === id);
+    const label = product ? product.productName : 'this product';
+    confirmAction(`${(newStatus || '').toUpperCase() === 'ACTIVE' ? 'Activate' : 'Deactivate'} "${label}"?`, async () => {
     try {
         const response = await fetch(PRODUCT_API + '/status', {
             method: 'PATCH',
@@ -6254,6 +6299,7 @@ async function changeProductStatus(id, newStatus) {
         console.error(error);
         showToast('error', 'Products', 'Something went wrong while updating product status.');
     }
+    });
 }
 
 function filterProducts(q) {
@@ -6403,15 +6449,103 @@ function renderProducts(list = productList) {
     }
 
     /* ============================================================
-       THEME TOGGLE
+       THEME TOGGLE — Light / Dark / System (auto, follows OS)
     ============================================================ */
-    let isDark = true;
-    document.getElementById('themeToggleBtn').addEventListener('click', () => {
-      isDark = !isDark;
-      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-      document.getElementById('themeToggleBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
-      showToast('info','Theme', isDark ? 'Dark mode enabled' : 'Light mode enabled');
+    const themeIcons = { light: 'fa-sun', dark: 'fa-moon', system: 'fa-desktop' };
+    const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    let themeMode = 'system'; // 'light' | 'dark' | 'system' — defaults to following the device's setting
+    let storeThemeColorHex = null; // set by applyThemeColor() once the /info API's brand color loads
+
+    try {
+      const savedMode = localStorage.getItem('themeMode');
+      if (savedMode === 'light' || savedMode === 'dark' || savedMode === 'system') themeMode = savedMode;
+    } catch (e) { /* localStorage unavailable — fall back to default */ }
+
+    function resolveEffectiveTheme(mode) {
+      if (mode === 'system') return (systemThemeQuery && systemThemeQuery.matches) ? 'dark' : 'light';
+      return mode;
+    }
+
+    // Blends brandHex toward mixHex. ratio is how much of the brand color shows through (kept low for a subtle tint).
+    function blendHexColor(brandHex, mixHex, ratio) {
+      const clean = (h) => { h = (h || '').replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); return h; };
+      const b = clean(brandHex), m = clean(mixHex);
+      if (b.length !== 6 || m.length !== 6) return mixHex;
+      const br = parseInt(b.substring(0, 2), 16), bg = parseInt(b.substring(2, 4), 16), bb = parseInt(b.substring(4, 6), 16);
+      const mr = parseInt(m.substring(0, 2), 16), mg = parseInt(m.substring(2, 4), 16), mb = parseInt(m.substring(4, 6), 16);
+      const r = Math.round(br * ratio + mr * (1 - ratio));
+      const g = Math.round(bg * ratio + mg * (1 - ratio));
+      const bl = Math.round(bb * ratio + mb * (1 - ratio));
+      return `rgb(${r}, ${g}, ${bl})`;
+    }
+
+    const bgVarKeys = ['--bg-primary', '--bg-secondary', '--bg-card', '--bg-card-hover', '--bg-input'];
+
+    // Only in System mode: tint the whole page's background using the store's brand themeColor (from /info API).
+    function applySystemBrandBackground(effective) {
+      const root = document.documentElement;
+      if (!storeThemeColorHex) { bgVarKeys.forEach(k => root.style.removeProperty(k)); return; }
+
+      if (effective === 'dark') {
+        root.style.setProperty('--bg-primary', blendHexColor(storeThemeColorHex, '#0b0f1a', 0.08));
+        root.style.setProperty('--bg-secondary', blendHexColor(storeThemeColorHex, '#111827', 0.07));
+        root.style.setProperty('--bg-card', blendHexColor(storeThemeColorHex, '#161d2e', 0.07));
+        root.style.setProperty('--bg-card-hover', blendHexColor(storeThemeColorHex, '#1a2236', 0.08));
+        root.style.setProperty('--bg-input', blendHexColor(storeThemeColorHex, '#1e2740', 0.08));
+      } else {
+        root.style.setProperty('--bg-primary', blendHexColor(storeThemeColorHex, '#f1f5fb', 0.06));
+        root.style.setProperty('--bg-secondary', blendHexColor(storeThemeColorHex, '#e8edf6', 0.06));
+        root.style.setProperty('--bg-card', blendHexColor(storeThemeColorHex, '#ffffff', 0.05));
+        root.style.setProperty('--bg-card-hover', blendHexColor(storeThemeColorHex, '#f8faff', 0.06));
+        root.style.setProperty('--bg-input', blendHexColor(storeThemeColorHex, '#eef1fa', 0.06));
+      }
+    }
+
+    function clearBrandBackground() {
+      const root = document.documentElement;
+      bgVarKeys.forEach(k => root.style.removeProperty(k));
+    }
+
+    function applyThemeMode(mode, opts = {}) {
+      themeMode = mode;
+      const effective = resolveEffectiveTheme(mode);
+      document.documentElement.setAttribute('data-theme', effective);
+
+      if (mode === 'system') applySystemBrandBackground(effective);
+      else clearBrandBackground();
+
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) btn.innerHTML = `<i class="fa-solid ${themeIcons[mode]}"></i>`;
+
+      document.querySelectorAll('#themeDropdown li').forEach(li => {
+        li.classList.toggle('active', li.dataset.mode === mode);
+      });
+
+      try { localStorage.setItem('themeMode', mode); } catch (e) { /* ignore */ }
+
+      if (!opts.silent) {
+        const label = mode === 'system' ? `System (${effective === 'dark' ? 'Dark' : 'Light'})` : (mode === 'dark' ? 'Dark' : 'Light');
+        showToast('info', 'Theme', `${label} mode enabled`);
+      }
+    }
+
+    function setThemeMode(mode) {
+      applyThemeMode(mode);
+      document.getElementById('themeDropdown').classList.remove('open');
+    }
+
+    document.getElementById('themeToggleBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('themeDropdown').classList.toggle('open');
     });
+
+    if (systemThemeQuery) {
+      systemThemeQuery.addEventListener('change', () => {
+        if (themeMode === 'system') applyThemeMode('system', { silent: true });
+      });
+    }
+
+    applyThemeMode(themeMode, { silent: true });
 
     /* ============================================================
        SIDEBAR TOGGLE
@@ -6437,7 +6571,11 @@ function renderProducts(list = productList) {
     ============================================================ */
     const profileDropdown = document.getElementById('profileDropdown');
     document.getElementById('profileBtn').addEventListener('click', (e) => { e.stopPropagation(); profileDropdown.classList.toggle('open'); });
-    document.addEventListener('click', () => profileDropdown.classList.remove('open'));
+    document.addEventListener('click', () => {
+      profileDropdown.classList.remove('open');
+      const themeDropdownEl = document.getElementById('themeDropdown');
+      if (themeDropdownEl) themeDropdownEl.classList.remove('open');
+    });
 
     function openDrawer() { document.getElementById('notificationDrawer').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
     document.getElementById('notifBtn').addEventListener('click', openDrawer);
@@ -6465,16 +6603,18 @@ function renderProducts(list = productList) {
     /* ============================================================
        LOGOUT
     ============================================================ */
-    async function logout() {
-      try {
-        const response = await fetch('/api/vendor/logout', { method:'POST', credentials:'include', headers:{ 'Content-Type':'application/json' } });
-        const data = await response.json();
-        if (response.ok) { showToast('success','Logged Out','Session ended. Redirecting...'); setTimeout(()=>window.location.href='/vendor/login', 1500); }
-        else { showToast('error','Logout Failed', data.message || 'Unable to logout.'); }
-      } catch (error) {
-        console.warn('Logout API not reachable:', error.message);
-        showToast('error','Logout Failed','Could not reach the server. Please try again.');
-      }
+    function logout() {
+      confirmAction('Are you sure you want to log out?', async () => {
+        try {
+          const response = await fetch('/api/vendor/logout', { method:'POST', credentials:'include', headers:{ 'Content-Type':'application/json' } });
+          const data = await response.json();
+          if (response.ok) { showToast('success','Logged Out','Session ended. Redirecting...'); setTimeout(()=>window.location.href='/vendor/login', 1500); }
+          else { showToast('error','Logout Failed', data.message || 'Unable to logout.'); }
+        } catch (error) {
+          console.warn('Logout API not reachable:', error.message);
+          showToast('error','Logout Failed','Could not reach the server. Please try again.');
+        }
+      });
     }
 
     /* ============================================================
@@ -6548,10 +6688,7 @@ uploadFavicon:   '/vendor/file/upload/favicon',
 contact:         '/vendor/settings/contact',
 bank:            '/vendor/settings/bank',
 invoice:         '/vendor/settings/invoice',
-uploadSignature: '/vendor/file/upload/signature',
-uploadSeal:      '/vendor/file/upload/seal',
 store:           '/vendor/settings/store',
-sessions:        '/vendor/settings/sessions',
 logoutAll:       '/vendor/settings/logout-all-devices'
 };
 
@@ -6577,6 +6714,8 @@ const root = document.documentElement;
 root.style.setProperty('--accent', hexColor);
 root.style.setProperty('--accent-glow', hexToRgba(hexColor, 0.25));
 root.style.setProperty('--accent-soft', hexToRgba(hexColor, 0.12));
+storeThemeColorHex = hexColor;
+if (themeMode === 'system') applyThemeMode('system', { silent: true });
 }
 
 function applyFavicon(faviconUrl) {
@@ -6634,7 +6773,6 @@ case 'contact-info':     loadContactInfo(); break;
 case 'bank-details':     loadBankDetails(); break;
 case 'invoice-settings': loadInvoiceSettings(); break;
 case 'store-settings':   loadStoreSettings(); break;
-case 'security':         loadSecuritySessions(); break;
 }
 }
 
@@ -6803,8 +6941,6 @@ reader.readAsDataURL(file);
 if (previewId === 'settingsLogoPreview') uploadBrandingAsset(file, SETTINGS_API.uploadLogo, previewId, url => uploadedLogoUrl = url);
 else if (previewId === 'settingsBannerPreview') uploadBrandingAsset(file, SETTINGS_API.uploadBanner, previewId, url => uploadedBrandBannerUrl = url);
 else if (previewId === 'settingsFaviconPreview') uploadBrandingAsset(file, SETTINGS_API.uploadFavicon, previewId, url => uploadedFaviconUrl = url);
-else if (previewId === 'settingsSignaturePreview') uploadBrandingAsset(file, SETTINGS_API.uploadSignature, previewId, url => uploadedSignatureUrl = url);
-else if (previewId === 'settingsSealPreview') uploadBrandingAsset(file, SETTINGS_API.uploadSeal, previewId, url => uploadedSealUrl = url);
 }
 
 async function uploadBrandingAsset(file, endpoint, previewId, onSuccess) {
@@ -6984,8 +7120,6 @@ if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
 /* ============================================================
 6. INVOICE SETTINGS
 ============================================================ */
-let uploadedSignatureUrl = null, uploadedSealUrl = null;
-
 async function loadInvoiceSettings() {
 try {
 const response = await fetch(SETTINGS_API.invoice, { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
@@ -6995,8 +7129,6 @@ if (!response.ok || !result.success) { showToast('error', 'Invoice Settings', re
 const d = result.data || {};
 document.getElementById('setInvPrefix').value = d.invoicePrefix || '';
 document.getElementById('setInvFooter').value = d.invoiceFooter || '';
-if (d.signatureUrl) document.getElementById('settingsSignaturePreview').src = getImageUrl(d.signatureUrl);
-if (d.sealUrl) document.getElementById('settingsSealPreview').src = getImageUrl(d.sealUrl);
 document.getElementById('setShowGst').checked = d.showGst !== false;
 document.getElementById('setShowBank').checked = d.showBankDetails !== false;
 } catch (error) {
@@ -7012,8 +7144,6 @@ invoiceFooter: document.getElementById('setInvFooter').value.trim(),
 showGst: document.getElementById('setShowGst').checked,
 showBankDetails: document.getElementById('setShowBank').checked
 };
-if (uploadedSignatureUrl) request.signatureUrl = uploadedSignatureUrl;
-if (uploadedSealUrl) request.sealUrl = uploadedSealUrl;
 
 const btn = event ? event.currentTarget : null;
 const originalHtml = btn ? btn.innerHTML : null;
@@ -7038,75 +7168,178 @@ if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
 }
 }
 
-/* ============================================================
-7. STORE SETTINGS
-============================================================ */
-async function loadStoreSettings() {
-try {
-const response = await fetch(SETTINGS_API.store, { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
-const result = await response.json();
-if (!response.ok || !result.success) { showToast('error', 'Store Settings', result.message || 'Unable to load store settings.'); return; }
 
-const d = result.data || {};
-document.getElementById('setStoreStatus').value = d.storeStatus || 'OPEN';
-document.getElementById('setMaintenanceMode').value = String(!!d.maintenanceMode);
-document.getElementById('setCurrency').value = d.currency || 'INR';
-document.getElementById('setTimezone').value = d.timezone || 'Asia/Kolkata';
-document.getElementById('setLanguage').value = d.language || 'en';
-} catch (error) {
-console.error(error);
-showToast('error', 'Store Settings', 'Something went wrong while loading store settings.');
+/* ============================================================
+   7. STORE SETTINGS
+============================================================ */
+
+async function loadStoreSettings() {
+    try {
+
+        const response = await fetch(SETTINGS_API.store, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast(
+                'error',
+                'Store Settings',
+                result.message || 'Unable to load store settings.'
+            );
+            return;
+        }
+
+        const d = result.data || {};
+
+        document.getElementById('setStoreStatus').value =
+            d.storeStatus || 'OPEN';
+
+        document.getElementById('setMaintenanceMode').value =
+            String(!!d.maintenanceMode);
+
+        document.getElementById('setCurrency').value =
+            d.currency || 'INR';
+
+        document.getElementById('setTimezone').value =
+            d.timezone || 'Asia/Kolkata';
+
+        document.getElementById('setLanguage').value =
+            d.language || 'en';
+
+        // Load closing reason
+        const reasonElement =
+            document.getElementById('setStoreCloseReason');
+
+        if (reasonElement) {
+            const reasonValue = d.closeReason || '';
+
+            // If backend sends a value that isn't one of the predefined
+            // options (e.g. free-text reason), add it dynamically so it
+            // still shows instead of silently falling back to blank.
+            const hasMatchingOption = Array.from(reasonElement.options)
+                .some(opt => opt.value === reasonValue);
+
+            if (reasonValue && !hasMatchingOption) {
+                const dynamicOption = document.createElement('option');
+                dynamicOption.value = reasonValue;
+                dynamicOption.textContent = reasonValue;
+                reasonElement.appendChild(dynamicOption);
+            }
+
+            reasonElement.value = reasonValue;
+        }
+
+        // Show/hide reason field according to status
+        toggleStoreCloseReason();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            'error',
+            'Store Settings',
+            'Something went wrong while loading store settings.'
+        );
+    }
 }
-}
+
 
 async function saveStoreSettings() {
-const request = {
-storeStatus: document.getElementById('setStoreStatus').value,
-maintenanceMode: document.getElementById('setMaintenanceMode').value === 'true',
-currency: document.getElementById('setCurrency').value,
-timezone: document.getElementById('setTimezone').value,
-language: document.getElementById('setLanguage').value
-};
 
-const btn = event ? event.currentTarget : null;
-const originalHtml = btn ? btn.innerHTML : null;
-if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Saving...'; }
+    const storeStatus =
+        document.getElementById('setStoreStatus').value;
 
-try {
-const response = await fetch(SETTINGS_API.store, {
-method: 'PUT',
-credentials: 'include',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify(request)
-});
-const result = await response.json();
+    const closeReason =
+        document.getElementById('setStoreCloseReason').value;
 
-if (!response.ok || !result.success) { showToast('error', 'Store Settings', result.message || 'Unable to save store settings.'); return; }
-showToast('success', 'Store Settings', result.message || 'Store settings saved successfully.');
-} catch (error) {
-console.error(error);
-showToast('error', 'Store Settings', 'Something went wrong.');
-} finally {
-if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+    // Closing reason required only when store is CLOSED
+    if (storeStatus === 'CLOSED' && !closeReason) {
+        showToast(
+            'error',
+            'Store Settings',
+            'Please select a reason for closing the store.'
+        );
+        return;
+    }
+
+    const request = {
+
+        storeStatus: storeStatus,
+
+        closeReason: storeStatus === 'CLOSED'
+            ? closeReason
+            : null,
+
+        maintenanceMode:
+            document.getElementById('setMaintenanceMode').value === 'true',
+
+        currency:
+            document.getElementById('setCurrency').value,
+
+        timezone:
+            document.getElementById('setTimezone').value,
+
+        language:
+            document.getElementById('setLanguage').value
+    };
+
+    const btn = event ? event.currentTarget : null;
+    const originalHtml = btn ? btn.innerHTML : null;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Saving...'; }
+
+    try {
+
+        const response = await fetch(SETTINGS_API.store, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(request)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast(
+                'error',
+                'Store Settings',
+                result.message || 'Unable to save store settings.'
+            );
+            return;
+        }
+
+        showToast(
+            'success',
+            'Store Settings',
+            result.message || 'Store settings saved successfully.'
+        );
+
+        // Refresh reason visibility
+        toggleStoreCloseReason();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            'error',
+            'Store Settings',
+            'Something went wrong while saving store settings.'
+        );
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+    }
 }
-}
 
-/* ============================================================
-8. SECURITY
-============================================================ */
-async function loadSecuritySessions() {
-try {
-const response = await fetch(SETTINGS_API.sessions, { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
-const result = await response.json();
-if (!response.ok || !result.success) { showToast('error', 'Security', result.message || 'Unable to load session info.'); return; }
 
-const d = result.data || {};
-document.getElementById('setLastLoginVal').textContent = d.lastLogin ? formatDateTime(d.lastLogin) : 'N/A';
-} catch (error) {
-console.error(error);
-showToast('error', 'Security', 'Something went wrong while loading session info.');
-}
-}
 
 async function updateSettingsPassword() {
 const currentPassword = document.getElementById('setCurrentPwd').value.trim();
@@ -7276,10 +7509,10 @@ function renderTicketDetail(t){
 
   const statusActions = t.status !== 'CLOSED' ? `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-      ${t.status !== 'IN_PROGRESS' ? `<button class="secondary-btn" onclick="updateTicketStatus('IN_PROGRESS')">Mark In Progress</button>` : ''}
-      ${t.status !== 'WAITING_FOR_CUSTOMER' ? `<button class="secondary-btn" onclick="updateTicketStatus('WAITING_FOR_CUSTOMER')">Waiting on Customer</button>` : ''}
+      ${t.status !== 'IN_PROGRESS' ? `<button class="secondary-btn" onclick="confirmAction('Mark this ticket as In Progress?', () => updateTicketStatus('IN_PROGRESS'))">Mark In Progress</button>` : ''}
+      ${t.status !== 'WAITING_FOR_CUSTOMER' ? `<button class="secondary-btn" onclick="confirmAction('Mark this ticket as waiting on the customer?', () => updateTicketStatus('WAITING_FOR_CUSTOMER'))">Waiting on Customer</button>` : ''}
       ${t.status !== 'RESOLVED' ? `<button class="secondary-btn" onclick="openResolveTicketPrompt()">Mark Resolved</button>` : ''}
-      <button class="secondary-btn" style="color:#dc2626;" onclick="updateTicketStatus('CLOSED')">Close Ticket</button>
+      <button class="secondary-btn" style="color:#dc2626;" onclick="confirmAction('Close this ticket? The customer won\\'t be able to reply once it is closed.', () => updateTicketStatus('CLOSED'))">Close Ticket</button>
     </div>` : '';
 
   const replyBlock = t.status !== 'CLOSED' ? `
