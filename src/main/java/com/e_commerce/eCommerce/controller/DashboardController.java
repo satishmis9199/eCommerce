@@ -1,10 +1,7 @@
 package com.e_commerce.eCommerce.controller;
 
 import com.e_commerce.eCommerce.dto.*;
-import com.e_commerce.eCommerce.dto.request.BankAccountRequestDto;
-import com.e_commerce.eCommerce.dto.request.VendorBrandingRequestDTO;
-import com.e_commerce.eCommerce.dto.request.VendorBusinessAddressDTO;
-import com.e_commerce.eCommerce.dto.request.VendorContactSocialRequestDTO;
+import com.e_commerce.eCommerce.dto.request.*;
 import com.e_commerce.eCommerce.dto.response.VenodorBusinessProfile;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
@@ -486,6 +483,138 @@ public class DashboardController {
         }
     }
 
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/settings/invoice")
+    public ResponseEntity<ApiResponse<InvoiceSettingsRequestDto>> editInvoiceSettings(
+            @AuthenticationPrincipal CustomUserDetail userDetail,@RequestBody InvoiceSettingsRequestDto invoiceSettingsRequestDto ) {
+
+        try {
+
+            InvoiceSettingsRequestDto invoiceSettingsRequestDto1=vendorService.editInvoiceData(userDetail,invoiceSettingsRequestDto);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            "Invoice settings updated Successfully",
+                            invoiceSettingsRequestDto1
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/settings/invoice")
+    public ResponseEntity<ApiResponse<InvoiceSettingsRequestDto>> getInvoiceSettings(
+            @AuthenticationPrincipal CustomUserDetail userDetail ) {
+
+        try {
+
+            InvoiceSettingsRequestDto invoiceSettingsRequestDto1=vendorService.getInvoiceData(userDetail);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+
+                            " Invoice Settings fecthed Successfully",
+                            invoiceSettingsRequestDto1
+
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/settings/store")
+    public ResponseEntity<ApiResponse<StoreSettingsRequestDto>> getStoreSettings(
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+
+        try {
+
+            StoreSettingsRequestDto storeSettingsRequestDto =
+                    vendorService.getStoreSettings(userDetail);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "Store Settings fetched Successfully",
+                            storeSettingsRequestDto
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/settings/store")
+    public ResponseEntity<ApiResponse<StoreSettingsRequestDto>> editStoreSettings(
+            @AuthenticationPrincipal CustomUserDetail userDetail,
+            @RequestBody StoreSettingsRequestDto storeSettingsRequestDto) {
+
+        try {
+
+            StoreSettingsRequestDto storeSettingsRequestDto1 =
+                    vendorService.editStoreSettings(
+                            userDetail,
+                            storeSettingsRequestDto
+                    );
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "Store Settings updated Successfully",
+                            storeSettingsRequestDto1
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
 
 
 }

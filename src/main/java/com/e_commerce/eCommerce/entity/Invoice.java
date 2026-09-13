@@ -76,11 +76,6 @@ public class Invoice {
             length = 500
     )
     private String pdfKey;
-
-    /*
-     * Optional public/permanent URL.
-     * If R2 is private, this can remain null.
-     */
     @Column(
             name = "pdf_url",
             length = 1000

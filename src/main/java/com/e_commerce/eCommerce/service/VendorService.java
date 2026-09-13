@@ -7,6 +7,7 @@ import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.*;
 import com.e_commerce.eCommerce.dto.response.VenodorBusinessProfile;
 import com.e_commerce.eCommerce.entity.*;
+import com.e_commerce.eCommerce.enums.ShopStatus;
 import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -41,6 +42,7 @@ public class VendorService {
     private final VendorAddresss vendorAddresssRepo;
     private final VendorBrandingRepository vendorBrandingRepository;
     private final VendorBankRepository vendorBankRepository;
+    private final ShopStatusHistoryRepository shopStatusHistoryRepository;
     @CacheEvict(value = "AllVendors", allEntries = true)
     @Transactional
     public Boolean createVendor(VendorRequestDto vendorRequestDto, String requesst) {
@@ -797,5 +799,190 @@ public class VendorService {
                 .upiId(
                         savedBank.getUpiId())
                 .build();
+    }
+    public InvoiceSettingsRequestDto editInvoiceData(
+            CustomUserDetail userDetail,
+            InvoiceSettingsRequestDto request) {
+
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (request == null) {
+            throw new RuntimeException("Invoice settings are required");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+        vendor.setInvoiceNotes(request.getInvoiceFooter());
+        vendor.setGstOnInvoice(request.isShowGst());
+        vendor.setBankDetailsOnInvoice(request.isShowBankDetails());
+        vendorRepository.save(vendor);
+
+        return request;
+    }
+    public InvoiceSettingsRequestDto getInvoiceData(CustomUserDetail userDetail) {
+
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        InvoiceSettingsRequestDto response = new InvoiceSettingsRequestDto();
+
+        String storeName = vendor.getStoreName();
+
+        if (storeName != null && !storeName.isBlank()) {
+            String prefix = storeName.trim().substring(0, Math.min(3, storeName.trim().length()));
+            response.setInvoicePrefix(prefix.toUpperCase()+".");
+        } else {
+            response.setInvoicePrefix("");
+        }
+        response.setInvoiceFooter(vendor.getInvoiceNotes());
+        response.setShowGst(vendor.isGstOnInvoice());
+        response.setShowBankDetails(vendor.isBankDetailsOnInvoice());
+        return response;
+    }
+
+
+    public StoreSettingsRequestDto getStoreSettings(CustomUserDetail userDetail) {
+
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        StoreSettingsRequestDto response = new StoreSettingsRequestDto();
+
+        response.setStoreStatus(String.valueOf(vendor.getShopStatus()));
+        response.setMaintenanceMode(vendor.isMaintenanceMode());
+        response.setCurrency(vendor.getCurrency());
+        response.setTimezone(vendor.getTimezone());
+        response.setLanguage(vendor.getLanguage());
+        if (vendor.getShopStatus() == ShopStatus.CLOSED) {
+            shopStatusHistoryRepository
+                    .findFirstByTenantIdOrderByChangedAtDesc(tenantId)
+                    .ifPresent(history ->
+                            response.setCloseReason(history.getReason())
+                    );
+        }
+
+        return response;
+    }
+
+
+    @Transactional
+    public StoreSettingsRequestDto editStoreSettings(
+            CustomUserDetail userDetail,
+            StoreSettingsRequestDto request) {
+
+        String tenantId = TenantContext.getTenantId();
+
+        if (userDetail == null) {
+            throw new RuntimeException("Please login again");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        if (request == null) {
+            throw new RuntimeException("Store settings are required");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Invalid tenant");
+        }
+
+        Vendor vendor = vendorRepository.findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        ShopStatus oldStatus = vendor.getShopStatus();
+        ShopStatus newStatus = ShopStatus.valueOf(request.getStoreStatus());
+
+        if (newStatus == null) {
+            throw new RuntimeException("Store status is required");
+        }
+        if (newStatus == ShopStatus.CLOSED) {
+
+            if (request.getCloseReason() == null
+                    || request.getCloseReason().isBlank()) {
+
+                throw new RuntimeException(
+                        "Closing reason is required");
+            }
+        }
+
+
+        vendor.setShopStatus(newStatus);
+      vendor.setMaintenanceMode(request.isMaintenanceMode());
+        vendor.setCurrency(request.getCurrency());
+        vendor.setTimezone(request.getTimezone());
+        vendor.setLanguage(request.getLanguage());
+
+        vendorRepository.save(vendor);
+        if (oldStatus != newStatus) {
+
+            ShopStatusHistory history = new ShopStatusHistory();
+
+            history.setTenantId(tenantId);
+            history.setStatus(newStatus);
+
+            if (newStatus == ShopStatus.CLOSED) {
+                history.setReason(request.getCloseReason());
+            } else {
+                history.setReason("Store Reopened");
+            }
+
+            history.setChangedBy(userDetail.getId());
+            history.setChangedAt(LocalDateTime.now());
+
+            shopStatusHistoryRepository.save(history);
+        }
+        request.setCloseReason(
+                newStatus == ShopStatus.CLOSED
+                        ? request.getCloseReason()
+                        : null
+        );
+
+        return request;
     }
 }
