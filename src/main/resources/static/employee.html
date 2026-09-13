@@ -3752,40 +3752,131 @@ async function loadWishlist(){
     document.getElementById("wishlistBadge").textContent = "0";
     return;
   }
+
   try{
-    const res = await apiRequest(API_ENDPOINTS.wishlist, { method:"GET" }, { silentError:true });
-    const data = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+    const res = await apiRequest(
+      API_ENDPOINTS.wishlist,
+      { method:"GET" },
+      { silentError:true }
+    );
+
+    const data =
+      (res && Array.isArray(res.data))
+        ? res.data
+        : (Array.isArray(res) ? res : []);
+
     const list = Array.isArray(data) ? data : [];
 
-    // Each entry can come back a few different ways depending on the
-    // backend: a full product object, { product: {...} } / { item: {...} },
-    // or (older/lighter responses) a bare productId string or { productId }.
+    // Normalize wishlist entry into the product shape
+    // expected by productCardHtml()
     const productOf = (entry) => {
       if (!entry) return null;
-      if (typeof entry === "string" || typeof entry === "number") return null;
-      if (entry.product && typeof entry.product === "object") return entry.product;
-      if (entry.item && typeof entry.item === "object") return entry.item;
-      if (entry.name || entry.image) return entry; // looks like a full product already
+
+      // Bare ID response
+      if (typeof entry === "string" || typeof entry === "number") {
+        return null;
+      }
+
+      // { product: {...} }
+      if (
+        entry.product &&
+        typeof entry.product === "object"
+      ) {
+        return entry.product;
+      }
+
+      // { item: {...} }
+      if (
+        entry.item &&
+        typeof entry.item === "object"
+      ) {
+        return entry.item;
+      }
+
+      // Already in frontend product format
+      if (entry.name || entry.image) {
+        return entry;
+      }
+
+      // Backend wishlist response:
+      // {
+      //   id,
+      //   productId,
+      //   productName,
+      //   productImage,
+      //   price,
+      //   createdAt
+      // }
+      if (
+        entry.productId != null &&
+        (entry.productName || entry.productImage)
+      ) {
+        return {
+          productId: entry.productId,
+          name: entry.productName || "",
+          image: entry.productImage
+            ? getImageUrl(entry.productImage)
+            : "",
+          price: entry.price ?? 0,
+
+          // Optional fields — productCardHtml can handle them
+          oldPrice: entry.oldPrice ?? null,
+          discountPercent: entry.discountPercent ?? null,
+          stockLevel: entry.stockLevel || "in_stock",
+          deliveryEta: entry.deliveryEta || "",
+          rating: entry.rating ?? 0,
+          reviewCount: entry.reviewCount ?? 0,
+          brand: entry.brand || "",
+          businessName: entry.businessName || ""
+        };
+      }
+
       return null;
     };
+
     const idOf = (entry) => {
-      if (typeof entry === "string" || typeof entry === "number") return entry;
+      if (
+        typeof entry === "string" ||
+        typeof entry === "number"
+      ) {
+        return entry;
+      }
+
       const p = productOf(entry);
-      return (p && p.productId) || entry.productId || entry.id;
+
+      return (
+        p?.productId ??
+        entry?.productId ??
+        entry?.id ??
+        null
+      );
     };
 
-    const ids = list.map(idOf).filter(Boolean);
-    const items = list.map(productOf).filter(Boolean);
+    const ids = list
+      .map(idOf)
+      .filter(id => id != null);
+
+    const items = list
+      .map(productOf)
+      .filter(Boolean);
 
     AppState.wishlistIds = new Set(ids);
     AppState.wishlistItems = items;
     AppState.wishlistCount = ids.length;
+
+    console.log("Wishlist IDs:", ids);
+    console.log("Wishlist Items:", items);
+
   }catch(e){
+    console.error("Wishlist load failed:", e);
+
     AppState.wishlistIds = new Set();
     AppState.wishlistItems = [];
     AppState.wishlistCount = 0;
   }
-  document.getElementById("wishlistBadge").textContent = AppState.wishlistCount;
+
+  document.getElementById("wishlistBadge").textContent =
+    AppState.wishlistCount;
 }
 
 /* ---- Add to cart ---- */

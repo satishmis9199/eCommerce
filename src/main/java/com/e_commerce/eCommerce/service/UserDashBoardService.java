@@ -41,6 +41,7 @@ public class UserDashBoardService {
     private final EmailSubscriberRepository newsletterSubscriberRepository;
     private final EmailService emailService;
     private final VendorPolicyRepository vendorPolicyRepository;
+    private final WiShlistRepositorye wiShlistRepositorye;
 
     public StoreInfoResponseDTO getStoreInfo() {
 
@@ -651,5 +652,27 @@ public class UserDashBoardService {
         emailService.sendEmailAsync(emailRequest
         );
 
+    }
+
+
+    public void addToWishlist(Long productId, CustomUserDetail userDetail) {
+
+        Long userId = userDetail.getId();
+        String tenantId = TenantContext.getTenantId();
+
+        User user = userRepos.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        if (wiShlistRepositorye.existsByUserIdAndProductId(userId, productId)) {
+            throw new RuntimeException("Product already in wishlist");
+        }
+
+        Wishlist wishlist = new Wishlist();
+        wishlist.setUser(user);
+        wishlist.setProduct(product);
+        wishlist.setTenantId(tenantId);
+
+        wiShlistRepositorye.save(wishlist);
     }
 }
