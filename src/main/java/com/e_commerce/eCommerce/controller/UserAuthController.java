@@ -269,10 +269,10 @@ public class UserAuthController {
     public ResponseEntity<?> registerUserData(@RequestBody RegisterRequestDTO registerRequestDTO, HttpServletRequest request) {
         try {
             String url = request.getServerName();
-            String message = userAuthService.registerUser(registerRequestDTO, url);
+            User user = userAuthService.registerUser(registerRequestDTO, url);
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", message
+                    "message","Registration completed successfully. Please login."
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(

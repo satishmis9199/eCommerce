@@ -24,7 +24,7 @@ public class UserAuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService service;
 
-    public String registerUser(RegisterRequestDTO registerRequestDTO, String url) {
+    public User registerUser(RegisterRequestDTO registerRequestDTO, String url) {
 
         String tenantId = TenantContext.getTenantId();
 
@@ -79,8 +79,13 @@ public class UserAuthService {
 
         user.setCreatedBy("SELF_REGISTER");
         user.setUpdatedBy("SELF_REGISTER");
+        String googleId = registerRequestDTO.getGoogleId();
 
-        userRepos.save(user);
+        if (googleId != null && !googleId.isBlank()) {
+            user.setGoogleId(googleId);
+        }
+
+       User saveduser= userRepos.save(user);
         EmailRequestDto welcomeEmail = EmailRequestDto.builder()
                 .to(user.getEmail())
                 .subject("Welcome to " + vendor.getStoreName() + " 🎉")
@@ -94,6 +99,6 @@ public class UserAuthService {
         service.sendEmailAsync(welcomeEmail);
 
 
-        return "Registration completed successfully. Please login.";
+        return saveduser;
     }
 }

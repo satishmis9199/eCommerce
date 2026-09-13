@@ -4,9 +4,11 @@ import java.time.Duration;
 import java.util.Map;
 
 import com.e_commerce.eCommerce.config.JwtUtil;
+import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.request.GoogleAuthRequest;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.service.GoogleAuthService;
+import jakarta.servlet.http.Cookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -40,24 +42,23 @@ public class GoogleAuthController {
             HttpServletResponse response) {
 
         try {
+            String tenantId= TenantContext.getTenantId();
 
             User user = authService.authenticateWithGoogle(
-                    request.getIdToken()
+                    request.getIdToken(),tenantId
             );
 
             // Existing application JWT generate hoga
-            String jwt = jwtService.generateToken(user.getId(),user.getFirstName(),String.valueOf(user.getRole()));
+            String token = jwtService.generateToken(user.getId(),user.getFirstName(),String.valueOf(user.getRole()));
 
 
-            // Existing frontend cookie-based authentication
-            ResponseCookie cookie = ResponseCookie
-                    .from("JWT", jwt)
-                    .httpOnly(true)
-                    .secure(true)
-                    .sameSite("Lax")
-                    .path("/")
-                    .maxAge(Duration.ofDays(7))
-                    .build();
+            Cookie cookie = new Cookie("token", token);
+            cookie.setHttpOnly(true);
+            cookie.setSecure(false); // true in production HTTPS
+            cookie.setPath("/");
+            cookie.setMaxAge(60 * 60);
+
+            response.addCookie(cookie);
 
             response.addHeader(
                     HttpHeaders.SET_COOKIE,

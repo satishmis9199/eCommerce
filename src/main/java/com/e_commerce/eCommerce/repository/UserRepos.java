@@ -82,5 +82,6 @@ public interface UserRepos extends JpaRepository<User, Long> {
 
     User findByEmailAndTenantId(String email, String tenantId);
 
-    Optional<User> findByGoogleId(String googleId);
+
+    Optional<User> findByGoogleIdAndTenantId(String googleId, String tenantId);
 }
