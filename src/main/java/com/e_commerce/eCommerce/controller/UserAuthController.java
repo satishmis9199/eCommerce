@@ -60,7 +60,31 @@ public class UserAuthController {
             HttpServletResponse response) {
 
         try {
+            String tenantId = TenantContext.getTenantId();
 
+            User existingUser =
+                    userRepository.findByEmailAndTenantId(
+                            dto.getEmail(),
+                            tenantId
+                    );
+
+            if (existingUser != null
+                    && existingUser.getPassword() == null
+                    && "GOOGLE".equalsIgnoreCase(
+                    existingUser.getAuthProvider()
+            )) {
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(
+                                Map.of(
+                                        "success", false,
+                                        "message",
+                                        "This account uses Google Sign-In. Please reset your password to enable password login.",
+                                        "action",
+                                        "RESET_PASSWORD"
+                                )
+                        );
+            }
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             dto.getEmail(),
@@ -72,8 +96,6 @@ public class UserAuthController {
                     (CustomUserDetail) authentication.getPrincipal();
 
             User user = customUser.getUser();
-
-            // Only USER can login from customer portal
             if (user.getRole() != Roles.USER) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of(
@@ -81,10 +103,6 @@ public class UserAuthController {
                                 "message", "Only customers can login from this portal."
                         ));
             }
-
-            // Tenant Validation
-            String tenantId = TenantContext.getTenantId();
-
             if (!tenantId.equals(user.getTenantId())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of(

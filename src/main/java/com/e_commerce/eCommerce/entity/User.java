@@ -1,6 +1,14 @@
 package com.e_commerce.eCommerce.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,7 +16,15 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_users_email_tenant",
+                        columnNames = {"email", "tenant_id"}
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,42 +34,63 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    /**
+     * Email is unique per tenant.
+     * Same email can exist in different tenants.
+     */
+    @Column(nullable = false, length = 100)
     private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private Roles role;
 
-
     @Column
     private String phone;
 
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    @Column
+    /**
+     * Every user belongs to a tenant.
+     */
+    @Column(name = "tenant_id", nullable = false, length = 255)
     private String tenantId;
+
     @Column(name = "vendorid")
     private Long vendorId;
-    @Column(name = "google_id", unique = true)
+
+    /**
+     * Google account unique ID (Google 'sub' claim).
+     *
+     * NULL for normal email/password users.
+     */
+    @Column(
+            name = "google_id",
+            unique = true,
+            nullable = true,
+            length = 255
+    )
     private String googleId;
-    @Column(name = "auth_provider")
+
+    /**
+     * Authentication provider.
+     *
+     * Examples:
+     * GOOGLE
+     * LOCAL
+     */
+    @Column(name = "auth_provider", length = 30)
     private String authProvider;
 
-
-    @Column(nullable = false)
+    /**
+     * Password is nullable because Google users
+     * may not have a local password.
+     */
+    @Column(nullable = true)
     private String password;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = true, length = 100)
     private String firstName;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = true, length = 100)
     private String lastName;
 
     @Column(length = 20)
@@ -85,23 +122,11 @@ public class User {
 
     @Column(length = 255)
     private String lastLoginDevice;
-
-    /**
-     * NEW — required for the password setup/reset flow. True once the user
-     * has completed their own password setup via the reset link. Until
-     * true, login should be rejected (see SUPER_ADMIN_INTEGRATION.md).
-     * Needs a matching DB column + migration — see updated migration script.
-     */
-    @Column(name = "credentials_setup_complete", nullable = false)
+    @Column(
+            name = "credentials_setup_complete",
+            nullable = false
+    )
     private Boolean credentialsSetupComplete = false;
-
-    public Boolean getCredentialsSetupComplete() {
-        return credentialsSetupComplete;
-    }
-
-    public void setCredentialsSetupComplete(Boolean credentialsSetupComplete) {
-        this.credentialsSetupComplete = credentialsSetupComplete;
-    }
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -114,164 +139,4 @@ public class User {
 
     @Column(length = 100)
     private String updatedBy;
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Roles getRole() {
-        return role;
-    }
-
-    public void setRole(Roles role) {
-        this.role = role;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getMobileNumber() {
-        return mobileNumber;
-    }
-
-    public void setMobileNumber(String mobileNumber) {
-        this.mobileNumber = mobileNumber;
-    }
-
-    public String getProfileImage() {
-        return profileImage;
-    }
-
-    public void setProfileImage(String profileImage) {
-        this.profileImage = profileImage;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
-
-    public Boolean getAccountLocked() {
-        return accountLocked;
-    }
-
-    public void setAccountLocked(Boolean accountLocked) {
-        this.accountLocked = accountLocked;
-    }
-
-    public Integer getFailedLoginAttempt() {
-        return failedLoginAttempt;
-    }
-
-    public void setFailedLoginAttempt(Integer failedLoginAttempt) {
-        this.failedLoginAttempt = failedLoginAttempt;
-    }
-
-    public Boolean getEmailVerified() {
-        return emailVerified;
-    }
-
-    public void setEmailVerified(Boolean emailVerified) {
-        this.emailVerified = emailVerified;
-    }
-
-    public LocalDateTime getAccountLockedUntil() {
-        return accountLockedUntil;
-    }
-
-    public void setAccountLockedUntil(LocalDateTime accountLockedUntil) {
-        this.accountLockedUntil = accountLockedUntil;
-    }
-
-    public LocalDateTime getLastLoginTime() {
-        return lastLoginTime;
-    }
-
-    public void setLastLoginTime(LocalDateTime lastLoginTime) {
-        this.lastLoginTime = lastLoginTime;
-    }
-
-    public String getLastLoginIp() {
-        return lastLoginIp;
-    }
-
-    public void setLastLoginIp(String lastLoginIp) {
-        this.lastLoginIp = lastLoginIp;
-    }
-
-    public String getLastLoginDevice() {
-        return lastLoginDevice;
-    }
-
-    public void setLastLoginDevice(String lastLoginDevice) {
-        this.lastLoginDevice = lastLoginDevice;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
 }

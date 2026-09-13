@@ -8,12 +8,15 @@ import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.entity.Vendor;
 import com.e_commerce.eCommerce.repository.UserRepos;
 import com.e_commerce.eCommerce.repository.VendorRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,43 +27,151 @@ public class UserAuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService service;
 
-    public User registerUser(RegisterRequestDTO registerRequestDTO, String url) {
+    public User registerUser(
+            RegisterRequestDTO registerRequestDTO,
+            String url) {
+
+        if (registerRequestDTO == null) {
+            throw new RuntimeException("Registration data is required.");
+        }
 
         String tenantId = TenantContext.getTenantId();
 
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new RuntimeException("Tenant does not exist.");
+        }
+
+        String email = registerRequestDTO.getEmail();
+
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("Email is required.");
+        }
+
+        email = email.trim().toLowerCase();
+
         Vendor vendor = vendorRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> new RuntimeException("Vendor does not exist."));
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor does not exist."));
 
         Long vendorId = vendor.getId();
 
-        User existingEmail = userRepos.findByEmailAndVendorIdAndTenantId(
-                registerRequestDTO.getEmail(),
-                vendorId,
-                tenantId
-        );
-
-        if (existingEmail != null) {
-            throw new RuntimeException("Email is already registered.");
+        if (vendorId == null) {
+            throw new RuntimeException("Vendor does not exist.");
         }
 
-        User existingMobile = userRepos.findByMobileNumberAndVendorIdAndTenantId(
-                registerRequestDTO.getMobileNumber(),
-                vendorId,
-                tenantId
-        );
+        String googleId = registerRequestDTO.getGoogleId();
 
-        if (existingMobile != null) {
-            throw new RuntimeException("Mobile number is already registered.");
+        boolean isGoogleUser =
+                googleId != null && !googleId.isBlank();
+
+        String authProvider =
+                registerRequestDTO.getAuthProvider();
+
+        boolean isGoogleProvider =
+                authProvider != null
+                        && !authProvider.isBlank()
+                        && "GOOGLE".equalsIgnoreCase(authProvider);
+
+        if (isGoogleUser != isGoogleProvider) {
+            throw new RuntimeException(
+                    "Invalid authentication provider."
+            );
+        }
+
+        User existingEmail =
+                userRepos.findByEmailAndVendorIdAndTenantId(
+                        email,
+                        vendorId,
+                        tenantId
+                );
+
+        if (existingEmail != null) {
+            throw new RuntimeException(
+                    "Email is already registered."
+            );
+        }
+
+        if (isGoogleUser) {
+
+            Optional<User> existingGoogleUser =
+                    userRepos.findByGoogleIdAndTenantId(
+                            googleId.trim(),
+                            tenantId
+                    );
+
+            if (existingGoogleUser != null) {
+                throw new RuntimeException(
+                        "Google account is already registered."
+                );
+            }
+
+        } else {
+
+            String mobileNumber =
+                    registerRequestDTO.getMobileNumber();
+
+            if (mobileNumber == null || mobileNumber.isBlank()) {
+                throw new RuntimeException(
+                        "Mobile number is required."
+                );
+            }
+
+            User existingMobile =
+                    userRepos.findByMobileNumberAndVendorIdAndTenantId(
+                            mobileNumber,
+                            vendorId,
+                            tenantId
+                    );
+
+            if (existingMobile != null) {
+                throw new RuntimeException(
+                        "Mobile number is already registered."
+                );
+            }
+
+            String password =
+                    registerRequestDTO.getPassword();
+
+            if (password == null || password.isBlank()) {
+                throw new RuntimeException(
+                        "Password is required."
+                );
+            }
         }
 
         User user = new User();
 
-        user.setFirstName(registerRequestDTO.getFirstName());
-        user.setLastName(registerRequestDTO.getLastName());
-        user.setEmail(registerRequestDTO.getEmail());
-        user.setMobileNumber(registerRequestDTO.getMobileNumber());
+        user.setFirstName(
+                registerRequestDTO.getFirstName()
+        );
 
-        user.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
+        user.setLastName(
+                registerRequestDTO.getLastName()
+        );
+
+        user.setEmail(email);
+
+        user.setMobileNumber(
+                registerRequestDTO.getMobileNumber()
+        );
+
+        if (isGoogleUser) {
+
+            user.setPassword(null);
+            user.setGoogleId(googleId.trim());
+            user.setAuthProvider("GOOGLE");
+
+        } else {
+
+            user.setPassword(
+                    passwordEncoder.encode(
+                            registerRequestDTO.getPassword()
+                    )
+            );
+
+            user.setGoogleId(null);
+            user.setAuthProvider("PASSWORD");
+        }
 
         user.setRole(Roles.USER);
 
@@ -68,37 +179,76 @@ public class UserAuthService {
         user.setVendorId(vendorId);
 
         user.setActive(true);
-        user.setEmailVerified(false);
+
+        user.setEmailVerified(isGoogleUser);
 
         user.setFailedLoginAttempt(0);
+
         user.setAccountLocked(false);
+
         user.setAccountLockedUntil(null);
 
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
 
-        user.setCreatedBy("SELF_REGISTER");
-        user.setUpdatedBy("SELF_REGISTER");
-        String googleId = registerRequestDTO.getGoogleId();
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
 
-        if (googleId != null && !googleId.isBlank()) {
-            user.setGoogleId(googleId);
+        user.setCreatedBy(
+                isGoogleUser
+                        ? "GOOGLE"
+                        : "SELF_REGISTER"
+        );
+
+        user.setUpdatedBy(
+                isGoogleUser
+                        ? "GOOGLE"
+                        : "SELF_REGISTER"
+        );
+
+        User savedUser = userRepos.save(user);
+
+        try {
+
+            String loginLink =
+                    url != null && !url.isBlank()
+                            ? "https://" + url
+                            : "";
+
+            String name =
+                    user.getFirstName();
+
+            if (name == null || name.isBlank()) {
+                name = "Customer";
+            }
+
+            EmailRequestDto welcomeEmail =
+                    EmailRequestDto.builder()
+                            .to(user.getEmail())
+                            .subject(
+                                    "Welcome to "
+                                            + vendor.getStoreName()
+                                            + " 🎉"
+                            )
+                            .templateName("welcome")
+                            .templateVariables(
+                                    Map.of(
+                                            "name",
+                                            name,
+                                            "loginLink",
+                                            loginLink,
+                                            "supportEmail",
+                                            "support@yourapp.com"
+                                    )
+                            )
+                            .build();
+
+            service.sendEmailAsync(
+                    welcomeEmail
+            );
+
+        } catch (Exception ignored) {
         }
 
-       User saveduser= userRepos.save(user);
-        EmailRequestDto welcomeEmail = EmailRequestDto.builder()
-                .to(user.getEmail())
-                .subject("Welcome to " + vendor.getStoreName() + " 🎉")
-                .templateName("welcome")
-                .templateVariables(Map.of(
-                        "name", user.getFirstName(),
-                        "loginLink", "https://" + url,
-                        "supportEmail", "support@yourapp.com"
-                ))
-                .build();
-        service.sendEmailAsync(welcomeEmail);
-
-
-        return saveduser;
+        return savedUser;
     }
 }

@@ -28,7 +28,8 @@ public class GoogleAuthService {
 
     public GoogleAuthService(
             @Value("${google.client-id}") String googleClientId,
-            UserRepos userRepository, UserAuthService userAuthService) {
+            UserRepos userRepository,
+            UserAuthService userAuthService) {
 
         this.userRepository = userRepository;
         this.userAuthService = userAuthService;
@@ -43,8 +44,6 @@ public class GoogleAuthService {
                             Collections.singletonList(googleClientId)
                     )
                     .build();
-
-            log.info("Google Auth Service initialized successfully");
 
         } catch (Exception e) {
 
@@ -64,11 +63,7 @@ public class GoogleAuthService {
 
         try {
 
-            log.info("Google ID token verification started");
-
             if (idToken == null || idToken.isBlank()) {
-
-                log.error("Google ID token is null or blank");
 
                 throw new RuntimeException(
                         "Google ID token is required"
@@ -80,8 +75,6 @@ public class GoogleAuthService {
 
             if (googleIdToken == null) {
 
-                log.error("Google ID token verification returned null");
-
                 throw new RuntimeException(
                         "Invalid Google ID token"
                 );
@@ -90,30 +83,11 @@ public class GoogleAuthService {
             GoogleIdToken.Payload payload =
                     googleIdToken.getPayload();
 
-            log.info(
-                    "Google ID token verified successfully"
-            );
-
-            log.debug(
-                    "Google ID Payload: {}",
-                    payload
-            );
-
             String googleId = payload.getSubject();
             String email = payload.getEmail();
             Boolean emailVerified = payload.getEmailVerified();
 
-            log.info(
-                    "Google account received. email={}, emailVerified={}",
-                    email,
-                    emailVerified
-            );
-
             if (googleId == null || googleId.isBlank()) {
-
-                log.error(
-                        "Google account ID (subject) not found"
-                );
 
                 throw new RuntimeException(
                         "Google account ID not found"
@@ -122,21 +96,12 @@ public class GoogleAuthService {
 
             if (email == null || email.isBlank()) {
 
-                log.error(
-                        "Google account email not found"
-                );
-
                 throw new RuntimeException(
                         "Google account email not found"
                 );
             }
 
             if (!Boolean.TRUE.equals(emailVerified)) {
-
-                log.error(
-                        "Google email is not verified. email={}",
-                        email
-                );
 
                 throw new RuntimeException(
                         "Google email is not verified"
@@ -148,7 +113,6 @@ public class GoogleAuthService {
             userInfo.setGoogleId(googleId);
             userInfo.setEmail(email);
             userInfo.setEmailVerified(true);
-
             userInfo.setFirstName(
                     payload.get("given_name") != null
                             ? payload.get("given_name").toString()
@@ -165,11 +129,6 @@ public class GoogleAuthService {
                     payload.get("picture") != null
                             ? payload.get("picture").toString()
                             : null
-            );
-
-            log.info(
-                    "Google user information prepared successfully for email={}",
-                    email
             );
 
             return userInfo;
@@ -198,57 +157,37 @@ public class GoogleAuthService {
         }
     }
 
-    public User authenticateWithGoogle(String idToken,String tenantId) {
-
-        log.info("Google authentication process started");
+    public User authenticateWithGoogle(
+            String idToken,
+            String tenantId) {
 
         GoogleUserInfo googleUser =
                 verifyToken(idToken);
 
-        log.info(
-                "Searching user by Google ID. googleId={}",
-                googleUser.getGoogleId()
-        );
-
         Optional<User> existingUser =
                 userRepository.findByGoogleIdAndTenantId(
-                        googleUser.getGoogleId(),tenantId
+                        googleUser.getGoogleId(),
+                        tenantId
                 );
 
         if (existingUser.isPresent()) {
 
             User user = existingUser.get();
 
-            log.info(
-                    "Existing Google user found. userId={}, email={}",
-                    user.getId(),
-                    user.getEmail()
-            );
-
             return user;
         }
-
-        log.info(
-                "Google ID not found. Searching user by email={}",
-                googleUser.getEmail()
-        );
 
         Optional<User> emailUser =
                 Optional.ofNullable(
                         userRepository.findByEmailAndTenantId(
-                                googleUser.getEmail(),tenantId
+                                googleUser.getEmail(),
+                                tenantId
                         )
                 );
 
         if (emailUser.isPresent()) {
 
             User user = emailUser.get();
-
-            log.info(
-                    "Existing user found by email. Linking Google account. userId={}, email={}",
-                    user.getId(),
-                    user.getEmail()
-            );
 
             user.setGoogleId(
                     googleUser.getGoogleId()
@@ -257,32 +196,38 @@ public class GoogleAuthService {
             User savedUser =
                     userRepository.save(user);
 
-            log.info(
-                    "Google account linked successfully. userId={}, email={}",
-                    savedUser.getId(),
-                    savedUser.getEmail()
-            );
-
             return savedUser;
         }
 
-        log.info(
-                "No existing user found. Creating new Google user. email={}",
+        RegisterRequestDTO registerRequestDTO =
+                new RegisterRequestDTO();
+
+        registerRequestDTO.setEmail(
                 googleUser.getEmail()
         );
-        RegisterRequestDTO registerRequestDTO = new RegisterRequestDTO();
+        registerRequestDTO.setAuthProvider("GOOGLE");
 
-        registerRequestDTO.setEmail(googleUser.getEmail());
-        registerRequestDTO.setFirstName(googleUser.getFirstName());
-        registerRequestDTO.setLastName(googleUser.getLastName());
-        registerRequestDTO.setGoogleId(googleUser.getGoogleId());
+        registerRequestDTO.setFirstName(
+                googleUser.getFirstName()
+        );
 
-        registerRequestDTO.setMobileNumber("0000000000");
-       User savedUser= userAuthService.registerUser(registerRequestDTO,"");
+        registerRequestDTO.setLastName(
+                googleUser.getLastName()
+        );
 
+        registerRequestDTO.setGoogleId(
+                googleUser.getGoogleId()
+        );
 
+        registerRequestDTO.setMobileNumber(
+                "0000000000"
+        );
 
-
+        User savedUser =
+                userAuthService.registerUser(
+                        registerRequestDTO,
+                        ""
+                );
 
         return savedUser;
     }
