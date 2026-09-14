@@ -1068,6 +1068,16 @@
           .icon-btn,.hamburger-btn,.modal-close,.qty-stepper button{min-width:38px;min-height:38px;}
           .qa-btn{width:36px;height:36px;}
           a,button,.cat-tile,.sugg-item{-webkit-tap-highlight-color:rgba(79,70,229,.12);}
+          /* .pcard-quick-actions (which holds the wishlist heart button)
+             is opacity:0 by default and only reveals on .pcard:hover.
+             Touch devices have no real hover state, so on the FIRST tap
+             iOS/Android just simulate :hover (revealing the button)
+             instead of firing a click — the tap meant to add/remove the
+             wishlist item gets silently swallowed, and only a SECOND tap
+             on the now-visible button actually registers. On coarse-
+             pointer devices we skip hover entirely and keep the quick
+             actions visible + tappable at all times, so one tap works. */
+          .pcard-quick-actions{opacity:1 !important;transform:none !important;}
         }
 
         /* =====================================================================
