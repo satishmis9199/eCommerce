@@ -477,6 +477,18 @@
         }
         .qa-btn:hover{background:var(--brand-primary);color:#fff;}
         .qa-btn.active{color:var(--danger);}
+        /* ---------- Favorites / Wishlist remove button ---------- */
+        .wish-remove-btn{
+          position:absolute;top:8px;right:8px;z-index:3;
+          width:32px;height:32px;border-radius:50%;
+          background:#fff;border:1px solid var(--border);
+          display:flex;align-items:center;justify-content:center;
+          font-size:14px;color:var(--danger);box-shadow:var(--shadow-sm);
+          transition:all .15s;
+        }
+        .wish-remove-btn:hover{background:var(--danger);color:#fff;border-color:var(--danger);}
+        .wish-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+        .wish-count{font-size:12.5px;color:var(--muted);}
         .pcard-body{padding:13px 14px 15px;display:flex;flex-direction:column;gap:6px;flex:1;}
         .pcard-vendor{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
         .pcard-brand{font-size:11px;color:var(--muted-2);font-weight:500;}
@@ -1980,6 +1992,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";
       cartPricing: null,
       wishlistCount: 0,
       wishlistIds: new Set(),
+      wishlistItems: [], // full product objects for whatever /wishlist returns, so the Favorites page can render real products even when they aren't in the local PRODUCT_POOL
       recentlyViewed: [],
       heroIndex: 0,
       heroTimer: null,
@@ -2505,7 +2518,7 @@ function renderCategoryGrid(categories) {
     function productCardHtml(p){
       const stockClass = p.stockLevel==="out_of_stock" ? "out" : p.stockLevel==="low_stock" ? "low" : "";
       const stockLabel = p.stockLevel==="out_of_stock" ? "Sold out" : p.stockLevel==="low_stock" ? "Selling fast" : "Available";
-      const isWished = AppState.wishlistIds.has(p.productId);
+      const isWished = AppState.wishlistIds.has(String(p.productId));
       const dietVal = (Array.isArray(p.specifications) ? p.specifications.find(s=>s[0]==="Dietary") : null);
       const isNonVeg = dietVal && /non/i.test(dietVal[1] || "");
       return `
@@ -2539,6 +2552,45 @@ function renderCategoryGrid(categories) {
         <div class="pcard-actions">
           <button class="btn btn-ghost" data-action="addtocart" data-pid="${p.productId}" ${p.stockLevel==="out_of_stock"?"disabled":""}>Add to Cart</button>
           <button class="btn btn-primary" data-action="buynow" data-pid="${p.productId}" ${p.stockLevel==="out_of_stock"?"disabled":""}>Order Now</button>
+        </div>
+      </div>`;
+    }
+
+    /* Favorites-page card: image, price, stock — plus an always-visible
+       Remove button (top-right on the image AND a labelled button in the
+       action row), so removing an item never depends on discovering the
+       small heart icon. */
+    function wishlistCardHtml(p){
+      const stockClass = p.stockLevel==="out_of_stock" ? "out" : p.stockLevel==="low_stock" ? "low" : "";
+      const stockLabel = p.stockLevel==="out_of_stock" ? "Sold out" : p.stockLevel==="low_stock" ? "Selling fast" : "Available";
+      const dietVal = (Array.isArray(p.specifications) ? p.specifications.find(s=>s[0]==="Dietary") : null);
+      const isNonVeg = dietVal && /non/i.test(dietVal[1] || "");
+      return `
+      <div class="pcard" data-pid="${p.productId}">
+        ${p.discountPercent ? `<div class="ribbon">${p.discountPercent}% OFF</div>` : ""}
+        <div class="pcard-media">
+          <img src="${p.image}" alt="${escapeHtml(p.name)}" loading="lazy">
+          ${dietVal ? `<span class="veg-dot ${isNonVeg ? 'nonveg' : ''}" title="${isNonVeg ? 'Non-Vegetarian' : 'Vegetarian'}"></span>` : ""}
+          <button class="wish-remove-btn" data-action="removewishlist" data-pid="${p.productId}" title="Remove from Favorites" aria-label="Remove from favorites">✕</button>
+        </div>
+        <div class="pcard-body">
+          <div class="pcard-vendor">${escapeHtml(p.businessName)}</div>
+          <div class="pcard-brand">${escapeHtml(p.brand)}</div>
+          <div class="pcard-name">${escapeHtml(p.name)}</div>
+          <div class="pcard-rating"><span class="stars">${starString(p.rating)}</span><span class="rating-count">${p.rating} (${p.reviewCount})</span></div>
+          <div class="pcard-price-row">
+            <span class="price-now mono">${fmtPrice(p.price)}</span>
+            ${p.oldPrice ? `<span class="price-old mono">${fmtPrice(p.oldPrice)}</span>` : ""}
+            ${p.discountPercent ? `<span class="price-discount">${p.discountPercent}% off</span>` : ""}
+          </div>
+          <div class="pcard-meta-row">
+            <span><span class="stock-dot ${stockClass}"></span>${stockLabel}</span>
+            <span>${escapeHtml(p.deliveryEta)}</span>
+          </div>
+        </div>
+        <div class="pcard-actions">
+          <button class="btn btn-ghost" data-action="removewishlist" data-pid="${p.productId}">Remove</button>
+          <button class="btn btn-primary" data-action="addtocart" data-pid="${p.productId}" ${p.stockLevel==="out_of_stock"?"disabled":""}>Add to Cart</button>
         </div>
       </div>`;
     }
@@ -3201,15 +3253,24 @@ function renderQuickView(product) {
    9. CART / WISHLIST ACTIONS (unchanged, backend-driven pricing)
 --------------------------------------------------------------------- */
 
-function findProduct(pid){ return PRODUCT_POOL.find(p=>p.productId===pid); }
+function findProduct(pid){ return PRODUCT_POOL.find(p=>String(p.productId)===String(pid)); }
 
 function refreshCartBadge(){
   document.getElementById("cartBadge").textContent = AppState.cartCount || 0;
 }
 
+/* ---- Load wishlist (real backend, cookie-authenticated) ----
+   Besides the id Set (used for the heart icon's active/inactive state),
+   this also normalizes each backend entry into a full product object
+   (AppState.wishlistItems) — the Favorites page can then render real
+   cards straight from the backend response instead of only ever
+   looking the id up in the local mock PRODUCT_POOL, which is why saved
+   items were showing up as an empty "no favorites yet" page before:
+   real backend product ids never exist in that local mock list. */
 async function loadWishlist(){
   if (!isAuthenticated){
     AppState.wishlistIds = new Set();
+    AppState.wishlistItems = [];
     AppState.wishlistCount = 0;
     document.getElementById("wishlistBadge").textContent = "0";
     return;
@@ -3217,11 +3278,56 @@ async function loadWishlist(){
   try{
     const res = await apiRequest(API_ENDPOINTS.wishlist, { method:"GET" }, { silentError:true });
     const data = (res && res.data) ? res.data : (Array.isArray(res) ? res : []);
-    const ids = (Array.isArray(data) ? data : []).map(item => item.productId || item.id).filter(Boolean);
+    const list = Array.isArray(data) ? data : [];
+
+    // Normalize a wishlist entry into the product shape productCardHtml() expects
+    const productOf = (entry) => {
+      if (!entry || typeof entry !== "object") return null;
+
+      if (entry.product && typeof entry.product === "object") return entry.product;
+      if (entry.item && typeof entry.item === "object") return entry.item;
+      if (entry.name || entry.image) return entry; // already frontend product shape
+
+      // Typical backend wishlist entry: { id, productId, productName, productImage, price, ... }
+      if (entry.productId != null && (entry.productName || entry.productImage)) {
+        return {
+          productId: entry.productId,
+          name: entry.productName || "",
+          image: entry.productImage ? getImageUrl(entry.productImage) : "",
+          price: entry.price ?? 0,
+          oldPrice: entry.oldPrice ?? null,
+          discountPercent: entry.discountPercent ?? null,
+          stockLevel: entry.stockLevel || "in_stock",
+          deliveryEta: entry.deliveryEta || "",
+          rating: entry.rating ?? 0,
+          reviewCount: entry.reviewCount ?? 0,
+          brand: entry.brand || "",
+          businessName: entry.businessName || ""
+        };
+      }
+      return null;
+    };
+
+    const idOf = (entry) => {
+      if (typeof entry === "string" || typeof entry === "number") return entry;
+      const p = productOf(entry);
+      return p?.productId ?? entry?.productId ?? entry?.id ?? null;
+    };
+
+    // Normalize every id to a string. Backend ids often come back as
+    // numbers, but any id read off the DOM (data-pid) is always a string —
+    // without this, Set.has()/===  checks silently fail on type mismatch
+    // and a "remove" ends up firing the "add" (POST) call instead of
+    // "remove" (DELETE).
+    const ids = list.map(idOf).filter(id => id != null).map(String);
+    const items = list.map(productOf).filter(Boolean);
+
     AppState.wishlistIds = new Set(ids);
+    AppState.wishlistItems = items;
     AppState.wishlistCount = ids.length;
   }catch(e){
     AppState.wishlistIds = new Set();
+    AppState.wishlistItems = [];
     AppState.wishlistCount = 0;
   }
   document.getElementById("wishlistBadge").textContent = AppState.wishlistCount;
@@ -3266,7 +3372,12 @@ function handleBuyNow(pid){
 
 async function handleToggleWishlist(pid, btnEl){
   requireAuth(async ()=>{
-    const alreadyWishlisted = AppState.wishlistIds.has(pid);
+    // dataset.pid off a button is always a string; backend ids are often
+    // numbers. Normalize before checking the Set, or an already-wishlisted
+    // item can look "new" and fire an add (POST) instead of a remove
+    // (DELETE).
+    const pidStr = String(pid);
+    const alreadyWishlisted = AppState.wishlistIds.has(pidStr);
 
     try{
       const response = alreadyWishlisted
@@ -3279,18 +3390,39 @@ async function handleToggleWishlist(pid, btnEl){
       }
 
       if (alreadyWishlisted){
-        AppState.wishlistIds.delete(pid);
+        AppState.wishlistIds.delete(pidStr);
+        AppState.wishlistItems = AppState.wishlistItems.filter(p => String(p.productId) !== pidStr);
         AppState.wishlistCount = Math.max(0, AppState.wishlistCount - 1);
       } else {
-        AppState.wishlistIds.add(pid);
+        AppState.wishlistIds.add(pidStr);
+        const p = findProduct(pid);
+        if (p && !AppState.wishlistItems.some(x => String(x.productId) === pidStr)) AppState.wishlistItems.push(p);
         AppState.wishlistCount++;
       }
 
       document.getElementById("wishlistBadge").textContent = AppState.wishlistCount;
-      if (btnEl){
-        btnEl.classList.toggle("active", !alreadyWishlisted);
-        btnEl.textContent = !alreadyWishlisted ? "♥" : "♡";
+
+      // A product can render in more than one place at once (a home rail
+      // AND the Favorites grid) — reflect the new state on every matching
+      // heart button on screen, not just the one that was clicked.
+      document.querySelectorAll(`[data-action="wishlist"][data-pid="${pid}"]`).forEach(b=>{
+        b.classList.toggle("active", !alreadyWishlisted);
+        b.textContent = !alreadyWishlisted ? "♥" : "♡";
+      });
+
+      // Removing an item while actually looking at the Favorites page
+      // should drop its card immediately, not wait for a manual refresh.
+      if (alreadyWishlisted){
+        const grid = document.getElementById("wishlistGrid");
+        const card = btnEl && btnEl.closest ? btnEl.closest(".pcard") : null;
+        if (grid && card && grid.contains(card)){
+          card.remove();
+          if (!grid.children.length){
+            grid.outerHTML = `<div class="empty-state"><div class="es-icon">♡</div>You haven't saved any favorites yet.<br>Tap the heart on any item to save it here.</div>`;
+          }
+        }
       }
+
       toast(response.message || (alreadyWishlisted ? "Removed from favorites" : "Added to favorites"), "success");
 
     } catch (error) {
@@ -3298,6 +3430,37 @@ async function handleToggleWishlist(pid, btnEl){
       toast(error.message || "Unable to update favorites", "error");
     }
   });
+}
+
+async function clearWishlist(){
+  if (!AppState.wishlistIds.size) return;
+  const ok = await confirmAction({
+    title: "Clear all favorites?",
+    message: "This will remove every item from your favorites list. This can't be undone.",
+    confirmLabel: "Yes, Clear All",
+  });
+  if (!ok) return;
+
+  const ids = [...AppState.wishlistIds];
+  try{
+    await Promise.all(ids.map(id =>
+      apiRequest(API_ENDPOINTS.removeWishlist(id), { method:"DELETE" }, { silentError:true })
+    ));
+  }catch(e){ /* best-effort — state is cleared locally below regardless */ }
+
+  AppState.wishlistIds = new Set();
+  AppState.wishlistItems = [];
+  AppState.wishlistCount = 0;
+  document.getElementById("wishlistBadge").textContent = "0";
+  document.querySelectorAll(`[data-action="wishlist"]`).forEach(b=>{
+    b.classList.remove("active");
+    b.textContent = "♡";
+  });
+
+  toast("All favorites removed", "success");
+  if (document.getElementById("accountView").style.display !== "none"){
+    await renderAccountPage("wishlist");
+  }
 }
 
 document.body.addEventListener("click", (e)=>{
@@ -3318,6 +3481,19 @@ document.body.addEventListener("click", (e)=>{
     case "wishlist":
       handleToggleWishlist(pid, actionBtn);
       break;
+    case "removewishlist": {
+      (async ()=>{
+        const product = findProduct(pid) || AppState.wishlistItems.find(x=>x.productId===pid);
+        const ok = await confirmAction({
+          title: "Remove from Favorites?",
+          message: `Remove "${product ? product.name : "this item"}" from your favorites?`,
+          confirmLabel: "Yes, Remove",
+        });
+        if (!ok) return;
+        handleToggleWishlist(pid, actionBtn);
+      })();
+      break;
+    }
     case "quickview": {
       openQuickView(pid);
       break;
@@ -3977,6 +4153,7 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
           AppState.cart = [];
           AppState.cartCount = 0;
           AppState.wishlistIds.clear();
+          AppState.wishlistItems = [];
           AppState.wishlistCount = 0;
           document.getElementById("cartBadge").textContent = "0";
           document.getElementById("wishlistBadge").textContent = "0";
@@ -4124,10 +4301,22 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
       }
       else if (pageId==="wishlist"){
         await loadWishlist();
-        const items = [...AppState.wishlistIds].map(findProduct).filter(Boolean);
-        panel.innerHTML = `<h3 style="margin-bottom:14px;">Favorites</h3>` + (items.length
-          ? `<div class="product-grid">${items.map(productCardHtml).join("")}</div>`
+        const byId = new Map(AppState.wishlistItems.map(p => [String(p.productId), p]));
+        const items = [...AppState.wishlistIds].map(id => byId.get(String(id)) || findProduct(id)).filter(Boolean);
+        panel.innerHTML = `
+          <div class="wish-toolbar">
+            <h3 style="margin:0;">Favorites</h3>
+            ${items.length ? `
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span class="wish-count">${items.length} item${items.length===1?"":"s"}</span>
+                <button class="btn btn-ghost btn-sm" id="clearWishlistBtn">Clear All</button>
+              </div>` : ""}
+          </div>` + (items.length
+          ? `<div class="product-grid" id="wishlistGrid">${items.map(wishlistCardHtml).join("")}</div>`
           : `<div class="empty-state"><div class="es-icon">♡</div>You haven't saved any favorites yet.<br>Tap the heart on any item to save it here.</div>`);
+
+        const clearBtn = document.getElementById("clearWishlistBtn");
+        if (clearBtn) clearBtn.addEventListener("click", clearWishlist);
       }
       else if (pageId==="notifications"){
         const notifs = await withFallback(
