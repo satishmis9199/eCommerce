@@ -207,7 +207,7 @@ public class UserAuthController {
     }
 
 
-    @PostMapping("//logout")
+    @PostMapping("/u1/v1/auth/logout")
     public ResponseEntity<?> logout(
 
             HttpServletRequest request,
@@ -342,6 +342,9 @@ public class UserAuthController {
                 new AuthMeResponse(true, user)
         );
     }
+
+
+
 
 
 }
