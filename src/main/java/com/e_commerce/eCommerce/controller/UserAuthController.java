@@ -314,6 +314,14 @@ public class UserAuthController {
                     ));
         }
         User userDetail1 = userDetail.getUser();
+        if(userDetail.getRole()!=Roles.USER){
+           return ResponseEntity.badRequest()
+                   .body(
+                           Map.of(
+                           )
+                   );
+
+        }
 
         AuthMeResponse.UserData user =
                 new AuthMeResponse.UserData(

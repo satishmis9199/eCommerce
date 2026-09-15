@@ -77,7 +77,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             for (Cookie cookie : request.getCookies()) {
 
-                if ("vendor".equals(cookie.getName())) {
+                if ("token".equals(cookie.getName())) {
 
                     return cookie.getValue();
                 }
