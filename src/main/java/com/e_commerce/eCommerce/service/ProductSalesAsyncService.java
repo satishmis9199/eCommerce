@@ -159,7 +159,6 @@ public class ProductSalesAsyncService {
         } finally {
 
             log.info("END :: createPlacedTracking()");
-            log.info("======================================================");
 
         }
     }
