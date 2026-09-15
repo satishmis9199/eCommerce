@@ -7052,7 +7052,7 @@ function renderProducts(list = productList) {
         try {
           const response = await fetch('/api/vendor/logout', { method:'POST', credentials:'include', headers:{ 'Content-Type':'application/json' } });
           const data = await response.json();
-          if (response.ok) { showToast('success','Logged Out','Session ended. Redirecting...'); setTimeout(()=>window.location.href='/vendor/login', 1500); }
+          if (response.ok) { showToast('success','Logged Out','Session ended. Redirecting...'); setTimeout(()=>window.location.href='/api/vendor/v1/login', 1500); }
           else { showToast('error','Logout Failed', data.message || 'Unable to logout.'); }
         } catch (error) {
           console.warn('Logout API not reachable:', error.message);

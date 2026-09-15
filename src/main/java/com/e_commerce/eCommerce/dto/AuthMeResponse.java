@@ -3,6 +3,7 @@ package com.e_commerce.eCommerce.dto;
 import com.e_commerce.eCommerce.entity.Roles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
@@ -17,6 +18,7 @@ public class AuthMeResponse {
     @Getter
     @Setter
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class UserData {
 
         private Long id;
@@ -34,5 +36,6 @@ public class AuthMeResponse {
         private Roles role;
 
         private String tenantId;
+        private String reddirectUrl;
     }
 }

@@ -333,7 +333,8 @@ public class UserAuthController {
                         userDetail1.getMobileNumber(),
                         userDetail1.getProfileImage(),
                         userDetail1.getRole(),
-                        userDetail1.getTenantId()
+                        userDetail1.getTenantId(),
+                        ""
 
                 );
 
