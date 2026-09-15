@@ -9,10 +9,13 @@ import com.e_commerce.eCommerce.entity.Vendor;
 import com.e_commerce.eCommerce.repository.UserRepos;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
+import com.e_commerce.eCommerce.service.VendorOtpService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,26 +35,16 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
+@AllArgsConstructor
+@Slf4j
 public class VendorAuthController {
 
-    private static final Logger logger = LoggerFactory.getLogger(VendorAuthController.class);
 
     private final AuthenticationManager authenticationManager;
-    @Autowired
-    UserRepos userRepository;
-    @Autowired
-    VendorRepository vendorRepository;
-
-
+    private final UserRepos userRepository;
+   private final VendorRepository vendorRepository;
     private final JwtUtil jwtUtil;
-
-    public VendorAuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
-
-        this.authenticationManager = authenticationManager;
-
-        this.jwtUtil = jwtUtil;
-    }
-
+    private final VendorOtpService vendorOtpService;
 
     @PostMapping("/v1/auth/vendor/login")
     public ResponseEntity<?> login(
@@ -61,10 +54,11 @@ public class VendorAuthController {
             HttpServletRequest request,
 
             HttpServletResponse response) throws Exception {
+        String tenanTid = TenantContext.getTenantId();
 
         try {
 
-            String tenanTid = TenantContext.getTenantId();
+
             User user11 = userRepository.findByTenantIdAndEmail(tenanTid, dto.getEmail());
             if (user11 == null) {
                 return ResponseEntity.status(401).body(Map.of("success", false, "message", "User Not found"));
@@ -74,31 +68,30 @@ public class VendorAuthController {
             }
 
             Authentication auth =
-
                     authenticationManager.authenticate(
-
                             new UsernamePasswordAuthenticationToken(
-
                                     dto.getEmail(),
-
                                     dto.getPassword()));
             String loginIp = getClientIp(request);
             String loginDevice = request.getHeader("User-Agent");
-
-
             CustomUserDetail user = (CustomUserDetail) auth.getPrincipal();
-            Optional<User> user1 = userRepository.findById(user.getId());
+            Optional<User> user1 = userRepository.findByIdAndTenantId(user.getId(),tenanTid);
             if (user1.get().getRole() != Roles.ADMIN) {
                 return ResponseEntity.status(401).body(Map.of("success", false, "message", "You do not have Sufficient access"));
             }
-
-
             if (!user1.isPresent()) {
 
                 throw new RuntimeException("User not found");
             }
 
             User user2 = user1.get();
+            String otp= vendorOtpService.generateOtp();
+            log.error("Otp generated");
+            vendorOtpService.saveOtp(tenanTid,user2.getId(),otp);
+            boolean isOtpEx=vendorOtpService.otpExists(tenanTid,user2.getId());
+            log.error("Otp existencce : "+isOtpEx);
+            boolean isverify=vendorOtpService.verifyOtp(tenanTid,user2.getId(),otp);
+            log.error("otp verification "+isverify);
 
             if (!user2.getTenantId().equals(tenanTid)) {
                 return ResponseEntity.status(401).body(Map.of("success", false, "message", "User Not found"));
@@ -186,7 +179,7 @@ public class VendorAuthController {
         } catch (Exception e) {
             e.printStackTrace();
 
-            User user = userRepository.findByEmail(dto.getEmail());
+            User user = userRepository.findByEmailAndTenantId(dto.getEmail(),tenanTid);
 
             if (user != null) {
 
@@ -194,17 +187,15 @@ public class VendorAuthController {
                 int failedAttempt = user.getFailedLoginAttempt() == null ? 0 : user.getFailedLoginAttempt();
                 if (failedAttempt >= 2) {
                     user.setAccountLocked(true);
+                    user.setAccountLockedUntil(LocalDateTime.now());
                 }
 
                 user.setFailedLoginAttempt(failedAttempt + 1);
 
                 userRepository.save(user);
 
-                logger.info("Failed Login Count : {}", user.getFailedLoginAttempt());
+
             }
-
-            logger.info("LOGIN ERROR", e);
-
             return ResponseEntity.status(401).body(Map.of("success", false, "message", e.getMessage()));
         }
     }

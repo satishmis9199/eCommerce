@@ -685,7 +685,7 @@
             <!-- Auth mode tabs -->
             <div class="auth-tabs">
                 <button class="auth-tab active" id="tabEmail" onclick="switchTab('email')">📧 Email & Password</button>
-                <button class="auth-tab" id="tabOtp" onclick="switchTab('otp')">📱 OTP Login</button>
+                <button class="auth-tab" id="tabOtp" onclick="switchTab('otp')">🔢 Email OTP</button>
             </div>
 
             <!-- EMAIL FORM -->
@@ -729,17 +729,17 @@
                 </button>
             </div>
 
-            <!-- OTP FORM -->
+            <!-- OTP FORM (email-based, matches VendorAuthOtpController) -->
             <div id="otpForm" class="hidden">
                 <div id="otpStep1">
                     <div class="field">
-                        <label for="otpMobile">Mobile Number</label>
+                        <label for="otpEmail">Business Email</label>
                         <div class="input-wrap">
-                            <span class="input-icon-left">📱</span>
-                            <input type="tel" id="otpMobile" placeholder="+91 98765 43210" maxlength="15"
-                                   oninput="clearError('otpMobile')" onkeydown="if(event.key==='Enter')sendOtp()"/>
+                            <span class="input-icon-left">✉</span>
+                            <input type="email" id="otpEmail" placeholder="you@business.com" autocomplete="email"
+                                   oninput="clearError('otpEmail')" onkeydown="if(event.key==='Enter')sendOtp()"/>
                         </div>
-                        <div class="field-error hidden" id="err-otpMobile"></div>
+                        <div class="field-error hidden" id="err-otpEmail"></div>
                     </div>
                     <button class="submit-btn" id="sendOtpBtn" onclick="sendOtp()">
                         <span id="sendOtpText">Send OTP</span>
@@ -748,7 +748,7 @@
 
                 <div id="otpStep2" class="hidden">
                     <p style="font-size:13px;color:var(--muted);margin-bottom:18px;text-align:center">
-                        Enter the 6-digit code sent to <strong id="otpSentTo" style="color:var(--text)"></strong>
+                        Enter the code sent to <strong id="otpSentTo" style="color:var(--text)"></strong>
                     </p>
                     <div class="otp-group" id="otpInputs">
                         <input type="text" maxlength="1" inputmode="numeric" onkeydown="otpKey(event,0)"
@@ -777,7 +777,7 @@
                     </button>
                     <div style="text-align:center;margin-top:4px">
                         <button class="label-link" onclick="resetOtpFlow()" style="font-size:13px;color:var(--muted)">←
-                            Change number
+                            Change email
                         </button>
                     </div>
                 </div>
@@ -1081,141 +1081,62 @@
 
 }
     /* ================================================================
-      API CONTRACT — Full Documentation
-      Base URL: /api/vendor/auth
-      All requests require Content-Type: application/json unless noted.
-      Auth-protected endpoints require: Authorization: Bearer <token>
+      API CONTRACT — Vendor OTP login (matches VendorAuthOtpController)
+      Base path: /api/v1/auth/vendor
+      Both endpoints require the X-Tenant-Id resolution that
+      TenantContext.getTenantId() reads (set via header/subdomain by
+      your tenant-resolving filter) plus Content-Type: application/json.
+      Responses always come back wrapped in ApiResponse<T>:
+        { "success": boolean, "message": string, "data": <T|null> }
 
-      ── 1. POST /api/vendor/auth/login ──────────────────────────────
-      PURPOSE: Authenticate vendor with email + password
-      REQUEST:
-      {
-        "email": "vendor@business.com",
-        "password": "SecurePass@123",
-        "rememberMe": true          // true → 30-day token, false → session token
-      }
-      RESPONSE 200:
-      {
-        "success": true,
-        "message": "Login successful",
-        "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-        "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2...",
-        "expiresIn": 3600,          // seconds
-        "vendor": {
-          "id": "VND-4892",
-          "firstName": "Rajesh",
-          "lastName": "Kumar",
-          "email": "rajesh@kumarenterprises.in",
-          "storeName": "KumarShop",
-          "storeLogoUrl": "https://cdn.sellerhub.in/logos/vnd4892.png",
-          "onboardingCompleted": true,
-          "onboardingStep": 7       // present if onboardingCompleted=false
-        }
-      }
-      RESPONSE 401 (wrong credentials):
-      { "success": false, "message": "Invalid email or password.", "code": "INVALID_CREDENTIALS" }
-
-      RESPONSE 403 (account suspended):
-      { "success": false, "message": "Your account has been suspended. Contact support.", "code": "ACCOUNT_SUSPENDED" }
-
-      RESPONSE 403 (unverified):
-      { "success": false, "message": "Email not verified. Check your inbox.", "code": "EMAIL_UNVERIFIED" }
-
-      RESPONSE 429 (rate limited):
-      { "success": false, "message": "Too many attempts. Try again in 15 minutes.", "code": "RATE_LIMITED", "retryAfter": 900 }
-
-      LOADING STATE: Show spinner on button, disable form
-      ERROR HANDLING: Show inline error under relevant field or generic toast
-      POST-LOGIN REDIRECT:
-        - onboardingCompleted=true  → /vendor/dashboard
-        - onboardingCompleted=false → /vendor/onboarding?step={onboardingStep}
-
-      ── 2. POST /api/vendor/auth/send-otp ───────────────────────────
-      PURPOSE: Send OTP to vendor's registered mobile for passwordless login
-      REQUEST:
-      { "mobile": "+919876543210" }
-      RESPONSE 200:
-      { "success": true, "message": "OTP sent.", "expiresIn": 30, "maskedMobile": "+91 ●●●●● 43210" }
-      RESPONSE 404:
-      { "success": false, "message": "No vendor account found with this number.", "code": "VENDOR_NOT_FOUND" }
-      RESPONSE 429:
-      { "success": false, "message": "OTP already sent. Retry in 30 seconds.", "retryAfter": 30, "code": "OTP_THROTTLED" }
-
-      ── 3. POST /api/vendor/auth/verify-otp ─────────────────────────
-      PURPOSE: Verify OTP and return auth token
-      REQUEST:
-      { "mobile": "+919876543210", "otp": "483920" }
-      RESPONSE 200: (same structure as /login response 200)
-      RESPONSE 400:
-      { "success": false, "message": "Incorrect OTP. 2 attempts remaining.", "code": "INVALID_OTP", "attemptsLeft": 2 }
-      RESPONSE 410:
-      { "success": false, "message": "OTP has expired. Request a new one.", "code": "OTP_EXPIRED" }
-      RESPONSE 423:
-      { "success": false, "message": "Account locked after too many failed attempts. Try in 10 minutes.", "code": "OTP_LOCKED" }
-
-      ── 4. POST /api/vendor/auth/forgot-password ────────────────────
-      PURPOSE: Trigger password reset email
+      ── 1. POST /api/v1/auth/vendor/login ───────────────────────────
+      PURPOSE: Look up the vendor admin by email + tenant and email them
+               an OTP (no password involved in this flow).
       REQUEST:
       { "email": "vendor@business.com" }
       RESPONSE 200:
-      { "success": true, "message": "Reset link sent to your email.", "expiresIn": 1800 }
-      NOTE: Always return 200 even if email doesn't exist (security — avoid user enumeration)
+      { "success": true, "message": "OTP sent successfully", "data": null }
+      RESPONSE 400 (missing email / missing tenant):
+      { "success": false, "message": "Email is required", "data": null }
+      RESPONSE 401 (no such user for this tenant):
+      { "success": false, "message": "Invalid email or vendor not found", "data": null }
+      RESPONSE 403 (user exists but isn't an ADMIN):
+      { "success": false, "message": "You do not have sufficient access", "data": null }
+      RESPONSE 500:
+      { "success": false, "message": "Unable to process vendor login", "data": null }
 
-      ── 5. POST /api/vendor/auth/reset-password ─────────────────────
-      PURPOSE: Set a new password using the token from email link
+      ── 2. POST /api/v1/auth/vendor/verifyOtp ───────────────────────
+      PURPOSE: Verify the emailed OTP and log the vendor admin in.
       REQUEST:
-      { "token": "eyJhbGciOiJIUzI...", "newPassword": "NewSecurePass@456", "confirmPassword": "NewSecurePass@456" }
-      RESPONSE 200:
-      { "success": true, "message": "Password updated. You may now sign in." }
-      RESPONSE 400:
-      { "success": false, "message": "Token is invalid or has expired.", "code": "INVALID_RESET_TOKEN" }
+      { "email": "vendor@business.com", "otp": "483920" }
+      RESPONSE 201 (CREATED):
+      {
+        "success": true,
+        "message": "Login successful.",
+        "data": {
+          "user": {
+            "id": 12,
+            "firstName": "Rajesh",
+            "lastName": "Kumar",
+            "email": "vendor@business.com",
+            "profileImage": "",
+            "role": "ADMIN"
+          },
+          "redirectUrl": "/vendor/s1/v1/dashboard"
+        }
+      }
+      RESPONSE 400 (blank otp/email, OTP expired/missing, or wrong OTP):
+      { "success": false, "message": "Invalid or expired OTP", "data": null }
+      RESPONSE 401 (no such user for this tenant):
+      { "success": false, "message": "Invalid email or vendor not found", "data": null }
+      RESPONSE 403 (user exists but isn't an ADMIN):
+      { "success": false, "message": "You do not have sufficient access", "data": null }
+      RESPONSE 500:
+      { "success": false, "message": "Unable to process vendor login", "data": null }
 
-      ── 6. POST /api/vendor/auth/social ─────────────────────────────
-      PURPOSE: OAuth login (Google, Microsoft)
-      REQUEST:
-      { "provider": "google", "idToken": "eyJhbGciOiJSUzI1..." }   // token from OAuth popup
-      RESPONSE 200: (same structure as /login response — new vendor gets redirected to onboarding)
-      RESPONSE 400:
-      { "success": false, "message": "Could not verify token.", "code": "OAUTH_ERROR" }
-
-      ── 7. POST /api/vendor/auth/refresh-token ──────────────────────
-      PURPOSE: Refresh expired access token silently
-      REQUEST:
-      { "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2..." }
-      RESPONSE 200:
-      { "success": true, "accessToken": "new_token", "expiresIn": 3600 }
-      RESPONSE 401:
-      { "success": false, "message": "Refresh token expired. Please log in again.", "code": "REFRESH_EXPIRED" }
-
-      ── 8. POST /api/vendor/auth/logout ─────────────────────────────
-      PURPOSE: Invalidate token server-side
-      HEADERS: Authorization: Bearer <token>
-      REQUEST: {}
-      RESPONSE 200:
-      { "success": true, "message": "Logged out successfully." }
-
-      ── ERROR CODES REFERENCE ────────────────────────────────────────
-      INVALID_CREDENTIALS   → Wrong email/password
-      ACCOUNT_SUSPENDED     → Admin action required
-      EMAIL_UNVERIFIED      → Resend verification email
-      RATE_LIMITED          → Enforce lockout timer on frontend
-      VENDOR_NOT_FOUND      → No account with given mobile/email
-      OTP_THROTTLED         → Show countdown before allowing resend
-      INVALID_OTP           → Show attempts remaining
-      OTP_EXPIRED           → Prompt resend
-      OTP_LOCKED            → Show cooldown timer
-      INVALID_RESET_TOKEN   → Show "request new link" prompt
-      OAUTH_ERROR           → Show generic OAuth failure toast
-
-      ── TOKEN STORAGE RECOMMENDATION ─────────────────────────────────
-      rememberMe=true  → localStorage  (persists across sessions)
-      rememberMe=false → sessionStorage (clears on tab close)
-      refreshToken     → httpOnly cookie (handled by Spring Boot, no JS access needed)
-
-      ── REDIRECT MATRIX ──────────────────────────────────────────────
-      After successful login:
-      onboardingCompleted=true  → /vendor/dashboard
-      onboardingCompleted=false → /vendor/onboarding?step=<onboardingStep>
+      NOTE: The controller doesn't return a JWT in the body — it relies
+      on TenantContext/session or a cookie set elsewhere. That's why the
+      calls below use credentials:'include' and just follow data.redirectUrl.
     ================================================================ */
 
     // ── STATE ──────────────────────────────────────────────────────
@@ -1227,6 +1148,9 @@
       theme:     localStorage.getItem('vh-theme') || 'light',
       resetToken: null,
     };
+
+    const VENDOR_OTP_LOGIN_ENDPOINT  = '/api/v1/auth/vendor/generateOtp';
+    const VENDOR_OTP_VERIFY_ENDPOINT = '/api/v1/auth/vendor/verifyOtp';
 
     // ── STORE INFO ─────────────────────────────────────────────────
     // GET /api/v1/store/info → branding for this vendor portal instance
@@ -1464,52 +1388,61 @@
     }
 
     // ── EMAIL LOGIN ────────────────────────────────────────────────
+    // (doLogin, defined above, handles the email+password tab)
 
-
-    // ── SEND OTP ───────────────────────────────────────────────────
+    // ── SEND OTP (email-based, calls /api/v1/auth/vendor/login) ─────
     async function sendOtp() {
       if (S.loading) return;
-      clearError('otpMobile');
+      clearError('otpEmail');
 
-      const mobile = document.getElementById('otpMobile').value.trim();
-      if (!mobile) { setError('otpMobile','Mobile number is required'); return; }
-      if (!/^[\+]?[0-9\s\-]{8,15}$/.test(mobile)) { setError('otpMobile','Enter a valid mobile number'); return; }
+      const email = document.getElementById('otpEmail').value.trim().toLowerCase();
+      if (!email) { setError('otpEmail','Email is required'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('otpEmail','Enter a valid email address'); return; }
 
+      S.loading = true;
       setLoading('sendOtpBtn','sendOtpText',true);
 
-      /* ── REPLACE WITH REAL API ───────────────────────────────────
-      const res = await fetch('/api/vendor/auth/send-otp', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ mobile })
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setLoading('sendOtpBtn','sendOtpText',false,'Send OTP');
-        switch(data.code) {
-          case 'VENDOR_NOT_FOUND':
-            setError('otpMobile','No account found with this number');
-            break;
-          case 'OTP_THROTTLED':
-            showToast('warning','OTP already sent', `Retry in ${data.retryAfter}s`);
-            startOtpTimer(data.retryAfter);
-            break;
-          default:
-            showToast('error','Failed to send OTP', data.message);
+      try {
+        const response = await fetch(VENDOR_OTP_LOGIN_ENDPOINT, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok && data.success) {
+          S.otpSentTo = email;
+          document.getElementById('otpSentTo').textContent = email;
+          document.getElementById('otpStep1').classList.add('hidden');
+          document.getElementById('otpStep2').classList.remove('hidden');
+          document.getElementById('otpInputs').querySelectorAll('input')[0].focus();
+          startOtpTimer(30);
+          showToast('success', 'OTP sent!', data.message || 'Check your inbox for the OTP');
+          return;
         }
-        return;
+
+        // Controller returns 400/401/403/500 with a message describing what went wrong
+        if (response.status === 401) {
+          setError('otpEmail', data.message || 'Invalid email or vendor not found');
+        } else if (response.status === 403) {
+          showToast('error', 'Access Denied', data.message || 'You do not have sufficient access');
+        } else if (response.status === 400) {
+          setError('otpEmail', data.message || 'Email is required');
+        } else {
+          showToast('error', 'Could not send OTP', data.message || 'Something went wrong');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('error', 'Server Error', 'Unable to connect to server.');
+      } finally {
+        S.loading = false;
+        setLoading('sendOtpBtn','sendOtpText',false,'Send OTP');
       }
-      ── END REAL API ─────────────────────────────────────────────── */
-
-      await delay(900); // mock network
-      setLoading('sendOtpBtn','sendOtpText',false,'Send OTP');
-
-      S.otpSentTo = mobile;
-      document.getElementById('otpSentTo').textContent = mobile;
-      document.getElementById('otpStep1').classList.add('hidden');
-      document.getElementById('otpStep2').classList.remove('hidden');
-      document.getElementById('otpInputs').querySelectorAll('input')[0].focus();
-      startOtpTimer(30);
-      showToast('success','OTP sent!','Check your mobile for the 6-digit code');
     }
 
     // ── OTP INPUT HANDLING ─────────────────────────────────────────
@@ -1551,15 +1484,37 @@
       }, 1000);
     }
 
-    // ── RESEND OTP ─────────────────────────────────────────────────
+    // ── RESEND OTP (re-calls /api/v1/auth/vendor/login) ─────────────
     async function resendOtp() {
-      /* REAL: re-call /api/vendor/auth/send-otp */
-      showToast('info','OTP resent','A new code has been sent to your mobile');
+      if (!S.otpSentTo) return;
+
+      try {
+        const response = await fetch(VENDOR_OTP_LOGIN_ENDPOINT, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify({ email: S.otpSentTo }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok && data.success) {
+          showToast('success', 'OTP resent', data.message || 'A new code has been sent to your email');
+        } else {
+          showToast('error', 'Could not resend OTP', data.message || 'Please try again in a moment.');
+        }
+      } catch (err) {
+        showToast('error', 'Network error', 'Could not reach the server. Please try again.');
+      }
+
       startOtpTimer(30);
       document.getElementById('otpInputs').querySelectorAll('input').forEach(i => { i.value=''; i.classList.remove('filled','error'); });
+      document.getElementById('otpInputs').querySelectorAll('input')[0].focus();
     }
 
-    // ── VERIFY OTP ─────────────────────────────────────────────────
+    // ── VERIFY OTP (calls /api/v1/auth/vendor/verifyOtp) ─────────────
     async function verifyOtp() {
       if (S.loading) return;
       clearError('otp');
@@ -1572,54 +1527,57 @@
       document.getElementById('verifyOtpBtn').disabled=true;
       S.loading=true;
 
-      /* ── REPLACE WITH REAL API ───────────────────────────────────
-      const res = await fetch('/api/vendor/auth/verify-otp', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ mobile: S.otpSentTo, otp })
-      });
-      const data = await res.json();
-      if (data.success) {
-        sessionStorage.setItem('vh_token', data.accessToken);
-        window.location.href = data.vendor.onboardingCompleted ? '/vendor/dashboard' : `/vendor/onboarding?step=${data.vendor.onboardingStep}`;
-        return;
-      }
-      switch(data.code) {
-        case 'INVALID_OTP':
-          inputs.forEach(i=>{i.classList.add('error');i.disabled=false});
-          setError('otp', `Incorrect OTP. ${data.attemptsLeft} attempt(s) remaining`);
-          break;
-        case 'OTP_EXPIRED':
-          setError('otp','OTP expired. Request a new one.');
-          break;
-        case 'OTP_LOCKED':
-          setError('otp','Too many attempts. Wait 10 minutes.');
-          break;
-      }
-      ── END REAL API ─────────────────────────────────────────────── */
+      try {
+        const response = await fetch(VENDOR_OTP_VERIFY_ENDPOINT, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify({ email: S.otpSentTo, otp }),
+        });
 
-      await delay(1200);
-      S.loading=false;
-      inputs.forEach(i=>i.disabled=false);
+        const data = await response.json().catch(() => ({}));
 
-      if (otp === '000000') { // demo: wrong otp
-        inputs.forEach(i=>i.classList.add('error'));
-        document.getElementById('verifyOtpBtn').innerHTML='<span id="verifyOtpText">Verify & Sign In</span>';
-        document.getElementById('verifyOtpBtn').disabled=false;
-        setError('otp','Incorrect OTP. 2 attempts remaining');
-        return;
+        if (response.ok && data.success) {
+          const user = (data.data && data.data.user) || {};
+          const redirectUrl = (data.data && data.data.redirectUrl) || '/vendor/dashboard';
+          const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Vendor';
+          showLoginSuccess(fullName, redirectUrl);
+          return;
+        }
+
+        inputs.forEach(i => { i.classList.add('error'); i.disabled = false; });
+
+        if (response.status === 401) {
+          setError('otp', data.message || 'Invalid email or vendor not found');
+        } else if (response.status === 403) {
+          setError('otp', data.message || 'You do not have sufficient access');
+        } else {
+          // 400: blank otp/email, expired OTP, or wrong OTP
+          setError('otp', data.message || 'Invalid or expired OTP');
+        }
+      } catch (err) {
+        console.error(err);
+        inputs.forEach(i => { i.disabled = false; });
+        showToast('error', 'Server Error', 'Unable to connect to server.');
+      } finally {
+        S.loading = false;
+        document.getElementById('verifyOtpBtn').innerHTML = '<span id="verifyOtpText">Verify & Sign In</span>';
+        document.getElementById('verifyOtpBtn').disabled = false;
       }
-
-      document.getElementById('verifyOtpBtn').innerHTML='<span id="verifyOtpText">Verify & Sign In</span>';
-      document.getElementById('verifyOtpBtn').disabled=false;
-      showLoginSuccess('Vendor User','Your Store');
     }
 
     // ── RESET OTP FLOW ─────────────────────────────────────────────
     function resetOtpFlow() {
       clearInterval(S.otpTimer);
+      S.otpSentTo = '';
       document.getElementById('otpStep1').classList.remove('hidden');
       document.getElementById('otpStep2').classList.add('hidden');
-      document.getElementById('otpMobile').value='';
+      document.getElementById('otpEmail').value='';
+      clearError('otpEmail');
+      clearError('otp');
       document.getElementById('otpInputs').querySelectorAll('input').forEach(i=>{i.value='';i.classList.remove('filled','error');});
     }
 
@@ -1801,13 +1759,13 @@
     }
 
     // ── LOGIN SUCCESS UI ───────────────────────────────────────────
-    function showLoginSuccess(name, store) {
+    function showLoginSuccess(name, redirectUrl) {
       const card = document.getElementById('loginCard');
       card.innerHTML = `
         <div class="success-wrap">
           <div class="success-icon-wrap">✅</div>
           <h3>Welcome back, ${name.split(' ')[0]}!</h3>
-          <p>Signed in to <strong>${store}</strong>.<br/>Taking you to your dashboard…</p>
+          <p>Signed in successfully.<br/>Taking you to your dashboard…</p>
           <div class="redirect-note">
             <span>Redirecting</span>
             <div class="spinner" style="width:14px;height:14px;border-color:rgba(79,70,229,.2);border-top-color:var(--indigo)"></div>
@@ -1817,9 +1775,8 @@
       showToast('success','Sign in successful',`Welcome back, ${name}!`);
       setTimeout(() => { document.getElementById('redirectFill').style.width='100%'; }, 50);
       setTimeout(() => {
-        // window.location.href = '/vendor/dashboard';
-        showToast('info','Demo mode','Real app would redirect to /vendor/dashboard');
-      }, 3200);
+        window.location.href = redirectUrl;
+      }, 1400);
     }
 
     // ── TOAST ──────────────────────────────────────────────────────

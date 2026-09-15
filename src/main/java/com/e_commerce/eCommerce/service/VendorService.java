@@ -82,6 +82,7 @@ public class VendorService {
         vendor.setEmail(vendorRequestDto.getEmail());
         vendor.setMobile(vendorRequestDto.getPhone());
         vendor.setStoreName(vendorRequestDto.getBusinessName());
+        logger.error("Vendor email while register {}"+vendorRequestDto.getVendorEmail());
         vendor.setVendorEmail(vendorRequestDto.getVendorEmail());
         vendor.setPlan(vendorRequestDto.getPlan());
         vendor.setSubDomain(vendorRequestDto.getSubDomain() + requesst);
@@ -92,6 +93,7 @@ public class VendorService {
         vendorOnboardingApplication.setVendor(vendor);
         vendorOnnBRepo.save(vendorOnboardingApplication);
         User user = new User();
+        logger.error("user email while register {}"+vendorRequestDto.getEmail());
         user.setEmail(vendorRequestDto.getEmail());
         user.setPassword(passwordEncoder.encode(vendorRequestDto.getFirstName() + "@" + 123));
         user.setRole(Roles.ADMIN);

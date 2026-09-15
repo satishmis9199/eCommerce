@@ -1,30 +1,30 @@
-{
-  "success": true,
-  "message": "Flash sale fetched successfully",
-  "data": {
-    "startedAt": 1754140800000,
-    "endsAt": 1754151600000,
-    "products": [
-      {
-        "productId": "p_1001",
-        "name": "OPC 53 Grade Cement (50kg bag)",
-        "brand": "UltraTech",
-        "vendorId": "v_4417",
-        "vendorName": "Kumar Bricks",
-        "businessName": "Kumar Bricks",
-        "image": "products/cement.jpg",
-        "images": [
-          "products/cement1.jpg",
-          "products/cement2.jpg"
-        ],
-        "rating": 4.7,
-        "reviewCount": 1342,
-        "price": 349,
-        "oldPrice": 449,
-        "discountPercent": 22,
-        "stockLevel": "in_stock",
-        "deliveryEta": "Next day"
-      }
-    ]
+[
+  {
+    "id": 2,
+    "account_locked": false,
+    "account_locked_until": null,
+    "active": true,
+    "created_at": "2026-08-09 17:52:03.972605",
+    "created_by": "SUPER_ADMIN",
+    "email": "kumar@mystore.com",
+    "email_verified": false,
+    "failed_login_attempt": 0,
+    "first_name": "Satish",
+    "last_login_device": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "last_login_ip": "0:0:0:0:0:0:0:1",
+    "last_login_time": "2026-09-14 07:11:17.759075",
+    "last_name": "Mishra",
+    "mobile_number": "9229299776",
+    "password": "$2a$10$oH.xuq1PHFDvzW08J8LzsOmCjgQPV0Oq2iVslqHfPWCV3NN8.I/0C",
+    "phone": null,
+    "profile_image": "profile/b5676e3c-f542-4829-b27e-4139ac8c8f76.jpg",
+    "role": "ADMIN",
+    "tenant_id": "4507c2a8-1f49-4622-bb7b-6bd9f0c0ce93",
+    "updated_at": "2026-08-09 17:52:03.972632",
+    "updated_by": "Satish",
+    "vendorid": 1,
+    "credentials_setup_complete": false,
+    "auth_provider": null,
+    "google_id": null
   }
-}
+]

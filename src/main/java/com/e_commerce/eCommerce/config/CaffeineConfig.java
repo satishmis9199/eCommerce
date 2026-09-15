@@ -1,4 +1,5 @@
-package com.e_commerce.eCommerce.config;
+
+        package com.e_commerce.eCommerce.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;
@@ -36,6 +37,7 @@ public class CaffeineConfig {
                         .recordStats()
                         .build()
         );
+
         CaffeineCache jwtSecret = new CaffeineCache(
                 "jwtSecret",
                 Caffeine.newBuilder()
@@ -44,7 +46,6 @@ public class CaffeineConfig {
                         .recordStats()
                         .build()
         );
-
 
         CaffeineCache productsCache = new CaffeineCache(
                 "products",
@@ -73,7 +74,6 @@ public class CaffeineConfig {
                         .build()
         );
 
-
         CaffeineCache productsByIdsCache = new CaffeineCache(
                 "productsByIds",
                 Caffeine.newBuilder()
@@ -82,6 +82,7 @@ public class CaffeineConfig {
                         .recordStats()
                         .build()
         );
+
         CaffeineCache tenantsCache = new CaffeineCache(
                 "tenants",
                 Caffeine.newBuilder()
@@ -90,6 +91,7 @@ public class CaffeineConfig {
                         .recordStats()
                         .build()
         );
+
         CaffeineCache allVendors = new CaffeineCache(
                 "AllVendors",
                 Caffeine.newBuilder()
@@ -98,6 +100,7 @@ public class CaffeineConfig {
                         .recordStats()
                         .build()
         );
+
         CaffeineCache vendorDetail = new CaffeineCache(
                 "vendorDetail",
                 Caffeine.newBuilder()
@@ -107,6 +110,14 @@ public class CaffeineConfig {
                         .build()
         );
 
+        CaffeineCache vendorLoginOtp = new CaffeineCache(
+                "vendorLoginOtp",
+                Caffeine.newBuilder()
+                        .expireAfterWrite(Duration.ofMinutes(2))
+                        .maximumSize(10000)
+                        .recordStats()
+                        .build()
+        );
 
         SimpleCacheManager cacheManager = new SimpleCacheManager();
 
@@ -118,8 +129,10 @@ public class CaffeineConfig {
                 adminProductCache,
                 productsByIdCache,
                 productsByIdsCache,
-                jwtSecret, allVendors
-                , vendorDetail
+                jwtSecret,
+                allVendors,
+                vendorDetail,
+                vendorLoginOtp
         ));
 
         return cacheManager;
@@ -132,3 +145,4 @@ public class CaffeineConfig {
                 .build();
     }
 }
+
