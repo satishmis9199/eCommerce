@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
           rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/bundles/stomp.umd.min.js"></script>
     <style>
         :root {
           --bg-primary:#0b0f1a; --bg-secondary:#111827; --bg-card:#161d2e; --bg-card-hover:#1a2236; --bg-input:#1e2740;
@@ -719,7 +720,7 @@
                     </div>
                 </div>
                 <button class="icon-btn" id="notifBtn" title="Notifications"><i class="fa-solid fa-bell"></i><span
-                        class="badge">6</span></button>
+                        class="badge" id="notifBadge">0</span></button>
                 <button class="icon-btn" title="Messages"><i class="fa-solid fa-envelope"></i><span
                         class="badge">2</span></button>
                 <button class="profile-btn" id="profileBtn">
@@ -875,23 +876,11 @@
                         <div class="panel-card">
                             <div class="card-header"><h3>Notifications</h3>
                                 <button class="secondary-btn" style="padding:5px 10px;font-size:11px;"
-                                        onclick="showToast('info','Notifications','All marked as read')">Mark all read
+                                        onclick="markAllNotificationsRead()">Mark all read
                                 </button>
                             </div>
-                            <div class="notification-list">
-                                <div class="notification-item"><i class="fa-solid fa-cart-shopping"></i>
-                                    <div><h4>New Order Received</h4>
-                                        <p>Order #ORD-7741 · ₹3,499</p><small>4 min ago</small></div>
-                                </div>
-                                <div class="notification-item"><i class="fa-solid fa-star"></i>
-                                    <div><h4>New Review</h4>
-                                        <p>Priya rated your product 5★</p><small>1 hour ago</small></div>
-                                </div>
-                                <div class="notification-item"><i class="fa-solid fa-triangle-exclamation"
-                                                                  style="color:var(--red)"></i>
-                                    <div><h4>Low Stock Alert</h4>
-                                        <p>iPhone 15 Case has only 3 units left.</p><small>2 hours ago</small></div>
-                                </div>
+                            <div class="notification-list" id="overviewNotificationList">
+                                <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">Loading…</div>
                             </div>
                         </div>
                         <div class="panel-card">
@@ -1997,27 +1986,12 @@
 
 <!-- Notification Drawer -->
 <aside class="notification-drawer" id="notificationDrawer">
-    <div class="drawer-header"><h2>Notifications <span style="font-size:12px;font-weight:400;color:var(--text-muted);">6 unread</span>
+    <div class="drawer-header"><h2>Notifications <span style="font-size:12px;font-weight:400;color:var(--text-muted);" id="notifDrawerCount">0 unread</span>
     </h2>
         <button class="close-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="drawer-body">
-        <div class="notification-card unread"><i class="fa-solid fa-cart-shopping"></i>
-            <div><h4>New Order</h4>
-                <p>Order #ORD-7741 placed by Priya Sharma.</p><small>4 Minutes Ago</small></div>
-        </div>
-        <div class="notification-card unread"><i class="fa-solid fa-star"></i>
-            <div><h4>New 5★ Review</h4>
-                <p>"Great product, fast delivery!"</p><small>1 Hour Ago</small></div>
-        </div>
-        <div class="notification-card"><i class="fa-solid fa-triangle-exclamation"></i>
-            <div><h4>Low Stock Alert</h4>
-                <p>iPhone 15 Case — only 3 units left.</p><small>2 Hours Ago</small></div>
-        </div>
-        <div class="notification-card"><i class="fa-solid fa-money-bill-transfer"></i>
-            <div><h4>Payout Processed</h4>
-                <p>₹42,000 credited to your bank account.</p><small>1 Day Ago</small></div>
-        </div>
+    <div class="drawer-body" id="notificationDrawerBody">
+        <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">Loading notifications…</div>
     </div>
 </aside>
 
@@ -3845,7 +3819,11 @@ async function changeNoticeStatus(id) {
       tickets: '/vendor/s2/v1/tickets',
       ticketDetail: (id) => `/vendor/s2/v1/tickets/${id}`,
       ticketMessages: (id) => `/vendor/s2/v1/tickets/${id}/messages`,
-      ticketStatus: (id) => `/vendor/s2/v1/tickets/${id}/status`
+      ticketStatus: (id) => `/vendor/s2/v1/tickets/${id}/status`,
+      notifications: '/vendor/s2/v1/notifications',
+      notificationRead: (id) => `/vendor/s2/v1/notifications/${id}/read`,
+      notificationReadAll: '/vendor/s2/v1/notifications/read-all',
+      notificationDelete: (id) => `/vendor/s2/v1/notifications/${id}`
     };
     const CATEGORY_API = '/vendor/s11/v11/create-Category';
     const CATEGORY_IMAGE_UPLOAD_API = '/vendor/file/upload/category';
@@ -5588,6 +5566,10 @@ async function uploadCategoryImage(file) {
         if (res.ok && data.success && data.vendorProfile) {
           vendorProfile = data.vendorProfile;
           applyVendorProfile(vendorProfile);
+          // ADDED: connect to real-time order notifications only once the vendor profile (and tenantId) is available
+          if (vendorProfile && vendorProfile.tenantId) {
+            connectNotificationSocket(vendorProfile.tenantId);
+          }
         } else {
           console.warn('Dashboard API returned an unsuccessful response:', data.message || data);
           showToast('warning', 'Profile', 'Could not load vendor profile. Showing demo data.');
@@ -7077,6 +7059,243 @@ function renderProducts(list = productList) {
     function dismissToast(id) { const el = document.getElementById(id); if (!el) return; el.classList.add('hide'); setTimeout(() => el.remove(), 350); }
 
     /* ============================================================
+       ADDED: NOTIFICATIONS — backed by GET /vendor/s2/v1/notifications
+       + REAL-TIME push over STOMP/WebSocket for new orders
+       - loadNotifications() is the source of truth (bell badge + drawer)
+       - WebSocket connects only after vendorProfile is loaded (see fetchVendorProfile)
+       - Subscribes to /topic/vendor/{tenantId}/notifications
+       - Reuses the existing notification bell badge + notification drawer + toast
+    ============================================================ */
+    let stompClient = null;
+    let notifSocketConnected = false;
+
+    const NOTIF_ICONS = {
+      NEW_ORDER: 'fa-cart-shopping',
+      REVIEW: 'fa-star',
+      LOW_STOCK: 'fa-triangle-exclamation',
+      PAYOUT: 'fa-money-bill-transfer'
+    };
+
+    function timeAgo(dateString) {
+      if (!dateString) return '';
+      const then = new Date(dateString).getTime();
+      if (isNaN(then)) return '';
+      const diffMs = Date.now() - then;
+      const mins = Math.floor(diffMs / 60000);
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return `${mins} Minute${mins === 1 ? '' : 's'} Ago`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours} Hour${hours === 1 ? '' : 's'} Ago`;
+      const days = Math.floor(hours / 24);
+      return `${days} Day${days === 1 ? '' : 's'} Ago`;
+    }
+
+    function renderNotificationCard(n) {
+      const icon = NOTIF_ICONS[n.type] || 'fa-bell';
+      return `
+        <div class="notification-card${n.isRead ? '' : ' unread'}" data-notif-id="${n.id}" onclick="onNotificationCardClick(${n.id}, event)">
+            <i class="fa-solid ${icon}"></i>
+            <div style="flex:1;">
+                <h4>${escapeHtml(n.title || '')}</h4>
+                <p>${escapeHtml(n.message || '')}</p>
+                <small>${timeAgo(n.createdAt)}</small>
+            </div>
+            <button class="close-btn" style="width:26px;height:26px;flex-shrink:0;" title="Delete"
+                    onclick="event.stopPropagation(); deleteNotificationItem(${n.id})">
+                <i class="fa-solid fa-xmark" style="font-size:11px;"></i>
+            </button>
+        </div>`;
+    }
+
+    function renderNotificationListItem(n) {
+      const icon = NOTIF_ICONS[n.type] || 'fa-bell';
+      return `
+        <div class="notification-item"><i class="fa-solid ${icon}"></i>
+            <div><h4>${escapeHtml(n.title || '')}</h4>
+                <p>${escapeHtml(n.message || '')}</p><small>${timeAgo(n.createdAt)}</small></div>
+        </div>`;
+    }
+
+    function updateNotifBadgeUI(unreadCount) {
+      const badgeEl = document.getElementById('notifBadge');
+      if (badgeEl) badgeEl.textContent = unreadCount;
+      const drawerCountEl = document.getElementById('notifDrawerCount');
+      if (drawerCountEl) drawerCountEl.textContent = `${unreadCount} unread`;
+    }
+
+    async function loadNotifications() {
+      const drawerBody = document.getElementById('notificationDrawerBody');
+      const overviewList = document.getElementById('overviewNotificationList');
+      const emptyState = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No notifications yet.</div>`;
+      const errorState = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">Couldn't load notifications.</div>`;
+      try {
+        const res = await fetch(`${API_ENDPOINTS.notifications}?page=0&size=20`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          console.warn('Unable to load notifications:', result.message || result);
+          if (drawerBody) drawerBody.innerHTML = errorState;
+          if (overviewList) overviewList.innerHTML = errorState;
+          return;
+        }
+        const { unreadCount, data } = result.data || { unreadCount: 0, data: [] };
+        if (drawerBody) {
+          drawerBody.innerHTML = (data && data.length) ? data.map(renderNotificationCard).join('') : emptyState;
+        }
+        if (overviewList) {
+          const topFive = (data || []).slice(0, 5);
+          overviewList.innerHTML = topFive.length ? topFive.map(renderNotificationListItem).join('') : emptyState;
+        }
+        updateNotifBadgeUI(unreadCount || 0);
+      } catch (err) {
+        console.warn('Notifications API not reachable:', err.message);
+        if (drawerBody) drawerBody.innerHTML = errorState;
+        if (overviewList) overviewList.innerHTML = errorState;
+      }
+    }
+
+    async function markAllNotificationsRead() {
+      try {
+        const res = await fetch(API_ENDPOINTS.notificationReadAll, {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          showToast('error', 'Notifications', result.message || 'Unable to mark all as read.');
+          return;
+        }
+        showToast('info', 'Notifications', 'All marked as read');
+        loadNotifications();
+      } catch (err) {
+        console.warn('Unable to reach notifications API:', err.message);
+        showToast('error', 'Notifications', 'Could not reach the server.');
+      }
+    }
+
+    async function onNotificationCardClick(id, event) {
+      const card = event.currentTarget;
+      if (card && card.classList.contains('unread')) {
+        await markNotificationAsRead(id);
+      }
+    }
+
+    async function markNotificationAsRead(id) {
+      try {
+        const res = await fetch(API_ENDPOINTS.notificationRead(id), {
+          method: 'PATCH', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          showToast('error', 'Notifications', result.message || 'Unable to mark notification as read.');
+          return;
+        }
+        const card = document.querySelector(`.notification-card[data-notif-id="${id}"]`);
+        if (card) card.classList.remove('unread');
+        const badgeEl = document.getElementById('notifBadge');
+        const current = badgeEl ? parseInt(badgeEl.textContent, 10) || 0 : 0;
+        updateNotifBadgeUI(Math.max(0, current - 1));
+      } catch (err) {
+        console.warn('Unable to reach notifications API:', err.message);
+      }
+    }
+
+    async function deleteNotificationItem(id) {
+      try {
+        const res = await fetch(API_ENDPOINTS.notificationDelete(id), {
+          method: 'DELETE', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          showToast('error', 'Notifications', result.message || 'Unable to delete notification.');
+          return;
+        }
+        const card = document.querySelector(`.notification-card[data-notif-id="${id}"]`);
+        const wasUnread = card && card.classList.contains('unread');
+        if (card) card.remove();
+        if (wasUnread) {
+          const badgeEl = document.getElementById('notifBadge');
+          const current = badgeEl ? parseInt(badgeEl.textContent, 10) || 0 : 0;
+          updateNotifBadgeUI(Math.max(0, current - 1));
+        }
+        const drawerBody = document.getElementById('notificationDrawerBody');
+        if (drawerBody && !drawerBody.querySelector('.notification-card')) {
+          drawerBody.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No notifications yet.</div>`;
+        }
+      } catch (err) {
+        console.warn('Unable to reach notifications API:', err.message);
+      }
+    }
+
+    function connectNotificationSocket(tenantId) {
+      if (notifSocketConnected || !tenantId) return;
+      if (typeof StompJs === 'undefined') {
+        console.warn('STOMP client library not available; skipping real-time notifications.');
+        return;
+      }
+
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+      const brokerURL = wsProtocol + window.location.host + '/ws';
+
+      stompClient = new StompJs.Client({
+        brokerURL,
+        reconnectDelay: 5000,        // REQUIRED #12: automatic reconnect
+        heartbeatIncoming: 10000,
+        heartbeatOutgoing: 10000,
+        onConnect: () => {
+          notifSocketConnected = true;
+          stompClient.subscribe(`/topic/vendor/${tenantId}/notifications`, (message) => {
+            let payload;
+            try {
+              payload = JSON.parse(message.body);
+            } catch (e) {
+              console.warn('Received malformed notification payload:', message.body);
+              return;
+            }
+            if (payload && payload.type === 'NEW_ORDER') {
+              handleNewOrderNotification(payload);
+            }
+          });
+        },
+        onStompError: (frame) => {
+          console.warn('STOMP broker error:', frame.headers && frame.headers.message, frame.body);
+        },
+        onWebSocketClose: () => {
+          notifSocketConnected = false; // stompClient will auto-reconnect via reconnectDelay
+        }
+      });
+
+      stompClient.activate();
+    }
+
+    function handleNewOrderNotification(notification) {
+      const orderId = notification.orderId || '';
+      const amount = notification.totalAmount != null ? notification.totalAmount : null;
+      const message = notification.message
+        || `Order ${orderId ? '#' + orderId + ' ' : ''}has been received${amount != null ? ' · ₹' + amount : ''}.`;
+
+      // Refresh from the API so the drawer/badge stay in sync with the DB
+      // (correct id, isRead, createdAt) rather than guessing at shape here.
+      loadNotifications();
+
+      // Reuse the existing toast notification for the instant "ping"
+      if (typeof showToast === 'function') {
+        showToast('success', 'New Order', message);
+      }
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (stompClient) {
+        stompClient.deactivate(); // REQUIRED #13: disconnect on page unload
+      }
+    });
+
+    /* ============================================================
        KPI COUNTER
     ============================================================ */
     function animateCounter(el, target) {
@@ -7098,6 +7317,7 @@ function renderProducts(list = productList) {
     }
     window.addEventListener('load', () => {
       fetchVendorProfile();
+      loadNotifications();
       loadCategories();
       loadProducts();
       loadFlashSales();

@@ -5,6 +5,7 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.controller.CartController;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.entity.*;
+import com.e_commerce.eCommerce.event.OrderCreatedEvent;
 import com.e_commerce.eCommerce.event.OrderTrackingEvent;
 import com.e_commerce.eCommerce.repository.*;
 import com.razorpay.Payment;
@@ -48,6 +49,8 @@ public class CartsService {
     private final ApplicationEventPublisher eventPublisher;
     private final CartLockManager cartLockManager;
     private final CartTransactionalService cartTransactionalService;
+    private final NotificationService notificationService;
+            ;
 
 
     private final String keySecret = "yg04Jq5QC2yDIvBMWCslo1VC";
@@ -618,7 +621,22 @@ public class CartsService {
         eventPublisher.publishEvent(
                 new OrderTrackingEvent(order.getId(), tenantId, vendor.getId())
         );
+        OrderCreatedEvent orderCreatedEvent=new OrderCreatedEvent(
+                savedOrder.getId(),
+                tenantId,
+                vendor.getId(),
+                savedOrder.getTotal()
 
+        );
+        eventPublisher.publishEvent(orderCreatedEvent);
+        notificationService.saveNotification(
+                tenantId,
+                vendor.getId(),
+                savedOrder.getId(),
+                "NEW_ORDER",
+                "New Order Received",
+                "Order #" + savedOrder.getId() + " has been received."
+        );
         return CheckoutResponseDTO.builder()
                 .orderId(savedOrder.getId())
                 .orderNumber(savedOrder.getOrderNumber())
