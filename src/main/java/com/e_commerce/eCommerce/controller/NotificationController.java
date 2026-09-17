@@ -113,7 +113,7 @@ public class NotificationController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         true,
-                        "Notification deleted successfully",
+                        "Notifications deleted successfully",
                         null
                 )
         );
