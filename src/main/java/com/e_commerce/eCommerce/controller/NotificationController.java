@@ -19,7 +19,7 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<ApiResponse<NotificationListResponse>> getNotifications(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "8") int size,
             Authentication authentication) {
 
         String tenantId = resolveTenantId(authentication);
