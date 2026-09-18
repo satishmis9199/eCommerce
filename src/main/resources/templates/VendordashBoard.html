@@ -7092,8 +7092,11 @@ function renderProducts(list = productList) {
 
     function renderNotificationCard(n) {
       const icon = NOTIF_ICONS[n.type] || 'fa-bell';
+      // NOTE: backend serializes the boolean getter isRead() as "read" (Jackson
+      // strips the "is" prefix), so we check both keys to be safe.
+      const isRead = n.isRead ?? n.read ?? false;
       return `
-        <div class="notification-card${n.isRead ? '' : ' unread'}" data-notif-id="${n.id}" onclick="onNotificationCardClick(${n.id}, event)">
+        <div class="notification-card${isRead ? '' : ' unread'}" data-notif-id="${n.id}" onclick="onNotificationCardClick(${n.id}, event)">
             <i class="fa-solid ${icon}"></i>
             <div style="flex:1;">
                 <h4>${escapeHtml(n.title || '')}</h4>
@@ -7123,37 +7126,118 @@ function renderProducts(list = productList) {
       if (drawerCountEl) drawerCountEl.textContent = `${unreadCount} unread`;
     }
 
+    // ---- Pagination state for the notification drawer's "Load more" ----
+    const NOTIF_PAGE_SIZE = 20;
+    let notifCurrentPage = 0;
+    let notifHasMore = false;
+    let notifLoadingMore = false;
+
+    const NOTIF_EMPTY_STATE = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No notifications yet.</div>`;
+    const NOTIF_ERROR_STATE = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">Couldn't load notifications.</div>`;
+    const NOTIF_LOAD_MORE_HTML = `
+      <div id="notifLoadMoreWrap" style="padding:12px;text-align:center;">
+        <button id="notifLoadMoreBtn" onclick="loadMoreNotifications()"
+                style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;color:var(--text-secondary);">
+          Load more
+        </button>
+      </div>`;
+
+    function renderNotifLoadMoreControl() {
+      const wrap = document.getElementById('notifLoadMoreWrap');
+      if (wrap) wrap.remove();
+      const drawerBody = document.getElementById('notificationDrawerBody');
+      if (drawerBody && notifHasMore) {
+        drawerBody.insertAdjacentHTML('beforeend', NOTIF_LOAD_MORE_HTML);
+      }
+    }
+
+    // Fresh load: always resets to page 0 and replaces the drawer's contents.
+    // Used on initial page load, after "mark all read", etc.
     async function loadNotifications() {
       const drawerBody = document.getElementById('notificationDrawerBody');
       const overviewList = document.getElementById('overviewNotificationList');
-      const emptyState = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No notifications yet.</div>`;
-      const errorState = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">Couldn't load notifications.</div>`;
+      notifCurrentPage = 0;
+      notifHasMore = false;
       try {
-        const res = await fetch(`${API_ENDPOINTS.notifications}?page=0&size=20`, {
+        const res = await fetch(`${API_ENDPOINTS.notifications}?page=0&size=${NOTIF_PAGE_SIZE}`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await res.json();
+        console.log('[notifications] raw API response:', result);
+
+        if (!res.ok || !result.success) {
+          console.warn('Unable to load notifications:', result.message || result);
+          if (drawerBody) drawerBody.innerHTML = NOTIF_ERROR_STATE;
+          if (overviewList) overviewList.innerHTML = NOTIF_ERROR_STATE;
+          return;
+        }
+
+        const payload = result.data ?? result ?? {};
+        const data = payload.data ?? payload.content ?? payload.notifications ?? payload.items
+                     ?? (Array.isArray(payload) ? payload : []) ?? [];
+        const unreadCount = payload.unreadCount ?? payload.unread ?? payload.totalUnread ?? 0;
+
+        if (drawerBody) {
+          drawerBody.innerHTML = (data && data.length)
+            ? `<div id="notifCardsList">${data.map(renderNotificationCard).join('')}</div>`
+            : NOTIF_EMPTY_STATE;
+        }
+        if (overviewList) {
+          const topFive = (data || []).slice(0, 5);
+          overviewList.innerHTML = topFive.length ? topFive.map(renderNotificationListItem).join('') : NOTIF_EMPTY_STATE;
+        }
+        updateNotifBadgeUI(unreadCount || 0);
+
+        // If this page came back full, assume there could be another page.
+        notifHasMore = data.length === NOTIF_PAGE_SIZE;
+        renderNotifLoadMoreControl();
+      } catch (err) {
+        console.warn('Notifications API not reachable:', err.message);
+        if (drawerBody) drawerBody.innerHTML = NOTIF_ERROR_STATE;
+        if (overviewList) overviewList.innerHTML = NOTIF_ERROR_STATE;
+      }
+    }
+
+    // Fetches the next page and appends it below the existing cards, instead
+    // of replacing them — this is what the "Load more" button calls.
+    async function loadMoreNotifications() {
+      if (notifLoadingMore || !notifHasMore) return;
+      notifLoadingMore = true;
+      const btn = document.getElementById('notifLoadMoreBtn');
+      if (btn) { btn.textContent = 'Loading…'; btn.disabled = true; }
+
+      const nextPage = notifCurrentPage + 1;
+      try {
+        const res = await fetch(`${API_ENDPOINTS.notifications}?page=${nextPage}&size=${NOTIF_PAGE_SIZE}`, {
           method: 'GET',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' }
         });
         const result = await res.json();
         if (!res.ok || !result.success) {
-          console.warn('Unable to load notifications:', result.message || result);
-          if (drawerBody) drawerBody.innerHTML = errorState;
-          if (overviewList) overviewList.innerHTML = errorState;
+          showToast('error', 'Notifications', result.message || 'Unable to load more notifications.');
           return;
         }
-        const { unreadCount, data } = result.data || { unreadCount: 0, data: [] };
-        if (drawerBody) {
-          drawerBody.innerHTML = (data && data.length) ? data.map(renderNotificationCard).join('') : emptyState;
+
+        const payload = result.data ?? result ?? {};
+        const data = payload.data ?? payload.content ?? payload.notifications ?? payload.items
+                     ?? (Array.isArray(payload) ? payload : []) ?? [];
+
+        if (data.length) {
+          const list = document.getElementById('notifCardsList');
+          if (list) list.insertAdjacentHTML('beforeend', data.map(renderNotificationCard).join(''));
+          notifCurrentPage = nextPage;
         }
-        if (overviewList) {
-          const topFive = (data || []).slice(0, 5);
-          overviewList.innerHTML = topFive.length ? topFive.map(renderNotificationListItem).join('') : emptyState;
-        }
-        updateNotifBadgeUI(unreadCount || 0);
+        notifHasMore = data.length === NOTIF_PAGE_SIZE;
+        renderNotifLoadMoreControl();
       } catch (err) {
-        console.warn('Notifications API not reachable:', err.message);
-        if (drawerBody) drawerBody.innerHTML = errorState;
-        if (overviewList) overviewList.innerHTML = errorState;
+        console.warn('Unable to load more notifications:', err.message);
+        showToast('error', 'Notifications', 'Could not reach the server.');
+        if (btn) { btn.textContent = 'Load more'; btn.disabled = false; }
+      } finally {
+        notifLoadingMore = false;
       }
     }
 
@@ -7225,7 +7309,8 @@ function renderProducts(list = productList) {
         }
         const drawerBody = document.getElementById('notificationDrawerBody');
         if (drawerBody && !drawerBody.querySelector('.notification-card')) {
-          drawerBody.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No notifications yet.</div>`;
+          notifHasMore = false;
+          drawerBody.innerHTML = NOTIF_EMPTY_STATE;
         }
       } catch (err) {
         console.warn('Unable to reach notifications API:', err.message);

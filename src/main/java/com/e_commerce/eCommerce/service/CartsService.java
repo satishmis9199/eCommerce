@@ -5,6 +5,7 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.controller.CartController;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.entity.*;
+import com.e_commerce.eCommerce.enums.NotificationType;
 import com.e_commerce.eCommerce.event.OrderCreatedEvent;
 import com.e_commerce.eCommerce.event.OrderTrackingEvent;
 import com.e_commerce.eCommerce.repository.*;
@@ -633,7 +634,7 @@ public class CartsService {
                 tenantId,
                 vendor.getId(),
                 savedOrder.getId(),
-                "NEW_ORDER",
+                NotificationType.NEW_ORDER,
                 "New Order Received",
                 "Order #" + savedOrder.getId() + " has been received."
         );

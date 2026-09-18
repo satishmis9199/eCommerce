@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.entity;
 
+import com.e_commerce.eCommerce.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +31,7 @@ public class Notification {
 
     // e.g. NEW_ORDER, REVIEW, LOW_STOCK, PAYOUT
     @Column(nullable = false, length = 50)
-    private String type;
+    private NotificationType type;
 
     @Column(nullable = false, length = 150)
     private String title;

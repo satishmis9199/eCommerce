@@ -7,18 +7,24 @@ import com.e_commerce.eCommerce.dto.LoginRequestDTO;
 import com.e_commerce.eCommerce.dto.RegisterRequestDTO;
 import com.e_commerce.eCommerce.entity.Roles;
 import com.e_commerce.eCommerce.entity.User;
+import com.e_commerce.eCommerce.enums.NotificationType;
+import com.e_commerce.eCommerce.event.VendorNotificationEvent;
 import com.e_commerce.eCommerce.repository.UserRepos;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
+import com.e_commerce.eCommerce.service.NotificationService;
 import com.e_commerce.eCommerce.service.UserAuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,6 +36,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -38,15 +45,21 @@ import java.util.Map;
 
 public class UserAuthController {
     private final UserAuthService userAuthService;
+    private  final String notificationTitle="User Has Logged In";
 
     private static final Logger logger =
-            LoggerFactory.getLogger(VendorAuthController.class);
+            LoggerFactory.getLogger(UserAuthController.class);
 
     private final AuthenticationManager authenticationManager;
+    private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
     @Autowired
     UserRepos userRepository;
     @Autowired
     VendorRepository vendorRepository;
+    private final BuildProperties buildProperties;
+
+
 
 
     private final JwtUtil jwtUtil;
@@ -135,8 +148,6 @@ public class UserAuthController {
             user.setFailedLoginAttempt(0);
 
             userRepository.save(user);
-
-            // Generate JWT
             String token = jwtUtil.generateToken(
                     user.getId(),
                     user.getEmail(),
@@ -150,6 +161,18 @@ public class UserAuthController {
             cookie.setMaxAge(60 * 60);
 
             response.addCookie(cookie);
+            logger.error("Current Thread1 "+Thread.currentThread());
+            eventPublisher.publishEvent(
+                    VendorNotificationEvent.builder()
+                            .tenantId(tenantId)
+                            .vendorId(user.getVendorId())
+                            .notificationType(NotificationType.USER_LOGIN)
+                            .title(notificationTitle)
+                            .message(user.getFirstName() +" has logged In ")
+                            .build()
+            );
+            logger.error("Event pulished");
+            notificationService.saveNotification(tenantId,user.getVendorId(),-1L, NotificationType.USER_LOGIN,notificationTitle, user.getFirstName() +" has logged In ");
 
             return ResponseEntity.ok(
                     Map.of(
@@ -341,6 +364,19 @@ public class UserAuthController {
         return ResponseEntity.ok(
                 new AuthMeResponse(true, user)
         );
+    }
+    @GetMapping("/version")
+    public ResponseEntity<Map<String,String>> getCodeVersionDetails(){
+        Map<String,String> buildDetails=new HashMap<>();
+        buildDetails.put("version",buildProperties.getVersion());
+        buildDetails.put("artifactName",buildProperties.getName());
+        buildDetails.put("group",buildProperties.getGroup());
+        buildDetails.put("date",String.valueOf(buildProperties.getTime()));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(
+                        buildDetails
+                );
+
     }
 
 

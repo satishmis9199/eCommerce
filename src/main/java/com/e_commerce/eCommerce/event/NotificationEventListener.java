@@ -1,8 +1,10 @@
 package com.e_commerce.eCommerce.event;
 
+import com.e_commerce.eCommerce.enums.NotificationType;
 import com.e_commerce.eCommerce.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -18,14 +20,12 @@ public class NotificationEventListener {
             phase = TransactionPhase.AFTER_COMMIT
     )
     public void createNotificationEvent(OrderCreatedEvent event) {
-
-        log.info(
-                "Order created event received | orderId={} | tenantId={} | vendorId={}",
-                event.getOrderId(),
-                event.getTenantId(),
-                event.getVendorId()
-        );
-
         notificationService.sendOrderNotification(event);
+    }
+
+    @EventListener
+    public void createAVendorNot(VendorNotificationEvent vendorNotificationEvent){
+        log.error("Generic notification event listen");
+        notificationService.sendVendorNotification(vendorNotificationEvent);
     }
 }
