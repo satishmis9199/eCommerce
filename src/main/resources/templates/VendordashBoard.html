@@ -672,6 +672,7 @@
                     </a>
                 </li>
                 <li data-page="banners"><a href="#"><i class="fa-solid fa-images"></i><span>Banners</span></a></li>
+                <li data-page="sponsoredAds"><a href="#"><i class="fa-solid fa-rectangle-ad"></i><span>Sponsored Ads</span></a></li>
                 <li data-page="notices"><a href="#"><i class="fa-solid fa-bullhorn"></i><span>Notices</span></a></li>
                 <li data-page="festivalBanners"><a href="#"><i class="fa-solid fa-star"></i><span>Festival Banners</span></a></li>
                 <li data-page="flashsales"><a href="#"><i class="fa-solid fa-bolt"></i><span>Flash Sales</span><span
@@ -1110,6 +1111,47 @@
                             </tr>
                             </thead>
                             <tbody id="bannerTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= SPONSORED ADS ================= -->
+            <section class="page-section" id="page-sponsoredAds">
+                <div class="section-header fade-up">
+                    <div>
+                        <div class="breadcrumb"><span>Home</span><i
+                                class="fa-solid fa-chevron-right"></i><span>Sponsored Ads</span></div>
+                        <h1>Sponsored Ads</h1>
+                        <p>Request an ad slot on the marketplace homepage — Admin approval required before it goes live.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="primary-btn" onclick="openAdRequestModal()"><i class="fa-solid fa-plus"></i>Request
+                            New Ad
+                        </button>
+                    </div>
+                </div>
+                <div class="table-card fade-up fade-up-1">
+                    <div class="card-header">
+                        <div><h2>My Ad Requests</h2>
+                            <p id="adRequestsCount">Loading...</p></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th style="width:60px;">#</th>
+                                <th style="width:110px;">Image</th>
+                                <th>Title</th>
+                                <th>Target</th>
+                                <th>Placement</th>
+                                <th>Status</th>
+                                <th>Performance</th>
+                                <th>Submitted</th>
+                                <th>Expires</th>
+                            </tr>
+                            </thead>
+                            <tbody id="adRequestsTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -2256,6 +2298,95 @@
         </div>
     </div>
 </div>
+<!-- Request Sponsored Ad Modal -->
+<div class="modal-overlay" id="adRequestModal">
+    <div class="modal large">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-rectangle-ad"></i><span>Request New Ad</span></h2>
+            <button class="modal-close-btn" onclick="closeModal('adRequestModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="adUploadLoader" class="upload-loader hidden">
+            <div class="loader-box">
+                <div class="spinner"></div>
+                <p>Uploading ad image...</p></div>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Ad Image <span style="color:red;">*</span></label>
+                <div style="display:flex;gap:8px;margin-bottom:10px;">
+                    <button type="button" id="adImageModeUploadBtn" onclick="setAdImageMode('upload')"
+                            class="secondary-btn" style="padding:6px 14px;font-size:12px;">
+                        <i class="fa-solid fa-upload"></i>&nbsp;Upload Image
+                    </button>
+                    <button type="button" id="adImageModeUrlBtn" onclick="setAdImageMode('url')"
+                            class="secondary-btn" style="padding:6px 14px;font-size:12px;">
+                        <i class="fa-solid fa-link"></i>&nbsp;Paste URL
+                    </button>
+                </div>
+                <div style="display:flex;align-items:center;gap:15px;">
+                    <img id="adImagePreview"
+                         src="https://ui-avatars.com/api/?name=Ad&background=6366f1&color=fff"
+                         style="width:110px;height:47px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;">
+                    <div style="flex:1;">
+                        <input id="adImage" type="file" accept="image/png,image/jpeg,image/webp"
+                               onchange="handleAdImageSelect(event)" style="width:100%;">
+                        <input id="adImageUrlInput" type="text" placeholder="https://example.com/banner.jpg"
+                               oninput="handleAdImageUrlInput(event)" style="width:100%;display:none;">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Title <span style="color:red;">*</span></label>
+                <input id="adTitle" type="text" maxlength="150" placeholder="e.g. Flat 30% off — festive collection">
+            </div>
+            <div class="form-group">
+                <label>Target URL <span style="color:red;">*</span></label>
+                <input id="adTargetUrl" type="text" placeholder="Your store or product page link">
+            </div>
+            <div class="form-group">
+                <label>Placement</label>
+                <select id="adSlotKey">
+                    <option value="">No specific placement (general rotation)</option>
+                    <option value="HOME_LEADERBOARD">Homepage — top banner (below hero)</option>
+                    <option value="HOME_MIDFEED_NATIVE">Homepage — native banner (mid-feed)</option>
+                    <option value="HOME_SPONSORED_CARD">Homepage — sponsored product card</option>
+                    <option value="CART_SIDEBAR">Cart page — sidebar</option>
+                    <option value="CHECKOUT_STRIP">Checkout page — strip</option>
+                    <option value="FOOTER_BANNER">All pages — footer banner</option>
+                </select>
+                <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Pick where you'd like this ad to appear. Admin may still reassign it during review.</p>
+            </div>
+            <div class="form-group">
+                <label>Subtext <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                <input id="adSubtext" type="text" maxlength="250" placeholder="Short supporting line shown under the title">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="form-group">
+                    <label>CTA Button Text <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                    <input id="adCtaLabel" type="text" maxlength="40" placeholder="e.g. Shop Now">
+                </div>
+                <div class="form-group">
+                    <label>Advertiser Name <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                    <input id="adAdvertiserName" type="text" maxlength="120" placeholder="Shown as 'Sponsored by ...'">
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input id="adDismissible" type="checkbox" style="width:16px;height:16px;">
+                    Let shoppers close this ad with an "×"
+                </label>
+            </div>
+            <p style="font-size:12px;color:var(--text-muted);">Once submitted, your ad goes to Admin for review. It goes live and starts rotating on the marketplace only after approval.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('adRequestModal')">Cancel</button>
+            <button class="primary-btn" id="saveAdRequestBtn" onclick="submitAdRequest()"><i class="fa-solid fa-paper-plane"></i>&nbsp;
+                Send for Approval
+            </button>
+        </div>
+    </div>
+</div>
 <!-- Add/Edit Festival Banner Modal -->
 <div class="modal-overlay" id="festivalBannerModal">
     <div class="modal large">
@@ -3205,6 +3336,237 @@ async function changeBannerStatus(id) {
 ============================================================ */
 const FESTIVAL_BANNER_API = '/vendor/s11/v1/festival-banner';
 const FESTIVAL_BANNER_IMAGE_UPLOAD_API = '/vendor/file/upload/festival-banner';
+const AD_IMAGE_UPLOAD_API = '/vendor/file/upload/ad';
+let uploadedAdImageUrl = null;
+let adImageMode = 'upload';
+let adRequestsList = [];
+
+function setAdImageMode(mode) {
+    adImageMode = mode;
+    uploadedAdImageUrl = null;
+
+    const uploadInput = document.getElementById('adImage');
+    const urlInput = document.getElementById('adImageUrlInput');
+    const uploadBtn = document.getElementById('adImageModeUploadBtn');
+    const urlBtn = document.getElementById('adImageModeUrlBtn');
+
+    uploadInput.value = '';
+    urlInput.value = '';
+    document.getElementById('adImagePreview').src = 'https://ui-avatars.com/api/?name=Ad&background=6366f1&color=fff';
+
+    if (mode === 'upload') {
+        uploadInput.style.display = 'block';
+        urlInput.style.display = 'none';
+        uploadBtn.style.background = 'var(--primary)';
+        uploadBtn.style.color = '#fff';
+        urlBtn.style.background = '';
+        urlBtn.style.color = '';
+    } else {
+        uploadInput.style.display = 'none';
+        urlInput.style.display = 'block';
+        urlBtn.style.background = 'var(--primary)';
+        urlBtn.style.color = '#fff';
+        uploadBtn.style.background = '';
+        uploadBtn.style.color = '';
+    }
+}
+
+function handleAdImageUrlInput(event) {
+    const url = event.target.value.trim();
+    uploadedAdImageUrl = url || null;
+    if (url) {
+        document.getElementById('adImagePreview').src = url;
+    }
+}
+
+function openAdRequestModal() {
+    uploadedAdImageUrl = null;
+    document.getElementById('adTitle').value = '';
+    document.getElementById('adTargetUrl').value = '';
+    document.getElementById('adSlotKey').value = '';
+    document.getElementById('adSubtext').value = '';
+    document.getElementById('adCtaLabel').value = '';
+    document.getElementById('adAdvertiserName').value = '';
+    document.getElementById('adDismissible').checked = false;
+    setAdImageMode('upload');
+    openModal('adRequestModal');
+}
+
+function handleAdImageSelect(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('warning', 'Invalid File', 'Please select an image file (JPG, PNG, or WEBP).');
+        event.target.value = '';
+        return;
+    }
+    const maxSizeMB = 5;
+    if (file.size > maxSizeMB * 1024 * 1024) {
+        showToast('warning', 'File Too Large', `Please choose an image under ${maxSizeMB}MB.`);
+        event.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => { document.getElementById('adImagePreview').src = e.target.result; };
+    reader.readAsDataURL(file);
+
+    uploadAdImage(file);
+}
+
+async function uploadAdImage(file) {
+    const loader = document.getElementById('adUploadLoader');
+    loader.classList.remove('hidden');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch(AD_IMAGE_UPLOAD_API, {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success && data.objectKey) {
+            uploadedAdImageUrl = data.objectKey;
+            document.getElementById('adImagePreview').src = getImageUrl(data.objectKey);
+            showToast('success', 'Ad Image Updated', data.message || 'Image uploaded.');
+        } else {
+            showToast('error', 'Upload Failed', data.message || 'Could not upload ad image.');
+        }
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Network Error', 'Could not reach the server.');
+    } finally {
+        loader.classList.add('hidden');
+    }
+}
+
+async function submitAdRequest() {
+    const title = document.getElementById('adTitle').value.trim();
+    const targetUrl = document.getElementById('adTargetUrl').value.trim();
+
+    if (!uploadedAdImageUrl) {
+        showToast('warning', 'Validation', adImageMode === 'url' ? 'Please paste an image URL.' : 'Please upload an ad image.');
+        return;
+    }
+    if (!title) {
+        showToast('warning', 'Validation', 'Title is required.');
+        return;
+    }
+    if (!targetUrl) {
+        showToast('warning', 'Validation', 'Target URL is required.');
+        return;
+    }
+
+    const request = {
+        title,
+        imageUrl: uploadedAdImageUrl,
+        targetUrl,
+        slotKey: document.getElementById('adSlotKey').value || null,
+        subtext: document.getElementById('adSubtext').value.trim() || null,
+        ctaLabel: document.getElementById('adCtaLabel').value.trim() || null,
+        advertiserName: document.getElementById('adAdvertiserName').value.trim() || null,
+        dismissible: document.getElementById('adDismissible').checked
+    };
+
+    const saveBtn = document.getElementById('saveAdRequestBtn');
+    const originalHtml = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Sending...';
+
+    try {
+        const response = await fetch(API_ENDPOINTS.ads, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request)
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast('error', 'Sponsored Ads', result.message || 'Unable to submit ad request.');
+            return;
+        }
+
+        showToast('success', 'Sponsored Ads', result.message || 'Ad request sent for approval.');
+        closeModal('adRequestModal');
+        loadAdRequests();
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Sponsored Ads', 'Something went wrong.');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalHtml;
+    }
+}
+
+function adStatusBadge(status) {
+    const map = {
+        PENDING:  { label: 'Pending Review', bg: '#fef3c7', color: '#92400e' },
+        APPROVED: { label: 'Live',           bg: '#dcfce7', color: '#166534' },
+        REJECTED: { label: 'Rejected',       bg: '#fee2e2', color: '#991b1b' }
+    };
+    const s = map[status] || { label: status || 'Unknown', bg: '#e5e7eb', color: '#374151' };
+    return `<span style="background:${s.bg};color:${s.color};padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;">${s.label}</span>`;
+}
+
+function renderAdRequestsTable() {
+    const tbody = document.getElementById('adRequestsTableBody');
+    const countEl = document.getElementById('adRequestsCount');
+    if (!tbody) return;
+
+    if (!adRequestsList.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted);">No ad requests yet.</td></tr>`;
+        if (countEl) countEl.textContent = '0 requests';
+        return;
+    }
+
+    tbody.innerHTML = adRequestsList.map((ad, idx) => `
+        <tr>
+            <td>${idx + 1}</td>
+            <td><img src="${getImageUrl(ad.imageUrl)}" style="width:70px;height:32px;object-fit:cover;border-radius:6px;"></td>
+            <td>${escapeHtml(ad.title || '')}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(ad.targetUrl || '')}</td>
+            <td style="font-size:12px;color:var(--text-secondary);">${escapeHtml(ad.slotDescription || 'General rotation')}</td>
+            <td>${adStatusBadge(ad.status)}${ad.status === 'REJECTED' && ad.rejectionReason ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${escapeHtml(ad.rejectionReason)}</div>` : ''}
+                ${ad.status === 'APPROVED' ? `<div style="font-size:11px;margin-top:4px;color:${ad.liveNow ? 'var(--green)' : 'var(--text-muted)'};">${ad.liveNow ? '● Live now' : '○ Not currently serving'}</div>` : ''}</td>
+            <td style="font-size:12px;white-space:nowrap;">
+                ${ad.impressions != null ? `${ad.impressions.toLocaleString()} views` : '—'}<br>
+                ${ad.clicks != null ? `${ad.clicks.toLocaleString()} clicks` : ''}
+                ${ad.ctr != null ? `<span style="color:var(--text-muted);"> · ${ad.ctr}% CTR</span>` : ''}
+            </td>
+            <td>${ad.createdAt ? new Date(ad.createdAt).toLocaleDateString() : '—'}</td>
+            <td>${ad.expiresAt ? new Date(ad.expiresAt).toLocaleDateString() : '—'}</td>
+        </tr>
+    `).join('');
+    if (countEl) countEl.textContent = `${adRequestsList.length} request${adRequestsList.length === 1 ? '' : 's'}`;
+}
+
+async function loadAdRequests() {
+    try {
+        const response = await fetch(API_ENDPOINTS.ads, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            showToast('error', 'Sponsored Ads', result.message || 'Unable to load ad requests.');
+            return;
+        }
+
+        adRequestsList = result.data || [];
+        renderAdRequestsTable();
+    } catch (error) {
+        console.error(error);
+        showToast('error', 'Sponsored Ads', 'Something went wrong while loading ad requests.');
+    }
+}
 
 let festivalBannerList = [];
 let editingFestivalBannerId = null;
@@ -3823,7 +4185,8 @@ async function changeNoticeStatus(id) {
       notifications: '/vendor/s2/v1/notifications',
       notificationRead: (id) => `/vendor/s2/v1/notifications/${id}/read`,
       notificationReadAll: '/vendor/s2/v1/notifications/read-all',
-      notificationDelete: (id) => `/vendor/s2/v1/notifications/${id}`
+      notificationDelete: (id) => `/vendor/s2/v1/notifications/${id}`,
+      ads: '/vendor/s2/v1/ads'
     };
     const CATEGORY_API = '/vendor/s11/v11/create-Category';
     const CATEGORY_IMAGE_UPLOAD_API = '/vendor/file/upload/category';
@@ -5659,6 +6022,10 @@ if (page === 'banners' && bannerList.length === 0) {   // ← ye naya add karo
     loadBanners();
 }
 
+if (page === 'sponsoredAds') {
+    loadAdRequests();
+}
+
     if (page === 'notices' && noticeList.length === 0) {
         loadNotices();
     }
@@ -7092,8 +7459,11 @@ function renderProducts(list = productList) {
 
     function renderNotificationCard(n) {
       const icon = NOTIF_ICONS[n.type] || 'fa-bell';
+      // NOTE: backend serializes the boolean getter isRead() as "read" (Jackson
+      // strips the "is" prefix), so we check both keys to be safe.
+      const isRead = n.isRead ?? n.read ?? false;
       return `
-        <div class="notification-card${n.isRead ? '' : ' unread'}" data-notif-id="${n.id}" onclick="onNotificationCardClick(${n.id}, event)">
+        <div class="notification-card${isRead ? '' : ' unread'}" data-notif-id="${n.id}" onclick="onNotificationCardClick(${n.id}, event)">
             <i class="fa-solid ${icon}"></i>
             <div style="flex:1;">
                 <h4>${escapeHtml(n.title || '')}</h4>
@@ -7123,37 +7493,118 @@ function renderProducts(list = productList) {
       if (drawerCountEl) drawerCountEl.textContent = `${unreadCount} unread`;
     }
 
+    // ---- Pagination state for the notification drawer's "Load more" ----
+    const NOTIF_PAGE_SIZE = 20;
+    let notifCurrentPage = 0;
+    let notifHasMore = false;
+    let notifLoadingMore = false;
+
+    const NOTIF_EMPTY_STATE = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No notifications yet.</div>`;
+    const NOTIF_ERROR_STATE = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">Couldn't load notifications.</div>`;
+    const NOTIF_LOAD_MORE_HTML = `
+      <div id="notifLoadMoreWrap" style="padding:12px;text-align:center;">
+        <button id="notifLoadMoreBtn" onclick="loadMoreNotifications()"
+                style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;color:var(--text-secondary);">
+          Load more
+        </button>
+      </div>`;
+
+    function renderNotifLoadMoreControl() {
+      const wrap = document.getElementById('notifLoadMoreWrap');
+      if (wrap) wrap.remove();
+      const drawerBody = document.getElementById('notificationDrawerBody');
+      if (drawerBody && notifHasMore) {
+        drawerBody.insertAdjacentHTML('beforeend', NOTIF_LOAD_MORE_HTML);
+      }
+    }
+
+    // Fresh load: always resets to page 0 and replaces the drawer's contents.
+    // Used on initial page load, after "mark all read", etc.
     async function loadNotifications() {
       const drawerBody = document.getElementById('notificationDrawerBody');
       const overviewList = document.getElementById('overviewNotificationList');
-      const emptyState = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No notifications yet.</div>`;
-      const errorState = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">Couldn't load notifications.</div>`;
+      notifCurrentPage = 0;
+      notifHasMore = false;
       try {
-        const res = await fetch(`${API_ENDPOINTS.notifications}?page=0&size=20`, {
+        const res = await fetch(`${API_ENDPOINTS.notifications}?page=0&size=${NOTIF_PAGE_SIZE}`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await res.json();
+        console.log('[notifications] raw API response:', result);
+
+        if (!res.ok || !result.success) {
+          console.warn('Unable to load notifications:', result.message || result);
+          if (drawerBody) drawerBody.innerHTML = NOTIF_ERROR_STATE;
+          if (overviewList) overviewList.innerHTML = NOTIF_ERROR_STATE;
+          return;
+        }
+
+        const payload = result.data ?? result ?? {};
+        const data = payload.data ?? payload.content ?? payload.notifications ?? payload.items
+                     ?? (Array.isArray(payload) ? payload : []) ?? [];
+        const unreadCount = payload.unreadCount ?? payload.unread ?? payload.totalUnread ?? 0;
+
+        if (drawerBody) {
+          drawerBody.innerHTML = (data && data.length)
+            ? `<div id="notifCardsList">${data.map(renderNotificationCard).join('')}</div>`
+            : NOTIF_EMPTY_STATE;
+        }
+        if (overviewList) {
+          const topFive = (data || []).slice(0, 5);
+          overviewList.innerHTML = topFive.length ? topFive.map(renderNotificationListItem).join('') : NOTIF_EMPTY_STATE;
+        }
+        updateNotifBadgeUI(unreadCount || 0);
+
+        // If this page came back full, assume there could be another page.
+        notifHasMore = data.length === NOTIF_PAGE_SIZE;
+        renderNotifLoadMoreControl();
+      } catch (err) {
+        console.warn('Notifications API not reachable:', err.message);
+        if (drawerBody) drawerBody.innerHTML = NOTIF_ERROR_STATE;
+        if (overviewList) overviewList.innerHTML = NOTIF_ERROR_STATE;
+      }
+    }
+
+    // Fetches the next page and appends it below the existing cards, instead
+    // of replacing them — this is what the "Load more" button calls.
+    async function loadMoreNotifications() {
+      if (notifLoadingMore || !notifHasMore) return;
+      notifLoadingMore = true;
+      const btn = document.getElementById('notifLoadMoreBtn');
+      if (btn) { btn.textContent = 'Loading…'; btn.disabled = true; }
+
+      const nextPage = notifCurrentPage + 1;
+      try {
+        const res = await fetch(`${API_ENDPOINTS.notifications}?page=${nextPage}&size=${NOTIF_PAGE_SIZE}`, {
           method: 'GET',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' }
         });
         const result = await res.json();
         if (!res.ok || !result.success) {
-          console.warn('Unable to load notifications:', result.message || result);
-          if (drawerBody) drawerBody.innerHTML = errorState;
-          if (overviewList) overviewList.innerHTML = errorState;
+          showToast('error', 'Notifications', result.message || 'Unable to load more notifications.');
           return;
         }
-        const { unreadCount, data } = result.data || { unreadCount: 0, data: [] };
-        if (drawerBody) {
-          drawerBody.innerHTML = (data && data.length) ? data.map(renderNotificationCard).join('') : emptyState;
+
+        const payload = result.data ?? result ?? {};
+        const data = payload.data ?? payload.content ?? payload.notifications ?? payload.items
+                     ?? (Array.isArray(payload) ? payload : []) ?? [];
+
+        if (data.length) {
+          const list = document.getElementById('notifCardsList');
+          if (list) list.insertAdjacentHTML('beforeend', data.map(renderNotificationCard).join(''));
+          notifCurrentPage = nextPage;
         }
-        if (overviewList) {
-          const topFive = (data || []).slice(0, 5);
-          overviewList.innerHTML = topFive.length ? topFive.map(renderNotificationListItem).join('') : emptyState;
-        }
-        updateNotifBadgeUI(unreadCount || 0);
+        notifHasMore = data.length === NOTIF_PAGE_SIZE;
+        renderNotifLoadMoreControl();
       } catch (err) {
-        console.warn('Notifications API not reachable:', err.message);
-        if (drawerBody) drawerBody.innerHTML = errorState;
-        if (overviewList) overviewList.innerHTML = errorState;
+        console.warn('Unable to load more notifications:', err.message);
+        showToast('error', 'Notifications', 'Could not reach the server.');
+        if (btn) { btn.textContent = 'Load more'; btn.disabled = false; }
+      } finally {
+        notifLoadingMore = false;
       }
     }
 
@@ -7225,7 +7676,8 @@ function renderProducts(list = productList) {
         }
         const drawerBody = document.getElementById('notificationDrawerBody');
         if (drawerBody && !drawerBody.querySelector('.notification-card')) {
-          drawerBody.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No notifications yet.</div>`;
+          notifHasMore = false;
+          drawerBody.innerHTML = NOTIF_EMPTY_STATE;
         }
       } catch (err) {
         console.warn('Unable to reach notifications API:', err.message);

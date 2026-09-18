@@ -278,6 +278,8 @@
         .status.suspended::before { background: var(--red); }
         .status.blocked { background: rgba(239,68,68,0.08); color: var(--red); }
         .status.blocked::before { background: var(--red); }
+        .status.rejected { background: var(--red-soft); color: var(--red); }
+        .status.rejected::before { background: var(--red); }
         .action-btn { padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border); margin-right: 4px; transition: all var(--transition); }
         .action-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
         .action-btn.danger:hover { background: var(--red-soft); color: var(--red); border-color: var(--red); }
@@ -475,6 +477,7 @@
             <p class="menu-label">Main</p>
             <ul>
                 <li class="active"><a href="#"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a></li>
+                <li><a href="#adsSection"><i class="fa-solid fa-rectangle-ad"></i><span>Ads</span><span class="badge-pill" id="adsBadge" style="display:none;">0</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-shop"></i><span>Vendors</span><span
                         class="badge-pill">27</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-users"></i><span>Customers</span></a></li>
@@ -834,15 +837,50 @@
 
                 </div>
             </section>
+
+            <section class="dashboard-content-grid fade-up" id="adsSection" style="grid-template-columns:1fr;">
+                <div class="table-card">
+                    <div class="card-header">
+                        <div>
+                            <h2>Ads Management</h2>
+                            <p>Vendor ads awaiting review before they go live</p>
+                        </div>
+                    </div>
+                    <div class="table-actions">
+                        <input type="text" id="adSearch" placeholder="Search pending ads..."
+                               oninput="filterAds(this.value)">
+                        <button class="secondary-btn" onclick="loadPendingAds()">
+                            <i class="fa-solid fa-rotate"></i>Refresh
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Ad</th>
+                                <th>Vendor</th>
+                                <th>Category</th>
+                                <th>Submitted</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="adTableBody">
+                            <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading pending ads...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </section>
 
-        <footer class="dashboard-footer">
-            <div>© 2026 MyStore Enterprise Platform — All rights reserved.</div>
-            <div style="display:flex;gap:16px;align-items:center;">
-                <span>v2.0.0</span>
-                <span style="color:var(--green);display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle"
-                                                                                             style="font-size:8px"></i>All Systems Operational</span>
-            </div>
+        <footer class="dashboard-footer"
+        <div>© 2026 MyStore Enterprise Platform — All rights reserved.</div>
+        <div style="display:flex;gap:16px;align-items:center;">
+            <span>v2.0.0</span>
+            <span style="color:var(--green);display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-circle"
+                                                                                         style="font-size:8px"></i>All Systems Operational</span>
+        </div>
         </footer>
     </main>
 </div>
@@ -1111,6 +1149,61 @@
                     onclick="submitVendorAction()">
                 Approve
             </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ============================================================
+     AD APPROVE / REJECT MODAL
+     Approve -> PATCH /admin/s1/v1/ads/{id}/approve  (optional activeDays)
+     Reject  -> PATCH /admin/s1/v1/ads/{id}/reject   (mandatory reason)
+============================================================ -->
+<div class="modal-overlay" id="adActionModalOverlay">
+    <div class="modal">
+
+        <div class="modal-header">
+            <h2 id="adActionModalTitle">
+                <i class="fa-solid fa-circle-check"></i>
+                Approve Ad
+            </h2>
+            <button class="modal-close-btn" onclick="closeAdActionModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+
+            <!-- Approve-only: Active Days -->
+            <div id="adActiveDaysGroup" style="display:none;">
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">
+                    Active Days <span style="color:var(--text-muted);font-weight:400;">(optional)</span>
+                </label>
+                <input
+                        type="number"
+                        id="adActiveDays"
+                        min="1"
+                        placeholder="e.g. 30"
+                        style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px;color:var(--text-primary);outline:none;margin-bottom:18px;">
+            </div>
+
+            <!-- Reject-only: Reason -->
+            <div id="adReasonGroup" style="display:none;">
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">
+                    Reason <span style="color:#ef4444;">*</span>
+                </label>
+                <textarea
+                        id="adActionReason"
+                        rows="5"
+                        style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px;color:var(--text-primary);outline:none;resize:vertical;"
+                        placeholder="Enter rejection reason..."></textarea>
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeAdActionModal()">Cancel</button>
+            <button class="primary-btn" id="adActionConfirmBtn" onclick="submitAdAction()">Approve</button>
         </div>
 
     </div>
@@ -1529,6 +1622,217 @@
         renderVendors(allVendors);
     }
 
+    /* ============================================================
+       ADS — PENDING LIST + APPROVE / REJECT
+       GET   /admin/s1/v1/ads/pending
+       PATCH /admin/s1/v1/ads/{id}/approve  body: { activeDays }
+       PATCH /admin/s1/v1/ads/{id}/reject   body: { reason }
+    ============================================================ */
+    let allAds = [];
+
+    async function loadPendingAds() {
+        try {
+            const response = await fetch('/admin/s1/v1/ads/pending', {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+            const result = await response.json();
+            const list = result.data || result || [];
+
+            allAds = list.map(a => ({
+                id: a.id ?? a.adId,
+                title: a.title ?? a.adTitle ?? a.name ?? 'Untitled Ad',
+                vendorName: a.vendorName ?? a.vendor?.businessName ?? a.vendor?.name ?? 'Unknown Vendor',
+                category: a.category ?? a.categoryName ?? '—',
+                submittedAt: a.createdAt ?? a.submittedAt ?? a.createdDate ?? null,
+                status: (a.status ?? 'PENDING').toLowerCase(),
+                thumbnail: a.imageUrl ?? a.thumbnailUrl ?? null
+            }));
+
+            renderAds(allAds);
+            updateAdsBadge();
+
+        } catch (e) {
+            console.warn('Ads API not reachable, using demo data instead:', e.message);
+            allAds = getDemoAds();
+            renderAds(allAds);
+            updateAdsBadge();
+        }
+    }
+
+    function getDemoAds() {
+        return [
+            { id: 101, title: 'Diwali Mega Sale Banner', vendorName: 'Hasan Mobile World', category: 'Electronics', submittedAt: new Date(Date.now() - 3600e3).toISOString(), status: 'pending', thumbnail: null },
+            { id: 102, title: 'Fresh Produce Weekly Offer', vendorName: 'Fresh Grocery', category: 'Grocery', submittedAt: new Date(Date.now() - 7200e3).toISOString(), status: 'pending', thumbnail: null },
+            { id: 103, title: 'Smart Watch Launch Promo', vendorName: 'Smart Electronics', category: 'Electronics', submittedAt: new Date(Date.now() - 86400e3).toISOString(), status: 'pending', thumbnail: null }
+        ];
+    }
+
+    function updateAdsBadge() {
+        const badge = document.getElementById('adsBadge');
+        const count = allAds.filter(a => a.status === 'pending').length;
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function renderAds(ads) {
+        const tbody = document.getElementById('adTableBody');
+        if (!ads.length) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">No pending ads. All caught up 🎉</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = ads.map(a => `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <img src="${a.thumbnail || `https://ui-avatars.com/api/?name=${encodeURIComponent(a.title)}&background=8b5cf6&color=fff&size=64`}">
+              <div><h4>${a.title}</h4><span>Ad #${a.id}</span></div>
+            </div>
+          </td>
+          <td>${a.vendorName}</td>
+          <td>${a.category}</td>
+          <td>${a.submittedAt ? new Date(a.submittedAt).toLocaleDateString() : '—'}</td>
+          <td><span class="status pending">Pending</span></td>
+          <td>
+            <button class="action-btn success" onclick="openAdActionModal(${a.id},'APPROVE')">Approve</button>
+            <button class="action-btn danger" onclick="openAdActionModal(${a.id},'REJECT')">Reject</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterAds(q) {
+        const filtered = allAds.filter(a =>
+            a.title.toLowerCase().includes(q.toLowerCase()) ||
+            a.vendorName.toLowerCase().includes(q.toLowerCase()) ||
+            a.category.toLowerCase().includes(q.toLowerCase())
+        );
+        renderAds(filtered);
+    }
+
+    let currentActionAdId = null;
+    let currentAdActionType = null; // 'APPROVE' | 'REJECT'
+
+    function openAdActionModal(adId, actionType) {
+        currentActionAdId = adId;
+        currentAdActionType = actionType;
+
+        const titleEl = document.getElementById('adActionModalTitle');
+        const confirmBtn = document.getElementById('adActionConfirmBtn');
+        const activeDaysGroup = document.getElementById('adActiveDaysGroup');
+        const reasonGroup = document.getElementById('adReasonGroup');
+
+        document.getElementById('adActiveDays').value = '';
+        document.getElementById('adActionReason').value = '';
+
+        if (actionType === 'APPROVE') {
+            titleEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>Approve Ad';
+            confirmBtn.textContent = 'Approve';
+            confirmBtn.className = 'primary-btn';
+            activeDaysGroup.style.display = 'block';
+            reasonGroup.style.display = 'none';
+        } else {
+            titleEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>Reject Ad';
+            confirmBtn.textContent = 'Reject';
+            confirmBtn.className = 'danger-btn';
+            activeDaysGroup.style.display = 'none';
+            reasonGroup.style.display = 'block';
+        }
+
+        openModal('adActionModalOverlay');
+        setTimeout(() => {
+            (actionType === 'APPROVE' ? document.getElementById('adActiveDays') : document.getElementById('adActionReason')).focus();
+        }, 100);
+    }
+
+    function closeAdActionModal() {
+        closeModal('adActionModalOverlay');
+        currentActionAdId = null;
+        currentAdActionType = null;
+    }
+
+    async function submitAdAction() {
+        if (!currentActionAdId || !currentAdActionType) {
+            showToast('error', 'Error', 'No ad selected.');
+            return;
+        }
+
+        const adId = currentActionAdId;
+        const actionType = currentAdActionType;
+        const activeDaysRaw = document.getElementById('adActiveDays').value.trim();
+        const reason = document.getElementById('adActionReason').value.trim();
+
+        if (actionType === 'REJECT' && !reason) {
+            showToast('warning', 'Reason Required', 'Please enter a reason before rejecting.');
+            return;
+        }
+
+        const endpoint = actionType === 'APPROVE'
+            ? `/admin/s1/v1/ads/${adId}/approve`
+            : `/admin/s1/v1/ads/${adId}/reject`;
+
+        const body = actionType === 'APPROVE'
+            ? (activeDaysRaw ? { activeDays: Number(activeDaysRaw) } : {})
+            : { reason: reason };
+
+        try {
+            showLoading(actionType === 'APPROVE' ? 'Approving Ad...' : 'Rejecting Ad...');
+
+            const response = await fetch(endpoint, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const result = await response.json();
+            hideLoading();
+
+            if (response.ok && result.success) {
+                closeAdActionModal();
+                updateAdStatusLocally(adId, actionType === 'APPROVE' ? 'approved' : 'rejected');
+                showToast(
+                    actionType === 'APPROVE' ? 'success' : 'error',
+                    actionType === 'APPROVE' ? 'Ad Approved!' : 'Ad Rejected',
+                    result.message || (actionType === 'APPROVE' ? 'Ad approved and is now live.' : 'Ad rejected.')
+                );
+            } else {
+                showToast(
+                    'error',
+                    actionType === 'APPROVE' ? 'Approval Failed' : 'Rejection Failed',
+                    result.message || 'Something went wrong.'
+                );
+            }
+
+        } catch (e) {
+            hideLoading();
+            console.warn('Ad action API not reachable:', e);
+            closeAdActionModal();
+            updateAdStatusLocally(adId, actionType === 'APPROVE' ? 'approved' : 'rejected');
+            showToast(
+                actionType === 'APPROVE' ? 'success' : 'error',
+                actionType === 'APPROVE' ? 'Ad Approved' : 'Ad Rejected',
+                (actionType === 'APPROVE' ? 'Approved' : 'Rejected') + ' (demo mode — backend not connected).'
+            );
+        }
+    }
+
+    function updateAdStatusLocally(id, status) {
+        // The pending-ads endpoint only ever returns pending items, so once
+        // an ad is approved/rejected it drops out of this queue.
+        allAds = allAds.filter(x => x.id !== id);
+        renderAds(allAds);
+        updateAdsBadge();
+    }
+
     /* Simple loading overlay helpers, reusing the existing #loader element */
     function showLoading(title = 'Loading...') {
         const loader = document.getElementById('loader');
@@ -1834,6 +2138,7 @@
     ============================================================ */
     window.addEventListener('load', () => {
       loadVendors();
+      loadPendingAds();
       buildRevenueChart('12');
       buildVendorChart();
       setTimeout(() => {

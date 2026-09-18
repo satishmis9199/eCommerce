@@ -1,13 +1,15 @@
 package com.e_commerce.eCommerce.dto.response;
 
 import com.e_commerce.eCommerce.entity.Notification;
+import com.e_commerce.eCommerce.enums.NotificationType;
+
 import java.time.LocalDateTime;
 
 
 public class NotificationDto {
 
     private Long id;
-    private String type;
+    private NotificationType type;
     private String title;
     private String message;
     private Long orderId;
@@ -39,11 +41,11 @@ public class NotificationDto {
         this.id = id;
     }
 
-    public String getType() {
+    public NotificationType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(NotificationType type) {
         this.type = type;
     }
 

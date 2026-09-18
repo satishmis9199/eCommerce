@@ -585,6 +585,102 @@
           .social-row{justify-content:center;width:100%;}
         }
 
+        /* ---------- Ad Slots (enterprise ad system) ---------------------
+           6 slot variants sharing one .ad-slot shell:
+             1. leaderboard   – full-width banner  (home, below hero)
+             2. native-inline – contained banner   (home, mid-feed)
+             3. native-card   – in-rail sponsored product card
+             4. sidebar       – tall rectangle      (cart page)
+             5. strip         – slim banner         (checkout page)
+             6. footer        – wide banner         (above footer)
+           Every slot starts hidden and is only revealed by JS once the
+           backend actually returns a creative for it — an empty/failed
+           response just means "no ad right now", same rule as the other
+           optional sections. See AD SLOTS SYSTEM in the script below.
+        ------------------------------------------------------------------ */
+        .ad-slot{display:none;position:relative;}
+        .ad-slot.ad-slot-loaded{display:block;}
+        .ad-slot-tag{
+          position:absolute;top:10px;left:10px;z-index:2;
+          background:rgba(20,22,31,.65);color:#fff;font-size:10px;font-weight:600;
+          text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:999px;
+          backdrop-filter:blur(2px);
+        }
+        .ad-slot-close{
+          position:absolute;top:8px;right:8px;z-index:2;width:22px;height:22px;border-radius:50%;
+          background:rgba(20,22,31,.55);color:#fff;border:none;font-size:12px;display:flex;
+          align-items:center;justify-content:center;line-height:1;
+        }
+        .ad-slot-close:hover{background:rgba(20,22,31,.8);}
+
+        /* 1. Leaderboard — home, below hero */
+        .ad-slot-leaderboard{margin:22px 0 6px;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);}
+        .ad-slot-leaderboard a{display:block;position:relative;}
+        .ad-slot-leaderboard img{width:100%;height:auto;max-height:180px;object-fit:cover;display:block;}
+        @media (max-width:640px){.ad-slot-leaderboard img{max-height:120px;}}
+        /* Text/CTA overlay for creatives that don't already bake their own
+           copy into the image — sits bottom-left over a dark scrim so it
+           stays legible on any background image. */
+        .ad-lb-overlay{
+          position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:6px;
+          padding:20px 28px;max-width:65%;
+          background:linear-gradient(90deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.32) 55%,rgba(0,0,0,0) 100%);
+          color:#fff;
+        }
+        .ad-lb-overlay .ad-headline{font-family:var(--font-display);font-weight:700;font-size:clamp(16px,2.4vw,26px);color:#fff;margin:0;}
+        .ad-lb-overlay .ad-sub{font-size:13px;color:rgba(255,255,255,.85);margin:0;}
+        .ad-lb-cta{
+          display:inline-block;margin-top:4px;padding:8px 18px;background:#fff;color:#14161f;
+          border-radius:999px;font-size:12.5px;font-weight:700;width:fit-content;
+        }
+        @media (max-width:640px){
+          .ad-lb-overlay{max-width:80%;padding:12px 16px;gap:3px;}
+          .ad-lb-cta{padding:6px 14px;font-size:11px;}
+        }
+
+        /* 2. Native inline banner — mid-feed */
+        .ad-slot-native-inline{
+          margin:8px 0 4px;border-radius:var(--radius-lg);overflow:hidden;
+          background:linear-gradient(120deg,var(--brand-primary-light),var(--surface));
+          border:1px solid var(--border);
+        }
+        .ad-slot-native-inline a{display:flex;align-items:center;gap:22px;padding:22px 28px;flex-wrap:wrap;}
+        .ad-slot-native-inline img{width:120px;height:120px;object-fit:cover;border-radius:var(--radius-md);flex-shrink:0;}
+        .ad-slot-native-inline .ad-copy{flex:1;min-width:200px;}
+        .ad-slot-native-inline .ad-headline{font-family:var(--font-display);font-weight:700;font-size:19px;margin-bottom:4px;}
+        .ad-slot-native-inline .ad-sub{font-size:13.5px;color:var(--muted);margin-bottom:10px;}
+        .ad-slot-native-inline .ad-advertiser{font-size:11px;color:var(--muted-2);margin-top:6px;}
+
+        /* 3. In-rail sponsored product card — same footprint as .product-card */
+        .ad-slot-native-card{width:100%;height:100%;}
+        .ad-slot-native-card a{display:block;height:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;transition:transform .15s,box-shadow .15s;}
+        .ad-slot-native-card a:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+        .ad-slot-native-card img{width:100%;aspect-ratio:1/1;object-fit:cover;}
+        .ad-slot-native-card .ad-pc-body{padding:12px 14px 14px;}
+        .ad-slot-native-card .ad-headline{font-size:13.5px;font-weight:600;margin-bottom:3px;}
+        .ad-slot-native-card .ad-sub{font-size:12px;color:var(--muted);}
+        .ad-slot-native-card .ad-cta{margin-top:8px;font-size:12px;font-weight:700;color:var(--brand-primary);}
+
+        /* 4. Sidebar rectangle — cart page */
+        .ad-slot-sidebar{border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border);margin-top:16px;}
+        .ad-slot-sidebar a{display:block;}
+        .ad-slot-sidebar img{width:100%;height:220px;object-fit:cover;}
+        .ad-slot-sidebar .ad-copy{padding:12px 14px;}
+        .ad-slot-sidebar .ad-headline{font-size:13.5px;font-weight:700;margin-bottom:2px;}
+        .ad-slot-sidebar .ad-sub{font-size:12px;color:var(--muted);}
+
+        /* 5. Slim strip — checkout page */
+        .ad-slot-strip{border-radius:var(--radius-md);border:1px dashed var(--border);background:var(--brand-primary-light);margin:14px 0;}
+        .ad-slot-strip a{display:flex;align-items:center;gap:12px;padding:12px 16px;}
+        .ad-slot-strip img{width:44px;height:44px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;}
+        .ad-slot-strip .ad-headline{font-size:13px;font-weight:700;}
+        .ad-slot-strip .ad-sub{font-size:12px;color:var(--muted);}
+
+        /* 6. Wide footer banner */
+        .ad-slot-footer{max-width:1320px;margin:36px auto 0;padding:0 24px;}
+        .ad-slot-footer a{display:block;border-radius:var(--radius-lg);overflow:hidden;}
+        .ad-slot-footer img{width:100%;height:auto;max-height:140px;object-fit:cover;}
+
         /* ---------- Modal / Overlay system ---------- */
         .overlay{
           position:fixed;inset:0;background:rgba(20,22,31,.55);backdrop-filter:blur(3px);
@@ -1310,6 +1406,9 @@
             <div class="hero-dots" id="heroDots"></div>
         </section>
 
+        <!-- ================= AD SLOT: HOME_LEADERBOARD ================= -->
+        <div class="ad-slot ad-slot-leaderboard" id="adSlot-HOME_LEADERBOARD" data-ad-slot="HOME_LEADERBOARD"></div>
+
         <!-- ================= CATEGORIES ================= -->
         <section class="section" id="categoriesSection">
             <div class="section-head">
@@ -1332,6 +1431,9 @@
             </div>
         </section>
 
+        <!-- ================= AD SLOT: HOME_MIDFEED_NATIVE ================= -->
+        <div class="ad-slot ad-slot-native-inline" id="adSlot-HOME_MIDFEED_NATIVE" data-ad-slot="HOME_MIDFEED_NATIVE"></div>
+
         <!-- ================= FEATURED ================= -->
         <section class="section" id="featuredSection">
             <div class="section-head">
@@ -1349,6 +1451,9 @@
             </div>
             <div class="rail" id="bestSellersRail"></div>
         </section>
+
+        <!-- ================= AD SLOT: HOME_SPONSORED_CARD (in-rail native) ================= -->
+        <section class="ad-slot" id="adSlot-HOME_SPONSORED_CARD" data-ad-slot="HOME_SPONSORED_CARD" style="margin-bottom:8px;"></section>
 
         <!-- ================= RECOMMENDED ================= -->
         <section class="section" id="recommendedSection">
@@ -1471,7 +1576,10 @@
             <h2 class="section-title" style="margin-bottom:18px;">Your Cart</h2>
             <div id="cartItemsList"></div>
         </div>
-        <div class="account-panel" id="cartSummary"></div>
+        <div>
+            <div class="account-panel" id="cartSummary"></div>
+            <div class="ad-slot ad-slot-sidebar" id="adSlot-CART_SIDEBAR" data-ad-slot="CART_SIDEBAR"></div>
+        </div>
     </div>
 </main>
 
@@ -1524,6 +1632,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Ad Slot: CHECKOUT_STRIP -->
+            <div class="ad-slot ad-slot-strip" id="adSlot-CHECKOUT_STRIP" data-ad-slot="CHECKOUT_STRIP"></div>
         </div>
 
         <!-- Sticky summary + place order -->
@@ -1544,6 +1655,9 @@
         </div>
     </div>
 </main>
+
+<!-- ================= AD SLOT: FOOTER_BANNER ================= -->
+<div class="ad-slot ad-slot-footer" id="adSlot-FOOTER_BANNER" data-ad-slot="FOOTER_BANNER"></div>
 
 <!-- ================= FOOTER ================= -->
 <footer class="site-footer">
@@ -1876,6 +1990,14 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       categories:            `${API_BASE}/catalog/categories`,
       customerReviews:       `${API_BASE}/store/reviews`,   // <-- naya endpoint
       notices:               `${API_BASE}/notices/active`, // announcement bar + testing-phase popup
+
+      // ---- Ad Slots (enterprise ad system) ----
+      // GET returns { success, data: AdCreative|null } — null/empty/error
+      // all mean "nothing to show here right now", never a hardcoded filler.
+      // slotKey is one of AD_SLOT_KEYS below (e.g. "HOME_LEADERBOARD").
+      adSlot:        (slotKey) => `${API_BASE}/ads/slots/${slotKey}`,
+      adImpression:  (adId)    => `${API_BASE}/ads/${adId}/impression`,
+      adClick:       (adId)    => `${API_BASE}/ads/${adId}/click`,
 
       featured:              `${API_BASE}/products/featured`,
       bestSellers:           `${API_BASE}/products/best-sellers`,
@@ -4136,6 +4258,7 @@ async function showCartView(){
 function renderCartView(){
   const listEl = document.getElementById("cartItemsList");
   const summaryEl = document.getElementById("cartSummary");
+  loadAdSlot("CART_SIDEBAR");
 
   if (!AppState.cart.length){
     listEl.innerHTML = `<div class="empty-state"><div class="es-icon">🛒</div>Your cart is empty.<br>Browse products and tap "Add to Cart" to see them here.</div>`;
@@ -5257,6 +5380,7 @@ else if (pageId === "change-password") {
       renderCheckoutItemsList();
       renderCheckoutAddressList();
       renderCheckoutSummary();
+      loadAdSlot("CHECKOUT_STRIP");
       window.scrollTo({top:0, behavior:"smooth"});
     }
 
@@ -5968,6 +6092,203 @@ function renderReturnSection(track){
   `;
 }
     /* ---------------------------------------------------------------------
+       13B. AD SLOTS SYSTEM (enterprise)
+       ---------------------------------------------------------------------
+       One generic engine drives all 6 placements. Each slot in the DOM is
+       a `<div class="ad-slot ad-slot-<variant>" data-ad-slot="SLOT_KEY">`.
+       Flow per slot:
+         1. GET  API_ENDPOINTS.adSlot(slotKey)  -> { success, data:AdCreative|null }
+         2. Nothing returned (null / 404 / timeout)  -> leave hidden, exactly
+            like the other optional/no-mock sections elsewhere in this file.
+         3. Creative returned -> render markup for that slot's variant,
+            reveal it, and arm an IntersectionObserver so an impression is
+            logged the FIRST time the ad is actually 50% on-screen (not
+            just present in the DOM — this matters for billing accuracy).
+         4. Click on the ad -> fire-and-forget beacon to adClick(id), then
+            follow clickUrl (new tab for external links, in-app route for
+            internal ones), and dismiss (X) hides + remembers the id for
+            this session so a closed ad doesn't reappear on re-render.
+
+       Expected AdCreative shape from the backend:
+       {
+         id: 8123,
+         slotKey: "HOME_LEADERBOARD",
+         imageUrl: "https://.../creative.jpg",
+         title: "Diwali Mega Sale",                   // headline text
+         subtext: "Up to 60% off electronics",        // optional
+         ctaLabel: "Shop Now",                         // optional, defaults per variant
+         advertiserName: "Acme Electronics",           // optional, shown as "Sponsored by X"
+         targetUrl: "https://... or /products/123",
+         internal: false,                               // true -> route inside the SPA instead of a new tab
+         dismissible: true                              // strip/native-inline only
+       }
+    --------------------------------------------------------------------- */
+    const AD_SLOT_KEYS = [
+      "HOME_LEADERBOARD",
+      "HOME_MIDFEED_NATIVE",
+      "HOME_SPONSORED_CARD",
+      "CART_SIDEBAR",
+      "CHECKOUT_STRIP",
+      "FOOTER_BANNER",
+    ];
+
+    // Ads the shopper has closed with the "×" this session — never
+    // re-rendered even if the slot is reloaded (e.g. after a nav change).
+    const dismissedAdIds = new Set();
+    // slotKey -> the ad currently shown there, so click/impression handlers
+    // always reference the right creative even after DOM re-renders.
+    const activeAdBySlot = {};
+    const adImpressionLogged = new Set();
+
+    function adSlotVariant(slotKey){
+      return {
+        HOME_LEADERBOARD:     "leaderboard",
+        HOME_MIDFEED_NATIVE:  "native-inline",
+        HOME_SPONSORED_CARD:  "native-card",
+        CART_SIDEBAR:         "sidebar",
+        CHECKOUT_STRIP:       "strip",
+        FOOTER_BANNER:        "footer",
+      }[slotKey] || "native-inline";
+    }
+
+    function adSlotMarkup(variant, ad){
+      const headline = ad.title ? `<div class="ad-headline">${escapeHtml(ad.title)}</div>` : "";
+      const sub = ad.subtext ? `<div class="ad-sub">${escapeHtml(ad.subtext)}</div>` : "";
+      const advertiser = ad.advertiserName ? `<div class="ad-advertiser">Sponsored by ${escapeHtml(ad.advertiserName)}</div>` : "";
+      const closeBtn = ad.dismissible ? `<button class="ad-slot-close" data-ad-dismiss aria-label="Dismiss ad">✕</button>` : "";
+
+      switch (variant){
+        case "leaderboard":
+          return `<span class="ad-slot-tag">Ad</span>${closeBtn}
+            <a data-ad-click href="#">
+              <img src="${ad.imageUrl}" alt="${escapeHtml(ad.title || "Advertisement")}">
+              ${(ad.title || ad.subtext || ad.ctaLabel) ? `<div class="ad-lb-overlay">
+                ${headline}${sub}
+                ${ad.ctaLabel ? `<span class="ad-lb-cta">${escapeHtml(ad.ctaLabel)}</span>` : ""}
+              </div>` : ""}
+            </a>`;
+        case "native-inline":
+          return `<span class="ad-slot-tag">Sponsored</span>${closeBtn}
+            <a data-ad-click href="#">
+              <img src="${ad.imageUrl}" alt="${escapeHtml(ad.title || "Advertisement")}">
+              <div class="ad-copy">${headline}${sub}${advertiser}</div>
+            </a>`;
+        case "native-card":
+          return `<div class="ad-slot-native-card">
+              <a data-ad-click href="#">
+                <span class="ad-slot-tag">Sponsored</span>
+                <img src="${ad.imageUrl}" alt="${escapeHtml(ad.title || "Advertisement")}">
+                <div class="ad-pc-body">
+                  ${headline}${sub}
+                  <div class="ad-cta">${escapeHtml(ad.ctaLabel || "Shop now")} →</div>
+                </div>
+              </a>
+            </div>`;
+        case "sidebar":
+          return `<span class="ad-slot-tag">Ad</span>
+            <a data-ad-click href="#">
+              <img src="${ad.imageUrl}" alt="${escapeHtml(ad.title || "Advertisement")}">
+              <div class="ad-copy">${headline}${sub}</div>
+            </a>`;
+        case "strip":
+          return `${closeBtn}
+            <a data-ad-click href="#" style="position:relative;">
+              <img src="${ad.imageUrl}" alt="${escapeHtml(ad.title || "Advertisement")}">
+              <div>${headline}${sub}</div>
+            </a>`;
+        case "footer":
+          return `<a data-ad-click href="#"><img src="${ad.imageUrl}" alt="${escapeHtml(ad.title || "Advertisement")}"></a>`;
+        default:
+          return "";
+      }
+    }
+
+    function trackAdEvent(endpointFn, adId){
+      // Fire-and-forget: an ad tracking beacon should never block the UI
+      // or surface an error toast if it fails.
+      apiRequest(endpointFn(adId), { method: "POST" }, { silentError: true }).catch(()=>{});
+    }
+
+    function armAdImpressionObserver(container, ad){
+      if (adImpressionLogged.has(ad.id)) return;
+      if (!("IntersectionObserver" in window)){
+        adImpressionLogged.add(ad.id);
+        trackAdEvent(API_ENDPOINTS.adImpression, ad.id);
+        return;
+      }
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !adImpressionLogged.has(ad.id)){
+            adImpressionLogged.add(ad.id);
+            trackAdEvent(API_ENDPOINTS.adImpression, ad.id);
+            io.disconnect();
+          }
+        });
+      }, { threshold: [0.5] });
+      io.observe(container);
+    }
+
+    async function loadAdSlot(slotKey){
+      const container = document.getElementById(`adSlot-${slotKey}`);
+      if (!container) return;
+
+      let ad = null;
+      try{
+        const res = await apiRequest(API_ENDPOINTS.adSlot(slotKey), {}, { silentError: true });
+        ad = res && res.data ? res.data : null;
+      }catch(e){
+        ad = null; // no ad service reachable -> slot simply stays hidden
+      }
+
+      if (!ad || !ad.imageUrl || dismissedAdIds.has(ad.id)){
+        container.classList.remove("ad-slot-loaded");
+        container.innerHTML = "";
+        return;
+      }
+
+      activeAdBySlot[slotKey] = ad;
+      const variant = adSlotVariant(slotKey);
+      container.innerHTML = adSlotMarkup(variant, ad);
+      container.classList.add("ad-slot-loaded");
+
+      const clickEl = container.querySelector("[data-ad-click]");
+      if (clickEl){
+        clickEl.addEventListener("click", (e)=>{
+          e.preventDefault();
+          trackAdEvent(API_ENDPOINTS.adClick, ad.id);
+          if (ad.internal){
+            // Internal routes (e.g. "/products/123") are handled inside
+            // this SPA rather than a real page navigation.
+            location.hash = ad.targetUrl.startsWith("/") ? ad.targetUrl : `/${ad.targetUrl}`;
+          } else {
+            window.open(ad.targetUrl, "_blank", "noopener");
+          }
+        });
+      }
+
+      const dismissBtn = container.querySelector("[data-ad-dismiss]");
+      if (dismissBtn){
+        dismissBtn.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          dismissedAdIds.add(ad.id);
+          container.classList.remove("ad-slot-loaded");
+          container.innerHTML = "";
+        });
+      }
+
+      armAdImpressionObserver(container, ad);
+    }
+
+    function loadHomeAdSlots(){
+      return Promise.all([
+        loadAdSlot("HOME_LEADERBOARD"),
+        loadAdSlot("HOME_MIDFEED_NATIVE"),
+        loadAdSlot("HOME_SPONSORED_CARD"),
+        loadAdSlot("FOOTER_BANNER"),
+      ]);
+    }
+
+    /* ---------------------------------------------------------------------
        14. INIT — fires all initial data loads in parallel, skeleton-first.
        Every remote call goes through withFallback so a missing/unreachable
        backend degrades to the bundled demo data instead of leaving the
@@ -6020,6 +6341,7 @@ function renderReturnSection(track){
           loadFlashSale(),
 
           loadCart(), // cart badge should reflect real state on load too, not just after a login/add-to-cart action
+          loadHomeAdSlots(), // 4 of the 6 ad placements live on the homepage
         ]);
 
         AppState.vendor = vendor;

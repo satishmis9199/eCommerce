@@ -4,8 +4,11 @@ import com.e_commerce.eCommerce.dto.request.OrderNotificationDTO;
 import com.e_commerce.eCommerce.dto.response.NotificationDto;
 import com.e_commerce.eCommerce.dto.response.NotificationListResponse;
 import com.e_commerce.eCommerce.entity.Notification;
+import com.e_commerce.eCommerce.enums.NotificationType;
 import com.e_commerce.eCommerce.event.OrderCreatedEvent;
+import com.e_commerce.eCommerce.event.VendorNotificationEvent;
 import com.e_commerce.eCommerce.repository.NotificationRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,11 +30,12 @@ public class NotificationService {
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationRepository notificationRepository;
 
-    public Notification saveNotification(
+    @Async
+    public void saveNotification(
             String tenantId,
             Long vendorId,
             Long orderId,
-            String type,
+            NotificationType type,
             String title,
             String message) {
 
@@ -49,20 +54,11 @@ public class NotificationService {
                         .isRead(false)
                         .build();
 
-        Notification saved =
-                notificationRepository.save(notification);
-
-        log.info(
-                "Notification saved to DB | id={} | tenantId={} | vendorId={} | orderId={}",
-                saved.getId(),
-                saved.getTenantId(),
-                saved.getVendorId(),
-                saved.getOrderId()
-        );
-
-        return saved;
+        notificationRepository.save(notification);
     }
+
     public void sendOrderNotification(OrderCreatedEvent event) {
+
         try {
             OrderNotificationDTO notification =
                     OrderNotificationDTO.builder()
@@ -70,7 +66,7 @@ public class NotificationService {
                             .tenantId(event.getTenantId())
                             .vendorId(event.getVendorId())
                             .totalAmount(event.getTotalAmount())
-                            .type("NEW_ORDER")
+                            .type(String.valueOf(NotificationType.NEW_ORDER))
                             .title("New Order Received")
                             .message(
                                     "Order #" + event.getOrderId()
@@ -78,35 +74,74 @@ public class NotificationService {
                             )
                             .build();
 
-
             String destination =
                     "/topic/vendor/"
                             + event.getTenantId()
                             + "/notifications";
 
-            /*
-             * SEND WEBSOCKET
-             */
             messagingTemplate.convertAndSend(
                     destination,
                     notification
             );
-        } catch (Exception e) {
 
-            throw e;
+        } catch (Exception e) {
+            log.error(
+                    "Failed to send order notification for orderId={}",
+                    event.getOrderId(),
+                    e
+            );
         }
     }
 
+    public void sendVendorNotification(
+            VendorNotificationEvent vendorNotificationEvent
+    ) {
+
+        try {
+            log.error("Generic notification event Started");
+
+            OrderNotificationDTO notification =
+                    OrderNotificationDTO.builder()
+                            .orderId(null)
+                            .tenantId(vendorNotificationEvent.getTenantId())
+                            .vendorId(vendorNotificationEvent.getVendorId())
+                            .totalAmount(null)
+                            .type(String.valueOf(vendorNotificationEvent.getNotificationType()))
+                            .title(vendorNotificationEvent.getTitle())
+                            .message(vendorNotificationEvent.getMessage())
+                            .build();
+
+            String destination =
+                    "/topic/vendor/"
+                            + vendorNotificationEvent.getTenantId()
+                            + "/notifications";
+
+            messagingTemplate.convertAndSend(
+                    destination,
+                    notification
+            );
+            log.error("Generic notification event send");
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Failed to send vendor notification",
+                    e
+            );
+        }
+    }
 
     public NotificationListResponse getNotifications(
             String tenantId,
             int page,
             int size) {
+
         if (tenantId == null || tenantId.isBlank()) {
             throw new IllegalArgumentException(
                     "Tenant ID cannot be null or blank"
             );
         }
+
         if (page < 0) {
             page = 0;
         }
@@ -114,7 +149,6 @@ public class NotificationService {
         if (size <= 0) {
             size = 20;
         }
-
 
         if (size > 100) {
             size = 100;
@@ -159,31 +193,25 @@ public class NotificationService {
             Long id,
             String tenantId) {
 
-        if (id == null) {
-            return false;
-        }
-
-        if (tenantId == null || tenantId.isBlank()) {
+        if (id == null || tenantId == null || tenantId.isBlank()) {
             return false;
         }
 
         if (!notificationRepository
                 .existsByIdAndTenantId(id, tenantId)) {
-
             return false;
         }
 
         notificationRepository
                 .findById(id)
                 .ifPresent(notification -> {
-
                     notification.setRead(true);
-
                     notificationRepository.save(notification);
                 });
 
         return true;
     }
+    @Transactional
     public int markAllAsRead(String tenantId) {
 
         if (tenantId == null || tenantId.isBlank()) {
@@ -193,21 +221,17 @@ public class NotificationService {
         return notificationRepository
                 .markAllAsReadForTenant(tenantId);
     }
+
     public boolean delete(
             Long id,
             String tenantId) {
 
-        if (id == null) {
-            return false;
-        }
-
-        if (tenantId == null || tenantId.isBlank()) {
+        if (id == null || tenantId == null || tenantId.isBlank()) {
             return false;
         }
 
         if (!notificationRepository
                 .existsByIdAndTenantId(id, tenantId)) {
-
             return false;
         }
 

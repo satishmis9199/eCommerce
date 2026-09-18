@@ -5,6 +5,10 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
+import com.e_commerce.eCommerce.enums.NotificationType;
+import com.e_commerce.eCommerce.event.VendorNotificationEvent;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +23,7 @@ import com.e_commerce.eCommerce.repository.VendorRepository;
 
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserAuthService {
@@ -27,6 +32,9 @@ public class UserAuthService {
     private final UserRepos userRepos;
     private final PasswordEncoder passwordEncoder;
     private final EmailService service;
+    private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
+    private  final String notificationTitle="New User Registered";
 
     public User registerUser(
             RegisterRequestDTO registerRequestDTO,
@@ -233,10 +241,6 @@ public class UserAuthService {
 
         User savedUser =
                 userRepos.save(user);
-
-        /*
-         * Send welcome email
-         */
         try {
 
             String loginLink =
@@ -276,10 +280,20 @@ public class UserAuthService {
                     welcomeEmail
             );
 
-        } catch (Exception ignored) {
-            // Welcome email failure should not fail registration
+        } catch (Exception e) {
+            log.error("Error while Register User {} ",e.getMessage());
         }
 
+        notificationService.saveNotification(tenantId,vendorId,-1L, NotificationType.REGISTER_USER, notificationTitle,savedUser.getFirstName()+" has Been Registered");
+        eventPublisher.publishEvent(
+                VendorNotificationEvent.builder()
+                        .tenantId(tenantId)
+                        .vendorId(user.getVendorId())
+                        .notificationType(NotificationType.NEW_ORDER)
+                        .title(notificationTitle)
+                        .message(user.getFirstName() +" has logged In ")
+                        .build()
+        );
         return savedUser;
     }
 }

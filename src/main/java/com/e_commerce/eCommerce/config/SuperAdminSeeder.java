@@ -54,11 +54,7 @@ public class SuperAdminSeeder implements CommandLineRunner {
             admin.setCreatedBy("SATISH");
             admin.setUpdatedBy("Rahul");
             admin.setTenantId("0");
-
             admin.setProfileImage("https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev/b1b657ce-98c1-4a19-99c4-7c287cb3a222.jpg");
-
-            // Super Admin doesn't belong to any tenant
-
             userRepository.save(admin);
 
             logger.info("===========================================");
