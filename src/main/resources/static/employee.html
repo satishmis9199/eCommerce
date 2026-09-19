@@ -107,6 +107,10 @@
 .timeline-desc{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.5;}
         @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
 
+        /* ---------- Vendor-disabled feature affordance ---------- */
+        .icon-btn.feature-disabled{opacity:.35;cursor:not-allowed;}
+        .icon-btn.feature-disabled .icon-badge{display:none;}
+
         /* ---------- Announcement Bar ---------- */
         .announce-bar{
           height:var(--announce-h);
@@ -883,6 +887,9 @@
         .payment-option .pay-title{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;}
         .payment-option .pay-desc{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5;}
         .payment-option .pay-icon{font-size:18px;}
+        .payment-option.payment-option-disabled{opacity:.55;cursor:not-allowed;background:var(--paper);}
+        .payment-option.payment-option-disabled:hover{border-color:var(--border);}
+        .payment-option.payment-option-disabled .pay-desc{color:var(--danger);font-weight:600;}
 
         .checkout-summary-panel{position:sticky;top:calc(var(--header-h) + 16px);}
         .checkout-place-btn{margin-top:16px;}
@@ -1619,14 +1626,14 @@
                         <div class="pay-radio"></div>
                         <div>
                             <div class="pay-title"><span class="pay-icon">💵</span> Cash on Delivery</div>
-                            <div class="pay-desc">Pay when your order is delivered.</div>
+                            <div class="pay-desc" data-default-desc="Pay when your order is delivered.">Pay when your order is delivered.</div>
                         </div>
                     </div>
                     <div class="payment-option" data-payment="ONLINE">
                         <div class="pay-radio"></div>
                         <div>
                             <div class="pay-title"><span class="pay-icon">💳</span> Pay Online</div>
-                            <div class="pay-desc">Pay securely using UPI, Debit Card, Credit Card, Net Banking, etc.
+                            <div class="pay-desc" data-default-desc="Pay securely using UPI, Debit Card, Credit Card, Net Banking, etc.">Pay securely using UPI, Debit Card, Credit Card, Net Banking, etc.
                             </div>
                         </div>
                     </div>
@@ -1990,6 +1997,9 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       categories:            `${API_BASE}/catalog/categories`,
       customerReviews:       `${API_BASE}/store/reviews`,   // <-- naya endpoint
       notices:               `${API_BASE}/notices/active`, // announcement bar + testing-phase popup
+      // Vendor-controlled feature toggles — { onlinePaymentEnabled, codEnabled,
+      // wishlistEnabled, reviewsEnabled }. See applyFeatureSettings().
+      featureSettings:       `${API_BASE}/featureSettings`,
 
       // ---- Ad Slots (enterprise ad system) ----
       // GET returns { success, data: AdCreative|null } — null/empty/error
@@ -2356,6 +2366,87 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
     }
 
     /* ---------------------------------------------------------------------
+       VENDOR FEATURE TOGGLES — /featureSettings gives the vendor control
+       over onlinePaymentEnabled, codEnabled, wishlistEnabled and
+       reviewsEnabled. Backend shape isn't locked yet (raw flags or
+       { data: {...} }), so unwrap defensively and default every flag to
+       ON (fail-open) if anything is missing.
+    --------------------------------------------------------------------- */
+    function applyFeatureSettings(raw){
+      const f = (raw && typeof raw === "object" && raw.data && typeof raw.data === "object") ? raw.data : (raw || {});
+      AppState.features = {
+        onlinePaymentEnabled: f.onlinePaymentEnabled !== false,
+        codEnabled:           f.codEnabled !== false,
+        wishlistEnabled:      f.wishlistEnabled !== false,
+        reviewsEnabled:       f.reviewsEnabled !== false,
+      };
+      const { wishlistEnabled, reviewsEnabled } = AppState.features;
+
+      // ---- Wishlist: dim the header icon and drop it from the account
+      // sidebar + footer. handleToggleWishlist() and navigateAccount()
+      // still guard every entry point below, so this is belt-and-braces.
+      const wishlistBtn = document.getElementById("wishlistBtn");
+      if (wishlistBtn){
+        wishlistBtn.classList.toggle("feature-disabled", !wishlistEnabled);
+        wishlistBtn.title = wishlistEnabled ? "Wishlist" : "This feature has been disabled by the vendor";
+      }
+      document.querySelectorAll('[data-account="wishlist"]').forEach(link=>{
+        link.closest("li")
+          ? (link.closest("li").style.display = wishlistEnabled ? "" : "none")
+          : (link.style.display = wishlistEnabled ? "" : "none");
+      });
+
+      // ---- Reviews: the homepage "What Customers Say" section is either
+      // fully shown or fully hidden. Per-item "Write a Review" buttons and
+      // the quick-view reviews block check AppState.features.reviewsEnabled
+      // directly wherever they render.
+      showSection("reviewsSection", reviewsEnabled);
+
+      applyPaymentFeatureUI();
+    }
+
+    /* Keeps both payment options visible at all times, but greys out and
+       locks whichever one the vendor has switched off (with a clear "We
+       are not accepting ..." note instead of removing it), keeps
+       AppState.paymentMethod pointed at whichever one is actually usable,
+       and disables "Place Order" if the vendor has switched both off.
+       Safe to call more than once (e.g. every time checkout opens). */
+    function applyPaymentFeatureUI(){
+      const { onlinePaymentEnabled, codEnabled } = AppState.features;
+      const wrap = document.getElementById("paymentOptions");
+      if (!wrap) return;
+      const codOpt = wrap.querySelector('[data-payment="COD"]');
+      const onlineOpt = wrap.querySelector('[data-payment="ONLINE"]');
+
+      function setOptionState(opt, enabled, offMessage){
+        if (!opt) return;
+        opt.classList.toggle("payment-option-disabled", !enabled);
+        const desc = opt.querySelector(".pay-desc");
+        if (desc){
+          desc.textContent = enabled ? (desc.dataset.defaultDesc || desc.textContent) : offMessage;
+        }
+      }
+      setOptionState(codOpt, codEnabled, "We are not accepting Cash on Delivery right now — disabled by the vendor.");
+      setOptionState(onlineOpt, onlinePaymentEnabled, "We are not accepting online payments right now — disabled by the vendor.");
+
+      // If the currently-selected method just got disabled, fall back to
+      // whichever one is still on.
+      if (!codEnabled && AppState.paymentMethod === "COD" && onlinePaymentEnabled) AppState.paymentMethod = "ONLINE";
+      if (!onlinePaymentEnabled && AppState.paymentMethod === "ONLINE" && codEnabled) AppState.paymentMethod = "COD";
+      if (!codEnabled && !onlinePaymentEnabled) AppState.paymentMethod = null;
+
+      if (codOpt) codOpt.classList.toggle("selected", AppState.paymentMethod === "COD");
+      if (onlineOpt) onlineOpt.classList.toggle("selected", AppState.paymentMethod === "ONLINE");
+
+      // If checkout is already open with a summary rendered, refresh its
+      // "Place Order" / "Proceed to Payment" label + disabled state.
+      const summaryEl = document.getElementById("checkoutSummary");
+      if (summaryEl && summaryEl.querySelector("#placeOrderBtn")) renderCheckoutSummary();
+      const placeBtn = document.getElementById("placeOrderBtn");
+      if (placeBtn) placeBtn.disabled = !AppState.paymentMethod;
+    }
+
+    /* ---------------------------------------------------------------------
        3. AUTH STATE
        isAuthenticated + AppState.user are the single source of truth,
        refreshed from the server (via /auth/me, which reads the cookie).
@@ -2382,6 +2473,10 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       selectedAddressId: null,  // id of the address currently selected for delivery
       paymentMethod: "COD",     // "COD" | "ONLINE"
       lastOrder: null,          // most recent order confirmation, shown on the success page
+      // Vendor-controlled feature toggles, loaded from /featureSettings in
+      // init() and applied by applyFeatureSettings(). Default to everything
+      // ON so nothing breaks if that call fails — see mockFeatureSettings().
+      features: { onlinePaymentEnabled:true, codEnabled:true, wishlistEnabled:true, reviewsEnabled:true },
     };
 
     /* Central auth gate — wrap any action that requires login. This is the
@@ -2534,6 +2629,9 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
     const mockRelatedProducts = (pid) => Promise.resolve(PRODUCT_POOL.filter(p=>p.productId!==pid).slice(0,4));
     const mockProductReviews = (pid) => mockReviews();
     const mockWishlistList = () => Promise.resolve([]);
+    // Fail-open: if /featureSettings can't be reached, keep every feature
+    // enabled instead of silently hiding wishlist/reviews/payment options.
+    const mockFeatureSettings = () => Promise.resolve({ onlinePaymentEnabled:true, codEnabled:true, wishlistEnabled:true, reviewsEnabled:true });
 
     function mockReviews() {
       return Promise.resolve([
@@ -3822,6 +3920,7 @@ function renderQuickView(product) {
     function renderQuickViewReviews(reviews){
       const el = document.getElementById("qvReviews");
       if (!el) return;
+      if (!AppState.features.reviewsEnabled){ el.innerHTML = ""; return; }
       if (!reviews || !reviews.length){ el.innerHTML = ""; return; }
       el.innerHTML = `<h4 style="font-size:13px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Customer Reviews</h4>` +
         reviews.slice(0,3).map(r=>`
@@ -4062,6 +4161,10 @@ async function handleToggleWishlist(pid, btnEl){
   // never silently mismatch (e.g. "15" !== 15) and fire an add (POST)
   // when it should have fired a remove (DELETE), or vice versa.
   pid = String(pid);
+  if (!AppState.features.wishlistEnabled){
+    toast("This feature has been disabled by the vendor.", "default");
+    return;
+  }
   requireAuth(async ()=>{
     const alreadyWishlisted = AppState.wishlistIds.has(pid);
 
@@ -4831,7 +4934,13 @@ document.getElementById("closeReviewModal").addEventListener("click", ()=>closeO
 
     document.getElementById("profileBtn").addEventListener("click", ()=> requireAuth(()=>navigateAccount("profile")));
     document.getElementById("cartBtn").addEventListener("click", ()=> requireAuth(()=>showCartView()));
-    document.getElementById("wishlistBtn").addEventListener("click", ()=> requireAuth(()=>navigateAccount("wishlist")));
+    document.getElementById("wishlistBtn").addEventListener("click", ()=>{
+      if (!AppState.features.wishlistEnabled){
+        toast("This feature has been disabled by the vendor.", "default");
+        return;
+      }
+      requireAuth(()=>navigateAccount("wishlist"));
+    });
 
     // Mobile-only "Filters" toggle — expands/collapses the filter panel
     // instead of it always sitting above the product grid.
@@ -4894,6 +5003,10 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
 
     function navigateAccount(pageId){
       requireAuth(async ()=>{
+        if (pageId==="wishlist" && !AppState.features.wishlistEnabled){
+          toast("This feature has been disabled by the vendor.", "default");
+          return;
+        }
         if (pageId==="logout"){
           try{
             await apiRequest(API_ENDPOINTS.logout, { method:"POST" }, { silentError:true });
@@ -4920,7 +5033,8 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
       });
     }
     function renderAccountNav(activeId){
-      document.getElementById("accountNav").innerHTML = ACCOUNT_PAGES.map(p=>
+      const pages = ACCOUNT_PAGES.filter(p => p.id !== "wishlist" || AppState.features.wishlistEnabled);
+      document.getElementById("accountNav").innerHTML = pages.map(p=>
         `<a href="#" class="${p.id===activeId?'active':''}" data-account="${p.id}">${p.icon} ${p.label}</a>`).join("");
     }
     document.addEventListener("click",(e)=>{
@@ -5194,7 +5308,7 @@ else if (pageId === "change-password") {
               /* Per-item "Write a Review" button — only rendered when the
                  backend has explicitly said this item is reviewable
                  (order delivered AND isReview === true for this item). */
-              (order.status==="DELIVERED" && i.isReview)
+              (order.status==="DELIVERED" && i.isReview && AppState.features.reviewsEnabled)
                 ? `<button class="btn btn-ghost btn-sm" data-write-review data-order-item-id="${i.itemId || ''}" data-product-id="${i.productId || ''}">Write a Review</button>`
                 : ''
             }
@@ -5380,6 +5494,7 @@ else if (pageId === "change-password") {
       renderCheckoutItemsList();
       renderCheckoutAddressList();
       renderCheckoutSummary();
+      applyPaymentFeatureUI();
       loadAdSlot("CHECKOUT_STRIP");
       window.scrollTo({top:0, behavior:"smooth"});
     }
@@ -5430,6 +5545,10 @@ else if (pageId === "change-password") {
     document.getElementById("paymentOptions").addEventListener("click", (e)=>{
       const opt = e.target.closest(".payment-option");
       if (!opt) return;
+      if (opt.classList.contains("payment-option-disabled")){
+        toast("We are not accepting this payment method right now — disabled by the vendor.", "default");
+        return;
+      }
       document.querySelectorAll(".payment-option").forEach(o=>o.classList.remove("selected"));
       opt.classList.add("selected");
       AppState.paymentMethod = opt.dataset.payment; // "COD" | "ONLINE"
@@ -5444,6 +5563,7 @@ else if (pageId === "change-password") {
         return;
       }
       const isOnline = AppState.paymentMethod === "ONLINE";
+      const noPaymentAvailable = !AppState.paymentMethod;
       el.innerHTML = `
         <h3 style="margin-bottom:16px;">Price Details</h3>
         <div class="cart-summary-row"><span>Subtotal</span><span class="mono">${fmtPrice(pricing.subtotal)}</span></div>
@@ -5454,7 +5574,7 @@ else if (pageId === "change-password") {
         </div>` : ""}
         <div class="cart-summary-row"><span>Shipping</span><span class="mono">${pricing.shipping === 0 ? (pricing.shippingLabel || "Free") : fmtPrice(pricing.shipping)}</span></div>
         <div class="cart-summary-total"><span>Total Payable</span><span class="mono">${fmtPrice(pricing.total)}</span></div>
-        <button class="btn btn-primary btn-block checkout-place-btn" id="placeOrderBtn">${isOnline ? "Proceed to Payment" : "Place Order"}</button>
+        <button class="btn btn-primary btn-block checkout-place-btn" id="placeOrderBtn" ${noPaymentAvailable ? "disabled" : ""}>${noPaymentAvailable ? "No payment method available" : (isOnline ? "Proceed to Payment" : "Place Order")}</button>
         <div class="checkout-secure-note">🔒 Safe and secure checkout</div>
       `;
       document.getElementById("placeOrderBtn").addEventListener("click", handlePlaceOrder);
@@ -5468,6 +5588,10 @@ else if (pageId === "change-password") {
       if (!AppState.cart.length){ toast("Your cart is empty.", "error"); return; }
       if (!AppState.selectedAddressId){
         toast("Please add a delivery address to continue.", "error");
+        return;
+      }
+      if (!AppState.paymentMethod){
+        toast("No payment method is available right now. Please contact the seller.", "error");
         return;
       }
 
@@ -6318,7 +6442,7 @@ function renderReturnSection(track){
         // everything (real data or its fallback) has resolved.
         const [
           , // updateAuthUI() result unused directly — it sets isAuthenticated/AppState.user itself
-          vendor, categoriesRaw, banners, reviews, notices,
+          vendor, categoriesRaw, banners, reviews, notices, featureSettingsRaw,
           featuredData, bestSellersData, recommendedData, newArrivalsData, flash,
         ] = await Promise.all([
           updateAuthUI(),
@@ -6327,6 +6451,9 @@ function renderReturnSection(track){
           withFallback(()=>apiRequest(API_ENDPOINTS.banners, {}, { silentError:true }), mockBanners),
           loadCustomerReviews(),
           loadNotices(), // announcement bar + testing-phase popup, backend-driven
+          // Vendor feature toggles — real API replies { data:{...} }, mock
+          // replies flat; applyFeatureSettings() below accepts either shape.
+          withFallback(()=>apiRequest(API_ENDPOINTS.featureSettings, {}, { silentError:true }), mockFeatureSettings),
           // Optional section: { success:true, data:[] } is a valid "nothing
           // to show" response, not an error — see loadOptionalSection().
           loadOptionalSection(API_ENDPOINTS.featured, mockFeatured),
@@ -6350,6 +6477,8 @@ function renderReturnSection(track){
         renderContact(getContactData(vendor));
         startAnnouncementRotation(announceEl, notices);
         showTestingPhasePopup(notices);
+
+        applyFeatureSettings(featureSettingsRaw);
 
         const categories = toArray(categoriesRaw);
         renderNavCategories(categories);

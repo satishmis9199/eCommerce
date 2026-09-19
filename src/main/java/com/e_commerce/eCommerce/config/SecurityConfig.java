@@ -199,7 +199,6 @@ public class SecurityConfig {
                                     ) {
 
                                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-
                                         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
                                         response.getWriter().write("""
