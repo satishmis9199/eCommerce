@@ -28,8 +28,6 @@ public class Notification {
 
     @Column
     private Long vendorId;
-
-    // e.g. NEW_ORDER, REVIEW, LOW_STOCK, PAYOUT
     @Column(nullable = false, length = 50)
     private NotificationType type;
 

@@ -25,7 +25,6 @@ public class NotificationEventListener {
 
     @EventListener
     public void createAVendorNot(VendorNotificationEvent vendorNotificationEvent){
-        log.error("Generic notification event listen");
         notificationService.sendVendorNotification(vendorNotificationEvent);
     }
 }

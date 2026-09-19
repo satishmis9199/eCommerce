@@ -7438,9 +7438,10 @@ function renderProducts(list = productList) {
 
     const NOTIF_ICONS = {
       NEW_ORDER: 'fa-cart-shopping',
-      REVIEW: 'fa-star',
-      LOW_STOCK: 'fa-triangle-exclamation',
-      PAYOUT: 'fa-money-bill-transfer'
+      USER_LOGIN: 'fa-right-to-bracket',
+      REGISTER_USER: 'fa-user-plus',
+      APPROOVE: 'fa-circle-check',
+      REJECTED: 'fa-circle-xmark'
     };
 
     function timeAgo(dateString) {
@@ -7709,7 +7710,7 @@ function renderProducts(list = productList) {
               console.warn('Received malformed notification payload:', message.body);
               return;
             }
-            if (payload && payload.type === 'NEW_ORDER') {
+            if (payload && payload.type) {
               handleNewOrderNotification(payload);
             }
           });
@@ -7725,11 +7726,25 @@ function renderProducts(list = productList) {
       stompClient.activate();
     }
 
+    // NOTE: name kept for backwards-compat, but this now handles every
+    // real-time notification type (NEW_ORDER, USER_LOGIN, REGISTER_USER,
+    // APPROOVE, REJECTED, ...), not just new orders.
+    const NOTIF_TOAST_TITLES = {
+      NEW_ORDER: 'New Order',
+      USER_LOGIN: 'User Login',
+      REGISTER_USER: 'New User',
+      APPROOVE: 'Approved',
+      REJECTED: 'Rejected'
+    };
+
     function handleNewOrderNotification(notification) {
+      const type = notification.type || '';
       const orderId = notification.orderId || '';
       const amount = notification.totalAmount != null ? notification.totalAmount : null;
       const message = notification.message
-        || `Order ${orderId ? '#' + orderId + ' ' : ''}has been received${amount != null ? ' · ₹' + amount : ''}.`;
+        || (type === 'NEW_ORDER'
+              ? `Order ${orderId ? '#' + orderId + ' ' : ''}has been received${amount != null ? ' · ₹' + amount : ''}.`
+              : 'You have a new notification.');
 
       // Refresh from the API so the drawer/badge stay in sync with the DB
       // (correct id, isRead, createdAt) rather than guessing at shape here.
@@ -7737,7 +7752,8 @@ function renderProducts(list = productList) {
 
       // Reuse the existing toast notification for the instant "ping"
       if (typeof showToast === 'function') {
-        showToast('success', 'New Order', message);
+        const title = notification.title || NOTIF_TOAST_TITLES[type] || 'Notification';
+        showToast('success', title, message);
       }
     }
 

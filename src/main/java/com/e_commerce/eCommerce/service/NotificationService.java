@@ -120,7 +120,6 @@ public class NotificationService {
                     destination,
                     notification
             );
-            log.error("Generic notification event send");
 
         } catch (Exception e) {
 

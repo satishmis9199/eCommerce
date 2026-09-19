@@ -161,7 +161,7 @@ public class UserAuthController {
             cookie.setMaxAge(60 * 60);
 
             response.addCookie(cookie);
-            logger.error("Current Thread1 "+Thread.currentThread());
+
             eventPublisher.publishEvent(
                     VendorNotificationEvent.builder()
                             .tenantId(tenantId)
@@ -171,7 +171,6 @@ public class UserAuthController {
                             .message(user.getFirstName() +" has logged In ")
                             .build()
             );
-            logger.error("Event pulished");
             notificationService.saveNotification(tenantId,user.getVendorId(),-1L, NotificationType.USER_LOGIN,notificationTitle, user.getFirstName() +" has logged In ");
 
             return ResponseEntity.ok(
