@@ -33,8 +33,6 @@ public class ReviewService {
             Pageable pageable) {
 
         String tenantId = TenantContext.getTenantId();
-        log.info("Tenant Id : {}", tenantId);
-
         if (tenantId == null) {
             throw new RuntimeException("No tenant");
         }

@@ -30,25 +30,6 @@ public class DashBoardService {
     }
 
     public VendorProfileDTO loadDashBoardData(User user) {
-//        {
-//            "vendorId": 2,
-//                "tenantId": "TENANT-100001",
-//                "firstName": "Satish",
-//
-//                "businessName": "Kumar Traders",
-//                "storeName": "Kumar Traders",
-//                "email": "satish.mishra@example.com",
-//                "mobile": "9876543210",
-//                "logo": "https://cdn.mystore.com/vendors/logos/vendor-2.png",
-//                "subscriptionPlan": "PREMIUM",
-//                "status": "ACTIVE",
-//                "role": "VENDOR",
-//                "emailVerified": true,
-//                "mobileVerified": true,
-//                "lastLogin": "2026-07-05T14:35:22"
-//        }
-
-//        User user1=userRepos.findById(user.getId());
         VendorProfileDTO vendorProfileDTO = new VendorProfileDTO();
         Optional<Vendor> vendor = vendorRepository.findById(user.getVendorId());
         VendorBranding vendorBranding = vendorBrandingRepository.findByVendorId(user.getVendorId());
@@ -70,8 +51,6 @@ public class DashBoardService {
         vendorProfileDTO.setStatus(v2.getStatus());
         vendorProfileDTO.setBusinessName(v2.getBussinessName());
         vendorProfileDTO.setSubscriptionPlan(v2.getPlan());
-//        vendorProfileDTO.setLogo(vendorBranding.getLogoUrl());
-        System.out.println("Url Binding is " + r2Properties.getPublicUrl() + "/" + vendorBranding.getLogoUrl());
         vendorProfileDTO.setLogo(r2Properties.getPublicUrl() + "/" + vendorBranding.getLogoUrl());
         vendorProfileDTO.setStoreName(v2.getStoreName());
         return vendorProfileDTO;

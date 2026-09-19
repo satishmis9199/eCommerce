@@ -86,13 +86,9 @@ public class VendorAuthController {
 
             User user2 = user1.get();
             String otp= vendorOtpService.generateOtp();
-            log.error("Otp generated");
             vendorOtpService.saveOtp(tenanTid,user2.getId(),otp);
             boolean isOtpEx=vendorOtpService.otpExists(tenanTid,user2.getId());
-            log.error("Otp existencce : "+isOtpEx);
             boolean isverify=vendorOtpService.verifyOtp(tenanTid,user2.getId(),otp);
-            log.error("otp verification "+isverify);
-
             if (!user2.getTenantId().equals(tenanTid)) {
                 return ResponseEntity.status(401).body(Map.of("success", false, "message", "User Not found"));
             }

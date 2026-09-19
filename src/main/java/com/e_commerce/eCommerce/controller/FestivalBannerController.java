@@ -156,4 +156,36 @@ public class FestivalBannerController {
                     ));
         }
     }
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/vendor/s11/v1/festival-banner/{id}")
+    public ResponseEntity<ApiResponse<?>> deleteFestivalBanner(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetail customUserDetail) {
+
+        try {
+
+            String message = festivalBannerService.deleteFestivalBanner(
+                    customUserDetail,
+                    id
+            );
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new ApiResponse<>(
+                            true,
+                            message,
+                            message
+                    ));
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(
+                            false,
+                            "Unable To fetch",
+                            e.getMessage()
+                    ));
+        }
+    }
 }

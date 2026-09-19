@@ -167,10 +167,6 @@ public class UserAuthService {
                 );
             }
         }
-
-        /*
-         * Create new user
-         */
         User user = new User();
 
         user.setFirstName(

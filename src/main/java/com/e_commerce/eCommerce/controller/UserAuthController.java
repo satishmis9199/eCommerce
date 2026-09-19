@@ -49,19 +49,12 @@ public class UserAuthController {
 
     private static final Logger logger =
             LoggerFactory.getLogger(UserAuthController.class);
-
     private final AuthenticationManager authenticationManager;
     private final NotificationService notificationService;
     private final ApplicationEventPublisher eventPublisher;
-    @Autowired
-    UserRepos userRepository;
-    @Autowired
-    VendorRepository vendorRepository;
+    private final UserRepos userRepository;
+    private final VendorRepository vendorRepository;
     private final BuildProperties buildProperties;
-
-
-
-
     private final JwtUtil jwtUtil;
 
 
@@ -141,7 +134,6 @@ public class UserAuthController {
                         ));
             }
 
-            // Update Login Details
             user.setLastLoginIp(getClientIp(request));
             user.setLastLoginDevice(request.getHeader("User-Agent"));
             user.setLastLoginTime(LocalDateTime.now());

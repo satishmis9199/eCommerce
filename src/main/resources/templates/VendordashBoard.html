@@ -97,6 +97,31 @@
         .danger-btn:hover{background:#dc2626;}
         .success-btn{display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--green);color:#fff;border-radius:10px;font-weight:600;font-size:13px;transition:all var(--transition);}
         .success-btn:hover{background:#059669;}
+        .report-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
+        .report-panel .rp-head{display:flex;align-items:center;gap:14px;}
+        .report-panel .rp-icon{width:42px;height:42px;border-radius:12px;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+        .report-panel .rp-head h3{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;}
+        .report-panel .rp-head p{font-size:12px;color:var(--text-muted);margin-top:2px;}
+        .report-panel .rp-body{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:stretch;}
+        .report-panel .rp-controls{display:flex;flex-direction:column;gap:14px;min-width:0;}
+        .report-panel .rp-label{font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted);}
+        .report-panel .rf-modes{display:flex;flex-wrap:wrap;gap:8px;}
+        .report-panel .rf-mode{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary);font-size:12.5px;font-weight:600;transition:all var(--transition);white-space:nowrap;}
+        .report-panel .rf-mode i{font-size:12px;}
+        .report-panel .rf-mode:hover{border-color:var(--accent);color:var(--text-primary);}
+        .report-panel .rf-mode.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+        .report-panel .rf-fields{display:flex;gap:12px;flex-wrap:wrap;}
+        .report-panel .rf-fields>div{flex:1 1 150px;max-width:220px;}
+        .report-panel label{display:block;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:5px;}
+        .report-panel input[type=date],.report-panel select{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text-primary);font-size:13px;padding:10px 12px;outline:none;transition:border-color var(--transition);}
+        .report-panel input[type=date]:focus,.report-panel select:focus{border-color:var(--border-focus);}
+        [data-theme="dark"] .report-panel input[type=date]{color-scheme:dark;}
+        .report-panel .rp-side{display:flex;flex-direction:column;justify-content:space-between;gap:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+        .report-panel .rp-range{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;line-height:1.35;color:var(--text-primary);word-break:break-word;}
+        .report-panel .rp-range.error{color:var(--red);font-size:12.5px;font-weight:500;}
+        .report-panel .rp-side .primary-btn{justify-content:center;width:100%;}
+        @media (max-width:900px){.report-panel .rp-body{grid-template-columns:1fr;}}
+        @media (max-width:768px){.report-panel{padding:18px 16px;}.report-panel .rf-mode{flex:1 1 calc(50% - 8px);justify-content:center;}.report-panel .rf-fields>div{max-width:none;}}
         .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;}
         .dashboard-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;transition:all var(--transition);position:relative;overflow:hidden;}
         .dashboard-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity var(--transition);border-radius:inherit;}
@@ -753,10 +778,6 @@
                         <button class="secondary-btn" onclick="switchPage('upload')">
                             <i class="fa-solid fa-file-arrow-up"></i> Bulk Upload
                         </button>
-                        <button class="secondary-btn"
-                                onclick="showToast('success','Export','Sales report downloading...')"><i
-                                class="fa-solid fa-download"></i>Export Report
-                        </button>
                     </div>
                 </div>
 
@@ -810,6 +831,59 @@
                         <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
                     </div>
                 </div>
+
+                <!-- ================= SALES REPORT (Excel export) ================= -->
+                <section class="report-panel fade-up fade-up-2" id="salesReportSection">
+                    <div class="rp-head">
+                        <div class="rp-icon"><i class="fa-solid fa-file-excel"></i></div>
+                        <div>
+                            <h3>Sales Report</h3>
+                            <p>Choose a period and download your sales as an Excel (.xlsx) file.</p>
+                        </div>
+                    </div>
+
+                    <div class="rp-body">
+                        <div class="rp-controls">
+                            <span class="rp-label">Period</span>
+                            <div class="rf-modes" id="reportModes">
+                                <button type="button" class="rf-mode" data-mode="today" onclick="setReportMode('today')"><i class="fa-solid fa-calendar-day"></i>Today</button>
+                                <button type="button" class="rf-mode" data-mode="month" onclick="setReportMode('month')"><i class="fa-solid fa-calendar-week"></i>This Month</button>
+                                <button type="button" class="rf-mode" data-mode="monthyear" onclick="setReportMode('monthyear')"><i class="fa-solid fa-calendar-days"></i>Month &amp; Year</button>
+                                <button type="button" class="rf-mode active" data-mode="custom" onclick="setReportMode('custom')"><i class="fa-solid fa-pen-to-square"></i>Manual</button>
+                            </div>
+
+                            <div class="rf-fields" id="reportMonthYearFields" style="display:none;">
+                                <div>
+                                    <label for="reportMonth">Month</label>
+                                    <select id="reportMonth" onchange="updateReportRangeHint()"></select>
+                                </div>
+                                <div>
+                                    <label for="reportYear">Year</label>
+                                    <select id="reportYear" onchange="updateReportRangeHint()"></select>
+                                </div>
+                            </div>
+
+                            <div class="rf-fields" id="reportCustomFields">
+                                <div>
+                                    <label for="reportStartDate">From</label>
+                                    <input type="date" id="reportStartDate" onchange="updateReportRangeHint()">
+                                </div>
+                                <div>
+                                    <label for="reportEndDate">To</label>
+                                    <input type="date" id="reportEndDate" onchange="updateReportRangeHint()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rp-side">
+                            <span class="rp-label">Selected period</span>
+                            <strong class="rp-range" id="reportRangeHint">All dates</strong>
+                            <button type="button" class="primary-btn" id="exportReportBtn" onclick="exportSalesReport(this)">
+                                <i class="fa-solid fa-download"></i> Export to Excel
+                            </button>
+                        </div>
+                    </div>
+                </section>
 
                 <section class="analytics-section fade-up fade-up-2">
                     <div class="analytics-card large">
@@ -1346,7 +1420,7 @@
                         <p>Add many products at once by uploading a filled-in Excel sheet.</p>
                     </div>
                     <div class="header-actions">
-                        <button class="secondary-btn" onclick="downloadProductTemplate()">
+                        <button class="secondary-btn" onclick="downloadProductTemplate(this)">
                             <i class="fa-solid fa-download"></i> Download Template
                         </button>
                     </div>
@@ -3986,6 +4060,231 @@ function filterNoticesByStatus(s) {
     if (s === 'all') { renderNotices(noticeList); return; }
     renderNotices(noticeList.filter(n => computeNoticeState(n) === s));
 }
+/* ============================================================
+   EXCEL DOWNLOAD HELPER  (used by Sales Report + Product Template)
+   - button lock + spinner (no double-click / duplicate downloads)
+   - success toast only AFTER the file is really received
+   - rejects JSON / HTML replies (expired session, error page) instead of
+     saving them as a corrupt .xlsx
+   - validates the file really is an .xlsx (zip "PK" signature)
+   - reads server filename safely (quoted, unquoted, filename*=UTF-8'')
+============================================================ */
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+function parseDownloadFileName(disposition, fallback) {
+    let name = null;
+    if (disposition) {
+        const star = disposition.match(/filename\*\s*=\s*(?:UTF-8|utf-8)?'[^']*'([^;]+)/i);
+        if (star && star[1]) {
+            try { name = decodeURIComponent(star[1].trim()); } catch (e) { /* fall through */ }
+        }
+        if (!name) {
+            const quoted = disposition.match(/filename\s*=\s*"([^"]+)"/i);
+            if (quoted && quoted[1]) name = quoted[1].trim();
+        }
+        if (!name) {
+            const plain = disposition.match(/filename\s*=\s*([^;]+)/i);
+            if (plain && plain[1]) name = plain[1].trim();
+        }
+    }
+    name = (name || fallback).replace(/[\\/:*?"<>|\r\n]+/g, '_');
+    if (!/\.xlsx$/i.test(name)) name += '.xlsx';
+    return name;
+}
+
+async function downloadExcelFromApi({ url, fallbackName, button, busyHtml, errorMessage, emptyMessage }) {
+    if (button && button.disabled) return null;              // already running
+    const originalHtml = button ? button.innerHTML : '';
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = busyHtml || '<i class="fa-solid fa-spinner fa-spin"></i> Please wait...';
+    }
+
+    const expired = 'Your session has expired. Please log in again.';
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Accept': XLSX_MIME + ', application/json;q=0.8' }
+        });
+
+        const contentType = (response.headers.get('Content-Type') || '').toLowerCase();
+
+        if (response.status === 401 || response.status === 403) {
+            throw new Error(expired);
+        }
+
+        // Error / info reply from the server (JSON) - show its message
+        if (!response.ok || contentType.includes('application/json')) {
+            let msg = errorMessage;
+            if (contentType.includes('application/json')) {
+                try {
+                    const data = await response.json();
+                    if (data && data.message) msg = data.message;
+                } catch (e) { /* keep default message */ }
+            }
+            throw new Error(msg);
+        }
+
+        // Login page / HTML error page returned with status 200
+        if (contentType.includes('text/html')) {
+            throw new Error(expired);
+        }
+
+        const rawBlob = await response.blob();
+        if (!rawBlob.size) {
+            throw new Error(emptyMessage || 'The downloaded file is empty.');
+        }
+
+        // .xlsx is a zip file -> must start with "PK"
+        const head = new Uint8Array(await rawBlob.slice(0, 2).arrayBuffer());
+        if (head[0] !== 0x50 || head[1] !== 0x4B) {
+            throw new Error('The server did not return a valid Excel file. Please try again.');
+        }
+
+        const fileName = parseDownloadFileName(response.headers.get('Content-Disposition'), fallbackName);
+        const blob = rawBlob.slice(0, rawBlob.size, XLSX_MIME);
+        const objectUrl = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+
+        // revoke late - revoking immediately can cancel the download in some browsers
+        setTimeout(() => {
+            link.remove();
+            window.URL.revokeObjectURL(objectUrl);
+        }, 4000);
+
+        return fileName;
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = originalHtml;
+        }
+    }
+}
+
+/* ============================================================
+   SALES REPORT RANGE  (Today / This Month / Month & Year / Manual)
+   The API call is unchanged: GET /vendor/v1/reports/sales?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   These options only decide which startDate / endDate get sent.
+============================================================ */
+let reportRangeMode = 'custom';   // 'custom' with empty dates = same behaviour as before (all dates)
+
+function reportPad2(n) { return String(n).padStart(2, '0'); }
+
+// local-time YYYY-MM-DD (toISOString() would shift the day for IST and other timezones)
+function reportToYMD(d) {
+    return d.getFullYear() + '-' + reportPad2(d.getMonth() + 1) + '-' + reportPad2(d.getDate());
+}
+
+function reportPretty(ymd) {
+    if (!ymd) return '';
+    const [y, m, d] = ymd.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function initReportFilter() {
+    const monthSel = document.getElementById('reportMonth');
+    const yearSel  = document.getElementById('reportYear');
+    if (!monthSel || !yearSel || monthSel.options.length) return;
+
+    const now = new Date();
+    ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        .forEach((name, i) => monthSel.add(new Option(name, i)));
+    for (let y = now.getFullYear(); y >= now.getFullYear() - 5; y--) yearSel.add(new Option(y, y));
+
+    monthSel.value = now.getMonth();
+    yearSel.value  = now.getFullYear();
+    setReportMode('custom');
+}
+
+function setReportMode(mode) {
+    reportRangeMode = mode;
+    document.querySelectorAll('#reportModes .rf-mode').forEach(b =>
+        b.classList.toggle('active', b.dataset.mode === mode));
+    document.getElementById('reportMonthYearFields').style.display = mode === 'monthyear' ? 'flex' : 'none';
+    document.getElementById('reportCustomFields').style.display    = mode === 'custom'    ? 'flex' : 'none';
+    updateReportRangeHint();
+}
+
+// Returns { startDate, endDate } (YYYY-MM-DD, either may be '' in manual mode) or { error, title }
+function getReportRange(now = new Date()) {
+    const today = reportToYMD(now);
+    const monthRange = (y, m) => {
+        const start = reportToYMD(new Date(y, m, 1));
+        let end = reportToYMD(new Date(y, m + 1, 0));
+        if (start > today) return { error: 'The selected month is in the future.', title: 'Invalid Month' };
+        if (end > today) end = today;                       // current month -> up to today
+        return { startDate: start, endDate: end };
+    };
+
+    if (reportRangeMode === 'today') return { startDate: today, endDate: today };
+    if (reportRangeMode === 'month') return monthRange(now.getFullYear(), now.getMonth());
+
+    if (reportRangeMode === 'monthyear') {
+        const m = parseInt(document.getElementById('reportMonth')?.value, 10);
+        const y = parseInt(document.getElementById('reportYear')?.value, 10);
+        if (Number.isNaN(m) || Number.isNaN(y)) return { error: 'Please select a month and a year.', title: 'Invalid Month' };
+        return monthRange(y, m);
+    }
+
+    const startDate = document.getElementById('reportStartDate')?.value || '';
+    const endDate   = document.getElementById('reportEndDate')?.value || '';
+    if (startDate && endDate && startDate > endDate) {
+        return { error: 'Start date cannot be greater than end date.', title: 'Invalid Date' };
+    }
+    return { startDate, endDate };
+}
+
+function updateReportRangeHint() {
+    const el = document.getElementById('reportRangeHint');
+    if (!el) return;
+    const r = getReportRange();
+    if (r.error) { el.textContent = r.error; el.classList.add('error'); return; }
+    el.classList.remove('error');
+    if (!r.startDate && !r.endDate) el.textContent = 'All dates';
+    else if (r.startDate === r.endDate) el.textContent = reportPretty(r.startDate);
+    else el.textContent = (r.startDate ? reportPretty(r.startDate) : 'Beginning') + ' \u2192 ' + (r.endDate ? reportPretty(r.endDate) : 'Today');
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initReportFilter);
+else initReportFilter();
+
+async function exportSalesReport(btn) {
+    const range = getReportRange();
+    if (range.error) {
+        showToast('error', range.title || 'Invalid Date', range.error);
+        return;
+    }
+
+    // same API call as before - only the startDate / endDate values come from the selected option
+    const params = new URLSearchParams();
+    if (range.startDate) params.append('startDate', range.startDate);
+    if (range.endDate)   params.append('endDate', range.endDate);
+    const url = '/vendor/v1/reports/sales' + (params.toString() ? '?' + params.toString() : '');
+
+    try {
+        const fileName = await downloadExcelFromApi({
+            url,
+            fallbackName: 'Sales_Report.xlsx',
+            button: btn,
+            busyHtml: '<i class="fa-solid fa-spinner fa-spin"></i> Preparing...',
+            errorMessage: 'Failed to download sales report.',
+            emptyMessage: 'No sales data found for the selected dates.'
+        });
+        if (fileName) showToast('success', 'Export Complete', fileName + ' downloaded successfully.');
+    } catch (error) {
+        console.error('Sales report export error:', error);
+        showToast('error', 'Export Failed', error.message || 'Unable to download sales report.');
+    }
+}
 
 function openAddNoticeModal() {
     editingNoticeId = null;
@@ -4671,39 +4970,20 @@ function showUploadResult(response){
     }
 
 }
-async function downloadProductTemplate() {
+async function downloadProductTemplate(btn) {
     try {
-
-        const response = await fetch('/vendor/v1/products/template', {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            }
+        const fileName = await downloadExcelFromApi({
+            url: '/vendor/v1/products/template',
+            fallbackName: 'Product_Template.xlsx',
+            button: btn,
+            busyHtml: '<i class="fa-solid fa-spinner fa-spin"></i> Downloading...',
+            errorMessage: 'Failed to download template.',
+            emptyMessage: 'The template file came back empty.'
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to download template.');
-        }
-        showToast('success', 'Template',  'Template downloading, please wait...');
-
-        const blob = await response.blob();
-
-        const url = window.URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'Product_Template.xlsx';
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        window.URL.revokeObjectURL(url);
-
+        if (fileName) showToast('success', 'Template', fileName + ' downloaded successfully.');
     } catch (error) {
-        console.error(error);
-        showToast('error', 'Template', 'Unable to download template.');
+        console.error('Template download error:', error);
+        showToast('error', 'Template', error.message || 'Unable to download template.');
     }
 }
 
