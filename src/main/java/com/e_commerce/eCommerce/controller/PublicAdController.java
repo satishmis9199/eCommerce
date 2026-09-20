@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.response.PublicAdDto;
 import com.e_commerce.eCommerce.enums.AdSlotKey;
@@ -21,6 +22,7 @@ public class PublicAdController {
 
 
     @GetMapping("/random")
+    @RequiresFeature("SPONSORED_ADS")
     public ResponseEntity<ApiResponse<PublicAdDto>> getRandomAd() {
         PublicAdDto ad = adService.getRandomActiveAd();
         if (ad == null) {
@@ -28,7 +30,7 @@ public class PublicAdController {
         }
         return ResponseEntity.ok(new ApiResponse<>(true, "Random ad fetched", ad));
     }
-
+    @RequiresFeature("SPONSORED_ADS")
     @GetMapping("/slots/{slotKey}")
     public ResponseEntity<ApiResponse<PublicAdDto>> getAdForSlot(@PathVariable String slotKey) {
 
@@ -45,12 +47,13 @@ public class PublicAdController {
         }
         return ResponseEntity.ok(new ApiResponse<>(true, "Ad fetched", ad));
     }
+    @RequiresFeature("SPONSORED_ADS")
     @PostMapping("/{adId}/impression")
     public ResponseEntity<ApiResponse<Void>> recordImpression(@PathVariable Long adId) {
         adService.recordImpression(adId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Impression recorded", null));
     }
-
+    @RequiresFeature("SPONSORED_ADS")
     @PostMapping("/{adId}/click")
     public ResponseEntity<ApiResponse<Void>> recordClick(@PathVariable Long adId) {
         adService.recordClick(adId);

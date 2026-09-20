@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.UploadResult;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.ProductExcelService;
@@ -25,12 +26,8 @@ public class ProductExcelController {
     private static final String[] ALLOWED_EXTENSIONS = {".xlsx"};
 
     private final ProductExcelService productExcelService;
-
-    /**
-     * Download Excel Template
-     */
-
     @GetMapping("/template")
+    @RequiresFeature("BULK_PRODUCT_UPLOAD")
     public ResponseEntity<ByteArrayResource> downloadTemplate(
             @AuthenticationPrincipal CustomUserDetail userDetail) throws Exception {
 
@@ -44,18 +41,11 @@ public class ProductExcelController {
                 .contentLength(excel.length)
                 .body(new ByteArrayResource(excel));
     }
-
-    /**
-     * Upload Filled Excel
-     */
+    @RequiresFeature("BULK_PRODUCT_UPLOAD")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadExcel(
             @RequestParam MultipartFile file,
             @AuthenticationPrincipal CustomUserDetail userDetail) throws Exception {
-
-        log.info("======================================================");
-        log.info("START :: ProductExcelController.uploadExcel()");
-
         if (file == null || file.isEmpty()) {
             log.error("Upload failed : File is null or empty");
             return ResponseEntity.badRequest()
@@ -63,13 +53,6 @@ public class ProductExcelController {
         }
 
         String filename = file.getOriginalFilename();
-
-        log.info("File Name      : {}", filename);
-        log.info("File Size      : {} bytes", file.getSize());
-        log.info("Tenant Id      : {}", userDetail.getUser().getTenantId());
-        log.info("Vendor Id      : {}", userDetail.getUser().getVendorId());
-        log.info("User Id        : {}", userDetail.getUser().getId());
-
         if (filename == null || !hasAllowedExtension(filename)) {
             log.error("Invalid file extension : {}", filename);
             return ResponseEntity.badRequest()
@@ -77,21 +60,12 @@ public class ProductExcelController {
         }
 
         UploadResult result = productExcelService.uploadProducts(file, userDetail.getUser());
-
-        log.info("======================================================");
-        log.info("Upload Summary");
-        log.info("Total Processed : {}", result.getTotalRowsProcessed());
-        log.info("Success Count   : {}", result.getSuccessCount());
-        log.info("Failure Count   : {}", result.getFailureCount());
-
         if (result.getRowErrors() != null && !result.getRowErrors().isEmpty()) {
             log.error("Validation Errors:");
             result.getRowErrors().forEach(error ->
                     log.error("Excel Row {} -> {}", error.getExcelRowNumber(), error.getMessages())
             );
         }
-
-        // Nothing usable
         if (result.getTotalRowsProcessed() == 0) {
 
             log.error("No product rows found in uploaded excel.");
@@ -102,8 +76,6 @@ public class ProductExcelController {
                             "result", result
                     ));
         }
-
-        // All rows failed
         if (result.getSuccessCount() == 0) {
 
             log.error("Every row failed validation.");
@@ -114,8 +86,6 @@ public class ProductExcelController {
                             "result", result
                     ));
         }
-
-        // Partial success
         if (result.getFailureCount() > 0) {
 
             log.warn("Partial Upload. Success={}, Failed={}",
@@ -128,8 +98,6 @@ public class ProductExcelController {
                     "result", result
             ));
         }
-
-        // Full success
         log.info("All products uploaded successfully.");
 
         return ResponseEntity.ok(Map.of(

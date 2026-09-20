@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.request.AdRequestDto;
@@ -16,21 +17,21 @@ import java.util.List;
 public class VendorAdController {
 
     private final AdService adService;
-
+    @RequiresFeature("SPONSORED_ADS")
     @PostMapping
     public ResponseEntity<ApiResponse<AdResponseDto>> requestAd(@RequestBody AdRequestDto dto) {
         String tenantId = resolveTenantId();
         AdResponseDto response = adService.createAdRequest(tenantId, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Ad request sent for approval", response));
     }
-
+    @RequiresFeature("SPONSORED_ADS")
     @GetMapping
     public ResponseEntity<ApiResponse<List<AdResponseDto>>> getMyAds() {
         String tenantId = resolveTenantId();
         List<AdResponseDto> response = adService.getVendorAds(tenantId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Ad requests fetched successfully", response));
     }
-
+    @RequiresFeature("SPONSORED_ADS")
     private String resolveTenantId() {
         String tenantId = TenantContext.getTenantId();
         if (tenantId == null || tenantId.isBlank()) {

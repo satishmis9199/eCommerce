@@ -25,7 +25,6 @@ public class DashBoardService {
         this.userRepos = userRepos;
         this.vendorRepository = vendorRepository;
         this.vendorBrandingRepository = vendorBrandingRepository;
-//        this.vendorBranding = (VendorBrandingRepository) vendorBranding;
         this.r2Properties = r2Properties;
     }
 

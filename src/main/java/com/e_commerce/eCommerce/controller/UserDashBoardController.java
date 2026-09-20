@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
@@ -29,7 +30,7 @@ public class UserDashBoardController {
 
     }
 
-
+    @RequiresFeature("CATEGORY_MANAGEMENT")
     @GetMapping("/catalog/categories")
     public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> getActiveCategory() {
 
@@ -81,7 +82,7 @@ public class UserDashBoardController {
     }
 
     @GetMapping("/products")
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getAllProducts() {
         try {
             String tenant = TenantContext.getTenantId();
@@ -106,7 +107,7 @@ public class UserDashBoardController {
                     );
         }
     }
-
+    @RequiresFeature("CATEGORY_MANAGEMENT")
     @GetMapping("/products/category/{categoryId}")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getProductsByCategory(@PathVariable Long categoryId) {
         try {
@@ -131,7 +132,7 @@ public class UserDashBoardController {
                     );
         }
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/recommended")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getRecommendedProducts() {
         try {
@@ -157,7 +158,7 @@ public class UserDashBoardController {
         }
     }
 
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/new-arrivals")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getNewArrivals() {
         try {
@@ -183,7 +184,7 @@ public class UserDashBoardController {
         }
 
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/best-sellers")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getBestSellProducts() {
         try {
@@ -214,13 +215,6 @@ public class UserDashBoardController {
     public ResponseEntity<ApiResponse<?>> changePassword(
             @RequestBody ChangePasswordDTO changePasswordDTO,
             @AuthenticationPrincipal CustomUserDetail userDetail) {
-
-        log.info("========== CHANGE PASSWORD REQUEST ==========");
-        log.info("User Id : {}", userDetail != null ? userDetail.getId() : "NULL");
-        log.info("Current Password : {}", changePasswordDTO.getCurrentPassword());
-        log.info("New Password : {}", changePasswordDTO.getNewPassword());
-        log.info("Confirm Password : {}", changePasswordDTO.getConfirmPassword());
-
         try {
 
             String message = userDashBoardService.changeMyPassword(changePasswordDTO, userDetail);
@@ -231,12 +225,7 @@ public class UserDashBoardController {
                     .body(new ApiResponse<>(true, message));
 
         } catch (Exception e) {
-
-            log.error("========== CHANGE PASSWORD ERROR ==========");
-            log.error("Exception Type : {}", e.getClass().getName());
-            log.error("Exception Message : {}", e.getMessage());
             log.error("Stack Trace :", e);
-
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(
                             false,
@@ -245,6 +234,7 @@ public class UserDashBoardController {
         }
     }
 
+    @RequiresFeature("FESTIVAL_BANNER")
     @GetMapping("/users/home/banners")
     public ResponseEntity<ApiResponse<List<UserBannerResponseDTo>>> loadBanner(
             @AuthenticationPrincipal CustomUserDetail userDetail) {

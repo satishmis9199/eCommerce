@@ -103,6 +103,9 @@
         .btn[disabled]{opacity:.7;pointer-events:none;}
 
         .header-actions .btn-outline{padding:10px 16px;}
+        .btn-soft{background:var(--brand-light);color:var(--brand);border-color:transparent;}
+        .btn-soft:hover{border-color:var(--brand);}
+        .header-actions .btn-soft{padding:10px 16px;}
 
         /* =====================================================================
            HERO (this IS the landing page — no other sections)
@@ -131,6 +134,87 @@
         .hero .lede{font-size:16px;line-height:1.6;color:var(--steel-200);max-width:520px;margin:18px auto 0;}
         .hero-ctas{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap;justify-content:center;}
 
+        /* Register hint directly under the hero buttons */
+        .hero-register{
+          display:inline-flex;align-items:center;gap:10px;margin-top:22px;
+          padding:9px 16px 9px 12px;border-radius:999px;font-size:13.5px;color:var(--steel-200);
+          background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+          transition:background .15s,border-color .15s,color .15s;
+        }
+        .hero-register strong{color:#fff;font-weight:600;}
+        .hero-register:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.4);}
+        .hero-register .hr-badge{
+          display:grid;place-items:center;width:24px;height:24px;border-radius:50%;
+          background:var(--clay-500);color:#fff;flex-shrink:0;
+        }
+
+        /* =====================================================================
+           VENDOR REGISTRATION BAND
+        ===================================================================== */
+        .vendor-band{background:var(--concrete-50);border-top:1px solid var(--border);padding:72px 0;}
+        .vb-card{
+          display:grid;grid-template-columns:1.2fr .8fr;
+          background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+          overflow:hidden;box-shadow:0 18px 44px rgba(20,22,31,.08);
+        }
+        .vb-main{padding:44px 48px;}
+        .vb-main h2{font-size:clamp(25px,3.4vw,34px);line-height:1.18;max-width:480px;}
+        .vb-main > p{margin-top:12px;font-size:15px;line-height:1.65;color:var(--ink-soft);max-width:480px;}
+
+        .vb-flow{list-style:none;margin-top:30px;display:grid;gap:0;position:relative;}
+        .vb-flow::before{
+          content:"";position:absolute;left:15px;top:18px;bottom:18px;width:2px;
+          background:linear-gradient(var(--brand),var(--border));
+        }
+        .vb-flow li{position:relative;display:flex;gap:16px;align-items:flex-start;padding:0 0 22px;}
+        .vb-flow li:last-child{padding-bottom:0;}
+        .vb-flow .n{
+          position:relative;z-index:1;flex-shrink:0;width:32px;height:32px;border-radius:50%;
+          display:grid;place-items:center;background:var(--brand);color:#fff;
+          font:700 13px var(--font-display);box-shadow:0 0 0 5px var(--surface);
+        }
+        .vb-flow li:last-child .n{background:var(--clay-500);}
+        .vb-flow strong{display:block;font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;padding-top:5px;}
+        .vb-flow span.d{display:block;margin-top:2px;font-size:13.5px;color:var(--ink-soft);line-height:1.5;}
+
+        .vb-cta{
+          position:relative;padding:44px 40px;color:#fff;
+          display:flex;flex-direction:column;justify-content:center;gap:18px;
+          background:
+            radial-gradient(420px 260px at 100% 0,rgba(198,85,47,.28),transparent 65%),
+            linear-gradient(160deg,var(--steel-900),var(--steel-800));
+        }
+        .vb-cta-icon{
+          width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
+          background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+        }
+        .vb-cta h3{font-size:24px;line-height:1.2;}
+        .vb-checks{list-style:none;display:grid;gap:9px;}
+        .vb-checks li{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--steel-200);}
+        .vb-checks svg{flex-shrink:0;color:#7FD6A4;}
+        .btn-light{background:#fff;color:var(--steel-900);}
+        .btn-light:hover{background:var(--concrete-100);}
+        .vb-cta .btn-lg{width:100%;margin-top:4px;box-shadow:0 10px 26px rgba(0,0,0,.28);}
+        .vb-login{font-size:13.5px;color:var(--steel-200);text-align:center;}
+        .vb-login a{color:#fff;font-weight:600;text-decoration:underline;text-underline-offset:3px;}
+        .vb-cta a:focus-visible{outline-color:#fff;}
+
+        /* One quiet attention cue: a slow ring on the hero pill badge */
+        .hero-register .hr-badge{position:relative;}
+        .hero-register .hr-badge::after{
+          content:"";position:absolute;inset:-4px;border-radius:50%;
+          border:2px solid var(--clay-500);opacity:0;animation:vbRing 2.6s ease-out 1.2s infinite;
+        }
+        @keyframes vbRing{0%{transform:scale(.8);opacity:.7;}100%{transform:scale(1.5);opacity:0;}}
+        @media (prefers-reduced-motion:reduce){ .hero-register .hr-badge::after{animation:none;} }
+
+        @media (max-width:860px){
+          .vb-card{grid-template-columns:1fr;}
+          .vb-main{padding:32px 26px 28px;}
+          .vb-cta{padding:32px 26px;}
+        }
+        @media (max-width:760px){ .vendor-band{padding:40px 0;} }
+
         .load-error{
           display:none;background:#FBEAE8;border:1px solid #F1C7C0;color:#8C2E22;
           border-radius:8px;padding:14px 16px;margin:24px auto 0;max-width:480px;
@@ -155,7 +239,8 @@
         @media (max-width:760px){
           .container{padding:0 18px;}
           .header-actions .btn-label-full{display:none;}
-          .hero-inner{padding:56px 0 64px;}
+          #vendorRegisterHeaderBtn{display:none;} /* hero pill + vendor band cover mobile */
+          .hero-inner{padding:56px 18px 64px;}
           .hero .lede{font-size:14.5px;}
           .hero-ctas{gap:10px;}
           .hero-ctas .btn{flex:1;min-width:150px;}
@@ -166,32 +251,6 @@
           .btn-lg{padding:13px 18px;font-size:14px;}
           .brand-name{font-size:14.5px;}
         }
-
-        /* =====================================================================
-           TEAM INFO POPUP
-        ===================================================================== */
-        .team-overlay{
-          display:none;position:fixed;inset:0;z-index:200;
-          background:rgba(18,24,31,.55);backdrop-filter:blur(2px);
-          align-items:center;justify-content:center;padding:20px;
-        }
-        .team-overlay.show{display:flex;}
-        .team-modal{
-          background:var(--surface);border-radius:var(--radius-lg);
-          max-width:400px;width:100%;padding:28px 26px 24px;
-          box-shadow:0 20px 50px rgba(18,24,31,.25);
-          text-align:left;position:relative;
-        }
-        .team-modal h3{font-size:19px;margin-bottom:8px;color:var(--ink);}
-        .team-modal-body{font-size:14px;line-height:1.6;color:var(--ink-soft);min-height:24px;}
-        .team-modal-body.loading{color:var(--ink-soft);font-style:italic;}
-        .team-modal-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
-        .team-modal-actions .btn{flex:1;min-width:130px;padding:10px 14px;font-size:13.5px;}
-        .team-modal-close{
-          position:absolute;top:14px;right:14px;background:none;border:none;
-          color:var(--ink-soft);font-size:20px;line-height:1;padding:4px;
-        }
-        .team-modal-close:hover{color:var(--ink);}
 
         /* =====================================================================
            FESTIVE PROMO POPUP
@@ -268,8 +327,11 @@
             <span class="brand-name skel" id="brandName">Loading store name</span>
         </a>
         <div class="header-actions">
+            <a href="/api/u1/v1/register-vendor" class="btn btn-soft" id="vendorRegisterHeaderBtn">
+                Register<span class="btn-label-full"> as Vendor</span>
+            </a>
             <a href="/api/vendor/v1/login" class="btn btn-outline" id="vendorHeaderBtn">
-                <span class="btn-label-full">Sign in as</span> Vendor
+                Sign in<span class="btn-label-full"> as Vendor</span>
             </a>
             <a href="/employee.html" class="btn btn-primary" id="shopHeaderBtn">Shop Now</a>
         </div>
@@ -297,9 +359,79 @@
             <a href="/api/vendor/v1/login" class="btn btn-ghost-light btn-lg" id="vendorHeroBtn">Sign in as Vendor</a>
         </div>
 
+        <a href="/api/u1/v1/register-vendor" class="hero-register" id="vendorRegisterHeroLink">
+            <span class="hr-badge">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/>
+                </svg>
+            </span>
+            <span>Want to sell here? <strong>Register as a vendor</strong></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+        </a>
+
         <div class="load-error" id="heroError">
             <span id="heroErrorText">We couldn't load full store details right now.</span>
             <button id="retryBtn" type="button">Retry</button>
+        </div>
+    </div>
+</section>
+
+<!-- ================= VENDOR REGISTRATION ================= -->
+<section class="vendor-band" id="vendor" aria-labelledby="vbTitle">
+    <div class="container">
+        <div class="vb-card">
+
+            <div class="vb-main">
+                <h2 id="vbTitle">Own a business? Start selling with us.</h2>
+                <p>Register your business details. Our team reviews your request, contacts you and sets up your
+                    vendor account.</p>
+
+                <ol class="vb-flow">
+                    <li>
+                        <span class="n">1</span>
+                        <div><strong>Register your business</strong>
+                            <span class="d">Fill in a short form. You get a request code to track your status.</span></div>
+                    </li>
+                    <li>
+                        <span class="n">2</span>
+                        <div><strong>Get approved</strong>
+                            <span class="d">We contact you, approve your request and send your login details.</span></div>
+                    </li>
+                    <li>
+                        <span class="n">3</span>
+                        <div><strong>Sign in and go live</strong>
+                            <span class="d">Set a new password, complete onboarding and your shop goes live after review.</span></div>
+                    </li>
+                </ol>
+            </div>
+
+            <aside class="vb-cta">
+                <div class="vb-cta-icon" aria-hidden="true">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/>
+                    </svg>
+                </div>
+                <h3>Ready to join?</h3>
+                <ul class="vb-checks">
+                    <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Free to apply</li>
+                    <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No plan needed to submit</li>
+                    <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Track your request online</li>
+                </ul>
+                <a href="/api/u1/v1/register-vendor" class="btn btn-light btn-lg" id="vendorRegisterBandBtn">
+                    Register as Vendor
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round">
+                        <path d="M5 12h14M13 6l6 6-6 6"/>
+                    </svg>
+                </a>
+                <span class="vb-login">Already registered? <a href="/api/vendor/v1/login">Sign in as Vendor</a></span>
+            </aside>
+
         </div>
     </div>
 </section>
@@ -312,7 +444,7 @@
             <a href="/api/team/info">The People Behind the Project</a>
             <a href="/api/product-document">Product Documentation</a>
             <span class="dot-sep">·</span>
-            <span>Vendor? <a href="/api/vendor/v1/login" style="color:#fff;font-weight:600;">Sign in here</a></span>
+            <span>Vendor? <a href="/api/vendor/v1/login" style="color:#fff;font-weight:600;">Sign in</a> or <a href="/api/u1/v1/register-vendor" style="color:#fff;font-weight:600;">Register</a></span>
         </div>
 
 
@@ -329,18 +461,6 @@
         </div>
     </div>
 </div>
-<div class="team-overlay" id="teamOverlay">
-    <div class="team-modal">
-        <button class="team-modal-close" id="teamPopupCloseX" type="button" aria-label="Close">&times;</button>
-        <h3>Meet the Team</h3>
-        <div class="team-modal-body" id="teamPopupBody">Curious who built this? Check out the team behind this page.</div>
-        <div class="team-modal-actions">
-            <button class="btn btn-outline" id="teamPopupLater" type="button">Remind me later</button>
-            <button class="btn btn-primary" id="teamPopupView" type="button">View Team</button>
-        </div>
-    </div>
-</div>
-
 <script>
     (function(){
       "use strict";
@@ -349,6 +469,7 @@
          CONFIG
            GET /api/u1/v1/store/info → vendor/store profile (branding only)
            Vendor CTA  → /api/vendor/v1/login (normal navigation, it's an API/auth route)
+           Register CTA → /api/u1/v1/register-vendor (normal navigation, vendor registration page)
            Shop CTA    → employee.html OR home.html depending on vendor.storeType —
                          plain redirect (window.location.href), so its own
                          <link>/<script> tags in <head> load correctly.
@@ -497,7 +618,7 @@
         document.getElementById("heroEyebrow").textContent = "Welcome";
         document.getElementById("footerCopyright").textContent = `© ${new Date().getFullYear()} All rights reserved.`;
 
-        // Festival banner / Team popup flow is fully independent of
+        // Festival banner flow is fully independent of
         // store info now — it runs regardless via loadFestivalBanner().
       }
 
@@ -547,8 +668,6 @@
              - Triggered from loadFestivalBanner() on page load, in
                parallel with /store/info — never waits on it, never
                blocks it, and a failure here never breaks the page.
-             - On close, or when no active banner exists, falls through
-               to maybeShowTeamPopup() so the two never show stacked.
       ----------------------------------------------------------------- */
       const FESTIVE_HIDE_KEY = "festivePopupHideUntil";
       const FESTIVE_HIDE_MS = 24 * 60 * 60 * 1000; // 24h
@@ -568,21 +687,17 @@
       function hideFestivePopup(){
         localStorage.setItem(FESTIVE_HIDE_KEY, String(Date.now() + FESTIVE_HIDE_MS));
         festiveOverlay.classList.remove("show");
-        maybeShowTeamPopup();
       }
 
       function handleFestivePopup(banner){
         if (banner && banner.active && banner.bannerImage && !isFestiveHideActive()){
           showFestivePopup(banner.bannerImage);
-        } else {
-          maybeShowTeamPopup();
         }
       }
 
       // Independent call — resolved in parallel with /store/info.
       // A 404 (no active banner) or any network/server error is treated
-      // as "nothing to show" and silently falls through to the Team
-      // popup; it never surfaces an error to the user.
+      // as "nothing to show"; it never surfaces an error to the user.
       async function loadFestivalBanner(){
         try{
           const result = await fetchJson(FESTIVAL_BANNER_URL);
@@ -601,45 +716,6 @@
         if (e.target === festiveOverlay) hideFestivePopup();
       });
 
-      /* -----------------------------------------------------------------
-         TEAM INFO POPUP
-           "View Team" -> plain redirect to /api/team/info (no fetch/load,
-           full navigation just like goToShop below)
-           Rules:
-             - "View Team" click -> navigates to /api/team/info
-             - "Remind me later" / close (×) -> hidden for 5 hours, then reappears
-             - Fresh visitor (no localStorage yet) -> popup shows
-             - Only auto-shown via maybeShowTeamPopup(), so it never
-               stacks on top of the festive popup.
-      ----------------------------------------------------------------- */
-      const TEAM_PAGE_URL = "/api/team/info";
-      const TEAM_HIDE_UNTIL_KEY = "teamPopupHideUntil"; // temporary (5h)
-      const TEAM_FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
-
-      const teamOverlay = document.getElementById("teamOverlay");
-
-      function shouldShowTeamPopup(){
-        const hideUntil = localStorage.getItem(TEAM_HIDE_UNTIL_KEY);
-        if (hideUntil && Date.now() < Number(hideUntil)) return false;
-        return true;
-      }
-
-      function showTeamPopup(){ teamOverlay.classList.add("show"); }
-      function hideTeamPopup(){ teamOverlay.classList.remove("show"); }
-
-      function remindTeamPopupLater(){
-        localStorage.setItem(TEAM_HIDE_UNTIL_KEY, String(Date.now() + TEAM_FIVE_HOURS_MS));
-        hideTeamPopup();
-      }
-      function goToTeamPage(){
-        window.location.href = TEAM_PAGE_URL;
-      }
-      function maybeShowTeamPopup(){
-        if (shouldShowTeamPopup()) showTeamPopup();
-      }
-      document.getElementById("teamPopupView").addEventListener("click", goToTeamPage);
-      document.getElementById("teamPopupLater").addEventListener("click", remindTeamPopupLater);
-      document.getElementById("teamPopupCloseX").addEventListener("click", remindTeamPopupLater);
       function goToShop(e){
         if (e) e.preventDefault();
         window.location.href = shopUrl;

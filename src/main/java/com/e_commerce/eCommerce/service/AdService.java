@@ -244,4 +244,18 @@ public class AdService {
 
         return vendor.map(Vendor::getId).orElse(null);
     }
+
+    public List<AdResponseDto> getAds(AdStatus status) {
+        List<Ad> ads;
+        if (status == null) {
+            ads = adRepository.findAllByOrderByCreatedAtDesc();
+        } else if (status == AdStatus.PENDING) {
+            ads = adRepository.findByStatusOrderByCreatedAtAsc(status);
+        } else {
+            ads = adRepository.findByStatusOrderByCreatedAtDesc(status);
+        }
+        return ads.stream()
+                .map(AdResponseDto::from)
+                .collect(Collectors.toList());
+    }
 }

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     private final NotificationService notificationService;
-
     @GetMapping
     public ResponseEntity<ApiResponse<NotificationListResponse>> getNotifications(
             @RequestParam(defaultValue = "0") int page,

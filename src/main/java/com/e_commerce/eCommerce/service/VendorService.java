@@ -29,7 +29,7 @@ import java.util.Optional;
 @AllArgsConstructor
 
 public class VendorService {
-    private static final Logger logger = LoggerFactory.getLogger(VendorController.class);
+    private static final Logger logger = LoggerFactory.getLogger(VendorService.class);
 
 
     private final VendorRepository vendorRepository;
@@ -131,7 +131,7 @@ public class VendorService {
 
     @Cacheable(value = "AllVendors")
     public List<VendorResponseDto> getAllVendors() {
-        logger.info("Fist hit in DB for  Vendor");
+
 
 
         List<VendorResponseDto> responseDtoList = new ArrayList<>();
@@ -986,5 +986,17 @@ public class VendorService {
         );
 
         return request;
+    }
+    public Long getPlanIdByTenantId(String tenantId) {
+
+        Vendor vendor = vendorRepository
+                .findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Vendor not found for tenant: " + tenantId
+                        )
+                );
+
+        return vendor.getPlanId();
     }
 }

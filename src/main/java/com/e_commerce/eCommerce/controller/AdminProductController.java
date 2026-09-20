@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.service.AdminProductService;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
@@ -23,8 +24,8 @@ public class AdminProductController {
     private final ProductService productService;
     private final AdminProductService adminProductService;
     private static final Logger logger = LoggerFactory.getLogger(AdminProductController.class);
-
-    @PostMapping("/s11/v1/product")
+    @RequiresFeature("PRODUCT_MANAGEMENT")
+    @PostMapping(value = "/s11/v1/product",produces = MediaType.APPLICATION_JSON_VALUE,consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addProduct(
             @RequestBody ProductRequestDTO dto,
             @AuthenticationPrincipal CustomUserDetail userDetail) {
@@ -36,7 +37,7 @@ public class AdminProductController {
                 "message", message
         ));
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/s11/v1/product")
     public ResponseEntity<?> loadProductsForAdmin(
             @AuthenticationPrincipal CustomUserDetail userDetail) {
@@ -50,7 +51,7 @@ public class AdminProductController {
                 "products", products
         ));
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @PutMapping("/s11/v1/product/{editingProductId}")
     public ResponseEntity<?> editProduct(
             @PathVariable Long editingProductId,
@@ -65,7 +66,7 @@ public class AdminProductController {
         ));
     }
 
-
+    @RequiresFeature("CATEGORY_MANAGEMENT")
     @PostMapping("/s11/v11/create-Category")
     public ResponseEntity<?> createCategory(@AuthenticationPrincipal CustomUserDetail userDetail, @RequestBody CategoryRequestDTO categoryRequestDTO) {
         CategoryResponseDTO c1 = new CategoryResponseDTO();
@@ -86,7 +87,7 @@ public class AdminProductController {
     }
 
     @GetMapping("/s11/v11/create-Category")
-
+    @RequiresFeature("CATEGORY_MANAGEMENT")
     public ResponseEntity<?> getAllCategory(
             @AuthenticationPrincipal CustomUserDetail userDetail) {
 
@@ -101,7 +102,7 @@ public class AdminProductController {
                         : "Categories fetched successfully."
         ));
     }
-
+    @RequiresFeature("CATEGORY_MANAGEMENT")
     @PutMapping("/s11/v11/create-Category/{categoryId}")
     public ResponseEntity<?> updateCategory(
             @PathVariable Long categoryId,
@@ -120,7 +121,7 @@ public class AdminProductController {
                     "message", e.getMessage()));
         }
     }
-
+    @RequiresFeature("CATEGORY_MANAGEMENT")
     @PatchMapping("/s11/v11/create-Category/status")
     public ResponseEntity<?> updateStatus(@RequestBody UpdateCategoryDTO updateCategoryDTO, @AuthenticationPrincipal CustomUserDetail userDetail) {
         try {
@@ -138,7 +139,7 @@ public class AdminProductController {
 
     }
 
-
+    @RequiresFeature("CATEGORY_MANAGEMENT")
     @DeleteMapping("/s11/v11/create-Category/{categoryId}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId, @AuthenticationPrincipal CustomUserDetail userDetail) {
         try {
@@ -155,7 +156,7 @@ public class AdminProductController {
         }
 
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @DeleteMapping("/s11/v1/product/{id}")
     public ResponseEntity<?> deleteProduct(@AuthenticationPrincipal CustomUserDetail userDetail, @PathVariable Long id) {
         try {
@@ -172,7 +173,7 @@ public class AdminProductController {
             ));
         }
     }
-
+    @RequiresFeature("CATEGORY_MANAGEMENT")
     @PutMapping("/s11/v1/category/move-and-delete")
     public ResponseEntity<?> moveAndDelete(@AuthenticationPrincipal CustomUserDetail userDetail, @RequestBody MoveAndDeleteDto moveAndDeleteDto) {
         try {
@@ -189,7 +190,7 @@ public class AdminProductController {
             ));
         }
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/s11/v1/products/{id}")
     public ResponseEntity<?> getProductById(@PathVariable Long id) {
         try {
@@ -215,7 +216,7 @@ public class AdminProductController {
 
 
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping(value = "/s2/v1/allorders", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getAdminOrders(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
         try {
@@ -242,7 +243,7 @@ public class AdminProductController {
         }
     }
 
-
+    @RequiresFeature("FLASH_SALE")
     @PostMapping(value = "/s11/v1/flash-sale", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<?>> createFlashSale(@AuthenticationPrincipal CustomUserDetail userDetail, @RequestBody FlashSaleRequestDto flashSaleRequestDto) {
         try {
@@ -266,7 +267,7 @@ public class AdminProductController {
                     );
         }
     }
-
+    @RequiresFeature("FLASH_SALE")
     @GetMapping(value = "/s11/v1/flash-sale")
     public ResponseEntity<ApiResponse<List<FlashSaleResponseDto>>> getFlashSaleData(@AuthenticationPrincipal CustomUserDetail userDetail) {
         try {
@@ -290,7 +291,7 @@ public class AdminProductController {
                     );
         }
     }
-
+    @RequiresFeature("FLASH_SALE")
     @PutMapping(value = "/s11/v1/flash-sale/{flashSaleId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<?>> getFlashSaleById(
             @AuthenticationPrincipal CustomUserDetail userDetail,
@@ -317,7 +318,7 @@ public class AdminProductController {
 
 
     }
-
+    @RequiresFeature("FLASH_SALE")
     @DeleteMapping(value = "/s11/v1/flash-sale/{flashSaleId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<?>> getFlashSaleById(
             @AuthenticationPrincipal CustomUserDetail userDetail,

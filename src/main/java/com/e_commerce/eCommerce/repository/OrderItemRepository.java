@@ -14,48 +14,47 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     List<OrderItem> findByOrderId(Long id);
 
-    List<OrderItem> findAllByOrderIdAndTenantId(
-            Long orderId,
-            String tenantId
-    );
-
     @Query(
             value = """
-                    SELECT
-                        o.order_number AS orderNumber,
-                        o.created_at AS orderDate,
+                SELECT
+                    o.order_number AS orderNumber,
+                    o.created_at AS orderDate,
 
-                        u.id AS customerId,
-                        CONCAT(u.first_name, ' ', u.last_name) AS customerName,
+                    u.id AS customerId,
+                    CONCAT(u.first_name, ' ', u.last_name) AS customerName,
 
-                        oi.product_id AS productId,
-                        oi.product_name AS productName,
-                        oi.brand_name AS brandName,
+                    oi.product_id AS productId,
+                    oi.product_name AS productName,
 
-                        oi.quantity AS quantity,
-                        oi.mrp AS mrp,
-                        oi.unit_price AS unitPrice,
-                        oi.line_total AS lineTotal,
+                    v.bussiness_name AS brandName,
 
-                        o.payment_method AS paymentMethod,
-                        o.payment_status AS paymentStatus,
-                        o.order_status AS orderStatus
+                    oi.quantity AS quantity,
+                    oi.mrp AS mrp,
+                    oi.unit_price AS unitPrice,
+                    oi.line_total AS lineTotal,
 
-                    FROM order_item oi
+                    o.payment_method AS paymentMethod,
+                    o.payment_status AS paymentStatus,
+                    o.order_status AS orderStatus
 
-                    JOIN orders o
-                        ON o.id = oi.order_id
+                FROM order_item oi
 
-                    JOIN users u
-                        ON u.id = o.user_id
+                JOIN orders o
+                    ON o.id = oi.order_id
 
-                    WHERE o.tenant_id = :tenantId
-                      AND o.created_at >= :startDate
-                      AND o.created_at <= :endDate
-                      AND o.order_status NOT IN ('CANCELLED')
+                JOIN users u
+                    ON u.id = o.user_id
 
-                    ORDER BY o.created_at DESC
-                    """,
+                JOIN vendors v
+                    ON v.tenant_id = o.tenant_id
+
+                WHERE o.tenant_id = :tenantId
+                  AND o.created_at >= :startDate
+                  AND o.created_at <= :endDate
+                  AND o.order_status NOT IN ('CANCELLED')
+
+                ORDER BY o.created_at DESC
+                """,
             nativeQuery = true
     )
     List<SalesReportProjection> getSalesReport(
@@ -69,4 +68,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             Long productId,
             String tenantId
     );
+
+    List<OrderItem> findAllByOrderIdAndTenantId(Long id, String tenantId);
 }

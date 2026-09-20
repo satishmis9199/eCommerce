@@ -274,6 +274,8 @@
         .status.active::before  { background: var(--green); }
         .status.pending { background: var(--orange-soft); color: var(--orange); }
         .status.pending::before { background: var(--orange); }
+        .status.contacted { background: var(--cyan-soft); color: var(--cyan); }
+        .status.contacted::before { background: var(--cyan); }
         .status.suspended { background: var(--red-soft);  color: var(--red); }
         .status.suspended::before { background: var(--red); }
         .status.blocked { background: rgba(239,68,68,0.08); color: var(--red); }
@@ -426,20 +428,105 @@
         .stat-mini .lbl { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
         @media (max-width: 1200px) { .analytics-section { grid-template-columns: 1fr; } .analytics-card.large { grid-column: 1; } }
         @media (max-width: 1024px) { .dashboard-content-grid { grid-template-columns: 1fr; } .platform-health { grid-template-columns: 1fr; } }
+        /* ---------- Status tabs (vendor requests, ads) ---------- */
+        .status.approved { background: var(--green-soft); color: var(--green); }
+        .status.approved::before { background: var(--green); }
+        .tabs { overflow-x: auto; scrollbar-width: none; }
+        .tab-btn { white-space: nowrap; flex-shrink: 0; }
+        .tab-btn .tab-count { display: inline-block; margin-left: 6px; min-width: 18px; padding: 1px 6px; border-radius: 99px; font-size: 10.5px; font-weight: 700; background: var(--bg-input); color: var(--text-muted); text-align: center; }
+        .tab-btn.active .tab-count { background: var(--accent-soft); color: var(--accent); }
+
+        /* ---------- Responsive foundations ---------- */
+        html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + 12px); }
+        body.no-scroll { overflow: hidden; }
+        .content, .dashboard-body, .dashboard-content-grid > * { min-width: 0; }
+        .sidebar__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .sidebar__menu { overscroll-behavior: contain; }
+        .table-responsive { -webkit-overflow-scrolling: touch; }
+        .sidebar__close, .mobile-search-btn { display: none; }
+
+        /* ---------- Tablet & mobile ---------- */
         @media (max-width: 768px) {
-          :root { --sidebar-w: 0px; }
-          .sidebar { transform: translateX(-260px); width: 260px; }
-          .sidebar.mobile-open { transform: translateX(0); }
-          .content { margin-left: 0; }
-          .content.expanded { margin-left: 0; }
-          .topbar { padding: 0 16px; }
-          .dashboard-body { padding: 16px; gap: 16px; }
-          .card-grid { grid-template-columns: 1fr 1fr; }
-          .section-header { flex-direction: column; }
-          .header-actions { width: 100%; }
+          :root { --sidebar-w: 0px; --topbar-h: 60px; }
+
+          /* Sidebar = off-canvas drawer, stacked ABOVE the dim overlay (overlay is z-index 350) */
+          .sidebar, .sidebar.collapsed { width: min(84vw, 300px); height: 100vh; height: 100dvh; transform: translateX(-105%); z-index: 400; box-shadow: none; }
+          .sidebar.mobile-open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+          .sidebar__header { padding: 16px; }
+          .sidebar__close { display: flex; width: 36px; height: 36px; border-radius: 10px; background: var(--bg-input); color: var(--text-secondary); align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+          .sidebar__menu li a { padding: 13px 14px; font-size: 14px; }
+          .sidebar__footer { padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+          .content, .content.expanded { margin-left: 0; }
+
+          /* Top bar */
+          .topbar { padding: 0 12px; gap: 8px; }
+          .topbar__left { flex: 0 0 auto; }
+          .topbar__right { gap: 6px; margin-left: auto; }
           .search-box { display: none; }
+          .mobile-search-btn { display: flex; }
+          .profile-btn { padding: 3px; border-radius: 12px; }
+          .profile-btn img { border-radius: 9px; }
+          .profile-btn .profile-info, .profile-btn > i { display: none; }
+          .profile-dropdown { right: 12px; width: min(260px, calc(100vw - 24px)); }
+          .notification-drawer { width: min(380px, 100vw); right: -100vw; }
+
+          /* Page layout */
+          .dashboard-body { padding: 14px; gap: 16px; }
+          .section-header { flex-direction: column; gap: 12px; }
+          .section-header h1 { font-size: 21px; }
+          .section-header p { font-size: 13px; }
+          .header-actions { width: 100%; }
+          .header-actions > button { flex: 1 1 140px; justify-content: center; }
+
+          /* KPI cards: 2 per row, icon on top */
+          .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px !important; }
+          .dashboard-card { padding: 14px; flex-direction: column-reverse; align-items: flex-start; gap: 10px; border-radius: 16px; }
+          .dashboard-card:hover { transform: none; }
+          .card-icon { width: 36px; height: 36px; font-size: 16px; border-radius: 10px; }
+          .card-left { width: 100%; }
+          .card-left > span { font-size: 10.5px; margin-bottom: 6px; }
+          .card-left h2 { font-size: 21px; margin-bottom: 6px; }
+          .card-left small { font-size: 11px; flex-wrap: wrap; }
+
+          /* Charts, panels, tables */
+          .analytics-section, .platform-health, .dashboard-content-grid { gap: 14px; }
+          .analytics-card, .health-card { padding: 16px; }
+          .card-header { margin-bottom: 14px; }
+          .table-card .card-header { padding: 16px 16px 0; }
+          .table-actions { padding: 12px 16px; gap: 8px; }
+          .table-actions input { flex: 1 1 100%; min-width: 0; }
+          .table-actions > select, .table-actions > button { flex: 1 1 auto; }
+          .tabs { padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
+          .tab-btn { white-space: nowrap; flex-shrink: 0; }
+          table { min-width: 640px; }
+          thead th, tbody td { padding: 11px 12px; }
+          .action-btn { padding: 7px 12px; margin-bottom: 4px; }
+
+          /* Modals become bottom sheets */
+          .modal-overlay { padding: 0; align-items: flex-end; }
+          .modal, .modal.large { max-width: 100%; max-height: 92vh; max-height: 92dvh; border-radius: 22px 22px 0 0; transform: translateY(40px); }
+          .modal-header, .modal-body { padding: 16px; }
+          .modal-footer { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); flex-wrap: wrap; }
+          .modal-footer > button { flex: 1 1 auto; justify-content: center; }
+
+          /* Search, toasts, footer */
+          .search-overlay { padding: 64px 12px 20px; }
+          .search-results { max-height: 55vh; }
+          .search-shortcut { display: none; }
+          #toastContainer { left: 12px; right: 12px; bottom: 12px; }
+          .toast { min-width: 0; max-width: none; width: 100%; }
+          .dashboard-footer { padding: 14px 16px; flex-direction: column; gap: 6px; text-align: center; }
+
+          /* 16px inputs stop iOS from zooming the page on focus */
+          input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px !important; }
         }
-        @media (max-width: 480px) { .card-grid { grid-template-columns: 1fr; } .vendor-info-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) {
+          .vendor-info-grid, .form-row { grid-template-columns: 1fr; }
+          .modal-body div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+          .header-actions > button { flex-basis: 100%; }
+          .vendor-profile { flex-wrap: wrap; }
+          .vendor-stats-row { gap: 8px; }
+        }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .fade-up { animation: fadeUp 0.4s ease both; }
         .fade-up-1 { animation-delay: 0.05s; }
@@ -447,6 +534,31 @@
         .fade-up-3 { animation-delay: 0.15s; }
         .fade-up-4 { animation-delay: 0.2s; }
         .fade-up-5 { animation-delay: 0.25s; }
+
+        /* ---------- Plans & Features ---------- */
+        .tabs { display:flex; gap:6px; padding:0 24px; border-bottom:1px solid var(--border); margin-top:14px; }
+        .tab-btn { background:none; color:var(--text-secondary); padding:10px 16px; font-weight:600; font-size:13px; border-bottom:2px solid transparent; transition:all var(--transition); }
+        .tab-btn:hover { color:var(--text-primary); }
+        .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+        .form-group { margin-bottom:14px; }
+        .form-group label { font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px; }
+        .form-input { width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:13px; color:var(--text-primary); outline:none; transition:border-color var(--transition); }
+        .form-input:focus { border-color:var(--border-focus); }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .feature-pick { display:flex; flex-direction:column; gap:8px; max-height:190px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:12px; background:var(--bg-input); }
+        .feature-pick label { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-primary); margin:0; font-weight:500; }
+        .chip-list { display:flex; flex-wrap:wrap; gap:5px; }
+        .chip { font-size:11px; font-weight:600; padding:3px 9px; border-radius:99px; background:var(--accent-soft); color:var(--accent); white-space:nowrap; }
+        .chip.more { background:var(--bg-input); color:var(--text-muted); }
+        .status.inactive { background:var(--bg-input); color:var(--text-muted); }
+        .status.inactive::before { background:var(--text-muted); }
+        .switch { position:relative; width:38px; height:20px; display:inline-block; flex-shrink:0; }
+        .switch input { opacity:0; width:0; height:0; }
+        .switch span { position:absolute; inset:0; background:var(--bg-input); border:1px solid var(--border); border-radius:99px; cursor:pointer; transition:.2s; }
+        .switch span::before { content:''; position:absolute; width:14px; height:14px; left:2px; top:2px; background:var(--text-muted); border-radius:50%; transition:.2s; }
+        .switch input:checked + span { background:var(--green-soft); border-color:var(--green); }
+        .switch input:checked + span::before { transform:translateX(18px); background:var(--green); }
+        .form-group label.switch { display:inline-block; margin-bottom:0; }
     </style>
 </head>
 <body>
@@ -471,6 +583,7 @@
                     <span>Enterprise</span>
                 </div>
             </div>
+            <button class="sidebar__close" id="sidebarCloseBtn" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <nav class="sidebar__menu">
@@ -478,8 +591,8 @@
             <ul>
                 <li class="active"><a href="#"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a></li>
                 <li><a href="#adsSection"><i class="fa-solid fa-rectangle-ad"></i><span>Ads</span><span class="badge-pill" id="adsBadge" style="display:none;">0</span></a></li>
-                <li><a href="#"><i class="fa-solid fa-shop"></i><span>Vendors</span><span
-                        class="badge-pill">27</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-shop"></i><span>Vendors</span></a></li>
+                <li><a href="#pendingVendorsSection"><i class="fa-solid fa-user-clock"></i><span>Vendor Requests</span><span class="badge-pill" id="pendingVendorsBadge" style="display:none;">0</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-users"></i><span>Customers</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-box"></i><span>Orders</span><span class="badge-pill">5</span></a>
                 </li>
@@ -487,6 +600,7 @@
             </ul>
             <p class="menu-label">Platform</p>
             <ul>
+                <li><a href="#planFeatureSection"><i class="fa-solid fa-layer-group"></i><span>Plans & Features</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-chart-column"></i><span>Analytics</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-ticket"></i><span>Support</span><span class="badge-pill">41</span></a>
                 </li>
@@ -507,13 +621,14 @@
 
         <header class="topbar">
             <div class="topbar__left">
-                <button class="menu-toggle-btn" id="menuToggleBtn"><i class="fa-solid fa-bars"></i></button>
+                <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
                 <div class="search-box" id="searchTrigger">
                     <i class="fa-solid fa-search"></i>
                     <input type="text" placeholder="Search vendors, orders... (⌘K)" readonly style="cursor:pointer">
                 </div>
             </div>
             <div class="topbar__right">
+                <button class="icon-btn mobile-search-btn" id="searchTriggerMobile" aria-label="Search"><i class="fa-solid fa-search"></i></button>
                 <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i>
                 </button>
                 <button class="icon-btn" id="notifBtn" title="Notifications">
@@ -593,7 +708,7 @@
                     <div class="dashboard-card purple fade-up fade-up-5">
                         <div class="card-left">
                             <span>Pending Approvals</span>
-                            <h2>27</h2>
+                            <h2 id="kpi-pending">—</h2>
                             <small><i class="fa-solid fa-clock"></i>Needs Review</small>
                         </div>
                         <div class="card-icon"><i class="fa-solid fa-user-check"></i></div>
@@ -709,7 +824,7 @@
                         <button class="quick-btn" onclick="showToast('warning','Security','Scanning for threats...')"><i
                                 class="fa-solid fa-shield-halved"></i>Security
                         </button>
-                        <button class="quick-btn" onclick="showToast('info','Plans','Loading subscription plans...')"><i
+                        <button class="quick-btn" onclick="document.getElementById('planFeatureSection').scrollIntoView({behavior:'smooth'})"><i
                                 class="fa-solid fa-credit-card"></i>Plans
                         </button>
                         <button class="quick-btn" onclick="showToast('info','Settings','Opening settings...')"><i
@@ -725,7 +840,7 @@
                     <div class="card-header">
                         <div>
                             <h2>Recent Vendor Registrations</h2>
-                            <p>Latest stores awaiting approval and management</p>
+                            <p>Approved stores and their management</p>
                         </div>
                     </div>
                     <div class="table-actions">
@@ -738,7 +853,6 @@
                                 style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:12px;padding:8px 10px;outline:none;">
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
-                            <option value="pending">Pending</option>
                             <option value="suspended">Suspended</option>
                         </select>
                     </div>
@@ -838,18 +952,56 @@
                 </div>
             </section>
 
+            <section class="dashboard-content-grid fade-up" id="pendingVendorsSection" style="grid-template-columns:1fr;">
+                <div class="table-card">
+                    <div class="card-header">
+                        <div>
+                            <h2>Vendor Requests</h2>
+                            <p>Every application by status: Pending, Contacted, Approved and Rejected</p>
+                        </div>
+                    </div>
+                    <div class="tabs" id="vendorReqTabs"></div>
+                    <div class="table-actions">
+                        <input type="text" id="pendingVendorSearch" placeholder="Search vendor requests..."
+                               oninput="filterPendingVendors()">
+                        <button class="secondary-btn" onclick="loadPendingVendors()">
+                            <i class="fa-solid fa-rotate"></i>Refresh
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Business</th>
+                                <th>Category</th>
+                                <th>Phone</th>
+                                <th>Applied On</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="pendingVendorTableBody">
+                            <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">Loading vendor requests...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <section class="dashboard-content-grid fade-up" id="adsSection" style="grid-template-columns:1fr;">
                 <div class="table-card">
                     <div class="card-header">
                         <div>
                             <h2>Ads Management</h2>
-                            <p>Vendor ads awaiting review before they go live</p>
+                            <p>Review new ads and keep track of the ones that are live</p>
                         </div>
                     </div>
+                    <div class="tabs" id="adTabs"></div>
                     <div class="table-actions">
-                        <input type="text" id="adSearch" placeholder="Search pending ads..."
+                        <input type="text" id="adSearch" placeholder="Search ads..."
                                oninput="filterAds(this.value)">
-                        <button class="secondary-btn" onclick="loadPendingAds()">
+                        <button class="secondary-btn" onclick="loadAds()">
                             <i class="fa-solid fa-rotate"></i>Refresh
                         </button>
                     </div>
@@ -866,9 +1018,65 @@
                             </tr>
                             </thead>
                             <tbody id="adTableBody">
-                            <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading pending ads...</td></tr>
+                            <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading ads...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-content-grid fade-up" id="planFeatureSection" style="grid-template-columns:1fr;">
+                <div class="table-card">
+                    <div class="card-header">
+                        <div>
+                            <h2>Plans &amp; Features</h2>
+                            <p>Create subscription plans and control which features each plan includes</p>
+                        </div>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab-btn active" id="tabBtn-plans" onclick="switchPfTab('plans')">Plans</button>
+                        <button class="tab-btn" id="tabBtn-features" onclick="switchPfTab('features')">Features</button>
+                        <button class="tab-btn" id="tabBtn-mapping" onclick="switchPfTab('mapping')">Plan Feature Mapping</button>
+                    </div>
+                    <div class="table-actions" id="pfActions">
+                        <input type="text" id="pfSearch" placeholder="Search plans..." oninput="pfRefreshView()">
+                        <button class="secondary-btn" onclick="loadPfData()"><i class="fa-solid fa-rotate"></i>Refresh</button>
+                        <button class="primary-btn" onclick="pfAdd()"><i class="fa-solid fa-plus"></i><span id="pfAddLabel">New Plan</span></button>
+                    </div>
+                    <div class="table-responsive" id="pfWrap-plans">
+                        <table>
+                            <thead><tr><th>Plan</th><th>Code</th><th>Price</th><th>Features</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="planTableBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading plans...</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="table-responsive" id="pfWrap-features" style="display:none;">
+                        <table>
+                            <thead><tr><th>Feature</th><th>Code</th><th>Description</th><th>Used In</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="featureTableBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading features...</td></tr></tbody>
+                        </table>
+                    </div>
+
+                    <div id="pfWrap-mapping" style="display:none;">
+                        <div class="table-actions">
+                            <label for="pfMapPlan" style="font-size:12px;color:var(--text-muted);font-weight:600;">Select Plan</label>
+                            <select class="form-input" id="pfMapPlan" onchange="pfMapChange()" style="max-width:240px;"></select>
+                            <span class="chip" id="pfMapCount">0 / 0 enabled</span>
+                            <span id="pfMapDirty" style="display:none;font-size:12px;font-weight:600;color:var(--orange);">Unsaved changes</span>
+                            <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;">
+                                <button class="secondary-btn" onclick="pfMapSetAll(true)"><i class="fa-solid fa-check-double"></i>Select All</button>
+                                <button class="secondary-btn" onclick="pfMapSetAll(false)"><i class="fa-solid fa-eraser"></i>Clear All</button>
+                            </div>
+                        </div>
+                        <div id="pfMapNote" style="display:none;padding:0 24px 12px;font-size:12px;color:var(--text-muted);"><i class="fa-solid fa-circle-info"></i> Showing demo data — live plans/features are not loaded.</div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>Feature</th><th>Code</th><th>Status</th><th>Enabled</th></tr></thead>
+                                <tbody id="pfMapBody"></tbody>
+                            </table>
+                        </div>
+                        <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;">
+                            <button class="primary-btn" onclick="pfMapSave()"><i class="fa-solid fa-floppy-disk"></i>Save Mapping</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1231,6 +1439,48 @@
     </div>
 </div>
 
+
+<!-- ============ PLAN CREATE / EDIT MODAL ============ -->
+<div class="modal-overlay" id="planModalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="planModalTitle"><i class="fa-solid fa-layer-group"></i>New Plan</h2>
+            <button class="modal-close-btn" onclick="closeModal('planModalOverlay')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group"><label>Plan Name *</label><input class="form-input" id="planName" type="text" placeholder="e.g. Business" oninput="pfAutoPlanCode()"></div>
+            <div class="form-group"><label>Plan Code *</label><input class="form-input" id="planCode" type="text" placeholder="e.g. BUSINESS" oninput="pfPlanCodeTouched=true"></div>
+            <div class="form-group"><label>Description</label><textarea class="form-input" id="planDescription" rows="2" style="resize:vertical;" placeholder="Short description"></textarea></div>
+            <div class="form-group"><label>Price (₹) *</label><input class="form-input" id="planPrice" type="number" min="0" step="0.01" placeholder="999"></div>
+            <div class="form-group" style="margin-bottom:0;display:flex;align-items:center;gap:10px;"><label class="switch"><input type="checkbox" id="planActive" checked><span></span></label><span style="font-size:13px;color:var(--text-primary);font-weight:500;">Active</span></div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('planModalOverlay')">Cancel</button>
+            <button class="primary-btn" onclick="savePlan()"><i class="fa-solid fa-floppy-disk"></i>Save Plan</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ FEATURE CREATE / EDIT MODAL ============ -->
+<div class="modal-overlay" id="featureModalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="featureModalTitle"><i class="fa-solid fa-puzzle-piece"></i>New Feature</h2>
+            <button class="modal-close-btn" onclick="closeModal('featureModalOverlay')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group"><label>Feature Name *</label><input class="form-input" id="featureName" type="text" placeholder="e.g. Custom Domain" oninput="pfAutoCode()"></div>
+            <div class="form-group"><label>Feature Code *</label><input class="form-input" id="featureCode" type="text" placeholder="e.g. CUSTOM_DOMAIN" oninput="pfCodeTouched=true"></div>
+            <div class="form-group"><label>Description</label><textarea class="form-input" id="featureDescription" rows="3" style="resize:vertical;" placeholder="What does this feature give the vendor?"></textarea></div>
+            <div class="form-group" style="margin-bottom:0;display:flex;align-items:center;gap:10px;"><label class="switch"><input type="checkbox" id="featureActive" checked><span></span></label><span style="font-size:13px;color:var(--text-primary);font-weight:500;">Active</span></div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('featureModalOverlay')">Cancel</button>
+            <button class="primary-btn" onclick="saveFeature()"><i class="fa-solid fa-floppy-disk"></i>Save Feature</button>
+        </div>
+    </div>
+</div>
+
 <div id="toastContainer"></div>
 
 <script>
@@ -1274,9 +1524,13 @@
       { title: "Enterprise Plan", sub: "Subscription Plan · ₹24,999/mo", icon: "fa-credit-card" }
     ];
 
-    let allVendors = [];
+    let allVendors = [];       // real Vendor rows -> "Recent Vendor Registrations" table
+    let pendingVendors = [];   // VendorRequest rows (all statuses) -> "Vendor Requests" section
 
     async function loadVendors() {
+        let vendorRows = [];
+
+        // Approved / active / suspended vendors (real Vendor rows)
         try {
             const response = await fetch("/s1/v1/super/admin/getAllVendor", {
                 method: "GET",
@@ -1289,8 +1543,9 @@
 
             const data = await response.json();
 
-            allVendors = data.map(v => ({
-                id: v.vendorId,
+            vendorRows = data.map(v => ({
+                id: `v-${v.vendorId}`,
+                actionId: v.vendorId,
                 name: v.vendorName,
                 email: v.vendorEmail,
                 business: v.businessName,
@@ -1301,13 +1556,15 @@
                 avatar: v.vendorName.split(" ").map(word => word.charAt(0)).join("").substring(0, 2)
             }));
 
-            renderVendors(allVendors);
-
         } catch (e) {
             console.warn("Vendor API not reachable, using demo data instead:", e.message);
-            allVendors = getDemoVendors();
-            renderVendors(allVendors);
+            vendorRows = getDemoVendors()
+                .filter(v => v.status !== 'pending')      // pending ones live in the Pending Vendors section
+                .map(v => ({ ...v, id: `v-${v.id}`, actionId: v.id }));
         }
+
+        allVendors = vendorRows;
+        renderVendors(allVendors);
     }
 
     function getDemoVendors() {
@@ -1341,12 +1598,9 @@
           <td style="font-weight:600;color:var(--text-primary)">${v.revenue}</td>
           <td>${v.orders.toLocaleString()}</td>
           <td>
-            <button class="action-btn" onclick="viewVendor(${v.id})">View</button>
-            ${v.status === 'pending'
-              ? `<button class="action-btn success" onclick="openVendorActionModal(${v.id},'APPROVE')">Approve</button>
-                 <button class="action-btn danger" onclick="openVendorActionModal(${v.id},'REJECT')">Reject</button>`
-              : v.status === 'active'
-              ? `<button class="action-btn danger" onclick="confirmAction('Suspend ${v.name}?', () => suspendVendor(${v.id}))">Suspend</button>`
+            <button class="action-btn" onclick="viewVendor('${v.id}')">View</button>
+${v.status === 'active'
+              ? `<button class="action-btn danger" onclick="confirmAction('Suspend ${v.name}?', () => suspendVendor('${v.id}'))">Suspend</button>`
               : `<button class="action-btn" onclick="showToast('info','Info','Account under review')">Review</button>`
             }
           </td>
@@ -1354,9 +1608,34 @@
       `).join('');
     }
 
-    async function viewVendor(id) {
+    function mapVendorRequestToModal(vr) {
+        return {
+            vendorId: vr.id,
+            fullName: vr.ownerName,
+            businessName: vr.businessName,
+            status: vr.status,
+            email: vr.email,
+            mobileNumber: vr.phone,
+            registrationDate: vr.createdAt,
+            storeName: vr.businessName,
+            businessType: "—",
+            businessCategory: vr.businessCategory || "—",
+            businessDescription: vr.message || vr.adminRemarks || "No additional message provided.",
+            gstNumber: "—",
+            panNumber: "—"
+        };
+    }
+
+    async function viewVendor(rowId) {
+        const isRequest = String(rowId).startsWith('r-');
+        const numId = String(rowId).replace(/^[rv]-/, '');
+
         try {
-            const response = await fetch(`/s1/v1/super/admin/vendor/${id}`, {
+            const url = isRequest
+                ? `/vendor/s1/v1/super/admin/vendor-requests/${numId}`
+                : `/s1/v1/super/admin/vendor/${numId}`;
+
+            const response = await fetch(url, {
                 method: "GET",
                 credentials: "include"
             });
@@ -1365,24 +1644,25 @@
                 throw new Error("Unable to load vendor details.");
             }
 
-            const vendor = await response.json();
+            const data = await response.json();
+            const vendor = isRequest ? mapVendorRequestToModal(data) : data;
             populateVendorModal(vendor);
             openModal("vendorModal");
 
         } catch (e) {
             console.warn("Vendor detail API not reachable, using demo data instead:", e.message);
-            const local = allVendors.find(v => v.id === id);
+            const local = [...allVendors, ...pendingVendors].find(v => v.id === rowId);
             const demoDetail = {
-                vendorId: id,
+                vendorId: local ? local.actionId : numId,
                 fullName: local ? local.name : "Unknown Vendor",
                 businessName: local ? local.business : "Unknown Business",
                 status: local ? local.status.toUpperCase() : "PENDING",
                 email: local ? local.email : "unknown@example.com",
-                mobileNumber: "+91 98765 43210",
+                mobileNumber: local && local.phone ? local.phone : "+91 98765 43210",
                 registrationDate: new Date().toISOString(),
                 storeName: local ? local.business : "Unknown Store",
                 businessType: "Retail",
-                businessCategory: "General Merchandise",
+                businessCategory: local && local.businessCategory ? local.businessCategory : "General Merchandise",
                 businessDescription: "Demo business description — connect the backend API to show real data here.",
                 gstNumber: "22AAAAA0000A1Z5",
                 panNumber: "AAAAA0000A"
@@ -1420,7 +1700,8 @@
         const approveBtn = document.getElementById("approveVendorBtn");
         const rejectBtn = document.getElementById("rejectVendorBtn");
 
-        if (vendor.status === "PENDING" || vendor.status === "pending") {
+        const st = (vendor.status || "").toUpperCase();
+        if (st === "PENDING" || st === "CONTACTED") {
             approveBtn.style.display = "inline-flex";
             rejectBtn.style.display = "inline-flex";
             // Both buttons route through the SAME unified remarks modal + SAME API.
@@ -1449,6 +1730,214 @@
     function suspendVendor(id) {
       const v = allVendors.find(x => x.id === id);
       if (v) { v.status = 'suspended'; renderVendors(allVendors); showToast('warning','Suspended',`${v.business} has been suspended.`); }
+    }
+
+    /* ============================================================
+       PENDING VENDOR REQUESTS  (VendorRequest rows — not yet Vendors)
+       GET   /vendor/s1/v1/super/admin/vendor-requests?status=PENDING|CONTACTED|APPROVED|REJECTED  (VendorRequestStatus)
+       PATCH /vendor/s1/v1/super/admin/vendor-requests/{id}/contact
+       Approve / Reject -> POST /vendor/s1/v1/super/admin/vendor/onboarding/decisions
+       actionId is the raw VendorRequest id (not the row's namespaced id).
+    ============================================================ */
+    const VENDOR_REQUEST_API  = '/vendor/s1/v1/super/admin/vendor-requests';
+    const VENDOR_DECISION_API = '/vendor/s1/v1/super/admin/vendor/onboarding/decisions';
+
+    function mapVendorRequestRow(vr) {
+        const owner = vr.ownerName || '—';
+        return {
+            id: `r-${vr.id}`,
+            actionId: vr.id,
+            name: owner,
+            email: String(vr.email ?? '—'),
+            phone: String(vr.phone ?? '—'),
+            business: vr.businessName || '—',
+            businessCategory: vr.businessCategory || '—',
+            appliedAt: vr.createdAt || null,
+            status: (vr.status || 'PENDING').toLowerCase(),
+            avatar: owner.split(' ').map(w => w.charAt(0)).join('').substring(0, 2) || 'V'
+        };
+    }
+
+    async function fetchVendorRequests(status) {
+        const response = await fetch(`${VENDOR_REQUEST_API}?status=${status}&size=100`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        const page = await response.json();
+        return Array.isArray(page) ? page : (page.content || []);
+    }
+
+    const VENDOR_REQUEST_STATUSES = ['PENDING', 'CONTACTED', 'APPROVED', 'REJECTED']; // VendorRequestStatus enum
+    // NOTE: don't write a double opening bracket in this page - Thymeleaf treats it as an inline expression and fails.
+    const VENDOR_REQUEST_TABS = [
+        { key: 'all',       label: 'All'       },
+        { key: 'pending',   label: 'Pending'   },
+        { key: 'contacted', label: 'Contacted' },
+        { key: 'approved',  label: 'Approved'  },
+        { key: 'rejected',  label: 'Rejected'  }
+    ];
+    const VENDOR_STATUS_LABEL = { pending: 'Pending', contacted: 'Contacted', approved: 'Approved', rejected: 'Rejected' };
+    let vendorReqTab = 'pending';
+
+    async function loadPendingVendors() {
+        // One call per status, so every tab has its own data and count.
+        const results = await Promise.allSettled(VENDOR_REQUEST_STATUSES.map(s => fetchVendorRequests(s)));
+
+        if (results.every(r => r.status === 'rejected')) {
+            console.warn('Vendor request API not reachable, using demo data instead:', results[0].reason && results[0].reason.message);
+            pendingVendors = getDemoPendingVendors();
+        } else {
+            const failed = VENDOR_REQUEST_STATUSES.filter((s, i) => results[i].status === 'rejected');
+            if (failed.length) showToast('warning', 'Some requests not loaded', `Could not load: ${failed.join(', ')}`);
+            pendingVendors = results
+                .filter(r => r.status === 'fulfilled')
+                .flatMap(r => r.value)
+                .map(mapVendorRequestRow)
+                .sort((a, b) => (Date.parse(b.appliedAt) || 0) - (Date.parse(a.appliedAt) || 0));
+        }
+
+        filterPendingVendors();
+        updatePendingVendorCounts();
+    }
+
+    function getDemoPendingVendors() {
+        const pending = getDemoVendors()
+            .filter(v => v.status === 'pending')
+            .map(v => ({
+                id: `r-${v.id}`,
+                actionId: v.id,
+                name: v.name,
+                email: v.email,
+                phone: '+91 98765 43210',
+                business: v.business,
+                businessCategory: 'General Merchandise',
+                appliedAt: new Date(Date.now() - v.id * 3600e3).toISOString(),
+                status: 'pending',
+                avatar: v.avatar
+            }));
+        const extra = (n, name, business, status, hoursAgo) => ({
+            id: `r-${n}`, actionId: n, name, business, status,
+            email: `${name.split(' ')[0].toLowerCase()}@example.com`,
+            phone: '+91 98765 43210',
+            businessCategory: 'General Merchandise',
+            appliedAt: new Date(Date.now() - hoursAgo * 3600e3).toISOString(),
+            avatar: name.split(' ').map(w => w.charAt(0)).join('').substring(0, 2)
+        });
+        return [
+            ...pending,
+            extra(901, 'Ravi Kumar', 'Kumar Traders', 'contacted', 30),
+            extra(902, 'Sana Sheikh', 'Sana Boutique', 'approved', 72),
+            extra(903, 'Amit Verma', 'Verma Hardware', 'rejected', 96)
+        ];
+    }
+
+    // Badge + KPI count only requests that still need action (pending or contacted).
+    function updatePendingVendorCounts() {
+        const count = pendingVendors.filter(v => v.status === 'pending' || v.status === 'contacted').length;
+        const badge = document.getElementById('pendingVendorsBadge');
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+        document.getElementById('kpi-pending').textContent = count;
+    }
+
+    function renderVendorReqTabs() {
+        const counts = { all: pendingVendors.length };
+        pendingVendors.forEach(v => { counts[v.status] = (counts[v.status] || 0) + 1; });
+        document.getElementById('vendorReqTabs').innerHTML = VENDOR_REQUEST_TABS.map(({ key, label }) =>
+            `<button class="tab-btn ${key === vendorReqTab ? 'active' : ''}" onclick="setVendorReqTab('${key}')">${label}<span class="tab-count">${counts[key] || 0}</span></button>`
+        ).join('');
+    }
+
+    function setVendorReqTab(key) {
+        vendorReqTab = key;
+        filterPendingVendors();
+    }
+
+    function filterPendingVendors() {
+        const q = (document.getElementById('pendingVendorSearch').value || '').toLowerCase();
+
+        renderVendorReqTabs();
+        renderPendingVendors(pendingVendors.filter(v =>
+            (vendorReqTab === 'all' || v.status === vendorReqTab) &&
+            (v.name.toLowerCase().includes(q) ||
+             v.business.toLowerCase().includes(q) ||
+             v.email.toLowerCase().includes(q) ||
+             v.phone.toLowerCase().includes(q))
+        ));
+    }
+
+    function renderPendingVendors(list) {
+        const tbody = document.getElementById('pendingVendorTableBody');
+        if (!list.length) {
+            const msg = vendorReqTab === 'all'
+                ? 'No vendor requests yet.'
+                : `No ${VENDOR_STATUS_LABEL[vendorReqTab].toLowerCase()} requests.`;
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">${msg}</td></tr>`;
+            return;
+        }
+
+        // Applicant data is submitted by the public, so everything is escaped before going into innerHTML.
+        tbody.innerHTML = list.map(v => {
+            const chip = VENDOR_STATUS_LABEL[v.status] ? v.status : 'inactive';
+            const label = VENDOR_STATUS_LABEL[v.status] || pfEsc(v.status);
+            const canDecide = v.status === 'pending' || v.status === 'contacted';
+            return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(v.avatar)}&background=f59e0b&color=fff&size=64">
+              <div><h4>${pfEsc(v.name)}</h4><span>${pfEsc(v.email)}</span></div>
+            </div>
+          </td>
+          <td>${pfEsc(v.business)}</td>
+          <td>${pfEsc(v.businessCategory)}</td>
+          <td>${pfEsc(v.phone)}</td>
+          <td>${v.appliedAt ? new Date(v.appliedAt).toLocaleDateString() : '—'}</td>
+          <td><span class="status ${chip}">${label}</span></td>
+          <td>
+            <button class="action-btn" onclick="viewVendor('${v.id}')">View</button>
+            ${v.status === 'pending' ? `<button class="action-btn" onclick="contactPendingVendor(${v.actionId})">Contact</button>` : ''}
+            ${v.status === 'contacted' ? `<button class="action-btn" disabled style="opacity:.6;cursor:default;pointer-events:none;">Contacted ✓</button>` : ''}
+            ${canDecide ? `<button class="action-btn success" onclick="openVendorActionModal(${v.actionId},'APPROVE')">Approve</button>
+            <button class="action-btn danger" onclick="openVendorActionModal(${v.actionId},'REJECT')">Reject</button>` : ''}
+          </td>
+        </tr>`;
+        }).join('');
+    }
+
+    function contactPendingVendor(actionId) {
+        const v = pendingVendors.find(x => x.actionId === actionId);
+        confirmAction(`Mark ${v ? v.business : 'this vendor'} as contacted?`, () => markVendorContacted(actionId));
+    }
+
+    async function markVendorContacted(actionId) {
+        const v = pendingVendors.find(x => x.actionId === actionId);
+
+        let response;
+        try {
+            response = await fetch(`${VENDOR_REQUEST_API}/${actionId}/contact`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+        } catch (e) {
+            console.warn('Contact API not reachable:', e);
+            if (v) { v.status = 'contacted'; filterPendingVendors(); }
+            showToast('success', 'Marked Contacted', 'Marked as contacted (demo mode — backend not connected).');
+            return;
+        }
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            showToast('error', 'Contact Failed', err.message || `HTTP Error: ${response.status}`);
+            return;
+        }
+
+        const updated = await response.json().catch(() => ({}));
+        if (v) { v.status = (updated.status || 'CONTACTED').toLowerCase(); filterPendingVendors(); }
+        showToast('success', 'Marked Contacted', `${v ? v.business : 'Vendor'} marked as contacted.`);
     }
 
     /* ============================================================
@@ -1505,217 +1994,263 @@
         currentActionType = null;
     }
 
-   async function submitVendorAction() {
+    async function submitVendorAction() {
 
-    const remarks = document.getElementById('vendorActionRemarks').value.trim();
-    const allowResubmit = document.getElementById('allowResubmit')?.checked || false;
+        const remarks = document.getElementById('vendorActionRemarks').value.trim();
+        const allowResubmit = document.getElementById('allowResubmit')?.checked || false;
 
-    if (!remarks) {
-        showToast('warning', 'Remarks Required', 'Please enter remarks before proceeding.');
-        return;
-    }
+        if (!remarks) {
+            showToast('warning', 'Remarks Required', 'Please enter remarks before proceeding.');
+            return;
+        }
 
-    if (!currentActionVendorId || !currentActionType) {
-        showToast('error', 'Error', 'No vendor selected.');
-        return;
-    }
+        if (!currentActionVendorId || !currentActionType) {
+            showToast('error', 'Error', 'No vendor selected.');
+            return;
+        }
 
-    const vendorId = currentActionVendorId;
-    const actionType = currentActionType; // APPROVE | REJECT
+        const vendorId = currentActionVendorId;
+        const actionType = currentActionType; // APPROVE | REJECT
 
-    try {
+        let response;
+        try {
+            showLoading(actionType === 'APPROVE' ? 'Approving Vendor...' : 'Rejecting Vendor...');
 
-        showLoading(actionType === 'APPROVE'
-            ? 'Approving Vendor...'
-            : 'Rejecting Vendor...');
-
-        const response = await fetch('/vendor/s1/v1/super/admin/vendor/onboarding/decision', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                applicationId: vendorId,
-                action: actionType,
-                remarks: remarks,
-                allowResubmit: actionType === 'REJECT' ? allowResubmit : false
-            })
-        });
-
-        const result = await response.json();
-
-        hideLoading();
-
-        if (response.ok && result.success) {
-
+            response = await fetch(VENDOR_DECISION_API, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    applicationId: vendorId,
+                    action: actionType,
+                    remarks: remarks,
+                    allowResubmit: actionType === 'REJECT' ? allowResubmit : false
+                })
+            });
+        } catch (e) {
+            // Network failure only (backend not running) -> demo mode
+            hideLoading();
+            console.warn('Vendor action API not reachable:', e);
             closeVendorActionModal();
 
             if (actionType === 'APPROVE') {
-
-                updateVendorStatusLocally(vendorId, 'active');
-
-                showToast(
-                    'success',
-                    'Vendor Approved!',
-                    result.message || 'Vendor approved successfully.'
-                );
-
+                approvePendingVendorLocally(vendorId);
+                showToast('success', 'Vendor Approved', 'Approved (demo mode — backend not connected).');
             } else {
-
-                removeVendorLocally(vendorId);
-
-                showToast(
-                    'error',
-                    'Vendor Rejected',
-                    result.message || 'Vendor rejected successfully.'
-                );
+                setVendorRequestStatusLocally(vendorId, 'rejected');
+                showToast('error', 'Vendor Rejected', 'Rejected (demo mode — backend not connected).');
             }
+            return;
+        }
 
+        // A 401/403/500 with a non-JSON body must show an error, not fake a success.
+        const result = await response.json().catch(() => ({}));
+        hideLoading();
+
+        if (response.ok && result.success) {
+            closeVendorActionModal();
+            setVendorRequestStatusLocally(vendorId, actionType === 'APPROVE' ? 'approved' : 'rejected');
+
+            if (actionType === 'APPROVE') {
+                loadVendors(); // approved request is now a real Vendor -> shows up in Recent Vendor Registrations
+                showToast('success', 'Vendor Approved!', result.message || 'Vendor approved successfully.');
+            } else {
+                showToast('error', 'Vendor Rejected', result.message || 'Vendor rejected successfully.');
+            }
         } else {
-
             showToast(
                 'error',
                 actionType === 'APPROVE' ? 'Approval Failed' : 'Rejection Failed',
-                result.message || 'Something went wrong.'
-            );
-        }
-
-    } catch (e) {
-
-        hideLoading();
-
-        console.warn('Vendor action API not reachable:', e);
-
-        closeVendorActionModal();
-
-        if (actionType === 'APPROVE') {
-
-            updateVendorStatusLocally(vendorId, 'active');
-
-            showToast(
-                'success',
-                'Vendor Approved',
-                'Approved (demo mode — backend not connected).'
-            );
-
-        } else {
-
-            removeVendorLocally(vendorId);
-
-            showToast(
-                'error',
-                'Vendor Rejected',
-                'Rejected (demo mode — backend not connected).'
+                result.message || `Request failed (HTTP ${response.status}).`
             );
         }
     }
-}
 
-    function updateVendorStatusLocally(id, status) {
-        const v = allVendors.find(x => x.id === id);
-        if (v) { v.status = status; renderVendors(allVendors); }
+    // After approve/reject the request stays in the list under its new status tab.
+    function setVendorRequestStatusLocally(actionId, status) {
+        const v = pendingVendors.find(x => x.actionId === actionId);
+        if (v) v.status = status;
+        filterPendingVendors();
+        updatePendingVendorCounts();
     }
 
-    function removeVendorLocally(id) {
-        allVendors = allVendors.filter(x => x.id !== id);
-        renderVendors(allVendors);
+    // demo mode only: mimic what the backend does on approve (request -> active vendor)
+    function approvePendingVendorLocally(actionId) {
+        const v = pendingVendors.find(x => x.actionId === actionId);
+        if (v) {
+            allVendors.unshift({
+                id: `v-demo-${actionId}`, actionId,
+                name: v.name, email: v.email, business: v.business,
+                plan: 'starter', status: 'active', revenue: '₹0', orders: 0, avatar: v.avatar
+            });
+            renderVendors(allVendors);
+        }
+        setVendorRequestStatusLocally(actionId, 'approved');
     }
 
     /* ============================================================
-       ADS — PENDING LIST + APPROVE / REJECT
-       GET   /admin/s1/v1/ads/pending
+       ADS — LIST BY STATUS + APPROVE / REJECT
+       GET   /admin/s1/v1/ads?status=PENDING|APPROVED|REJECTED   (status is OPTIONAL; omit it to get every ad)
        PATCH /admin/s1/v1/ads/{id}/approve  body: { activeDays }
        PATCH /admin/s1/v1/ads/{id}/reject   body: { reason }
     ============================================================ */
+    const ADS_API = '/admin/s1/v1/ads';
+    // Tabs -> value sent as the optional `status` request param. param: null = status is not sent (all ads).
+    // If your AdStatus enum names a live ad differently (e.g. ACTIVE), change its param here.
+    const AD_STATUS_TABS = [
+        { key: 'all',      label: 'All',      param: null       },
+        { key: 'pending',  label: 'Pending',  param: 'PENDING'  },
+        { key: 'approved', label: 'Live',     param: 'APPROVED' },
+        { key: 'rejected', label: 'Rejected', param: 'REJECTED' }
+    ];
+
     let allAds = [];
+    let adsTab = 'pending';
+    let adsPendingCount = 0;
+    let demoAdStore = null;   // only used when the backend is not reachable
 
-    async function loadPendingAds() {
+    const adTabParam = key => (AD_STATUS_TABS.find(t => t.key === key) || {}).param || null;
+
+    async function fetchAds(status) {
+        const url = status ? `${ADS_API}?status=${encodeURIComponent(status)}` : ADS_API;
+        const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+        const result = await response.json();
+        const list = Array.isArray(result) ? result : (result.data?.content ?? result.data ?? result.content ?? []);
+        return Array.isArray(list) ? list : [];
+    }
+
+    function mapAd(a) {
+        return {
+            id: a.id ?? a.adId,
+            title: a.title ?? a.adTitle ?? a.name ?? 'Untitled Ad',
+            vendorName: a.vendorName ?? a.vendor?.businessName ?? a.vendor?.name ?? 'Unknown Vendor',
+            category: a.category ?? a.categoryName ?? '—',
+            submittedAt: a.createdAt ?? a.submittedAt ?? a.createdDate ?? null,
+            status: String(a.status ?? 'PENDING').toLowerCase(),
+            thumbnail: a.imageUrl ?? a.thumbnailUrl ?? null
+        };
+    }
+
+    async function loadAds() {
+        const param = adTabParam(adsTab);
         try {
-            const response = await fetch('/admin/s1/v1/ads/pending', {
-                method: 'GET',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-            const result = await response.json();
-            const list = result.data || result || [];
-
-            allAds = list.map(a => ({
-                id: a.id ?? a.adId,
-                title: a.title ?? a.adTitle ?? a.name ?? 'Untitled Ad',
-                vendorName: a.vendorName ?? a.vendor?.businessName ?? a.vendor?.name ?? 'Unknown Vendor',
-                category: a.category ?? a.categoryName ?? '—',
-                submittedAt: a.createdAt ?? a.submittedAt ?? a.createdDate ?? null,
-                status: (a.status ?? 'PENDING').toLowerCase(),
-                thumbnail: a.imageUrl ?? a.thumbnailUrl ?? null
-            }));
-
-            renderAds(allAds);
-            updateAdsBadge();
-
+            allAds = (await fetchAds(param)).map(mapAd);
+            demoAdStore = null;
+            if (adsTab === 'pending' || adsTab === 'all') {
+                adsPendingCount = allAds.filter(a => a.status === 'pending').length;
+            } else {
+                refreshAdsPendingCount();   // pending badge must not depend on the open tab
+            }
         } catch (e) {
             console.warn('Ads API not reachable, using demo data instead:', e.message);
-            allAds = getDemoAds();
-            renderAds(allAds);
-            updateAdsBadge();
+            demoAdStore = demoAdStore || getDemoAds();
+            allAds = demoAdStore.filter(a => !param || a.status === param.toLowerCase());
+            adsPendingCount = demoAdStore.filter(a => a.status === 'pending').length;
         }
+        applyAdFilters();
+    }
+
+    async function refreshAdsPendingCount() {
+        try {
+            adsPendingCount = (await fetchAds('PENDING')).length;
+            renderAdTabs();
+            updateAdsBadge();
+        } catch (e) { /* keep the last known count */ }
+    }
+
+    function setAdsTab(key) {
+        adsTab = key;
+        renderAdTabs();
+        document.getElementById('adTableBody').innerHTML =
+            '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading ads...</td></tr>';
+        loadAds();
+    }
+
+    function renderAdTabs() {
+        document.getElementById('adTabs').innerHTML = AD_STATUS_TABS.map(t =>
+            `<button class="tab-btn ${t.key === adsTab ? 'active' : ''}" onclick="setAdsTab('${t.key}')">${t.label}${t.key === 'pending' && adsPendingCount > 0 ? `<span class="tab-count">${adsPendingCount}</span>` : ''}</button>`
+        ).join('');
     }
 
     function getDemoAds() {
+        const ago = h => new Date(Date.now() - h * 3600e3).toISOString();
         return [
-            { id: 101, title: 'Diwali Mega Sale Banner', vendorName: 'Hasan Mobile World', category: 'Electronics', submittedAt: new Date(Date.now() - 3600e3).toISOString(), status: 'pending', thumbnail: null },
-            { id: 102, title: 'Fresh Produce Weekly Offer', vendorName: 'Fresh Grocery', category: 'Grocery', submittedAt: new Date(Date.now() - 7200e3).toISOString(), status: 'pending', thumbnail: null },
-            { id: 103, title: 'Smart Watch Launch Promo', vendorName: 'Smart Electronics', category: 'Electronics', submittedAt: new Date(Date.now() - 86400e3).toISOString(), status: 'pending', thumbnail: null }
+            { id: 101, title: 'Diwali Mega Sale Banner', vendorName: 'Hasan Mobile World', category: 'Electronics', submittedAt: ago(1), status: 'pending', thumbnail: null },
+            { id: 102, title: 'Fresh Produce Weekly Offer', vendorName: 'Fresh Grocery', category: 'Grocery', submittedAt: ago(2), status: 'pending', thumbnail: null },
+            { id: 103, title: 'Smart Watch Launch Promo', vendorName: 'Smart Electronics', category: 'Electronics', submittedAt: ago(24), status: 'pending', thumbnail: null },
+            { id: 104, title: 'Festive Fashion Sale', vendorName: 'Sana Boutique', category: 'Fashion', submittedAt: ago(72), status: 'approved', thumbnail: null },
+            { id: 105, title: 'Cheap Watches Clearance', vendorName: 'Kumar Traders', category: 'Accessories', submittedAt: ago(96), status: 'rejected', thumbnail: null }
         ];
     }
 
     function updateAdsBadge() {
         const badge = document.getElementById('adsBadge');
-        const count = allAds.filter(a => a.status === 'pending').length;
-        if (count > 0) {
-            badge.textContent = count;
+        if (adsPendingCount > 0) {
+            badge.textContent = adsPendingCount;
             badge.style.display = 'inline-block';
         } else {
             badge.style.display = 'none';
         }
     }
 
+    function adStatusMeta(s) {
+        if (s === 'pending') return ['pending', 'Pending'];
+        if (['approved', 'active', 'live'].includes(s)) return ['active', 'Live'];
+        if (s === 'rejected') return ['rejected', 'Rejected'];
+        return ['inactive', s.charAt(0).toUpperCase() + s.slice(1)];
+    }
+
     function renderAds(ads) {
         const tbody = document.getElementById('adTableBody');
         if (!ads.length) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">No pending ads. All caught up 🎉</td></tr>`;
+            const tab = AD_STATUS_TABS.find(t => t.key === adsTab);
+            const msg = adsTab === 'all' ? 'No ads yet.'
+                : adsTab === 'pending' ? 'No pending ads. All caught up 🎉'
+                : `No ${tab.label.toLowerCase()} ads.`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">${msg}</td></tr>`;
             return;
         }
-        tbody.innerHTML = ads.map(a => `
+        tbody.innerHTML = ads.map(a => {
+            const [chip, label] = adStatusMeta(a.status);
+            return `
         <tr>
           <td>
             <div class="user-cell">
-              <img src="${a.thumbnail || `https://ui-avatars.com/api/?name=${encodeURIComponent(a.title)}&background=8b5cf6&color=fff&size=64`}">
-              <div><h4>${a.title}</h4><span>Ad #${a.id}</span></div>
+              <img src="${pfEsc(a.thumbnail || `https://ui-avatars.com/api/?name=${encodeURIComponent(a.title)}&background=8b5cf6&color=fff&size=64`)}">
+              <div><h4>${pfEsc(a.title)}</h4><span>Ad #${pfEsc(a.id)}</span></div>
             </div>
           </td>
-          <td>${a.vendorName}</td>
-          <td>${a.category}</td>
+          <td>${pfEsc(a.vendorName)}</td>
+          <td>${pfEsc(a.category)}</td>
           <td>${a.submittedAt ? new Date(a.submittedAt).toLocaleDateString() : '—'}</td>
-          <td><span class="status pending">Pending</span></td>
-          <td>
-            <button class="action-btn success" onclick="openAdActionModal(${a.id},'APPROVE')">Approve</button>
-            <button class="action-btn danger" onclick="openAdActionModal(${a.id},'REJECT')">Reject</button>
-          </td>
-        </tr>
-      `).join('');
+          <td><span class="status ${chip}">${pfEsc(label)}</span></td>
+          <td>${a.status === 'pending'
+              ? `<button class="action-btn success" onclick="openAdActionModal(${a.id},'APPROVE')">Approve</button>
+                 <button class="action-btn danger" onclick="openAdActionModal(${a.id},'REJECT')">Reject</button>`
+              : '—'}</td>
+        </tr>`;
+        }).join('');
     }
 
     function filterAds(q) {
-        const filtered = allAds.filter(a =>
-            a.title.toLowerCase().includes(q.toLowerCase()) ||
-            a.vendorName.toLowerCase().includes(q.toLowerCase()) ||
-            a.category.toLowerCase().includes(q.toLowerCase())
-        );
-        renderAds(filtered);
+        q = (q || '').toLowerCase();
+        renderAds(allAds.filter(a =>
+            String(a.title).toLowerCase().includes(q) ||
+            String(a.vendorName).toLowerCase().includes(q) ||
+            String(a.category).toLowerCase().includes(q)
+        ));
+    }
+
+    function applyAdFilters() {
+        renderAdTabs();
+        updateAdsBadge();
+        filterAds(document.getElementById('adSearch').value);
     }
 
     let currentActionAdId = null;
@@ -1826,11 +2361,12 @@
     }
 
     function updateAdStatusLocally(id, status) {
-        // The pending-ads endpoint only ever returns pending items, so once
-        // an ad is approved/rejected it drops out of this queue.
-        allAds = allAds.filter(x => x.id !== id);
-        renderAds(allAds);
-        updateAdsBadge();
+        // Demo mode keeps its own copy of the ads; with the real backend this simply reloads the open tab.
+        if (demoAdStore) {
+            const ad = demoAdStore.find(x => x.id === id);
+            if (ad) ad.status = status;
+        }
+        loadAds();
     }
 
     /* Simple loading overlay helpers, reusing the existing #loader element */
@@ -1904,6 +2440,7 @@
     let revenueChart, vendorChart;
     const chartDefaults = {
       responsive: true,
+      aspectRatio: window.innerWidth <= 768 ? 1.35 : undefined,
       plugins: { legend: { display: false }, tooltip: { backgroundColor:'#1e2740', titleColor:'#f0f4ff', bodyColor:'#8b95b0', borderColor:'rgba(255,255,255,0.07)', borderWidth:1, padding:12, cornerRadius:8 } },
       scales: {
         x: { grid: { color:'rgba(255,255,255,0.04)', drawBorder:false }, ticks: { color:'#4b5578', font:{ size:11 } } },
@@ -1973,17 +2510,58 @@
     let mobileSidebarOpen = false;
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.getElementById('mainContent');
+    const pageOverlay = document.getElementById('overlay');
     const isMobile = () => window.innerWidth <= 768;
+
+    function setMobileSidebar(open) {
+      mobileSidebarOpen = open;
+      sidebar.classList.toggle('mobile-open', open);
+      pageOverlay.classList.toggle('show', open);
+      document.body.classList.toggle('no-scroll', open);
+    }
 
     document.getElementById('menuToggleBtn').addEventListener('click', () => {
       if (isMobile()) {
-        mobileSidebarOpen = !mobileSidebarOpen;
-        sidebar.classList.toggle('mobile-open', mobileSidebarOpen);
-        document.getElementById('overlay').classList.toggle('show', mobileSidebarOpen);
+        setMobileSidebar(!mobileSidebarOpen);
       } else {
         sidebarCollapsed = !sidebarCollapsed;
         sidebar.classList.toggle('collapsed', sidebarCollapsed);
         mainContent.classList.toggle('expanded', sidebarCollapsed);
+      }
+    });
+    document.getElementById('sidebarCloseBtn').addEventListener('click', () => setMobileSidebar(false));
+
+    // Tapping a menu item highlights it and closes the drawer on mobile
+    sidebar.querySelectorAll('.sidebar__menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        sidebar.querySelectorAll('.sidebar__menu li').forEach(li => li.classList.remove('active'));
+        link.closest('li').classList.add('active');
+        if (isMobile()) setMobileSidebar(false);
+      });
+    });
+
+    // Escape closes the drawer; swipe left on the drawer closes it too
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mobileSidebarOpen) setMobileSidebar(false); });
+    let touchStartX = null, touchStartY = null;
+    sidebar.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, { passive: true });
+    sidebar.addEventListener('touchend', (e) => {
+      if (touchStartX === null) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (dx < -60 && Math.abs(dx) > Math.abs(dy) * 1.5) setMobileSidebar(false);
+      touchStartX = null;
+    }, { passive: true });
+
+    // Keep desktop/mobile sidebar states from leaking into each other when the screen size changes
+    window.addEventListener('resize', () => {
+      if (isMobile()) {
+        if (sidebarCollapsed) {
+          sidebarCollapsed = false;
+          sidebar.classList.remove('collapsed');
+          mainContent.classList.remove('expanded');
+        }
+      } else if (mobileSidebarOpen) {
+        setMobileSidebar(false);
       }
     });
 
@@ -2013,11 +2591,9 @@
     /* ============================================================
        OVERLAY DISMISS
     ============================================================ */
-    document.getElementById('overlay').addEventListener('click', () => {
+    pageOverlay.addEventListener('click', () => {
       document.getElementById('notificationDrawer').classList.remove('open');
-      sidebar.classList.remove('mobile-open');
-      mobileSidebarOpen = false;
-      document.getElementById('overlay').classList.remove('show');
+      setMobileSidebar(false);
     });
 
     async function logout() {
@@ -2071,6 +2647,7 @@
     }
 
     document.getElementById('searchTrigger').addEventListener('click', openSearch);
+    document.getElementById('searchTriggerMobile').addEventListener('click', openSearch);
     searchOverlay.addEventListener('click', (e) => { if(e.target === searchOverlay) closeSearch(); });
 
     function globalSearchFn(q) {
@@ -2134,11 +2711,406 @@
     }
 
     /* ============================================================
+       PLANS & FEATURES
+       SuperAdminPlanController    -> /s1/v1/super/admin/plans
+       SuperAdminFeatureController -> /s1/v1/super/admin/features
+       (GET list, POST create, PUT /{id} update, PATCH /status active toggle)
+       NOTE: field names in the normFeature/normPlan/build helpers below are assumptions;
+       adjust them to match PlanRequest / FeatureRequest / ActiveStatusRequest.
+    ============================================================ */
+    const PF_API = { plan: '/s1/v1/super/admin/plans', feature: '/s1/v1/super/admin/features', mapping: '/s1/v1/super/admin/plan-features' };
+    let allPlans = [], allFeatures = [], pfTab = 'plans', pfEditId = null;
+
+    const pfEl = id => document.getElementById(id);
+    const pfEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const pfMsg = (t, cols) => `<tr><td colspan="${cols}" style="text-align:center;padding:30px;color:var(--text-muted);">${t}</td></tr>`;
+
+    // ---- request payloads (match your DTOs here) ----
+    const buildPlanPayload    = v => ({ code: v.code, name: v.name, description: v.description, price: v.price, active: v.active });
+    const buildFeaturePayload = v => ({ code: v.code, name: v.name, description: v.description, active: v.active });
+    const buildStatusPayload  = (id, active) => ({ id, active });
+
+    // ---- response normalizers (match your DTOs here) ----
+    const normFeature = f => ({ id: f.id ?? f.featureId, name: f.name ?? f.featureName ?? '', code: f.code ?? f.featureCode ?? '', description: f.description ?? '', active: f.active ?? f.isActive ?? true });
+    const normPlan = p => ({
+        id: p.id ?? p.planId,
+        name: p.name ?? p.planName ?? '',
+        description: p.description ?? '',
+        price: Number(p.price ?? p.monthlyPrice ?? 0),
+        code: p.code ?? p.planCode ?? '',
+        features: (p.features ?? p.featureIds ?? []).map(f => typeof f === 'object'
+            ? { id: f.id ?? f.featureId, name: f.name ?? f.featureName ?? '' } : { id: f, name: '' }),
+        active: p.active ?? p.isActive ?? true
+    });
+
+    async function pfApi(url, method = 'GET', body) {
+        const res = await fetch(url, {
+            method, credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: body ? JSON.stringify(body) : undefined
+        });
+        let json = null;
+        try { json = await res.json(); } catch (e) {}
+        if (!res.ok || (json && json.success === false)) throw new Error((json && json.message) || `HTTP ${res.status}`);
+        return json && 'data' in json ? json.data : json;
+    }
+
+    async function loadPfData() {
+        try {
+            const [f, p] = await Promise.all([pfApi(PF_API.feature), pfApi(PF_API.plan)]);
+            allFeatures = (f || []).map(normFeature);
+            allPlans = (p || []).map(normPlan);
+            await pfLoadPlanFeatures();
+            pfRefreshView();
+        } catch (e) {
+            console.warn('Plans/Features API error:', e.message);
+            pfEl('planTableBody').innerHTML = pfMsg('Could not load plans: ' + pfEsc(e.message), 6);
+            pfEl('featureTableBody').innerHTML = pfMsg('Could not load features: ' + pfEsc(e.message), 6);
+            showToast('error', 'Plans & Features', e.message || 'Could not load data.');
+        }
+    }
+
+    function pfStatusCell(type, o) {
+        return `<div style="display:flex;align-items:center;gap:10px;">
+            <label class="switch"><input type="checkbox" ${o.active ? 'checked' : ''} onchange="pfToggle('${type}',${o.id},this)"><span></span></label>
+            <span class="status ${o.active ? 'active' : 'inactive'}">${o.active ? 'Active' : 'Inactive'}</span></div>`;
+    }
+
+    function renderPlans(list) {
+        const el = pfEl('planTableBody');
+        if (!list.length) { el.innerHTML = pfMsg('No plans found.', 6); return; }
+        el.innerHTML = list.map(p => {
+            const names = p.features.map(f => f.name || (allFeatures.find(x => x.id === f.id) || {}).name || `#${f.id}`);
+            const chips = names.slice(0, 3).map(n => `<span class="chip">${pfEsc(n)}</span>`).join('')
+                + (names.length > 3 ? `<span class="chip more">+${names.length - 3}</span>` : '')
+                || '<span style="color:var(--text-muted);">—</span>';
+            return `<tr>
+              <td><h4 style="font-size:13.5px;color:var(--text-primary);">${pfEsc(p.name)}</h4>
+                  <span style="font-size:12px;color:var(--text-muted);">${pfEsc(p.description) || '—'}</span></td>
+              <td>${p.code ? `<span class="chip">${pfEsc(p.code)}</span>` : '—'}</td>
+              <td>₹${Number(p.price).toLocaleString('en-IN')}</td>
+              <td><div class="chip-list">${chips}</div></td>
+              <td>${pfStatusCell('plan', p)}</td>
+              <td><button class="action-btn" onclick="openPlanModal(${p.id})"><i class="fa-solid fa-pen"></i> Edit</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderFeatures(list) {
+        const el = pfEl('featureTableBody');
+        if (!list.length) { el.innerHTML = pfMsg('No features found.', 6); return; }
+        el.innerHTML = list.map(f => {
+            const used = allPlans.filter(p => p.features.some(x => x.id === f.id)).length;
+            return `<tr>
+              <td><h4 style="font-size:13.5px;color:var(--text-primary);">${pfEsc(f.name)}</h4></td>
+              <td>${f.code ? `<span class="chip">${pfEsc(f.code)}</span>` : '—'}</td>
+              <td style="max-width:320px;">${pfEsc(f.description) || '—'}</td>
+              <td>${used} plan${used === 1 ? '' : 's'}</td>
+              <td>${pfStatusCell('feature', f)}</td>
+              <td><button class="action-btn" onclick="openFeatureModal(${f.id})"><i class="fa-solid fa-pen"></i> Edit</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function pfRefreshView() {
+        const q = pfEl('pfSearch').value.trim().toLowerCase();
+        const hit = o => !q || o.name.toLowerCase().includes(q) || (o.code || '').toLowerCase().includes(q) || o.description.toLowerCase().includes(q);
+        renderPlans(pfTab === 'plans' ? allPlans.filter(hit) : allPlans);
+        renderFeatures(pfTab === 'features' ? allFeatures.filter(hit) : allFeatures);
+        pfEl('tabBtn-plans').textContent = `Plans (${allPlans.length})`;
+        pfEl('tabBtn-features').textContent = `Features (${allFeatures.length})`;
+        if (pfTab === 'mapping') pfMapSync();
+    }
+
+    function switchPfTab(tab) {
+        pfTab = tab;
+        ['plans', 'features', 'mapping'].forEach(t => {
+            pfEl('tabBtn-' + t).classList.toggle('active', t === tab);
+            pfEl('pfWrap-' + t).style.display = t === tab ? 'block' : 'none';
+        });
+        pfEl('pfAddLabel').textContent = tab === 'plans' ? 'New Plan' : 'New Feature';
+        pfEl('pfSearch').placeholder = `Search ${tab}...`;
+        pfEl('pfSearch').value = '';
+        pfEl('pfActions').style.display = tab === 'mapping' ? 'none' : 'flex';
+        pfRefreshView();
+    }
+
+    function pfAdd() { pfTab === 'plans' ? openPlanModal() : openFeatureModal(); }
+
+    /* ---- Plan modal ---- */
+    let pfPlanCodeTouched = false;
+    // suggests a code from the name until the admin edits the code manually
+    function pfAutoPlanCode() {
+        if (pfPlanCodeTouched) return;
+        pfEl('planCode').value = pfEl('planName').value.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    }
+
+    function openPlanModal(id) {
+        pfEditId = id ?? null;
+        const p = id != null ? allPlans.find(x => x.id === id) : null;
+        pfEl('planModalTitle').innerHTML = `<i class="fa-solid fa-layer-group"></i>${p ? 'Edit Plan' : 'New Plan'}`;
+        pfEl('planName').value = p ? p.name : '';
+        pfEl('planCode').value = p ? p.code : '';
+        pfPlanCodeTouched = !!p;
+        pfEl('planDescription').value = p ? p.description : '';
+        pfEl('planPrice').value = p ? p.price : '';
+        pfEl('planActive').checked = p ? p.active : true;
+        openModal('planModalOverlay');
+        setTimeout(() => pfEl('planName').focus(), 100);
+    }
+
+    async function savePlan() {
+        const v = {
+            name: pfEl('planName').value.trim(),
+            code: pfEl('planCode').value.trim(),
+            description: pfEl('planDescription').value.trim(),
+            price: parseFloat(pfEl('planPrice').value),
+            active: pfEl('planActive').checked
+        };
+        if (!v.name) return showToast('warning', 'Name Required', 'Please enter a plan name.');
+        if (!v.code) return showToast('warning', 'Code Required', 'Please enter a plan code (e.g. BUSINESS).');
+        if (isNaN(v.price) || v.price < 0) return showToast('warning', 'Invalid Price', 'Enter a valid price (0 or more).');
+        await pfSave('plan', buildPlanPayload(v), 'planModalOverlay');
+    }
+
+    /* ---- Feature modal ---- */
+    let pfCodeTouched = false;
+    // suggests a code from the name until the admin edits the code manually
+    function pfAutoCode() {
+        if (pfCodeTouched) return;
+        pfEl('featureCode').value = pfEl('featureName').value.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    }
+
+    function openFeatureModal(id) {
+        pfEditId = id ?? null;
+        const f = id != null ? allFeatures.find(x => x.id === id) : null;
+        pfEl('featureModalTitle').innerHTML = `<i class="fa-solid fa-puzzle-piece"></i>${f ? 'Edit Feature' : 'New Feature'}`;
+        pfEl('featureName').value = f ? f.name : '';
+        pfEl('featureCode').value = f ? f.code : '';
+        pfCodeTouched = !!f;
+        pfEl('featureActive').checked = f ? f.active : true;
+        pfEl('featureDescription').value = f ? f.description : '';
+        openModal('featureModalOverlay');
+        setTimeout(() => pfEl('featureName').focus(), 100);
+    }
+
+    async function saveFeature() {
+        const v = { name: pfEl('featureName').value.trim(), code: pfEl('featureCode').value.trim(), description: pfEl('featureDescription').value.trim(), active: pfEl('featureActive').checked };
+        if (!v.name) return showToast('warning', 'Name Required', 'Please enter a feature name.');
+        if (!v.code) return showToast('warning', 'Code Required', 'Please enter a feature code (e.g. CUSTOM_DOMAIN).');
+        await pfSave('feature', buildFeaturePayload(v), 'featureModalOverlay');
+    }
+
+    /* ---- shared create/update ---- */
+    async function pfSave(type, payload, modalId) {
+        const isEdit = pfEditId != null;
+        const label = type === 'plan' ? 'Plan' : 'Feature';
+        try {
+            showLoading(isEdit ? 'Saving changes...' : `Creating ${label.toLowerCase()}...`);
+            await pfApi(isEdit ? `${PF_API[type]}/${pfEditId}` : PF_API[type], isEdit ? 'PUT' : 'POST', payload);
+            hideLoading();
+            closeModal(modalId);
+            showToast('success', `${label} ${isEdit ? 'Updated' : 'Created'}`, `${label} saved successfully.`);
+            await loadPfData();
+        } catch (e) {
+            hideLoading();
+            showToast('error', 'Save Failed', e.message || 'Something went wrong.');
+        }
+    }
+
+    /* ---- active / inactive toggle ---- */
+    function pfToggle(type, id, el) {
+        const want = el.checked;
+        el.checked = !want; // stay in old state until server confirms
+        const run = async () => {
+            try {
+                showLoading('Updating status...');
+                await pfApi(`${PF_API[type]}/status`, 'PATCH', buildStatusPayload(id, want));
+                hideLoading();
+                const item = (type === 'plan' ? allPlans : allFeatures).find(x => x.id === id);
+                if (item) item.active = want;
+                pfRefreshView();
+                showToast('success', 'Status Updated', `${type === 'plan' ? 'Plan' : 'Feature'} is now ${want ? 'active' : 'inactive'}.`);
+            } catch (e) {
+                hideLoading();
+                showToast('error', 'Update Failed', e.message || 'Could not change status.');
+            }
+        };
+        if (want) run();
+        else confirmAction(type === 'plan'
+            ? 'Deactivate this plan? Vendors will no longer be able to subscribe to it.'
+            : 'Deactivate this feature? It may stop being available in plans that include it.', run);
+    }
+
+    /* ============================================================
+       PLAN FEATURE MAPPING
+       GET /s1/v1/super/admin/plan-features/{planId}
+       PUT /s1/v1/super/admin/plan-features   { planId, features: [{ featureId, enabled }] }
+       When live plans/features are not loaded, demo data is shown and
+       Save only logs the payload to the console (no API call).
+    ============================================================ */
+    const PF_DEMO = {
+        features: [
+            { id: 1, name: 'Custom Domain',      code: 'CUSTOM_DOMAIN',      description: 'Connect own domain to the store', active: true },
+            { id: 2, name: 'Advanced Analytics', code: 'ADVANCED_ANALYTICS', description: 'Sales and traffic reports',       active: true },
+            { id: 3, name: 'Bulk Product Upload', code: 'BULK_UPLOAD',       description: 'Upload products via CSV',         active: true },
+            { id: 4, name: 'Priority Support',   code: 'PRIORITY_SUPPORT',   description: '24x7 priority support channel',   active: true },
+            { id: 5, name: 'Discount Coupons',   code: 'COUPONS',            description: 'Create coupon campaigns',         active: true },
+            { id: 6, name: 'Multi-Staff Access', code: 'MULTI_STAFF',        description: 'Add multiple staff accounts',     active: false }
+        ],
+        plans: [
+            { id: 1, name: 'Starter',    features: [{ id: 3 }] },
+            { id: 2, name: 'Business',   features: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 5 }] },
+            { id: 3, name: 'Enterprise', features: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }] }
+        ]
+    };
+    let pfMapPlanId = null, pfMapDraft = new Set(), pfMapLive = null, pfMapBlocked = false;
+    // planId -> Set(featureId): last loaded/saved state (separate stores for live and demo data)
+    const pfMapSaved = { live: new Map(), demo: new Map() };
+
+    function pfMapData() {
+        const live = allPlans.length > 0 && allFeatures.length > 0;
+        return live ? { live, plans: allPlans, features: allFeatures } : { live, plans: PF_DEMO.plans, features: PF_DEMO.features };
+    }
+    const pfMapCache = () => pfMapData().live ? pfMapSaved.live : pfMapSaved.demo;
+
+    function pfMapBaseline() {
+        const cache = pfMapCache();
+        if (cache.has(pfMapPlanId)) return new Set(cache.get(pfMapPlanId));
+        const plan = pfMapData().plans.find(p => p.id === pfMapPlanId);
+        return new Set(plan ? plan.features.map(f => f.id) : []);
+    }
+    function pfMapLoadDraft() { pfMapDraft = pfMapBaseline(); }
+
+    // apply a PlanFeatureMappingResponse to the plan + live cache
+    function pfMapApply(plan, m) {
+        if (!plan) return;
+        const on = ((m && m.features) || []).filter(f => f.enabled);
+        plan.features = on.map(f => ({ id: f.featureId, name: f.name }));
+        pfMapSaved.live.set(plan.id, new Set(on.map(f => f.featureId)));
+    }
+
+    // called after plans load: real mapping for every plan (fills Features column + "Used In")
+    async function pfLoadPlanFeatures() {
+        await Promise.allSettled(allPlans.map(async p => pfMapApply(p, await pfApi(`${PF_API.mapping}/${p.id}`))));
+    }
+
+    function pfMapSync() {
+        const d = pfMapData();
+        if (d.live !== pfMapLive) { pfMapLive = d.live; pfMapPlanId = null; pfMapBlocked = false; }
+        if (!d.plans.some(p => p.id === pfMapPlanId)) {
+            pfMapPlanId = d.plans.length ? d.plans[0].id : null;
+            pfMapLoadDraft();
+        }
+        pfEl('pfMapPlan').innerHTML = d.plans.map(p => `<option value="${p.id}">${pfEsc(p.name)}</option>`).join('');
+        pfEl('pfMapPlan').value = String(pfMapPlanId);
+        pfEl('pfMapNote').style.display = d.live ? 'none' : 'block';
+        pfMapEnsure(false);
+    }
+
+    function pfMapChange() {
+        pfMapPlanId = Number(pfEl('pfMapPlan').value);
+        pfMapBlocked = false;
+        pfMapEnsure(true);
+    }
+
+    // live mode: fetch this plan's mapping if it has not been loaded yet, then render
+    async function pfMapEnsure(resetDraft) {
+        if (pfMapData().live && pfMapPlanId != null && !pfMapSaved.live.has(pfMapPlanId)) {
+            const id = pfMapPlanId;
+            pfEl('pfMapBody').innerHTML = pfMsg('Loading mapping...', 4);
+            try {
+                pfMapApply(allPlans.find(p => p.id === id), await pfApi(`${PF_API.mapping}/${id}`));
+                pfMapBlocked = false;
+            } catch (e) {
+                pfMapBlocked = true;
+                showToast('error', 'Mapping', e.message || 'Could not load plan mapping.');
+            }
+            if (id === pfMapPlanId) { pfMapLoadDraft(); pfMapRender(); }
+            return;
+        }
+        if (resetDraft) pfMapLoadDraft();
+        pfMapRender();
+    }
+
+    function pfMapRender() {
+        if (pfMapBlocked) {
+            pfEl('pfMapBody').innerHTML = pfMsg("Could not load this plan's mapping. Reselect the plan to retry.", 4);
+            pfEl('pfMapCount').textContent = '— / —';
+            pfEl('pfMapDirty').style.display = 'none';
+            return;
+        }
+        const feats = pfMapData().features;
+        pfEl('pfMapBody').innerHTML = feats.length ? feats.map(f => `<tr>
+            <td><h4 style="font-size:13.5px;color:var(--text-primary);">${pfEsc(f.name)}</h4>
+                <span style="font-size:12px;color:var(--text-muted);">${pfEsc(f.description) || '—'}</span></td>
+            <td>${f.code ? `<span class="chip">${pfEsc(f.code)}</span>` : '—'}</td>
+            <td><span class="status ${f.active ? 'active' : 'inactive'}">${f.active ? 'Active' : 'Inactive'}</span></td>
+            <td><label class="switch"><input type="checkbox" ${pfMapDraft.has(f.id) ? 'checked' : ''} onchange="pfMapToggle(${f.id}, this.checked)"><span></span></label></td>
+        </tr>`).join('') : pfMsg('No features available.', 4);
+        pfMapUpdateMeta();
+    }
+
+    function pfMapUpdateMeta() {
+        const feats = pfMapData().features;
+        const on = feats.filter(f => pfMapDraft.has(f.id)).length;
+        pfEl('pfMapCount').textContent = `${on} / ${feats.length} enabled`;
+        const base = pfMapBaseline();
+        const dirty = base.size !== pfMapDraft.size || [...pfMapDraft].some(id => !base.has(id));
+        pfEl('pfMapDirty').style.display = dirty ? 'inline' : 'none';
+    }
+
+    function pfMapToggle(featureId, on) {
+        on ? pfMapDraft.add(featureId) : pfMapDraft.delete(featureId);
+        pfMapUpdateMeta();
+    }
+
+    function pfMapSetAll(on) {
+        if (pfMapBlocked) return;
+        pfMapDraft = on ? new Set(pfMapData().features.map(f => f.id)) : new Set();
+        pfMapRender();
+    }
+
+    async function pfMapSave() {
+        if (pfMapPlanId == null) return showToast('warning', 'No Plan', 'Please select a plan first.');
+        if (pfMapBlocked) return showToast('warning', 'Mapping Not Loaded', 'Reselect the plan to reload its mapping first.');
+        const payload = {
+            planId: pfMapPlanId,
+            features: pfMapData().features.map(f => ({ featureId: f.id, enabled: pfMapDraft.has(f.id) }))
+        };
+        console.log('Plan Feature Mapping payload:', JSON.stringify(payload, null, 2));
+
+        if (!pfMapData().live) { // demo data: local only
+            pfMapSaved.demo.set(pfMapPlanId, new Set(pfMapDraft));
+            pfMapUpdateMeta();
+            return showToast('success', 'Mapping Saved (demo)', 'Demo data — payload logged to console, no API call.');
+        }
+
+        const plan = allPlans.find(p => p.id === pfMapPlanId);
+        try {
+            showLoading('Saving mapping...');
+            const saved = await pfApi(PF_API.mapping, 'PUT', payload);
+            hideLoading();
+            pfMapApply(plan, saved);
+            pfMapLoadDraft();
+            pfRefreshView(); // updates Plans table features, "Used In" counts and this tab
+            showToast('success', 'Mapping Saved', `${plan.name}: ${plan.features.length} feature(s) enabled.`);
+        } catch (e) {
+            hideLoading();
+            showToast('error', 'Save Failed', e.message || 'Could not save mapping.');
+        }
+    }
+
+    /* ============================================================
        INIT
     ============================================================ */
     window.addEventListener('load', () => {
       loadVendors();
-      loadPendingAds();
+      renderVendorReqTabs();
+      renderAdTabs();
+      loadPendingVendors();
+      loadAds();
+      loadPfData();
       buildRevenueChart('12');
       buildVendorChart();
       setTimeout(() => {

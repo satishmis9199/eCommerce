@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.info.BuildProperties;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,7 +54,6 @@ public class UserAuthController {
     private final ApplicationEventPublisher eventPublisher;
     private final UserRepos userRepository;
     private final VendorRepository vendorRepository;
-    private final BuildProperties buildProperties;
     private final JwtUtil jwtUtil;
 
 
@@ -356,19 +355,7 @@ public class UserAuthController {
                 new AuthMeResponse(true, user)
         );
     }
-    @GetMapping("/version")
-    public ResponseEntity<Map<String,String>> getCodeVersionDetails(){
-        Map<String,String> buildDetails=new HashMap<>();
-        buildDetails.put("version",buildProperties.getVersion());
-        buildDetails.put("artifactName",buildProperties.getName());
-        buildDetails.put("group",buildProperties.getGroup());
-        buildDetails.put("date",String.valueOf(buildProperties.getTime()));
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(
-                        buildDetails
-                );
 
-    }
 
 
 

@@ -76,6 +76,7 @@ public class Vendor {
     private String subDomain;
 
     private SubscriptionPlan plan;
+    private Long planId = 1L;
 
     private String logo;
     @Column(nullable = false)

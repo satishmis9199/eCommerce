@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.OrderResponseDto;
 import com.e_commerce.eCommerce.dto.OrderTrackingResponseDto;
@@ -26,7 +27,7 @@ public class OrderController {
     private final OrderService orderService;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
-
+    @RequiresFeature("ORDER_MANAGEMENT")
     @GetMapping("/orders/{orderId}/track")
     public ResponseEntity<ApiResponse<OrderResponseDto>> getSpecificOrderDetails(@PathVariable String orderId, @AuthenticationPrincipal CustomUserDetail userDetail) {
         try {
@@ -51,7 +52,7 @@ public class OrderController {
 
     }
 
-
+    @RequiresFeature("ORDER_MANAGEMENT")
     @GetMapping(value = "/orders/myOrders", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<List<OrderResponseDto>>> getMyOrders(@AuthenticationPrincipal CustomUserDetail userDetail) {
         try {
@@ -78,7 +79,7 @@ public class OrderController {
 
     //    @PreAuthorize("hasRole('USER')")
     @GetMapping("/orders/{orderId}/tracks")
-
+    @RequiresFeature("ORDER_MANAGEMENT")
     public ResponseEntity<ApiResponse<OrderTrackingResponseDto>> getTrackingDetail(@AuthenticationPrincipal CustomUserDetail userDetail, @PathVariable String orderId) {
         try {
             OrderTrackingResponseDto orderResponseDto = orderService.getTracking(userDetail, orderId);
@@ -101,6 +102,8 @@ public class OrderController {
         }
     }
 
+
+    @RequiresFeature("ORDER_MANAGEMENT")
     @PostMapping("/orders/{orderId}/cancel")
     public ResponseEntity<ApiResponse<?>> cancelOrder(
             @PathVariable String orderId,
@@ -130,7 +133,7 @@ public class OrderController {
         }
     }
 
-
+    @RequiresFeature("ORDER_MANAGEMENT")
     @PostMapping("/orders/{orderId}/return")
     public ResponseEntity<ApiResponse<?>> returnOrder(
             @PathVariable String orderId,

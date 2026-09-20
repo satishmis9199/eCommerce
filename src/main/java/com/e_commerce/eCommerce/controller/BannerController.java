@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.BannerRequestDto;
 import com.e_commerce.eCommerce.dto.BannerResponseDto;
@@ -19,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 public class BannerController {
     private final BannerService bannerService;
-
+    @RequiresFeature("STORE_BANNER")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/vendor/s11/v1/banner")
     public ResponseEntity<ApiResponse<?>> saveBanner(@AuthenticationPrincipal CustomUserDetail customerDetailDTo, @RequestBody BannerRequestDto bannerRequestDTO) {
@@ -30,7 +31,8 @@ public class BannerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Unable To fetch", e.getMessage()));
         }
     }
-
+    @RequiresFeature("STORE_BANNER")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/vendor/s11/v1/banner")
     public ResponseEntity<ApiResponse<List<BannerResponseDto>>> getBannerAdmin(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
         try {
@@ -40,7 +42,7 @@ public class BannerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
-
+    @RequiresFeature("STORE_BANNER")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/vendor/s11/v1/banner/{id}")
     public ResponseEntity<ApiResponse<?>> updateBanner(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetail customerDetailDTo, @RequestBody BannerRequestDto bannerRequestDTO) {
@@ -51,7 +53,7 @@ public class BannerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, "Unable To fetch", e.getMessage()));
         }
     }
-
+    @RequiresFeature("STORE_BANNER")
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/vendor/s11/v1/banner/status")
     public ResponseEntity<ApiResponse<?>> changeBannerStatus(@RequestBody BannerStatusRequestDTO request, @AuthenticationPrincipal CustomUserDetail userDetail) {

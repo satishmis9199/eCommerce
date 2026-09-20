@@ -19,6 +19,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 @Configuration
 public class SecurityConfig {
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
@@ -133,6 +136,7 @@ public class SecurityConfig {
 
                         ).permitAll()
                         .requestMatchers(("/s4/**")).permitAll()
+                        .requestMatchers(("/public/**")).permitAll()
                         .requestMatchers("/s1/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/**").permitAll()
                         .anyRequest().authenticated())
@@ -182,37 +186,70 @@ public class SecurityConfig {
                                     }
                                 })
 
-                        .accessDeniedHandler(
 
-                                (request, response, accessDeniedException) -> {
+                                .accessDeniedHandler(
+                                        (request, response, accessDeniedException) -> {
 
-                                    String uri = request.getRequestURI();
+                                            System.out.println(
+                                                    "Access Denied Message: "
+                                                            + accessDeniedException.getMessage()
+                                            );
 
-                                    boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+                                            String message = accessDeniedException.getMessage();
+
+                                            if (message == null
+                                                    || message.isBlank()
+                                                    || "Access Denied".equalsIgnoreCase(message)) {
+
+                                                message =
+                                                        "You don't have permission to access this resource";
+                                            }
+
+                                            boolean isAjax =
+                                                    "XMLHttpRequest".equals(
+                                                            request.getHeader("X-Requested-With")
+                                                    );
 
 
-                                    if (
+                                            if (isAjax) {
 
-                                            isAjax
+                                                response.setStatus(
+                                                        HttpServletResponse.SC_FORBIDDEN
+                                                );
+
+                                                response.setContentType(
+                                                        MediaType.APPLICATION_JSON_VALUE
+                                                );
+
+                                                response.setCharacterEncoding("UTF-8");
+
+                                                response.getWriter().write("""
+                        {
+                            "success": false,
+                            "message": "%s",
+                            "redirectUrl": "/api/access-denied"
+                        }
+                        """.formatted(
+                                                        message.replace("\"", "\\\"")
+                                                ));
+
+                                                return;
+                                            }
+                                            String encodedMessage =
+                                                    URLEncoder.encode(
+                                                            message,
+                                                            StandardCharsets.UTF_8
+                                                    );
+
+                                            response.sendRedirect(
+                                                    "/api/access-denied?message="
+                                                            + encodedMessage
+                                            );
+                                        }
+                                )
 
 
-                                    ) {
-
-                                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-
-                                        response.getWriter().write("""
-                                                {
-                                                    "success": false,
-                                                    "message": "Access Denied",
-                                                    "redirectUrl": "/api/access-denied"
-                                                }
-                                                """);
-
-                                    } else {
-                                        response.sendRedirect("/api/access-denied");
-                                    }
-                                }))
+                )
 
 
 //                .oauth2Login(oauth -> oauth.successHandler(successHandler))

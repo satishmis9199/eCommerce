@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.SalesReportProjection;
 import com.e_commerce.eCommerce.entity.Vendor;
@@ -33,7 +34,7 @@ public class DownloadSalesReport {
     private final OrderItemRepository orderItemRepository;
     private final VendorRepository vendorRepository;
 
-
+    @RequiresFeature("EXPORT_DATA")
     @GetMapping("/sales")
     public ResponseEntity<byte[]> downloadSalesReport(
 

@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.response.FestivalBannerResponseDto;
@@ -21,6 +22,7 @@ public class ProductController {
     private final ProductService productService;
     private final FestivalBannerService festivalBannerService;
     @GetMapping("festival-banner/active")
+    @RequiresFeature("FESTIVAL_BANNER")
     public ResponseEntity<ApiResponse<FestivalBannerResponseDto>> getActiveFestivalBanner() {
 
         try {
@@ -71,7 +73,7 @@ public class ProductController {
                     ));
         }
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("products/{productId}")
     public ResponseEntity<ApiResponse<ProductResponseDTOs>> getProductByProductId(@PathVariable Long productId) {
         try {
@@ -93,7 +95,7 @@ public class ProductController {
                     );
         }
     }
-
+    @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("products/{productId}/related")
     public ResponseEntity<ApiResponse<List<RelatedProductDTO>>> getRelatedProduct(@PathVariable Long productId) {
         try {
@@ -117,7 +119,7 @@ public class ProductController {
                     );
         }
     }
-
+    @RequiresFeature("FLASH_SALE")
     @GetMapping("/products/flash-sale")
     public ResponseEntity<ApiResponse<FlashSaleDashBoardResponseDTO>> getFlashProduct() {
         try {
@@ -143,6 +145,7 @@ public class ProductController {
     }
 
     @PostMapping("/orders/{orderId}/items/review")
+     @RequiresFeature("PRODUCT_REVIEWS")
     public ResponseEntity<ApiResponse<?>> postReview(@AuthenticationPrincipal CustomUserDetail userDetail, @RequestBody ReviewRequetDTO reviewRequetDTO, @PathVariable String orderId) {
         try {
             String message = productService.addreviewToProduct(userDetail, reviewRequetDTO, orderId);

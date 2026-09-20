@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.ChatRequestDto;
 import com.e_commerce.eCommerce.dto.ChatResponseDto;
@@ -22,8 +23,8 @@ import java.util.UUID;
 @RequestMapping("/api/chat")
 @AllArgsConstructor
 public class SupportChatController {
-
     private final ChatClient supportChatClient;
+    @RequiresFeature("SUPPORT_TICKETS")
 
     @PostMapping(value = "/support",consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<ChatResponseDto>> chat(

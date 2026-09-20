@@ -46,4 +46,8 @@ public interface AdRepository extends JpaRepository<Ad, Long> {
     long countBySlotKeyAndStatus(AdSlotKey slotKey, AdStatus status);
 
     Optional<Ad> findByIdAndTenantId(Long id, String tenantId);
+
+    List<Ad> findAllByOrderByCreatedAtDesc();
+
+    List<Ad> findByStatusOrderByCreatedAtDesc(AdStatus status);
 }

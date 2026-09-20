@@ -1,9 +1,11 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.request.AdApproveRequestDto;
 import com.e_commerce.eCommerce.dto.request.AdRejectRequestDto;
 import com.e_commerce.eCommerce.dto.response.AdResponseDto;
+import com.e_commerce.eCommerce.enums.AdStatus;
 import com.e_commerce.eCommerce.service.AdService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,6 @@ public class AdminAdController {
         List<AdResponseDto> response = adService.getPendingAds();
         return ResponseEntity.ok(new ApiResponse<>(true, "Pending ads fetched successfully", response));
     }
-
     @PatchMapping("/{id}/approve")
     public ResponseEntity<ApiResponse<Void>> approveAd(
             @PathVariable Long id,
@@ -49,5 +50,15 @@ public class AdminAdController {
             return ResponseEntity.status(404).body(new ApiResponse<>(false, "Ad not found", null));
         }
         return ResponseEntity.ok(new ApiResponse<>(true, "Ad rejected", null));
+    }
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<AdResponseDto>>> getAds(
+            @RequestParam(required = false) AdStatus status) {
+
+        List<AdResponseDto> response = adService.getAds(status);
+        String message = (status == null)
+                ? "Ads fetched successfully"
+                : status + " ads fetched successfully";
+        return ResponseEntity.ok(new ApiResponse<>(true, message, response));
     }
 }

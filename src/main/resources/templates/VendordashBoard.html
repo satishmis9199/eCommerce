@@ -596,6 +596,7 @@
   .icon-btn{width:32px;height:32px;}
   .menu-toggle-btn{width:34px;height:34px;}
 }
+        .feature-hidden{display:none !important;}
     </style>
 </head>
 <body>
@@ -4332,36 +4333,223 @@ function updateReportRangeHint() {
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initReportFilter);
 else initReportFilter();
-
-async function exportSalesReport(btn) {
-    const range = getReportRange();
-    if (range.error) {
-        showToast('error', range.title || 'Invalid Date', range.error);
-        return;
-    }
-
-    // same API call as before - only the startDate / endDate values come from the selected option
-    const params = new URLSearchParams();
-    if (range.startDate) params.append('startDate', range.startDate);
-    if (range.endDate)   params.append('endDate', range.endDate);
-    const url = '/vendor/v1/reports/sales' + (params.toString() ? '?' + params.toString() : '');
+async function downloadExcelFromApi({
+    url,
+    fallbackName,
+    button,
+    busyHtml,
+    errorMessage,
+    emptyMessage
+}) {
+    const originalHtml = button ? button.innerHTML : '';
 
     try {
-        const fileName = await downloadExcelFromApi({
-            url,
-            fallbackName: 'Sales_Report.xlsx',
-            button: btn,
-            busyHtml: '<i class="fa-solid fa-spinner fa-spin"></i> Preparing...',
-            errorMessage: 'Failed to download sales report.',
-            emptyMessage: 'No sales data found for the selected dates.'
+
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = busyHtml;
+        }
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         });
-        if (fileName) showToast('success', 'Export Complete', fileName + ' downloaded successfully.');
-    } catch (error) {
-        console.error('Sales report export error:', error);
-        showToast('error', 'Export Failed', error.message || 'Unable to download sales report.');
+
+        /*
+         * Feature access denied
+         */
+        if (response.status === 403) {
+
+            let data = {};
+
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+
+            if (data.redirectUrl) {
+
+                const message =
+                    data.message || 'Access Denied';
+
+                window.location.href =
+                    data.redirectUrl +
+                    '?message=' +
+                    encodeURIComponent(message);
+
+                return null;
+            }
+
+            throw new Error(
+                data.message ||
+                'You do not have access to this feature.'
+            );
+        }
+
+        /*
+         * Other HTTP errors
+         */
+        if (!response.ok) {
+            throw new Error(
+                errorMessage ||
+                'Something went wrong while downloading the file.'
+            );
+        }
+
+        /*
+         * Excel file
+         */
+        const blob = await response.blob();
+
+        if (!blob || blob.size === 0) {
+            throw new Error(
+                emptyMessage ||
+                'No data found.'
+            );
+        }
+
+        /*
+         * Get filename from response header
+         */
+        let fileName =
+            fallbackName || 'download.xlsx';
+
+        const contentDisposition =
+            response.headers.get('Content-Disposition');
+
+        if (contentDisposition) {
+
+            const match =
+                contentDisposition.match(
+                    /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i
+                );
+
+            if (match && match[1]) {
+                fileName =
+                    decodeURIComponent(match[1]);
+            }
+        }
+
+        /*
+         * Download file
+         */
+        const downloadUrl =
+            window.URL.createObjectURL(blob);
+
+        const link =
+            document.createElement('a');
+
+        link.href = downloadUrl;
+        link.download = fileName;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        window.URL.revokeObjectURL(downloadUrl);
+
+        return fileName;
+
+    } finally {
+
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = originalHtml;
+        }
     }
 }
 
+async function exportSalesReport(btn) {
+
+    const range = getReportRange();
+
+    if (range.error) {
+
+        showToast(
+            'error',
+            range.title || 'Invalid Date',
+            range.error
+        );
+
+        return;
+    }
+
+    const params = new URLSearchParams();
+
+    if (range.startDate) {
+        params.append(
+            'startDate',
+            range.startDate
+        );
+    }
+
+    if (range.endDate) {
+        params.append(
+            'endDate',
+            range.endDate
+        );
+    }
+
+    const url =
+        '/vendor/v1/reports/sales' +
+        (
+            params.toString()
+                ? '?' + params.toString()
+                : ''
+        );
+
+    try {
+
+        const fileName =
+            await downloadExcelFromApi({
+
+                url: url,
+
+                fallbackName:
+                    'Sales_Report.xlsx',
+
+                button: btn,
+
+                busyHtml:
+                    '<i class="fa-solid fa-spinner fa-spin"></i> Preparing...',
+
+                errorMessage:
+                    'Failed to download sales report.',
+
+                emptyMessage:
+                    'No sales data found for the selected dates.'
+            });
+
+        if (fileName) {
+
+            showToast(
+                'success',
+                'Export Complete',
+                fileName +
+                ' downloaded successfully.'
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            'Sales report export error:',
+            error
+        );
+
+        showToast(
+            'error',
+            'Export Failed',
+            error.message ||
+            'Unable to download sales report.'
+        );
+    }
+}
 function openAddNoticeModal() {
     editingNoticeId = null;
 
@@ -6352,6 +6540,7 @@ async function uploadCategoryImage(file) {
        PAGE NAVIGATION
     ============================================================ */
    function switchPage(page) {
+        if (!canOpenPage(page)) return;
     document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
 
@@ -8144,12 +8333,118 @@ function renderProducts(list = productList) {
     async function loadVendorData() {
       renderTransactions();
     }
+    /* ============================================================
+       PLAN FEATURE ACCESS - tabs/sections visible according to the vendor's plan
+       GET /vendor/s1/v1/plan/features  ->  { "success": true, "features": ["PRODUCT_MANAGEMENT", ...] }
+       To gate a new feature, add ONE entry to FEATURE_UI_MAP.
+       Only codes listed in FEATURE_UI_MAP are gated; everything else stays visible.
+       (This only hides the UI - the backend must still enforce access.)
+    ============================================================ */
+    const PLAN_FEATURES_API = '/vendor/s1/v1/plan/features';
+    const FEATURE_UI_MAP = {
+        // ---- sidebar tabs (page id = data-page of the sidebar item) ----
+        DASHBOARD:            { pages: ['overview'],        selectors: [] },
+        ORDER_MANAGEMENT:     { pages: ['orders'],          selectors: [`[onclick*="switchPage('orders')"]`] },
+        CUSTOMER_MANAGEMENT:  { pages: ['customers'],       selectors: [] },
+        PRODUCT_MANAGEMENT:   { pages: ['products'],        selectors: [`[onclick*="switchPage('products')"]`] },
+        CATEGORY_MANAGEMENT:  { pages: ['categories'],      selectors: [] },
+        STORE_BANNER:         { pages: ['banners'],         selectors: [] },
+        SPONSORED_ADS:        { pages: ['sponsoredAds'],    selectors: [] },
+        NOTICE_MANAGEMENT:    { pages: ['notices'],         selectors: [] },
+        FESTIVAL_BANNER:      { pages: ['festivalBanners'], selectors: [] },
+        FLASH_SALE:           { pages: ['flashsales'],      selectors: [`[onclick*="switchPage('flashsales')"]`] },
+        BULK_PRODUCT_UPLOAD:  { pages: ['upload'],          selectors: [`[onclick*="switchPage('upload')"]`] },
+        PAYOUT_MANAGEMENT:    { pages: ['payouts'],         selectors: [] },
+        PRODUCT_REVIEWS:      { pages: ['reviews'],         selectors: [] },
+        SUPPORT_TICKETS:      { pages: ['tickets'],         selectors: [] },
+        SETTINGS:             { pages: ['settings'],        selectors: [] },
+        // ---- sections inside the Overview page ----
+        SALES_REPORT:         { pages: [], selectors: ['#salesReportSection'] },
+        ANALYTICS:            { pages: [], selectors: ['.analytics-section'] },
+        // ---- codes that exist in the DB but have no matching UI in this dashboard yet.
+        //      When that UI is built, add its page id / CSS selector here and it gets gated automatically. ----
+        ADVANCED_ANALYTICS:   { pages: [], selectors: [] },
+        COUPON_MANAGEMENT:    { pages: [], selectors: [] },
+        DISCOUNT_MANAGEMENT:  { pages: [], selectors: [] },
+        INVENTORY_MANAGEMENT: { pages: [], selectors: [] },
+        CUSTOM_DOMAIN:        { pages: [], selectors: [] },
+        MULTI_STAFF:          { pages: [], selectors: [] },
+        ORDER_EXPORT:         { pages: [], selectors: [] },
+        PRODUCT_EXPORT:       { pages: [], selectors: [] },
+        PRIORITY_SUPPORT:     { pages: [], selectors: [] }
+    };
+    let vendorFeatures = null; // null = still loading (gated items stay hidden), Set = loaded
+
+    const hasFeature = code => !!vendorFeatures && vendorFeatures.has(code);
+
+    function featureForPage(page) {
+        return Object.keys(FEATURE_UI_MAP).find(c => FEATURE_UI_MAP[c].pages.includes(page));
+    }
+    function pageAllowed(page) {
+        const code = featureForPage(page);
+        return !code || hasFeature(code);
+    }
+    function canOpenPage(page) {
+        if (pageAllowed(page)) return true;
+        showToast('warning', 'Not Available', 'This section is not included in your current plan.');
+        return false;
+    }
+
+    function firstAllowedPage() {
+        const li = [...document.querySelectorAll('.sidebar__menu li[data-page]')]
+            .find(el => isTabItem(el) && !el.classList.contains('feature-hidden'));
+        return li ? li.dataset.page : null;
+    }
+    // sidebar items that switch tabs (href="#"); real links like Policy are never gated
+    function isTabItem(li) {
+        const a = li.querySelector('a');
+        return !a || a.getAttribute('href') === '#';
+    }
+
+    function applyFeatureGating() {
+        Object.entries(FEATURE_UI_MAP).forEach(([code, cfg]) => {
+            const hide = !hasFeature(code);
+            const targets = [
+                ...cfg.pages.flatMap(p => [...document.querySelectorAll(`.sidebar__menu li[data-page="${p}"]`)].filter(isTabItem)),
+                ...cfg.selectors.flatMap(sel => [...document.querySelectorAll(sel)])
+            ];
+            targets.forEach(el => el.classList.toggle('feature-hidden', hide));
+        });
+        if (!vendorFeatures) return; // still loading: don't redirect yet
+        // if the open page is not allowed, move to the first allowed tab
+        const activePage = ((document.querySelector('.page-section.active') || {}).id || '').replace('page-', '');
+        if (activePage && !pageAllowed(activePage)) {
+            const next = firstAllowedPage();
+            if (next) switchPage(next);
+            else showToast('warning', 'No Access', 'No sections are enabled for your plan. Please contact support.');
+        }
+    }
+
+    async function loadPlanFeatures() {
+        try {
+            const res = await fetch(PLAN_FEATURES_API, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || `HTTP ${res.status}`);
+            vendorFeatures = new Set((data.features || []).map(f => String(f).trim().toUpperCase()));
+        } catch (e) {
+            console.warn('Plan features API error:', e.message);
+            vendorFeatures = new Set(Object.keys(FEATURE_UI_MAP)); // fail-open: server still enforces access
+            showToast('warning', 'Plan Features', 'Could not verify your plan features, showing all sections.');
+        }
+        applyFeatureGating();
+    }
+
+    applyFeatureGating();                       // hide gated items right away (no flash)
+    const featuresReady = loadPlanFeatures();   // then show what the plan allows
+    // run a loader only when the plan includes the feature (avoids 403 noise)
+    function whenFeature(codes, fn) { featuresReady.then(() => { if ([].concat(codes).some(hasFeature)) fn(); }); }
+
     window.addEventListener('load', () => {
       fetchVendorProfile();
       loadNotifications();
-      loadCategories();
-      loadProducts();
-      loadFlashSales();
+      whenFeature(['PRODUCT_MANAGEMENT', 'CATEGORY_MANAGEMENT'], loadCategories);
+      whenFeature('PRODUCT_MANAGEMENT', loadProducts);
+      whenFeature('FLASH_SALE', loadFlashSales);
       loadOrders();
       loadCustomers();
       loadVendorData();

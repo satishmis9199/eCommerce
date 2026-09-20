@@ -11,14 +11,11 @@ public class LoginRedirect {
     @GetMapping("/super/admin")
     public String superAdminLogin() {
         String tenant = TenantContext.getTenantId();
-
         return "super-admin";
     }
 
     @GetMapping("/super/admin/tenant-not-found")
     public String tenantNotFound() {
-
-
         return "tenant-not-found";
     }
 }

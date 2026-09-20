@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.NoticeListDto;
 import com.e_commerce.eCommerce.dto.NoticeResponseDto;
@@ -22,7 +23,7 @@ import java.util.List;
 public class NoticeController {
 
     private final NoticeService noticeService;
-
+    @RequiresFeature("NOTICE_MANAGEMENT")
     @PostMapping(
             value = "/vendor/s11/v1/notice",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -63,7 +64,7 @@ public class NoticeController {
                     );
         }
     }
-
+    @RequiresFeature("NOTICE_MANAGEMENT")
     @GetMapping(
             value = "/vendor/s11/v1/notice",
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -100,7 +101,7 @@ public class NoticeController {
                     );
         }
     }
-
+    @RequiresFeature("NOTICE_MANAGEMENT")
     @GetMapping(
             value = "/api/u1/v1/notices/active",
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -118,6 +119,8 @@ public class NoticeController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @RequiresFeature("NOTICE_MANAGEMENT")
+
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> updateNotice(
             @PathVariable Long noticeId,
@@ -158,6 +161,7 @@ public class NoticeController {
             value = "/vendor/s11/v1/notice/{noticeId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @RequiresFeature("NOTICE_MANAGEMENT")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteNotice(
             @PathVariable Long noticeId,
@@ -198,6 +202,7 @@ public class NoticeController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @RequiresFeature("NOTICE_MANAGEMENT")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> changeNoticeStatus(
             @RequestBody NoticeStatusUpdateDto request,

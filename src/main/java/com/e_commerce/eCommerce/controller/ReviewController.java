@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.ReviewResponseAdminDto;
 import com.e_commerce.eCommerce.dto.UserReviewResponseDTO;
@@ -24,7 +25,7 @@ import java.util.Map;
 public class ReviewController {
 
     private final ReviewService reviewService;
-
+    @RequiresFeature("PRODUCT_REVIEWS")
     @GetMapping(value = "/vendor/s2/v1/reviews", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<Page<ReviewResponseAdminDto>>> getReviewWithStatus(
             @AuthenticationPrincipal CustomUserDetail userDetail,
@@ -63,7 +64,7 @@ public class ReviewController {
                     );
         }
     }
-
+    @RequiresFeature("PRODUCT_REVIEWS")
     @PatchMapping(value = "/vendor/s2/v1/reviews/{id}/status", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<?>> updateReviewStatus(@PathVariable Long id, @RequestBody Map<String, ReviewStatus> action, @AuthenticationPrincipal CustomUserDetail userDetail) {
         try {
@@ -92,6 +93,7 @@ public class ReviewController {
                     );
         }
     }
+    @RequiresFeature("PRODUCT_REVIEWS")
 
     @GetMapping("/api/u1/v1/store/reviews")
     public ResponseEntity<ApiResponse<List<UserReviewResponseDTO>>> getVerifiedReviwed() {

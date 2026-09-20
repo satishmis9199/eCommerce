@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 
 import com.e_commerce.eCommerce.dto.request.FestivalBannerRequestDto;
@@ -9,6 +10,7 @@ import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.FestivalBannerService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,7 +24,7 @@ public class FestivalBannerController {
 
     private final FestivalBannerService festivalBannerService;
 
-
+    @RequiresFeature("FESTIVAL_BANNER")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/vendor/s11/v1/festival-banner")
     public ResponseEntity<ApiResponse<?>> saveFestivalBanner(
@@ -56,7 +58,7 @@ public class FestivalBannerController {
         }
     }
 
-
+    @RequiresFeature("FESTIVAL_BANNER")
     @GetMapping("/vendor/s11/v1/festival-banner")
     public ResponseEntity<ApiResponse<List<FestivalBannerResponseDto>>> getFestivalBannerAdmin(
             @AuthenticationPrincipal CustomUserDetail customUserDetail) {
@@ -85,7 +87,7 @@ public class FestivalBannerController {
         }
     }
 
-
+    @RequiresFeature("FESTIVAL_BANNER")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/vendor/s11/v1/festival-banner/{id}")
     public ResponseEntity<ApiResponse<?>> updateFestivalBanner(
@@ -121,9 +123,10 @@ public class FestivalBannerController {
         }
     }
 
-
+    @RequiresFeature("FESTIVAL_BANNER")
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/vendor/s11/v1/festival-banner/status")
+    @PatchMapping(value = "/vendor/s11/v1/festival-banner/status",consumes = MediaType.APPLICATION_JSON_VALUE,
+    produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<?>> changeFestivalBannerStatus(
             @RequestBody FestivalBannerStatusRequestDTO request,
             @AuthenticationPrincipal CustomUserDetail userDetail) {
@@ -156,6 +159,7 @@ public class FestivalBannerController {
                     ));
         }
     }
+    @RequiresFeature("FESTIVAL_BANNER")
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/vendor/s11/v1/festival-banner/{id}")
     public ResponseEntity<ApiResponse<?>> deleteFestivalBanner(

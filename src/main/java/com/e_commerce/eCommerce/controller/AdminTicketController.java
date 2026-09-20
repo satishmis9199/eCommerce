@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.*;
 
 import com.e_commerce.eCommerce.dto.request.TicketMessageRequestDto;
@@ -24,6 +25,7 @@ import java.util.List;
 public class AdminTicketController {
     private final SupportTicketService supportTicketService;
     @GetMapping
+    @RequiresFeature("SUPPORT_TICKETS")
     public ResponseEntity<ApiResponse<List<TicketSummaryResponseDto>>> listTickets(
             @AuthenticationPrincipal CustomUserDetail userDetail,
             @RequestParam(required = false) TicketStatus status) {
@@ -35,7 +37,7 @@ public class AdminTicketController {
                     .body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
-
+    @RequiresFeature("SUPPORT_TICKETS")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TicketDetailResponseDto>> getTicket(
             @AuthenticationPrincipal CustomUserDetail userDetail,
@@ -48,7 +50,7 @@ public class AdminTicketController {
                     .body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
-
+    @RequiresFeature("SUPPORT_TICKETS")
     @PostMapping("/{id}/messages")
     public ResponseEntity<ApiResponse<TicketDetailResponseDto>> reply(
             @AuthenticationPrincipal CustomUserDetail userDetail,

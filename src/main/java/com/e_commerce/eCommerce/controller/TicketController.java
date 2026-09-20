@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.request.ConfirmResolutionRequestDto;
 import com.e_commerce.eCommerce.dto.request.CreateTicketRequestDto;
@@ -24,7 +25,7 @@ import java.util.List;
 public class TicketController {
 
     private final SupportTicketService supportTicketService;
-
+    @RequiresFeature("SUPPORT_TICKETS")
     @PostMapping
     public ResponseEntity<ApiResponse<TicketDetailResponseDto>> createTicket(@AuthenticationPrincipal CustomUserDetail userDetail, @Valid @RequestBody CreateTicketRequestDto dto) {
         try {
@@ -44,7 +45,7 @@ public class TicketController {
                                     null));
         }
     }
-
+    @RequiresFeature("SUPPORT_TICKETS")
     @GetMapping
     public ResponseEntity<ApiResponse<List<TicketSummaryResponseDto>>> myTickets(@AuthenticationPrincipal CustomUserDetail userDetail) {
         try {
@@ -60,7 +61,7 @@ public class TicketController {
                             null));
         }
     }
-
+    @RequiresFeature("SUPPORT_TICKETS")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TicketDetailResponseDto>> getTicket(@AuthenticationPrincipal CustomUserDetail userDetail, @PathVariable Long id) {
         try {
@@ -73,7 +74,7 @@ public class TicketController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
-
+    @RequiresFeature("SUPPORT_TICKETS")
     @PostMapping("/{id}/messages")
     public ResponseEntity<ApiResponse<TicketDetailResponseDto>> addMessage(@AuthenticationPrincipal CustomUserDetail userDetail, @PathVariable Long id, @Valid @RequestBody TicketMessageRequestDto dto) {
         try {
@@ -86,7 +87,7 @@ public class TicketController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage(), null));
         }
     }
-
+    @RequiresFeature("SUPPORT_TICKETS")
     @PostMapping("/{id}/confirm-resolution")
     public ResponseEntity<ApiResponse<TicketDetailResponseDto>> confirmResolution(@AuthenticationPrincipal CustomUserDetail userDetail, @PathVariable Long id, @Valid @RequestBody ConfirmResolutionRequestDto dto) {
         try {
