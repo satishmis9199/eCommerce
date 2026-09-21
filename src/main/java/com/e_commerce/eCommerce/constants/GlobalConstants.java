@@ -1,6 +1,8 @@
 package com.e_commerce.eCommerce.constants;
 
+import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.enums.VendorRequestStatus;
+import org.springframework.security.core.Authentication;
 
 public final class GlobalConstants {
 
@@ -37,4 +39,17 @@ public final class GlobalConstants {
                     VENDOR_REQUEST_REJECTED;
         };
     }
+
+
+    public static String resolveTenantId(String tenantId) {
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new IllegalStateException(
+                    "Tenant ID not found for authenticated vendor"
+            );
+        }
+
+        return tenantId;
+    }
+
 }

@@ -37,6 +37,14 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
+    @Column(name = "payment_collected_at")
+    private LocalDateTime paymentCollectedAt;
+
+    @Column(name = "payment_collected_by")
+    private Long paymentCollectedBy;
+
+    @Column(name = "payment_collected_amount", precision = 12, scale = 2)
+    private BigDecimal paymentCollectedAmount;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;

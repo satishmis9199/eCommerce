@@ -1,13 +1,18 @@
 package com.e_commerce.eCommerce.service;
 
+import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.config.R2Properties;
 import com.e_commerce.eCommerce.config.TenantContext;
+import com.e_commerce.eCommerce.constants.GlobalConstants;
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.request.UpdatePaymentDTO;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -387,6 +392,83 @@ public class OrderService {
 
         return "Return Intiated Successfully";
     }
+    @Transactional
+    public String updateCoDPaymentStatus(
+            String tenantId,
+            CustomUserDetail userDetail,
+            UpdatePaymentDTO updatePaymentDTO) {
+log.error("Order No is "+updatePaymentDTO.getOrderNo());
+        GlobalConstants.resolveTenantId(tenantId);
+
+        if (userDetail == null) {
+            throw new RuntimeException("Invalid User");
+        }
+
+        if (userDetail.getRole() != Roles.ADMIN) {
+            throw new AccessDeniedException(
+                    "You do not have sufficient permission"
+            );
+        }
+
+        if (updatePaymentDTO == null
+                || updatePaymentDTO.getPaymentCollectedAmount() == null) {
+            throw new RuntimeException(
+                    "Blank Request... Please fill required fields"
+            );
+        }
+
+        Order order = orderRepository
+                .findByTenantIdAndId(tenantId, updatePaymentDTO.getOrderNo());
+
+        if (order == null) {
+            throw new RuntimeException("Order Not Found");
+        }
+
+        BigDecimal collectedAmount =
+                updatePaymentDTO.getPaymentCollectedAmount();
+
+        BigDecimal orderAmount = order.getSubtotal();
+
+        if (collectedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException(
+                    "Payment amount must be greater than zero"
+            );
+        }
+
+        if (collectedAmount.compareTo(orderAmount) > 0) {
+            throw new RuntimeException(
+                    "Collected amount cannot be greater than order amount"
+            );
+        }
+
+
+        order.setPaymentCollectedAmount(collectedAmount);
+        order.setPaymentCollectedBy(userDetail.getId());
+        order.setPaymentCollectedAt(LocalDateTime.now());
+
+        if (collectedAmount.compareTo(orderAmount) == 0) {
+
+            order.setPaymentStatus(PaymentStatus.PAID);
+
+            return "Payment Done";
+
+        }
+
+
+        order.setPaymentStatus(PaymentStatus.PARTIAL);
+
+        BigDecimal remainingAmount =
+                orderAmount.subtract(collectedAmount);
+
+        return "Partial Payment of ₹"
+                + collectedAmount
+                + " received. Remaining amount: ₹"
+                + remainingAmount;
+    }
+
+
+
+
 
 
 }

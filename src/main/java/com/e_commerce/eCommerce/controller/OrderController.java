@@ -1,9 +1,11 @@
 package com.e_commerce.eCommerce.controller;
 
 import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
+import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.OrderResponseDto;
 import com.e_commerce.eCommerce.dto.OrderTrackingResponseDto;
+import com.e_commerce.eCommerce.dto.request.UpdatePaymentDTO;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -144,6 +146,34 @@ public class OrderController {
             String reason = request.get("reason");
 
             String message = orderService.returnOrder(userDetail, reason, orderId);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(
+                            new ApiResponse<>(
+                                    true,
+                                    message
+                            )
+                    );
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage()
+                            )
+                    );
+        }
+    }
+    @RequiresFeature("ORDER_MANAGEMENT")
+    @PostMapping("/orders/updatePayment")
+    public ResponseEntity<ApiResponse<?>> updatePayment(@RequestBody UpdatePaymentDTO updatePaymentDTO,
+
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+
+        try {
+
+           String tenant= TenantContext.getTenantId();
+            String message = orderService.updateCoDPaymentStatus(tenant,userDetail,updatePaymentDTO);
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(

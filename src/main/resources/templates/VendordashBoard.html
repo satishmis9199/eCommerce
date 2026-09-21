@@ -410,6 +410,10 @@
 .order-status-update select:focus,.order-status-update input:focus,.order-status-update textarea:focus{border-color:var(--border-focus);}
 .order-status-update textarea{resize:vertical;min-height:64px;}
 .order-status-update .osu-actions{display:flex;justify-content:flex-end;}
+.cod-payment-update input[readonly]{opacity:.75;cursor:not-allowed;}
+.cod-payment-update input:disabled{opacity:.6;cursor:not-allowed;}
+.cod-payment-update .cod-note{font-size:12px;color:var(--text-muted);margin:-4px 0 14px;}
+.cod-payment-update .success-btn:disabled{opacity:.55;cursor:not-allowed;}
 .osu-required{color:var(--red);}
 .spec-table-wrap table{ font-size:13px; }
 .spec-table-wrap thead th{ padding:10px 14px; }
@@ -2826,6 +2830,31 @@
 
             <div id="orderItemsContainer"></div>
 
+            <!-- COD payment — vendor records the cash collected on delivery (shown only for COD orders) -->
+            <div class="order-status-update cod-payment-update" id="codPaymentBox" style="display:none;">
+                <div class="osu-title"><i class="fa-solid fa-money-bill-wave" style="color:var(--green);"></i>&nbsp; COD Payment
+                </div>
+
+                <div class="osu-row">
+                    <div>
+                        <label for="codOrderTotal">Order Total</label>
+                        <input type="text" id="codOrderTotal" readonly>
+                    </div>
+                    <div>
+                        <label for="codCollectedAmount">Collected Amount (₹) <span class="osu-required">*</span></label>
+                        <input type="number" id="codCollectedAmount" min="0" step="0.01" placeholder="e.g. 1499.00">
+                    </div>
+                </div>
+
+                <p class="cod-note" id="codPaymentNote"></p>
+
+                <div class="osu-actions">
+                    <button class="success-btn" id="codPaymentSaveBtn" onclick="saveCodPayment()">
+                        <i class="fa-solid fa-check"></i>&nbsp; Update Payment
+                    </button>
+                </div>
+            </div>
+
             <!-- Order status update — lets the vendor action the order right from the item view -->
             <div class="order-status-update">
                 <div class="osu-title"><i class="fa-solid fa-truck-fast" style="color:var(--accent);"></i>&nbsp; Update
@@ -4738,6 +4767,7 @@ async function changeNoticeStatus(id) {
       changePassword: '/vendor/s2/v1/change-password',
       orders : '/vendor/s2/v1/allorders',
       updateOrderStatus: '/vendor/s2/v1/order/status',
+      updateCodPayment: '/user/u1/v1/orders/updatePayment',   // POST { orderNo, paymentCollectedAmount }
       customers: '/vendor/customer',
       reviews: '/vendor/s2/v1/reviews',
       reviewStatus: '/vendor/s2/v1/reviews/{id}/status',
@@ -6761,6 +6791,8 @@ function viewOrder(id){
     if (locationInput) locationInput.value = order.lastLocation || '';
     if (remarksInput) remarksInput.value = '';
 
+    renderCodPaymentBlock(order);
+
     const container = document.getElementById("orderItemsContainer");
     container.innerHTML = "";
 
@@ -6849,6 +6881,106 @@ function viewOrder(id){
       } finally {
         btn.disabled = false;
         btn.innerHTML = originalHtml;
+      }
+    }
+
+    /* ============================================================
+       COD PAYMENT — record the cash collected on delivery
+       POST /user/u1/v1/orders/updatePayment  { orderNo, paymentCollectedAmount }
+       Backend (orderService.updateCoDPaymentStatus) decides the resulting payment status.
+    ============================================================ */
+    function isCodOrder(order) {
+      const m = String(order.paymentMethod || '').toLowerCase().replace(/[^a-z]/g, '');
+      return m === 'cod' || m.includes('cashondelivery');
+    }
+
+    // Shows the COD box only for COD orders; locks it once the payment is already marked paid
+    function renderCodPaymentBlock(order) {
+      const box = document.getElementById('codPaymentBox');
+      if (!box) return;
+      if (!isCodOrder(order)) { box.style.display = 'none'; return; }
+
+      const paid = String(order.paymentStatus || '').toLowerCase() === 'paid';
+      const total = Number(order.amount || 0);
+      const input = document.getElementById('codCollectedAmount');
+      const btn = document.getElementById('codPaymentSaveBtn');
+
+      box.style.display = '';
+      document.getElementById('codOrderTotal').value = '₹' + total.toLocaleString('en-IN');
+      input.value = total > 0 ? total : '';
+      input.disabled = paid;
+      btn.disabled = paid;
+      document.getElementById('codPaymentNote').textContent = paid
+        ? 'Payment already collected for this order.'
+        : 'Enter the cash amount collected from the customer on delivery.';
+    }
+
+    async function saveCodPayment() {
+      const order = allOrders.find(x => String(x.id) === String(currentOrderId));
+      if (!order) {
+        showToast('error', 'Orders', 'Order not found.');
+        return;
+      }
+      if (!order.orderNo) {
+        showToast('error', 'Orders', 'Order number is missing for this order.');
+        return;
+      }
+
+      const input = document.getElementById('codCollectedAmount');
+      const amount = parseFloat(input.value);
+      const total = Number(order.amount || 0);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        showToast('warning', 'Validation', 'Please enter the collected amount.');
+        input.focus();
+        return;
+      }
+      if (total > 0 && amount > total) {
+        showToast('warning', 'Validation', `Collected amount cannot be more than the order total (₹${total.toLocaleString('en-IN')}).`);
+        input.focus();
+        return;
+      }
+
+      const btn = document.getElementById('codPaymentSaveBtn');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Updating...';
+
+      let updatedOrder = null;
+      try {
+        const response = await fetch(API_ENDPOINTS.updateCodPayment, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderNo: order.orderNo,
+            paymentCollectedAmount: Math.round(amount * 100) / 100
+          })
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          showToast('error', 'COD Payment', result.message || 'Unable to update payment.');
+          return;
+        }
+
+        showToast('success', 'COD Payment', result.message || `Payment updated for ${order.id}.`);
+
+        // Reload so the new payment status comes from the server, not a guess
+        await loadOrders();
+        updatedOrder = allOrders.find(x => String(x.id) === String(currentOrderId)) || null;
+      } catch (error) {
+        console.error(error);
+        showToast('error', 'COD Payment', 'Something went wrong while updating the payment.');
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+
+      if (updatedOrder) {
+        document.getElementById('ordModalPayment').innerHTML =
+          `<strong>${escapeHtml(updatedOrder.paymentMethod || 'N/A')}</strong><br><small>${escapeHtml(updatedOrder.paymentStatus || 'N/A')}</small>`;
+        renderCodPaymentBlock(updatedOrder);
       }
     }
 
