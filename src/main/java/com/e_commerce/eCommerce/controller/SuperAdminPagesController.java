@@ -13,6 +13,11 @@ public class SuperAdminPagesController {
     public String getDahBoard() {
         return "SuperAdminDashBoard";
     }
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @GetMapping("/admin/u1/v1/auditLog")
+    public String getAuditPage(){
+        return  "auditLogs";
+    }
 
 
 }

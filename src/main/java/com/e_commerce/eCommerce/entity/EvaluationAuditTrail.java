@@ -17,17 +17,13 @@ public class EvaluationAuditTrail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private Long evaluationId;
-
     private Long userId;
-
     private String action;
-
     @Column(columnDefinition = "TEXT")
     private String remarks;
-
     private LocalDateTime createdAt;
+    private String serverIp;
+    private Long exceutionTtime;
 
     @PrePersist
     protected void onCreate() {

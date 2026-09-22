@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Trail</title>
+  <style>
+    :root{
+      --bg:#0f1420; --card:#161d2e; --border:#232b40; --text:#e7ebf5; --muted:#8b93a7;
+      --accent:#5b8cff; --accent-soft:rgba(91,140,255,.15); --ok:#33c481; --bad:#ff5c72;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
+    .store-bar{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:14px 18px;margin-bottom:20px}
+    .store-bar img{width:42px;height:42px;border-radius:8px;object-fit:cover;background:#222}
+    .store-bar .name{font-weight:600;font-size:16px}
+    .store-bar .sub{color:var(--muted);font-size:12px}
+    h1{font-size:20px;margin:0 0 16px}
+    .filters{display:flex;flex-wrap:wrap;gap:10px;background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:14px;margin-bottom:16px}
+    .filters input,.filters select{background:#0f1420;border:1px solid var(--border);color:var(--text);
+      padding:8px 10px;border-radius:8px;font-size:13px}
+    .filters button{background:var(--accent);border:none;color:#fff;padding:8px 16px;border-radius:8px;
+      cursor:pointer;font-size:13px}
+    .filters button.secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+    table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);
+      border-radius:12px;overflow:hidden}
+    thead th{text-align:left;font-size:12px;color:var(--muted);text-transform:uppercase;
+      padding:12px 14px;border-bottom:1px solid var(--border)}
+    tbody td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}
+    tbody tr:last-child td{border-bottom:none}
+    tbody tr:hover{background:rgba(255,255,255,.02)}
+    .action-pill{display:inline-block;padding:3px 9px;border-radius:20px;background:var(--accent-soft);
+      color:var(--accent);font-size:12px}
+    .remarks{max-width:320px;color:var(--muted);white-space:pre-wrap}
+    .exec-ok{color:var(--ok)} .exec-bad{color:var(--bad)}
+    .pager{display:flex;justify-content:space-between;align-items:center;margin-top:16px;
+      color:var(--muted);font-size:13px}
+    .pager button{background:var(--card);border:1px solid var(--border);color:var(--text);
+      padding:6px 14px;border-radius:8px;cursor:pointer}
+    .pager button:disabled{opacity:.4;cursor:not-allowed}
+    .empty,.loading{text-align:center;padding:40px;color:var(--muted)}
+    .danger-zone{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--card);
+      border:1px solid var(--bad);border-radius:12px;padding:14px;margin-bottom:16px}
+    .danger-zone .label{font-size:12px;color:var(--bad);font-weight:600;text-transform:uppercase;
+      letter-spacing:.5px;margin-right:4px}
+    .danger-zone input{background:#0f1420;border:1px solid var(--border);color:var(--text);
+      padding:8px 10px;border-radius:8px;font-size:13px}
+    .btn-danger{background:var(--bad);border:none;color:#fff;padding:8px 16px;border-radius:8px;
+      cursor:pointer;font-size:13px;font-weight:600}
+    .btn-danger:hover{opacity:.9}
+    .btn-danger:disabled{opacity:.5;cursor:not-allowed}
+    .spacer{flex:1}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="store-bar" id="storeBar">
+    <img id="storeLogo" src="" alt="">
+    <div>
+      <div class="name" id="storeName">Loading store info…</div>
+      <div class="sub" id="storeSub"></div>
+    </div>
+  </div>
+
+  <h1>Evaluation Audit Trail</h1>
+
+  <div class="danger-zone">
+    <span class="label"><i>&#9888;</i> Delete logs</span>
+    <input type="date" id="deleteDay">
+    <button class="btn-danger" id="deleteDayBtn" onclick="deleteDayLogs()">Delete This Day</button>
+    <div class="spacer"></div>
+    <button class="btn-danger" id="deleteAllBtn" onclick="deleteAllLogs()">Delete All Logs</button>
+  </div>
+
+  <div class="filters">
+    <input type="number" id="fUserId" placeholder="User ID">
+    <input type="text" id="fAction" placeholder="Action contains…">
+    <input type="datetime-local" id="fFrom" title="From">
+    <input type="datetime-local" id="fTo" title="To">
+    <button onclick="applyFilters()">Search</button>
+    <button class="secondary" onclick="clearFilters()">Clear</button>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>ID</th><th>User ID</th><th>Action</th><th>Remarks</th>
+      <th>Server IP</th><th>Exec Time</th><th>Created At</th>
+    </tr>
+    </thead>
+    <tbody id="rows"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
+  </table>
+
+  <div class="pager">
+    <span id="pageInfo">—</span>
+    <div>
+      <button id="prevBtn" onclick="changePage(-1)">Prev</button>
+      <button id="nextBtn" onclick="changePage(1)">Next</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Configure your API base here if the page is not served from the same origin ----
+  const API_BASE = '';
+  const AUDIT_ENDPOINT = API_BASE + '/admin/s1/v1/audit-trail';
+  const STORE_INFO_ENDPOINT = API_BASE + '/api/u1/v1/store/info';
+
+  let state = { page: 0, size: 20, totalPages: 1 };
+
+  async function loadStoreInfo() {
+    try {
+      const res = await fetch(STORE_INFO_ENDPOINT);
+      const json = await res.json();
+      const s = json.data || {};
+      document.getElementById('storeName').textContent = s.storeName || s.businessName || 'MyStore';
+      document.getElementById('storeSub').textContent = s.tagline || s.email || '';
+      if (s.logoUrl) document.getElementById('storeLogo').src = s.logoUrl;
+      if (s.themeColor) document.documentElement.style.setProperty('--accent', s.themeColor);
+    } catch (e) {
+      document.getElementById('storeName').textContent = 'MyStore';
+      document.getElementById('storeSub').textContent = 'Store info unavailable';
+    }
+  }
+
+  function buildQuery() {
+    const p = new URLSearchParams();
+    const userId = document.getElementById('fUserId').value;
+    const action = document.getElementById('fAction').value;
+    const from = document.getElementById('fFrom').value;
+    const to = document.getElementById('fTo').value;
+    if (userId) p.set('userId', userId);
+    if (action) p.set('action', action);
+    if (from) p.set('fromDate', from + ':00');
+    if (to) p.set('toDate', to + ':00');
+    p.set('page', state.page);
+    p.set('size', state.size);
+    return p.toString();
+  }
+
+  async function loadAuditTrail() {
+    const rows = document.getElementById('rows');
+    rows.innerHTML = '<tr><td colspan="7" class="loading">Loading…</td></tr>';
+    try {
+      const res = await fetch(AUDIT_ENDPOINT + '?' + buildQuery());
+      const json = await res.json();
+      const page = json.data || {};
+      const content = page.content || [];
+      state.totalPages = page.totalPages ?? 1;
+
+      if (!content.length) {
+        rows.innerHTML = '<tr><td colspan="7" class="empty">No audit records found.</td></tr>';
+      } else {
+        rows.innerHTML = content.map(r => `
+          <tr>
+            <td>${r.id}</td>
+            <td>${r.userId ?? '—'}</td>
+            <td><span class="action-pill">${escapeHtml(r.action || '—')}</span></td>
+            <td class="remarks">${escapeHtml(r.remarks || '')}</td>
+            <td>${r.serverIp ?? '—'}</td>
+            <td class="${(r.executionTimeMs ?? 0) > 1000 ? 'exec-bad' : 'exec-ok'}">${r.executionTimeMs ?? '—'} ms</td>
+            <td>${formatDate(r.createdAt)}</td>
+          </tr>`).join('');
+      }
+
+      document.getElementById('pageInfo').textContent =
+        `Page ${state.page + 1} of ${state.totalPages} · ${page.totalElements ?? content.length} records`;
+      document.getElementById('prevBtn').disabled = state.page <= 0;
+      document.getElementById('nextBtn').disabled = state.page + 1 >= state.totalPages;
+    } catch (e) {
+      rows.innerHTML = '<tr><td colspan="7" class="empty">Failed to load audit trail.</td></tr>';
+    }
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleString();
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function deleteDayLogs() {
+    const day = document.getElementById('deleteDay').value;
+    if (!day) { alert('Pick a date first.'); return; }
+    if (!confirm(`Delete ALL audit logs for ${day}? This cannot be undone.`)) return;
+
+    const btn = document.getElementById('deleteDayBtn');
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${AUDIT_ENDPOINT}/day?date=${day}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok || json.success === false) throw new Error(json.message || 'Delete failed');
+      alert(json.message || 'Deleted.');
+      state.page = 0;
+      loadAuditTrail();
+    } catch (e) {
+      alert('Failed to delete logs for that day: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function deleteAllLogs() {
+    if (!confirm('Delete the ENTIRE audit trail? This cannot be undone.')) return;
+    if (!confirm('Are you absolutely sure? All records will be permanently removed.')) return;
+
+    const btn = document.getElementById('deleteAllBtn');
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${AUDIT_ENDPOINT}/all`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok || json.success === false) throw new Error(json.message || 'Delete failed');
+      alert(json.message || 'All logs deleted.');
+      state.page = 0;
+      loadAuditTrail();
+    } catch (e) {
+      alert('Failed to delete all logs: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function applyFilters() { state.page = 0; loadAuditTrail(); }
+  function clearFilters() {
+    document.getElementById('fUserId').value = '';
+    document.getElementById('fAction').value = '';
+    document.getElementById('fFrom').value = '';
+    document.getElementById('fTo').value = '';
+    applyFilters();
+  }
+  function changePage(delta) {
+    const next = state.page + delta;
+    if (next < 0 || next >= state.totalPages) return;
+    state.page = next;
+    loadAuditTrail();
+  }
+
+  loadStoreInfo();
+  loadAuditTrail();
+</script>
+</body>
+</html>

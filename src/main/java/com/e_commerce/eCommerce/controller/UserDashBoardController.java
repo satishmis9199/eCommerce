@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.CustomAnnotation.AuditLogs;
 import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
@@ -22,14 +23,14 @@ import java.util.Map;
 public class UserDashBoardController {
 
     private final UserDashBoardService userDashBoardService;
-
+    @AuditLogs("StoreInfo")
     @GetMapping("/store/info")
     public StoreInfoResponseDTO getStoreInfo() {
         return userDashBoardService.getStoreInfo();
 
 
     }
-
+    @AuditLogs("getActiveCategory")
     @RequiresFeature("CATEGORY_MANAGEMENT")
     @GetMapping("/catalog/categories")
     public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> getActiveCategory() {
@@ -55,7 +56,7 @@ public class UserDashBoardController {
                         )
                 );
     }
-
+    @AuditLogs("getFeaturedProducts")
     @GetMapping("/products/featured")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getFeaturedProduct() {
         try {
@@ -80,7 +81,7 @@ public class UserDashBoardController {
                     );
         }
     }
-
+    @AuditLogs("GetAllProduct")
     @GetMapping("/products")
     @RequiresFeature("PRODUCT_MANAGEMENT")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getAllProducts() {
@@ -107,6 +108,7 @@ public class UserDashBoardController {
                     );
         }
     }
+    @AuditLogs("getProductsByCategory")
     @RequiresFeature("CATEGORY_MANAGEMENT")
     @GetMapping("/products/category/{categoryId}")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getProductsByCategory(@PathVariable Long categoryId) {
@@ -132,6 +134,7 @@ public class UserDashBoardController {
                     );
         }
     }
+    @AuditLogs("Recommended products")
     @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/recommended")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getRecommendedProducts() {
@@ -157,7 +160,7 @@ public class UserDashBoardController {
                     );
         }
     }
-
+    @AuditLogs("New Arrivals")
     @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/new-arrivals")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getNewArrivals() {
@@ -184,6 +187,7 @@ public class UserDashBoardController {
         }
 
     }
+    @AuditLogs("Best Seller")
     @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/best-sellers")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getBestSellProducts() {
@@ -233,7 +237,7 @@ public class UserDashBoardController {
                     ));
         }
     }
-
+    @AuditLogs("Loaded Festival banner")
     @RequiresFeature("FESTIVAL_BANNER")
     @GetMapping("/users/home/banners")
     public ResponseEntity<ApiResponse<List<UserBannerResponseDTo>>> loadBanner(
@@ -261,6 +265,7 @@ public class UserDashBoardController {
                     ));
         }
     }
+    @AuditLogs("Saved Subscribed Email")
     @PostMapping("/marketing/newsletter/subscribe")
     public ResponseEntity<ApiResponse<?>> saveSubscribedEmail(
             @RequestBody Map<String, String> request) {

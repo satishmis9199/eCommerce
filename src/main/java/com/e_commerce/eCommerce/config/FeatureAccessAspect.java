@@ -1,23 +1,25 @@
 package com.e_commerce.eCommerce.config;
 
-import com.e_commerce.eCommerce.CustomAnnotation.AditLogAnnotate;
+import com.e_commerce.eCommerce.CustomAnnotation.AuditLogs;
 import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
-import com.e_commerce.eCommerce.entity.EvaluationAuditTrail;
-import com.e_commerce.eCommerce.repository.AuditLogRepository;
+
 import com.e_commerce.eCommerce.service.AuditLogService;
+import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.PlanFeatureService;
 import com.e_commerce.eCommerce.service.VendorService;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.lang.JoinPoint;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
+
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 
+@Slf4j
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -63,6 +65,41 @@ public class FeatureAccessAspect {
         }
 
         return joinPoint.proceed();
+    }
+
+    @Around("@annotation(auditLogs)")
+//    @Around("execution(* com.e_commerce.eCommerce.controller..*(..))")
+    public Object createAuditLogData(ProceedingJoinPoint proceedingJoinPoint, AuditLogs auditLogs) {
+        try {
+            Long userId = 0L;
+            String logAction = auditLogs.value();
+            Long currentTime = System.currentTimeMillis();
+            Authentication authentication =
+                    SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication != null &&
+                    authentication.getPrincipal() instanceof CustomUserDetail userDetail) {
+
+                userId = userDetail.getId();
+            }
+
+            String remarks = proceedingJoinPoint.getSignature().getName();
+            Object result = proceedingJoinPoint.proceed();
+            Long afterExe = System.currentTimeMillis();
+
+            auditLogService.saveAudit(
+                    userId,
+                    logAction,
+                    remarks,
+                    afterExe - currentTime
+
+            );
+
+            return result;
+        } catch (Throwable e) {
+            log.error("Error ::" + e);
+            return null;
+        }
     }
 
 }
