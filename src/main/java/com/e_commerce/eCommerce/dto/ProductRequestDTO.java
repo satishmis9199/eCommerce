@@ -17,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ProductRequestDTO {
-
+    private Long brandId;
     @NotBlank(message = "Product Name is required.")
     private String productName;
 

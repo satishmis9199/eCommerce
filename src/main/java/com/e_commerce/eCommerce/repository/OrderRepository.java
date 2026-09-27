@@ -4,8 +4,12 @@ import com.e_commerce.eCommerce.entity.Order;
 import com.e_commerce.eCommerce.entity.OrderStatus;
 import com.e_commerce.eCommerce.entity.ReturnStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +43,68 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findTopByTenantIdOrderByCreatedAtDesc(String tenantId);
 
+    @Query("""
+    SELECT COALESCE(SUM(o.subtotal), 0)
+    FROM Order o
+    WHERE o.tenantId = :tenantId
+      AND o.orderStatus <> com.e_commerce.eCommerce.entity.OrderStatus.CANCELLED
+""")
+    BigDecimal findTotalCountOfRevenue(
+            @Param("tenantId") String tenantId
+    );
 
-//    Order findByTenantIdAndId(Long orderId);
+
+
+    @Query("""
+    SELECT COALESCE(SUM(o.subtotal), 0)
+    FROM Order o
+    WHERE o.tenantId = :tenantId
+      AND o.createdAt >= :startDate
+      AND o.createdAt <= :endDate
+      AND o.orderStatus <> com.e_commerce.eCommerce.entity.OrderStatus.CANCELLED
+""")
+    BigDecimal findRevenueBetween(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+
+
+
+    @Query("""
+    SELECT COUNT(o)
+    FROM Order o
+    WHERE o.tenantId = :tenantId
+      AND o.orderStatus <> com.e_commerce.eCommerce.entity.OrderStatus.CANCELLED
+""")
+    Long totalOrders(
+            @Param("tenantId") String tenantId
+
+    );
+    @Query("""
+    SELECT COUNT(o)
+    FROM Order o
+    WHERE o.tenantId = :tenantId
+      AND o.createdAt >= :startDate
+      AND o.createdAt <= :endDate
+      AND o.orderStatus <> com.e_commerce.eCommerce.entity.OrderStatus.CANCELLED
+""")
+    Long totalOrdersBetween(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+
+    @Query("""
+    SELECT COUNT(o)
+    FROM Order o
+    WHERE o.tenantId = :tenantId
+      AND o.orderStatus = com.e_commerce.eCommerce.entity.OrderStatus.PENDING
+""")
+    Long pendingOrders(
+            @Param("tenantId") String tenantId
+    );
 }
+

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -86,4 +87,26 @@ public interface UserRepos extends JpaRepository<User, Long> {
     Optional<User> findByGoogleIdAndTenantId(String googleId, String tenantId);
 
     Optional<User> findByIdAndTenantId(Long id, String tenanTid);
+    @Query("""
+    SELECT COUNT(u)
+    FROM User u
+    WHERE u.tenantId = :tenantId
+""")
+    Long totalCustomers(
+            @Param("tenantId") String tenantId
+    );
+
+
+    @Query("""
+    SELECT COUNT(u)
+    FROM User u
+    WHERE u.tenantId = :tenantId
+      AND u.createdAt >= :startDate
+      AND u.createdAt <= :endDate
+""")
+    Long totalCustomersBetween(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 }

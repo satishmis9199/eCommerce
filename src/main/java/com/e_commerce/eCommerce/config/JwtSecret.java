@@ -18,7 +18,7 @@ import java.util.Optional;
 @Slf4j
 public class JwtSecret {
     private static final String SECRET =
-            "myeCommereceuhjhkhnkadjaskjdkasdjoasjdoasdjoasdjoasdjoasd";
+            "myeCommereceuhjhkhnkadjaskjdkasdjoasjdoasdjoasdjoasdjoasd0kmdad0daddad";
 
     private final SecretKey defaultKey =
             Keys.hmacShaKeyFor(
@@ -28,16 +28,12 @@ public class JwtSecret {
 
     @Cacheable(value = "jwtSecret", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
     public SecretKey getTenantKey() {
-
         String tenantId = TenantContext.getTenantId();
-
         if (tenantId == null) {
             throw new RuntimeException("Tenant not found");
         }
-
         Optional<Vendor> vendorOpt =
                 vendorRepository.findByTenantId(tenantId);
-
         if (vendorOpt.isPresent()) {
 
             String tenantSecret =
@@ -51,7 +47,6 @@ public class JwtSecret {
                 );
             }
         }
-        log.error("using default key");
         return defaultKey;
     }
 }

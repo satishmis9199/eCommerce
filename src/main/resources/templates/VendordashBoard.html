@@ -718,6 +718,12 @@
                         <span>Categories</span>
                     </a>
                 </li>
+                <li data-page="brands">
+                    <a href="#">
+                        <i class="fa-solid fa-tags"></i>
+                        <span>Brands</span>
+                    </a>
+                </li>
                 <li data-page="banners"><a href="#"><i class="fa-solid fa-images"></i><span>Banners</span></a></li>
                 <li data-page="sponsoredAds"><a href="#"><i class="fa-solid fa-rectangle-ad"></i><span>Sponsored Ads</span></a></li>
                 <li data-page="notices"><a href="#"><i class="fa-solid fa-bullhorn"></i><span>Notices</span></a></li>
@@ -806,20 +812,17 @@
                 <div class="card-grid fade-up fade-up-1">
                     <div class="dashboard-card blue">
                         <div class="card-left"><span>Total Revenue</span>
-                            <h2 id="kpi-revenue">₹0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+18%
-                                This Month</small></div>
+                            <h2 id="kpi-revenue">₹0</h2><small id="kpi-revenue-trend" class="up"><i class="fa-solid fa-arrow-trend-up"></i>-- This Month</small></div>
                         <div class="card-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
                     </div>
                     <div class="dashboard-card green">
                         <div class="card-left"><span>Total Orders</span>
-                            <h2 id="kpi-orders">0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+9%
-                                This Month</small></div>
+                            <h2 id="kpi-orders">0</h2><small id="kpi-orders-trend" class="up"><i class="fa-solid fa-arrow-trend-up"></i>-- This Month</small></div>
                         <div class="card-icon"><i class="fa-solid fa-cart-shopping"></i></div>
                     </div>
                     <div class="dashboard-card orange">
                         <div class="card-left"><span>Total Customers</span>
-                            <h2 id="kpi-customers">0</h2><small class="up"><i class="fa-solid fa-arrow-trend-up"></i>+6%
-                                This Month</small></div>
+                            <h2 id="kpi-customers">0</h2><small id="kpi-customers-trend" class="up"><i class="fa-solid fa-arrow-trend-up"></i>-- This Month</small></div>
                         <div class="card-icon"><i class="fa-solid fa-users"></i></div>
                     </div>
                     <div class="dashboard-card purple">
@@ -830,26 +833,26 @@
                     </div>
                     <div class="dashboard-card cyan">
                         <div class="card-left"><span>Products Listed</span>
-                            <h2 id="kpi-products">0</h2><small style="color:var(--orange)"><i
-                                    class="fa-solid fa-triangle-exclamation"></i>5 Low Stock</small></div>
+                            <h2 id="kpi-products">0</h2><small id="kpi-products-trend" style="color:var(--orange)"><i
+                                    class="fa-solid fa-triangle-exclamation"></i>0 Low Stock</small></div>
                         <div class="card-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
                     </div>
                     <div class="dashboard-card pink">
                         <div class="card-left"><span>Avg. Rating</span>
-                            <h2>4.6<span style="font-size:16px;color:var(--text-muted);">/5</span></h2><small
-                                    class="up"><i class="fa-solid fa-star"></i>312 Reviews</small></div>
+                            <h2 id="kpi-avg-rating">--<span style="font-size:16px;color:var(--text-muted);">/5</span></h2><small
+                                    id="kpi-reviews-trend" class="up"><i class="fa-solid fa-star"></i>Coming soon</small></div>
                         <div class="card-icon"><i class="fa-solid fa-star"></i></div>
                     </div>
                     <div class="dashboard-card red">
                         <div class="card-left"><span>Returns / Refunds</span>
-                            <h2>23</h2><small style="color:var(--red)"><i class="fa-solid fa-arrow-rotate-left"></i>2.1%
-                                of Orders</small></div>
+                            <h2 id="kpi-returns">--</h2><small id="kpi-returns-trend" style="color:var(--text-muted)"><i class="fa-solid fa-rotate-left"></i>Coming
+                                soon</small></div>
                         <div class="card-icon"><i class="fa-solid fa-rotate-left"></i></div>
                     </div>
                     <div class="dashboard-card accent">
                         <div class="card-left"><span>Wallet Balance</span>
-                            <h2>₹1,84,320</h2><small class="up"><i class="fa-solid fa-wallet"></i>Ready for
-                                Payout</small></div>
+                            <h2 id="kpi-wallet">--</h2><small id="kpi-wallet-trend" style="color:var(--text-muted)"><i class="fa-solid fa-wallet"></i>Coming
+                                soon</small></div>
                         <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
                     </div>
                 </div>
@@ -1161,6 +1164,105 @@
                         </table>
                     </div>
                 </div>
+            </section>
+            <!-- ================= BRANDS ================= -->
+
+            <section class="page-section" id="page-brands">
+
+                <div class="section-header">
+
+                    <div>
+
+                        <div class="breadcrumb">
+
+                            <span>Home</span>
+
+                            <i class="fa-solid fa-chevron-right"></i>
+
+                            <span>Brands</span>
+
+                        </div>
+
+                        <h1>Brands</h1>
+
+                        <p>Manage your product brands.</p>
+
+                    </div>
+
+
+                    <div class="header-actions">
+
+                        <button
+                                class="primary-btn"
+                                onclick="openAddBrandModal()">
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            Create Brand
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-card">
+
+                    <div class="table-actions">
+
+                        <input
+                                type="text"
+                                id="brandSearchInput"
+                                placeholder="Search Brand..."
+                                oninput="filterBrands(this.value)">
+
+                    </div>
+
+
+                    <div class="table-responsive">
+
+                        <table>
+
+                            <thead>
+
+                            <tr>
+
+                                <th style="width:60px;">
+                                    #
+                                </th>
+
+                                <th>
+                                    Brand Name
+                                </th>
+
+                                <th>
+                                    Description
+                                </th>
+
+                                <th style="width:110px;">
+                                    Status
+                                </th>
+
+                                <th style="width:150px;">
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                            </thead>
+
+
+                            <tbody id="brandTableBody">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
             </section>
             <!-- ================= BANNERS ================= -->
             <section class="page-section" id="page-banners">
@@ -2317,6 +2419,40 @@
     </div>
 </div>
 
+<!-- Brand Modal -->
+<div class="modal-overlay" id="brandModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-tags"></i><span id="brandModalTitle">Create Brand</span></h2>
+            <button class="modal-close-btn" onclick="closeModal('brandModal')"><i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Brand Name <span style="color:red;">*</span></label>
+                <input id="brandName" type="text" placeholder="e.g. Ultratech">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="brandDescription" rows="3" placeholder="Short brand description..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="brandStatus">
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeModal('brandModal')">Cancel</button>
+            <button class="primary-btn" id="saveBrandBtn" onclick="saveBrand()">
+                <i class="fa-solid fa-plus"></i>&nbsp; Create Brand
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Move Products & Delete Category Modal -->
 <div class="modal-overlay" id="moveCategoryModal">
     <div class="modal">
@@ -2999,6 +3135,14 @@
 
                 </div>
 
+            </div>
+
+            <!-- Brand (optional) -->
+            <div class="form-group">
+                <label>Brand <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                <select id="prodBrand">
+                    <option value="">No Brand (optional)</option>
+                </select>
             </div>
 
             <!-- Dynamic Category Specifications — rendered based on selected category -->
@@ -4792,6 +4936,7 @@ async function changeNoticeStatus(id) {
     const FILE_BASE_URL = R2_PUBLIC_URL + '/'; // kept for any code path not yet migrated to getImageUrl()
     const PRODUCT_API = '/vendor/s11/v1/product';
 const PRODUCT_IMAGE_UPLOAD_API = '/vendor/file/upload/product';
+const BRAND_API = '/vendor/s11/v1/brand';
 const MOVE_DELETE_API = '/vendor/s11/v1/category/move-and-delete';
 const FLASH_SALE_API = '/vendor/s11/v1/flash-sale';
 
@@ -5630,6 +5775,259 @@ async function uploadCategoryImage(file) {
             btn.disabled = false;
             btn.innerHTML = originalBtnHtml;
         }
+    }
+
+    /* ============================================================
+       BRAND MANAGEMENT
+    ============================================================ */
+    let brandList = [];
+    let editingBrandId = null;
+
+    async function loadBrands() {
+        try {
+            const response = await fetch(BRAND_API, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                showToast('error', 'Brand', result.message || 'Unable to load brands.');
+                return;
+            }
+
+            brandList = result.brands || result.data || [];
+            renderBrands(brandList);
+
+        } catch (error) {
+            console.error(error);
+            showToast('error', 'Brand', 'Something went wrong while loading brands.');
+        }
+    }
+
+    function renderBrands(brands = []) {
+        const tbody = document.getElementById('brandTableBody');
+        if (!tbody) return;
+
+        if (!Array.isArray(brands) || brands.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="padding:60px;text-align:center;">
+                        <i class="fa-solid fa-tags" style="font-size:55px;color:#94a3b8;margin-bottom:15px;"></i>
+                        <h3 style="margin-bottom:10px;color:var(--text-primary);">No Brands Found</h3>
+                        <p style="color:var(--text-muted);margin-bottom:20px;">You haven't created any product brand yet.</p>
+                        <button class="primary-btn" onclick="openAddBrandModal()">
+                            <i class="fa-solid fa-plus"></i> Add First Brand
+                        </button>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = brands.map((brand, index) => {
+            const name = brand.brandName || brand.name || '';
+            const status = (brand.status || 'ACTIVE').toUpperCase();
+            const statusClass = status === 'ACTIVE' ? 'active' : 'inactive';
+
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td style="font-weight:600;color:var(--text-primary);">${escapeHtml(name)}</td>
+                    <td style="color:var(--text-muted);">${escapeHtml(brand.description || '-')}</td>
+                    <td>
+                        <span class="status ${statusClass}" style="cursor:pointer;" title="Click to toggle" onclick="changeBrandStatus(${brand.id})">
+                            ${status === 'ACTIVE' ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn" title="Edit" onclick="editBrand(${brand.id})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="action-btn danger" title="Delete" onclick="deleteBrand(${brand.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+
+    function openAddBrandModal() {
+        editingBrandId = null;
+        document.getElementById('brandModalTitle').textContent = 'Create Brand';
+        document.getElementById('saveBrandBtn').innerHTML = '<i class="fa-solid fa-plus"></i>&nbsp; Create Brand';
+        document.getElementById('brandName').value = '';
+        document.getElementById('brandDescription').value = '';
+        document.getElementById('brandStatus').value = 'ACTIVE';
+        openModal('brandModal');
+    }
+
+    async function saveBrand() {
+        const brandName = document.getElementById('brandName').value.trim();
+        const description = document.getElementById('brandDescription').value.trim();
+        const status = document.getElementById('brandStatus').value;
+
+        if (brandName === '') {
+            showToast('warning', 'Validation', 'Brand Name is required.');
+            return;
+        }
+
+        const request = { brandName, description, status };
+
+        let url = BRAND_API;
+        let method = 'POST';
+        if (editingBrandId !== null) {
+            url = BRAND_API + '/' + editingBrandId;
+            method = 'PUT';
+        }
+
+        const saveBtn = document.getElementById('saveBrandBtn');
+        const originalHtml = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Saving...';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(request)
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                showToast('error', 'Brand', result.message || 'Unable to save brand.');
+                return;
+            }
+
+            showToast('success', 'Brand', result.message || 'Brand saved successfully.');
+            closeModal('brandModal');
+            await loadBrands();
+        } catch (error) {
+            console.error(error);
+            showToast('error', 'Brand', 'Something went wrong.');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalHtml;
+        }
+    }
+
+    function editBrand(id) {
+        const brand = brandList.find(item => item.id === id);
+        if (!brand) {
+            showToast('error', 'Brand', 'Brand not found.');
+            return;
+        }
+
+        editingBrandId = id;
+        document.getElementById('brandModalTitle').textContent = 'Edit Brand';
+        document.getElementById('saveBrandBtn').innerHTML = '<i class="fa-solid fa-check"></i>&nbsp; Save Changes';
+        document.getElementById('brandName').value = brand.brandName || brand.name || '';
+        document.getElementById('brandDescription').value = brand.description || '';
+        document.getElementById('brandStatus').value = brand.status || 'ACTIVE';
+        openModal('brandModal');
+    }
+
+    async function deleteBrand(id) {
+        const brand = brandList.find(item => item.id === id);
+        const confirmMsg = brand
+            ? `Delete brand "${brand.brandName || brand.name}"? This cannot be undone.`
+            : 'Delete this brand? This cannot be undone.';
+
+        confirmAction(confirmMsg, async () => {
+            try {
+                const response = await fetch(BRAND_API + '/' + id, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showToast('error', 'Brand', result.message || 'Unable to delete brand.');
+                    return;
+                }
+
+                showToast('success', 'Brand', result.message || 'Brand deleted successfully.');
+                loadBrands();
+            } catch (error) {
+                console.error(error);
+                showToast('error', 'Brand', 'Something went wrong while deleting brand.');
+            }
+        });
+    }
+
+    async function changeBrandStatus(id) {
+        const brand = brandList.find(item => item.id === id);
+        if (!brand) {
+            showToast('error', 'Brand', 'Brand not found.');
+            return;
+        }
+
+        const newStatus = (brand.status || 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+
+        confirmAction(`${newStatus === 'ACTIVE' ? 'Activate' : 'Deactivate'} brand "${brand.brandName || brand.name}"?`, async () => {
+            try {
+                const response = await fetch(BRAND_API + '/status', {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, status: newStatus })
+                });
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showToast('error', 'Brand', result.message || 'Unable to update brand status.');
+                    return;
+                }
+
+                showToast('success', 'Brand', result.message || 'Brand status updated successfully.');
+                loadBrands();
+            } catch (error) {
+                console.error(error);
+                showToast('error', 'Brand', 'Something went wrong while updating brand status.');
+            }
+        });
+    }
+
+    function filterBrands(q) {
+        const query = (q || '').toLowerCase();
+        renderBrands(brandList.filter(b => (b.brandName || b.name || '').toLowerCase().includes(query)));
+    }
+
+    // Looks up a brand's display name from the locally loaded brandList using its id.
+    function getBrandNameById(brandId) {
+        if (brandId === null || brandId === undefined || brandId === '') return '';
+        const brand = brandList.find(b => String(b.id) === String(brandId));
+        return brand ? (brand.brandName || brand.name || '') : '';
+    }
+
+    // Fills the optional "Brand" dropdown inside the Add/Edit Product modal.
+    function populateProductBrandDropdown(selectedId) {
+        const select = document.getElementById('prodBrand');
+        if (!select) return;
+
+        // Distinguish "no argument passed" (undefined → keep whatever the select already has)
+        // from an EXPLICIT null/empty (product genuinely has no brand → force "No Brand").
+        const currentValue = selectedId === undefined
+            ? select.value
+            : (selectedId === null || selectedId === '' ? '' : String(selectedId));
+
+        // Only show ACTIVE brands in the dropdown.
+        let options = brandList.filter(b => (b.status || 'ACTIVE').toUpperCase() === 'ACTIVE');
+
+        // If the product already has an inactive brand assigned, keep it visible (selected) so editing doesn't silently drop it.
+        if (currentValue && !options.some(b => String(b.id) === currentValue)) {
+            const existing = brandList.find(b => String(b.id) === currentValue);
+            if (existing) options = [...options, existing];
+        }
+
+        select.innerHTML =
+            `<option value="" ${!currentValue ? 'selected' : ''}>No Brand (optional)</option>` +
+            options.map(b => {
+                const isSelected = currentValue && String(b.id) === currentValue;
+                return `<option value="${b.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(b.brandName || b.name)}</option>`;
+            }).join('');
+
+        // Belt-and-braces: also set .value directly so the highlighted option and the actual form value always match.
+        select.value = currentValue || '';
     }
 
     /* ============================================================
@@ -6588,6 +6986,10 @@ async function uploadCategoryImage(file) {
         loadCategories();
     }
 
+    if (page === 'brands' && brandList.length === 0) {
+        loadBrands();
+    }
+
     if (page === 'flashsales' && flashSaleList.length === 0) {
         loadFlashSales();
     }
@@ -7292,6 +7694,10 @@ async function loadProducts() {
 
     try {
 
+        if (!brandList.length) {
+            await loadBrands();
+        }
+
         const response = await fetch(PRODUCT_API, {
             method: "GET",
             credentials: "include",
@@ -7436,6 +7842,7 @@ async function openAddProductModal() {
 
     document.getElementById("prodName").value = "";
     document.getElementById("prodCategory").value = "";
+    document.getElementById("prodBrand").value = "";
     document.getElementById("prodMrp").value = "";
     document.getElementById("prodSellingPrice").value = "";
     document.getElementById("prodStock").value = "";
@@ -7457,7 +7864,12 @@ async function openAddProductModal() {
         await loadCategories();
     }
 
+    if (!brandList.length) {
+        await loadBrands();
+    }
+
     populateProductCategoryDropdown();
+    populateProductBrandDropdown();
 
     openModal("addProductModal");
 }
@@ -7512,6 +7924,7 @@ async function saveProduct() {
 
     const productName = document.getElementById("prodName").value.trim();
     const categoryId = document.getElementById("prodCategory").value;
+    const brandId = document.getElementById("prodBrand").value;
     const mrp = parseFloat(document.getElementById("prodMrp").value);
     const sellingPrice = parseFloat(document.getElementById("prodSellingPrice").value);
     const stockQuantity = parseInt(document.getElementById("prodStock").value);
@@ -7544,6 +7957,7 @@ async function saveProduct() {
     const request = {
         productName,
         categoryId: Number(categoryId),
+        brandId: brandId ? Number(brandId) : null,
         mrp: isNaN(mrp) ? null : mrp,
         sellingPrice,
         stockQuantity,
@@ -7703,6 +8117,24 @@ async function editProduct(id) {
 
         populateProductCategoryDropdown(product.categoryId);
 
+        // Brand (optional) — response only sends brandName (no brandId), so
+        // resolve the matching brand from brandList by name to preselect it.
+        if (!brandList.length) {
+            await loadBrands();
+        }
+
+        let brandIdToSelect = product.brandId ?? null;
+
+        if (!brandIdToSelect && product.brandName) {
+            const matchedBrand = brandList.find(
+                b => (b.brandName || b.name || '').trim().toLowerCase() ===
+                     String(product.brandName).trim().toLowerCase()
+            );
+            if (matchedBrand) brandIdToSelect = matchedBrand.id;
+        }
+
+        populateProductBrandDropdown(brandIdToSelect);
+
         // Specifications
         productSpecValues = {};
 
@@ -7828,6 +8260,8 @@ function renderProducts(list = productList) {
                 ? Math.round(((p.mrp - p.sellingPrice) / p.mrp) * 100)
                 : 0;
 
+        const brandLabel = p.brandName || getBrandNameById(p.brandId);
+
         return `
         <div class="product-card">
             <div class="product-thumb">
@@ -7839,7 +8273,7 @@ function renderProducts(list = productList) {
             </div>
             <div class="product-body">
                 <h4>${escapeHtml(p.productName)}</h4>
-                <div class="sku">${escapeHtml(p.categoryName || '')}</div>
+                <div class="sku">${escapeHtml(p.categoryName || '')}${brandLabel ? ' • ' + escapeHtml(brandLabel) : ''}</div>
                 <div class="product-meta">
                     <span class="price">₹${Number(p.sellingPrice).toLocaleString("en-IN")}</span>
                     ${p.mrp ? `<span class="mrp">₹${Number(p.mrp).toLocaleString("en-IN")}</span>` : ""}
@@ -8465,6 +8899,146 @@ function renderProducts(list = productList) {
     async function loadVendorData() {
       renderTransactions();
     }
+
+    /* ============================================================
+       STORE OVERVIEW (DASHBOARD) — GET /vendor/u1/v1/data
+       Backend DTO: VendorDashboardDTO. Some fields (averageRating,
+       totalReviews, returnsRefunds, returnsRefundsPercentage,
+       walletBalance) aren't implemented on the backend yet and will
+       come back as null — those cards fall back to "--" / "Coming soon"
+       instead of breaking.
+    ============================================================ */
+    const DASHBOARD_API = '/vendor/u1/v1/data';
+
+    async function loadDashboardOverview() {
+        try {
+            const response = await fetch(DASHBOARD_API, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                showToast('error', 'Dashboard', result.message || 'Unable to load dashboard data.');
+                return;
+            }
+
+            renderDashboardOverview(result.data || {});
+
+        } catch (error) {
+            console.error(error);
+            showToast('error', 'Dashboard', 'Something went wrong while loading your dashboard.');
+        }
+    }
+
+    // Renders a "%" trend badge; hides/greys out gracefully when the value is null (not yet available).
+    function renderTrendBadge(elId, percentage, suffix = 'This Month') {
+        const el = document.getElementById(elId);
+        if (!el) return;
+
+        if (percentage === null || percentage === undefined) {
+            el.innerHTML = `<i class="fa-solid fa-minus"></i> --`;
+            el.classList.remove('up', 'down');
+            el.style.color = 'var(--text-muted)';
+            return;
+        }
+
+        const num = Number(percentage);
+        const isDown = num < 0;
+        el.innerHTML = `<i class="fa-solid fa-arrow-trend-${isDown ? 'down' : 'up'}"></i>${isDown ? '' : '+'}${num}% ${suffix}`;
+        el.classList.toggle('up', !isDown);
+        el.classList.toggle('down', isDown);
+        el.style.color = '';
+    }
+
+    function renderDashboardOverview(data) {
+        // --- Revenue ---
+        const revenueEl = document.getElementById('kpi-revenue');
+        if (revenueEl) {
+            animateCounter(revenueEl, `₹${Number(data.totalRevenue || 0).toLocaleString('en-IN')}`);
+        }
+        renderTrendBadge('kpi-revenue-trend', data.revenueChangePercentage ?? null);
+
+        // --- Orders ---
+        const ordersEl = document.getElementById('kpi-orders');
+        if (ordersEl) {
+            animateCounter(ordersEl, `${Number(data.totalOrders || 0).toLocaleString('en-IN')}`);
+        }
+        renderTrendBadge('kpi-orders-trend', data.ordersChangePercentage ?? null);
+
+        // --- Customers ---
+        const customersEl = document.getElementById('kpi-customers');
+        if (customersEl) customersEl.textContent = data.totalCustomers ?? 0;
+        renderTrendBadge('kpi-customers-trend', data.customersChangePercentage ?? null);
+
+        // --- Pending Orders ---
+        const pendingEl = document.getElementById('kpi-pending');
+        if (pendingEl) pendingEl.textContent = data.pendingOrders ?? 0;
+
+        // --- Products Listed / Low Stock ---
+        const productsEl = document.getElementById('kpi-products');
+        if (productsEl) productsEl.textContent = data.productsListed ?? 0;
+
+        const productsTrendEl = document.getElementById('kpi-products-trend');
+        if (productsTrendEl) {
+            const lowStock = data.lowStockProducts ?? 0;
+            productsTrendEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>${lowStock} Low Stock`;
+        }
+
+        // --- Avg. Rating / Reviews — not implemented on the backend yet, so fall back gracefully ---
+        const ratingEl = document.getElementById('kpi-avg-rating');
+        if (ratingEl) {
+            ratingEl.innerHTML = data.averageRating !== null && data.averageRating !== undefined
+                ? `${Number(data.averageRating).toFixed(1)}<span style="font-size:16px;color:var(--text-muted);">/5</span>`
+                : `--<span style="font-size:16px;color:var(--text-muted);">/5</span>`;
+        }
+        const reviewsTrendEl = document.getElementById('kpi-reviews-trend');
+        if (reviewsTrendEl) {
+            reviewsTrendEl.innerHTML = data.totalReviews !== null && data.totalReviews !== undefined
+                ? `<i class="fa-solid fa-star"></i>${Number(data.totalReviews).toLocaleString('en-IN')} Reviews`
+                : `<i class="fa-solid fa-star"></i>Coming soon`;
+            reviewsTrendEl.style.color = data.totalReviews !== null && data.totalReviews !== undefined ? '' : 'var(--text-muted)';
+        }
+
+        // --- Returns / Refunds — not implemented on the backend yet, so fall back gracefully ---
+        const returnsEl = document.getElementById('kpi-returns');
+        if (returnsEl) {
+            returnsEl.textContent = data.returnsRefunds !== null && data.returnsRefunds !== undefined
+                ? Number(data.returnsRefunds).toLocaleString('en-IN')
+                : '--';
+        }
+        const returnsTrendEl = document.getElementById('kpi-returns-trend');
+        if (returnsTrendEl) {
+            if (data.returnsRefundsPercentage !== null && data.returnsRefundsPercentage !== undefined) {
+                returnsTrendEl.innerHTML = `<i class="fa-solid fa-rotate-left"></i>${data.returnsRefundsPercentage}% of Orders`;
+                returnsTrendEl.style.color = 'var(--red)';
+            } else {
+                returnsTrendEl.innerHTML = `<i class="fa-solid fa-rotate-left"></i>Coming soon`;
+                returnsTrendEl.style.color = 'var(--text-muted)';
+            }
+        }
+
+        // --- Wallet Balance — not implemented on the backend yet, so fall back gracefully ---
+        const walletEl = document.getElementById('kpi-wallet');
+        if (walletEl) {
+            walletEl.textContent = data.walletBalance !== null && data.walletBalance !== undefined
+                ? `₹${Number(data.walletBalance).toLocaleString('en-IN')}`
+                : '--';
+        }
+        const walletTrendEl = document.getElementById('kpi-wallet-trend');
+        if (walletTrendEl) {
+            if (data.walletBalance !== null && data.walletBalance !== undefined) {
+                walletTrendEl.innerHTML = `<i class="fa-solid fa-wallet"></i>Ready for Payout`;
+                walletTrendEl.style.color = '';
+            } else {
+                walletTrendEl.innerHTML = `<i class="fa-solid fa-wallet"></i>Coming soon`;
+                walletTrendEl.style.color = 'var(--text-muted)';
+            }
+        }
+    }
+
     /* ============================================================
        PLAN FEATURE ACCESS - tabs/sections visible according to the vendor's plan
        GET /vendor/s1/v1/plan/features  ->  { "success": true, "features": ["PRODUCT_MANAGEMENT", ...] }
@@ -8574,6 +9148,7 @@ function renderProducts(list = productList) {
     window.addEventListener('load', () => {
       fetchVendorProfile();
       loadNotifications();
+      loadDashboardOverview();
       whenFeature(['PRODUCT_MANAGEMENT', 'CATEGORY_MANAGEMENT'], loadCategories);
       whenFeature('PRODUCT_MANAGEMENT', loadProducts);
       whenFeature('FLASH_SALE', loadFlashSales);
@@ -8588,10 +9163,6 @@ function renderProducts(list = productList) {
         document.getElementById('loader').classList.add('hidden');
         showToast('success','Welcome Back','Your store data is up to date.');
       }, 800);
-      setTimeout(() => {
-        animateCounter(document.getElementById('kpi-revenue'), '₹42,60,000');
-        animateCounter(document.getElementById('kpi-orders'), '4,821');
-      }, 900);
     });
 
 /* ============================================================

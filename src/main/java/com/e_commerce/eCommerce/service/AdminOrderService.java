@@ -87,12 +87,6 @@ public class AdminOrderService {
         orderRepository.save(order);
         orderTrackingrepository.save(orderTracking);
 
-        log.info(
-                "Order status updated successfully. Order : {}, Previous : {}, Current : {}",
-                order.getOrderNumber(),
-                previousStatus,
-                newStatus
-        );
         if (newStatus == OrderStatus.DELIVERED) {
 
             eventPublisher.publishEvent(

@@ -39,7 +39,6 @@ public class Vendor {
     private String bussinessName;
     @Column
     private String invoiceNotes;
-
     @Column(nullable = false)
     private String firstName;
 
@@ -50,14 +49,6 @@ public class Vendor {
 
     @Column(unique = true)
     private String vendorEmail;
-
-    public String getVendorEmail() {
-        return vendorEmail;
-    }
-
-    public void setVendorEmail(String vendorEmail) {
-        this.vendorEmail = vendorEmail;
-    }
 
     @Column(nullable = false, unique = true)
     private String mobile;
@@ -100,6 +91,7 @@ public class Vendor {
 
     @Column(name = "bank_details_on_invoice", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean bankDetailsOnInvoice = false;
+
     private String role;
 
     private boolean active;
@@ -147,9 +139,7 @@ public class Vendor {
     }
     @PreUpdate
     public void preUpdate() {
-
         updatedAt = LocalDateTime.now();
-
     }
 
 }

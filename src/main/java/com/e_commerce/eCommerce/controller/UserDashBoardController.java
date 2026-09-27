@@ -4,6 +4,7 @@ import com.e_commerce.eCommerce.CustomAnnotation.AuditLogs;
 import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.request.ProductFilterDTO;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.UserDashBoardService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -58,10 +60,17 @@ public class UserDashBoardController {
     }
     @AuditLogs("getFeaturedProducts")
     @GetMapping("/products/featured")
-    public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getFeaturedProduct() {
+    public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getFeaturedProduct(
+            @RequestParam(required = false) List<Long> categoryId,
+            @RequestParam(required = false) List<String> brand,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Integer rating){
         try {
+
+            ProductFilterDTO filterDTO=new ProductFilterDTO(categoryId,brand,minPrice,maxPrice,rating);
             String tenant = TenantContext.getTenantId();
-            List<ProductCardResponseDTO> productCardResponseDTOS = userDashBoardService.getFeaturedProd(tenant);
+            List<ProductCardResponseDTO> productCardResponseDTOS = userDashBoardService.getFeaturedProd(filterDTO,tenant);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
                             new ApiResponse<>(
@@ -84,28 +93,23 @@ public class UserDashBoardController {
     @AuditLogs("GetAllProduct")
     @GetMapping("/products")
     @RequiresFeature("PRODUCT_MANAGEMENT")
-    public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getAllProducts() {
+    public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getAllProducts(
+            @RequestParam(required = false) List<Long> categoryId,
+            @RequestParam(required = false) List<String> brand,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Integer rating) {
         try {
             String tenant = TenantContext.getTenantId();
-            List<ProductCardResponseDTO> productCardResponseDTOS = userDashBoardService.getAllProducts(tenant);
+            ProductFilterDTO filter = new ProductFilterDTO(categoryId, brand, minPrice, maxPrice, rating);
+            List<ProductCardResponseDTO> productCardResponseDTOS =
+                    userDashBoardService.getAllProducts(tenant, filter);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(
-                            new ApiResponse<>(
-                                    true,
-                                    " Product Fetched Successfully",
-                                    productCardResponseDTOS
-                            )
-                    );
+                    .body(new ApiResponse<>(true, "Product Fetched Successfully", productCardResponseDTOS));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            new ApiResponse<>(
-                                    false,
-                                    "Error While Featured Product Fetching",
-                                    null
-                            )
-                    );
+                    .body(new ApiResponse<>(false, "Error While Product Fetching", null));
         }
     }
     @AuditLogs("getProductsByCategory")

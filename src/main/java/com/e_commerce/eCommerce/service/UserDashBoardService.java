@@ -4,9 +4,11 @@ import com.e_commerce.eCommerce.config.R2Properties;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
+import com.e_commerce.eCommerce.dto.request.ProductFilterDTO;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.enums.PolicyStatus;
 import com.e_commerce.eCommerce.enums.PolicyType;
+import com.e_commerce.eCommerce.exception.vendorNotFoundException;
 import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -284,46 +286,113 @@ public class UserDashBoardService {
                 .toList();
     }
 
-    public List<ProductCardResponseDTO> getFeaturedProd(String tenant) {
-        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenant);
-        List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
+    public List<ProductCardResponseDTO> getFeaturedProd(
+            ProductFilterDTO dto,
+            String tenant) {
+
+        log.info("===== FEATURED PRODUCT FILTER START =====");
+
+        log.info("Tenant       : {}", tenant);
+        log.info("Category     : {}", dto.getCategory());
+        log.info("Brand        : {}", dto.getBrand());
+        log.info("Min Price    : {}", dto.getMinPrice());
+        log.info("Max Price    : {}", dto.getMaxPrice());
+        log.info("Rating       : {}", dto.getRating());
+
+        Optional<Vendor> vendor =
+                vendorRepository.findByTenantId(tenant);
+
+        List<ProductCardResponseDTO> productCardResponseDTOS =
+                new ArrayList<>();
+
         if (vendor.isEmpty()) {
+            log.error("Vendor not found for tenant: {}", tenant);
             throw new RuntimeException("Vendor Does not exist");
         }
+
         Vendor v1 = vendor.get();
 
-        List<Product> products = productRepository.findAllByTenantIdAndStatusAndFeatured(tenant, ProductStatus.ACTIVE, true);
+        log.info("Vendor ID    : {}", v1.getId());
+        log.info("Vendor Name  : {}", v1.getStoreName());
+
+        List<Product> products =
+                productRepository.findFeaturedProductsWithFilter(
+                        tenant,
+                        dto.getCategory(),
+                        dto.getBrand(),
+                        dto.getMinPrice(),
+                        dto.getMaxPrice()
+                );
+
+        log.info("Products returned from DB: {}", products.size());
+
         for (Product product : products) {
-            ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
+
+            log.info(
+                    "Product -> ID: {}, Name: {}, Category: {}, Price: {},  Status: {}",
+                    product.getId(),
+                    product.getProductName(),
+                    product.getCategoryId(),
+                    product.getSellingPrice(),
+
+                    product.getStatus()
+            );
+
+            ProductCardResponseDTO productCardResponseDTO =
+                    new ProductCardResponseDTO();
+
             productCardResponseDTO.setProductId(product.getId());
             productCardResponseDTO.setName(product.getProductName());
             productCardResponseDTO.setBusinessName(v1.getBussinessName());
 
-            productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
+            productCardResponseDTO.setImage(
+                    r2Properties.getPublicUrl()
+                            + "/"
+                            + product.getProductImage()
+            );
+
             productCardResponseDTO.setBrand(v1.getStoreName());
             productCardResponseDTO.setRating(4.4);
             productCardResponseDTO.setReviewCount(1200);
+
             productCardResponseDTO.setPrice(product.getSellingPrice());
             productCardResponseDTO.setOldPrice(product.getMrp());
-            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(), product.getMrp()));
+
+            productCardResponseDTO.setDiscountPercent(
+                    getDiscountPrice(
+                            product.getSellingPrice(),
+                            product.getMrp()
+                    )
+            );
+
             productCardResponseDTO.setDeliveryEta("0-1 Days");
-            productCardResponseDTO.setVendorId(vendor.get().getId());
+
+            productCardResponseDTO.setVendorId(
+                    vendor.get().getId()
+            );
+
             String stockLabel = "";
+
             if (product.getStockQuantity() > 1) {
                 stockLabel = "low_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
-
             } else {
                 stockLabel = "out_of_stock";
                 productCardResponseDTO.setStockLevel(stockLabel);
             }
-            productCardResponseDTOS.add(productCardResponseDTO);
 
+            productCardResponseDTOS.add(productCardResponseDTO);
         }
+
+        log.info(
+                "Final featured products returned: {}",
+                productCardResponseDTOS.size()
+        );
+
+        log.info("===== FEATURED PRODUCT FILTER END =====");
+
         return productCardResponseDTOS;
     }
-
-
     private Integer getDiscountPrice(BigDecimal sellingPrice, BigDecimal mrp) {
 
         if (sellingPrice == null || mrp == null || mrp.compareTo(BigDecimal.ZERO) <= 0) {
@@ -338,45 +407,106 @@ public class UserDashBoardService {
     }
 
 
-    @Cacheable(value = "products", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
-    public List<ProductCardResponseDTO> getAllProducts(String tenant) {
-        log.error("DB hit for gtAll Products");
-        Optional<Vendor> vendor = vendorRepository.findByTenantId(tenant);
-        List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
+//    @Cacheable(value = "products", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId()")
+    public List<ProductCardResponseDTO> getAllProducts(
+            String tenant,
+            ProductFilterDTO filter) {
+        Optional<Vendor> vendor =
+                vendorRepository.findByTenantId(tenant);
+
+        List<ProductCardResponseDTO> productCardResponseDTOS =
+                new ArrayList<>();
+
         if (vendor.isEmpty()) {
-            throw new RuntimeException("Vendor Does not exist");
+            throw new vendorNotFoundException("Vendor Does not exist");
         }
         Vendor v1 = vendor.get();
-        List<Product> products = productRepository.findAllByTenantIdAndStatus(tenant, ProductStatus.ACTIVE);
+
+        List<Product> products =
+                productRepository.findFilteredProducts(
+                        tenant,
+                        ProductStatus.ACTIVE,
+                        filter.getCategory(),
+                        filter.getBrand(),
+                        filter.getMinPrice(),
+                        filter.getMaxPrice()
+                );
+        log.error("Product kist size{}",products.size());
 
         for (Product product : products) {
-            ProductCardResponseDTO productCardResponseDTO = new ProductCardResponseDTO();
+
+            ProductCardResponseDTO productCardResponseDTO =
+                    new ProductCardResponseDTO();
+
             productCardResponseDTO.setProductId(product.getId());
-            productCardResponseDTO.setName(product.getProductName());
-            productCardResponseDTO.setBusinessName(v1.getBussinessName());
-            productCardResponseDTO.setImage(r2Properties.getPublicUrl() + "/" + product.getProductImage());
-            productCardResponseDTO.setBrand(v1.getStoreName());
+
+            productCardResponseDTO.setName(
+                    product.getProductName()
+            );
+
+            productCardResponseDTO.setBusinessName(
+                    v1.getBussinessName()
+            );
+
+            productCardResponseDTO.setImage(
+                    r2Properties.getPublicUrl()
+                            + "/"
+                            + product.getProductImage()
+            );
+
+            productCardResponseDTO.setBrand(
+                    v1.getStoreName()
+            );
+
             productCardResponseDTO.setRating(4.4);
+
             productCardResponseDTO.setReviewCount(1200);
-            productCardResponseDTO.setPrice(product.getSellingPrice());
-            productCardResponseDTO.setOldPrice(product.getMrp());
-            productCardResponseDTO.setDiscountPercent(getDiscountPrice(product.getSellingPrice(), product.getMrp()));
-            productCardResponseDTO.setDeliveryEta("0-1 Days");
+
+            productCardResponseDTO.setPrice(
+                    product.getSellingPrice()
+            );
+
+            productCardResponseDTO.setOldPrice(
+                    product.getMrp()
+            );
+
+            productCardResponseDTO.setDiscountPercent(
+                    getDiscountPrice(
+                            product.getSellingPrice(),
+                            product.getMrp()
+                    )
+            );
+
+            productCardResponseDTO.setDeliveryEta(
+                    "0-1 Days"
+            );
+
             String stockLabel = "";
+
             if (product.getStockQuantity() > 1) {
+
                 stockLabel = "low_stock";
-                productCardResponseDTO.setStockLevel(stockLabel);
+
+                productCardResponseDTO.setStockLevel(
+                        stockLabel
+                );
 
             } else {
-                stockLabel = "out_of_stock";
-                productCardResponseDTO.setStockLevel(stockLabel);
-            }
-            productCardResponseDTOS.add(productCardResponseDTO);
 
+                stockLabel = "out_of_stock";
+
+                productCardResponseDTO.setStockLevel(
+                        stockLabel
+                );
+            }
+
+            productCardResponseDTOS.add(
+                    productCardResponseDTO
+            );
         }
+
         return productCardResponseDTOS;
     }
-
     public List<ProductCardResponseDTO> getProductsByCategory(Long categoryId) {
         List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
         String tenantId = TenantContext.getTenantId();

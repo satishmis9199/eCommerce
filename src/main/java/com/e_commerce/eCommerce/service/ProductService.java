@@ -4,6 +4,8 @@ import com.e_commerce.eCommerce.config.R2Properties;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.entity.*;
+import com.e_commerce.eCommerce.exception.BrandDoesNotExist;
+import com.e_commerce.eCommerce.exception.ProductAlreadyExist;
 import com.e_commerce.eCommerce.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,7 @@ public class ProductService {
     private final FlashSaleReporsitory flashSaleReporsitory;
     private final FlashSaleItemRepository flashSaleItemRepository;
     private final ProductReviewRepository productReviewRepository;
+    private final BrandService brandService;
 
     private final R2Properties r2Properties;
 
@@ -167,10 +170,7 @@ public class ProductService {
         if (!tenantId.equalsIgnoreCase(user.getTenantId())) {
             throw new RuntimeException("Vendor does not exist.");
         }
-
-
         Product product = productRepository.findByIdAndTenantIdAndVendorId(id, tenantId, user.getVendorId());
-
         if (product == null) {
             throw new RuntimeException("Product does not exist.");
         }
@@ -183,7 +183,11 @@ public class ProductService {
         if (dto.getMrp() != null && dto.getSellingPrice().compareTo(dto.getMrp()) > 0) {
             throw new RuntimeException("Selling Price cannot be greater than MRP.");
         }
-
+        boolean isActiveBrand=brandService.isActivebrand(dto.getBrandId(), tenantId);
+        if(!isActiveBrand){
+            throw new BrandDoesNotExist("Brand does Not exisr");
+        }
+        product.setBrandId(dto.getBrandId());
         product.setCategoryId(category.getId());
         product.setProductName(dto.getProductName());
         product.setDescription(dto.getDescription());
@@ -262,7 +266,7 @@ public class ProductService {
     public ProductResponseDTO getProductById(Long ids) {
 
         String tenantId = TenantContext.getTenantId();
-
+         Map<Long,String> brandDetails=brandService.getBrandNameAndId(tenantId);
         Product product = productRepository.findByIdAndTenantIdAndStatus(ids, tenantId, ProductStatus.ACTIVE);
 
         if (product == null) {
@@ -276,9 +280,25 @@ public class ProductService {
         List<ProductSpecificationValue> productSpecificationValues = productSpecificationValueRepository.findByProductIdAndTenantId(ids, tenantId);
 
         List<ProductSpecificationResponeDto> specificationDtos = productSpecificationValues.stream().map(value -> ProductSpecificationResponeDto.builder().categorySpecificationId(value.getCategorySpecification().getId()).value(value.getValue()).build()).toList();
-
-        return ProductResponseDTO.builder().id(product.getId()).categoryId(product.getCategoryId()).categoryName(productCategory != null ? productCategory.getCategoryName() : null).productName(product.getProductName()).sellingPrice(product.getSellingPrice()).mrp(product.getMrp()).stockQuantity(product.getStockQuantity()).unit(product.getUnit()).productImage(product.getProductImage()).status(ProductStatus.ACTIVE).description(product.getDescription()).createdAt(product.getCreatedAt()).updatedAt(product.getUpdatedAt()).specifications(specificationDtos).build();
-    }
+        return ProductResponseDTO.builder()
+                .id(product.getId())
+                .categoryId(product.getCategoryId())
+                .brandId(product.getBrandId())
+                .brandName(brandDetails.get(product.getBrandId()))
+                .categoryName(productCategory != null ? productCategory.getCategoryName() : null)
+                .productName(product.getProductName())
+                .sellingPrice(product.getSellingPrice())
+                .mrp(product.getMrp())
+                .stockQuantity(product.getStockQuantity())
+                .unit(product.getUnit())
+                .productImage(product.getProductImage())
+                .status(ProductStatus.ACTIVE)
+                .description(product.getDescription())
+                .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
+                .specifications(specificationDtos)
+                .build();
+       }
 
     @Cacheable(value = "productsByIds", key = "T(com.e_commerce.eCommerce.config.TenantContext).getTenantId() + ':' + #productId")
     public ProductResponseDTOs findByProductId(Long productId) {

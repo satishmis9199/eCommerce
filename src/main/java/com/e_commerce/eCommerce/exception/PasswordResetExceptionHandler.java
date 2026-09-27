@@ -40,4 +40,35 @@ public class PasswordResetExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse<>(false, ex.getMessage()));
     }
+    @ExceptionHandler(vendorNotFoundException.class)
+
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(vendorNotFoundException ex) {
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>(false, ex.getMessage()));
+    }
+    @ExceptionHandler(ProductAlreadyExist.class)
+    public ResponseEntity<ApiResponse<?>> handleAlreadyProductInBrand(ProductAlreadyExist exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+    @ExceptionHandler(BrandDoesNotExist.class)
+    public ResponseEntity<ApiResponse<?>> brandALreadyExist(BrandDoesNotExist exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+
+
 }

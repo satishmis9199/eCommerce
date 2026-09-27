@@ -41,6 +41,8 @@ public class ProductResponseDTO {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    private String brandName;
+    private Long brandId;
     private List<ProductSpecificationResponeDto> specifications;
 
     public ProductResponseDTO(
@@ -56,7 +58,7 @@ public class ProductResponseDTO {
             ProductStatus status,
             String description,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            LocalDateTime updatedAt,String brandName) {
 
         this.id = id;
         this.categoryId = categoryId;
@@ -71,6 +73,7 @@ public class ProductResponseDTO {
         this.description = description;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.brandName=brandName;
     }
 
 }

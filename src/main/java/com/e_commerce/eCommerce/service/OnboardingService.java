@@ -3,7 +3,10 @@ package com.e_commerce.eCommerce.service;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
+import com.e_commerce.eCommerce.dto.response.OnboardHistoryDTO;
 import com.e_commerce.eCommerce.entity.*;
+import com.e_commerce.eCommerce.exception.VendorRequestException;
+import com.e_commerce.eCommerce.exception.vendorNotFoundException;
 import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +18,11 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,13 +33,14 @@ public class OnboardingService {
 
     private final VendorOnnBRepo vendorOnnBRepo;
     private final EmailService emailService;
-    //    private final VendorBankRepository vendorBankRepository;
+    private final VendorOnboardingHistoryRepository vendorOnbaordingRepository;
     private final VendorRepository vendorRepository;
     private final vendorBussinesss vendorBusinessRepository;
     private final VendorAddresss vendorAddressRepository;
     private final VendorBankRepository vendorBankRepository;
     private final VendorBrandingRepository vendorBrandingRepository;
     private final VendorAddresss vendorAddressRepo;
+    private final OnboardingHistoryService onboardingHistoryService;
 
     public VendorOnboardingResponseDTO getOnboarding(Long vendorId) {
         VendorOnboardingResponseDTO response = new VendorOnboardingResponseDTO();
@@ -87,11 +94,6 @@ public class OnboardingService {
         data.setBranding(new BrandingDTO());
         return data;
     }
-
-    //===========================================================
-    // Basic Information
-    //===========================================================
-
     private BasicInfoDto getBasicInfo(Long vendorId) {
 
         BasicInfoDto dto = new BasicInfoDto();
@@ -377,12 +379,11 @@ public class OnboardingService {
     }
 
     public String saveBankDetail(Long vendorid, BankInfoDto dto) {
-        // Vendor
+
         Vendor vendor = vendorRepository.findById(vendorid)
                 .orElseThrow(() ->
                         new RuntimeException("Vendor not found"));
 
-        // Onboarding Application
         VendorOnboardingApplication onboarding =
                 vendorOnnBRepo.findByVendorId(vendorid)
                         .orElseThrow(() ->
@@ -411,7 +412,6 @@ public class OnboardingService {
                 .orElseThrow(() ->
                         new RuntimeException("Vendor not found"));
 
-        // Onboarding Application
         VendorOnboardingApplication onboarding =
                 vendorOnnBRepo.findByVendorId(vendorid)
                         .orElseThrow(() ->
@@ -443,15 +443,21 @@ public class OnboardingService {
     })
     @Transactional
     public SubmitApplicationResponseDTO submitApplication(Long vendorId) {
+
+        String tenantId = TenantContext.getTenantId();
+
         Vendor vendor = vendorRepository.findById(vendorId)
-                .orElseThrow(() ->
-                        new RuntimeException("Vendor not found"));
+                .orElseThrow(() -> new vendorNotFoundException("Vendor not found"));
+
         VendorOnboardingApplication onboarding = vendorOnnBRepo
                 .findByVendorId(vendorId)
-                .orElseThrow(() ->
-                        new RuntimeException("Onboarding application not found"));
+                .orElseThrow(() -> new vendorNotFoundException("Onboarding application not found"));
+
+        OnboardingStatus prevStatus = onboarding.getStatus();
+        OnboardingStatus nextStatus = OnboardingStatus.UNDER_REVIEW;
+
         onboarding.setSubmittedAt(LocalDateTime.now());
-        onboarding.setStatus(OnboardingStatus.UNDER_REVIEW);
+        onboarding.setStatus(nextStatus);
         onboarding.setCurrentStep(6);
         onboarding.setCompletionPercentage(100);
         onboarding.setCompleted(true);
@@ -459,12 +465,27 @@ public class OnboardingService {
         vendor.setStatus(VendorStatus.PENDING);
         vendorOnnBRepo.save(onboarding);
         vendorRepository.save(vendor);
+        String remarks = String.format(
+                "Vendor submitted the onboarding application. Status changed from %s to %s.",
+                prevStatus,
+                nextStatus
+        );
+
+        onboardingHistoryService.saveVendorOnBoardingHistory(
+                tenantId,
+                vendorId,
+                remarks,
+                prevStatus,
+                nextStatus
+        );
+
         SubmitApplicationResponseDTO response = new SubmitApplicationResponseDTO();
         response.setSuccess(true);
         response.setMessage("Your onboarding application has been submitted successfully.");
         response.setApplicationId(onboarding.getApplicationId());
-        response.setStatus(OnboardingStatus.valueOf(onboarding.getStatus().name()));
+        response.setStatus(onboarding.getStatus());
         response.setSubmittedAt(onboarding.getSubmittedAt());
+
         EmailRequestDto emailRequest = EmailRequestDto.builder()
                 .to(vendor.getEmail())
                 .subject("Onboarding Application Submitted – Kumar Store Online")
@@ -488,70 +509,132 @@ public class OnboardingService {
             @CacheEvict(value = "vendorDetail", allEntries = true),
             @CacheEvict(value = "AllVendors", allEntries = true)
     })
-    public String makeDecisiion(OnBoardingDecisionDto onBoardingDecisionDto, User user) {
-        Vendor vendor = vendorRepository.findById(onBoardingDecisionDto.getApplicationId())
+    @Transactional
+    public String makeDecisiion(
+            OnBoardingDecisionDto onBoardingDecisionDto,
+            User user) {
+        log.error("Inside service makeDecision");
+
+        String tenantId = TenantContext.getTenantId();
+
+        Vendor vendor = vendorRepository.findById(
+                        onBoardingDecisionDto.getApplicationId()
+                )
                 .orElseThrow(() -> new RuntimeException("Vendor not found"));
 
         VendorOnboardingApplication onboarding = vendorOnnBRepo
                 .findByVendorId(onBoardingDecisionDto.getApplicationId())
                 .orElseThrow(() -> new RuntimeException("Onboarding application not found"));
 
-        if (onBoardingDecisionDto.getAction().equalsIgnoreCase("APPROVE")) {
-            onboarding.setStatus(OnboardingStatus.APPROVED);
+        OnboardingStatus prevStatus = onboarding.getStatus();
+        OnboardingStatus nextStatus;
+
+        boolean isApprove = "APPROVE".equalsIgnoreCase(
+                onBoardingDecisionDto.getAction()
+        );
+
+        if (isApprove) {
+
+            nextStatus = OnboardingStatus.APPROVED;
+
+            onboarding.setStatus(nextStatus);
             onboarding.setReviewedAt(LocalDateTime.now());
             onboarding.setReviewedBy(user.getId());
             onboarding.setReviewRemarks(onBoardingDecisionDto.getRemarks());
 
             vendor.setStatus(VendorStatus.ACTIVE);
             vendor.setReSubmit(onBoardingDecisionDto.isAllowResubmit());
+
             vendorRepository.save(vendor);
             vendorOnnBRepo.save(onboarding);
+
+            String remarks = String.format(
+                    "Vendor onboarding application approved. Status changed from %s to %s.",
+                    prevStatus,
+                    nextStatus
+            );
+
+            onboardingHistoryService.saveVendorOnBoardingHistory(
+                    tenantId,
+                    vendor.getId(),
+                    remarks,
+                    prevStatus,
+                    nextStatus
+            );
+
             EmailRequestDto approvalEmail = EmailRequestDto.builder()
                     .to(vendor.getEmail())
-                    .subject("🎉 Your Vendor Application is Approved – " + vendor.getBussinessName())
+                    .subject("🎉 Your Vendor Application is Approved – "
+                            + vendor.getBussinessName())
                     .templateName("vendor-application-approved")
                     .templateVariables(Map.of(
                             "vendorName", vendor.getFirstName(),
                             "shopName", vendor.getBussinessName(),
                             "applicationId", onboarding.getApplicationId(),
-                            "remarks", onBoardingDecisionDto.getRemarks() != null ? onBoardingDecisionDto.getRemarks() : "",
+                            "remarks",
+                            onBoardingDecisionDto.getRemarks() != null
+                                    ? onBoardingDecisionDto.getRemarks()
+                                    : "",
                             "loginLink", "#",
                             "supportEmail", "support@kumarstore.online"
                     ))
                     .build();
+
             emailService.sendEmailAsync(approvalEmail);
 
             return "Approved Successfully";
         }
+        nextStatus = OnboardingStatus.REJECTED;
 
-        onboarding.setStatus(OnboardingStatus.REJECTED);
+        onboarding.setStatus(nextStatus);
         onboarding.setReviewedAt(LocalDateTime.now());
         onboarding.setReviewedBy(user.getId());
         onboarding.setReviewRemarks(onBoardingDecisionDto.getRemarks());
-        vendor.setReSubmit(onBoardingDecisionDto.isAllowResubmit());
 
         vendor.setStatus(VendorStatus.REJECTED);
+        vendor.setReSubmit(onBoardingDecisionDto.isAllowResubmit());
+
         vendorRepository.save(vendor);
         vendorOnnBRepo.save(onboarding);
+
+        String remarks = String.format(
+                "Vendor onboarding application rejected. Status changed from %s to %s.",
+                prevStatus,
+                nextStatus
+        );
+
+        onboardingHistoryService.saveVendorOnBoardingHistory(
+                tenantId,
+                vendor.getId(),
+                remarks,
+                prevStatus,
+                nextStatus
+        );
+
         EmailRequestDto rejectionEmail = EmailRequestDto.builder()
                 .to(vendor.getEmail())
-                .subject("Update on Your Vendor Application – " + vendor.getBussinessName())
+                .subject("Update on Your Vendor Application – "
+                        + vendor.getBussinessName())
                 .templateName("vendor-application-rejected")
                 .templateVariables(Map.of(
                         "vendorName", vendor.getFirstName(),
                         "shopName", vendor.getBussinessName(),
                         "applicationId", onboarding.getApplicationId(),
-                        "remarks", onBoardingDecisionDto.getRemarks() != null ? onBoardingDecisionDto.getRemarks() : "",
-                        "allowResubmit", onBoardingDecisionDto.isAllowResubmit(),
+                        "remarks",
+                        onBoardingDecisionDto.getRemarks() != null
+                                ? onBoardingDecisionDto.getRemarks()
+                                : "",
+                        "allowResubmit",
+                        onBoardingDecisionDto.isAllowResubmit(),
                         "resubmitLink", "#",
                         "supportEmail", "support@kumarstore.online"
                 ))
                 .build();
+
         emailService.sendEmailAsync(rejectionEmail);
 
         return "Rejected Successfully";
     }
-
     public VenddorOnBoardingApplicationStatus getOnboardingStatus(CustomUserDetail userDetail) {
         String tenantId = TenantContext.getTenantId();
         VenddorOnBoardingApplicationStatus v2 = new VenddorOnBoardingApplicationStatus();
@@ -580,27 +663,84 @@ public class OnboardingService {
 
     }
 
-    public String initiateResubmit(CustomUserDetail userDetail, String applicationId) {
-        String tenantid = TenantContext.getTenantId();
-        VendorOnboardingApplication onboarding = vendorOnnBRepo
-                .findByApplicationId(applicationId);
+    @Transactional
+    public String initiateResubmit(
+            CustomUserDetail userDetail,
+            String applicationId) {
+
+        String tenantId = TenantContext.getTenantId();
+
+        VendorOnboardingApplication onboarding =
+                vendorOnnBRepo.findByApplicationId(applicationId);
+
         if (onboarding == null) {
-            throw new RuntimeException("Application Doee Not Exist ..Contact Support team");
+            throw new RuntimeException(
+                    "Application does not exist. Please contact the support team."
+            );
         }
-        Optional<Vendor> v11 = vendorRepository.findByTenantId(tenantid);
-        if (!v11.isPresent()) {
-            throw new RuntimeException("Vendor Does not Exist ");
+
+        Optional<Vendor> vendorOptional =
+                vendorRepository.findByTenantId(tenantId);
+
+        if (vendorOptional.isEmpty()) {
+            throw new vendorNotFoundException("Vendor does not exist.");
         }
-        Vendor v1 = v11.get();
-        onboarding.setStatus(OnboardingStatus.DRAFT);
-        v1.setStatus(VendorStatus.ONBOARDING);
+
+        Vendor vendor = vendorOptional.get();
+        OnboardingStatus prevStatus = onboarding.getStatus();
+        OnboardingStatus nextStatus = OnboardingStatus.DRAFT;
+        onboarding.setStatus(nextStatus);
         onboarding.setCompletionPercentage(90);
         onboarding.setCurrentStep(5);
-
+        vendor.setStatus(VendorStatus.ONBOARDING);
         vendorOnnBRepo.save(onboarding);
-        vendorRepository.save(v1);
-        return "Resubmit Initiated Success";
+        vendorRepository.save(vendor);
+        String remarks = String.format(
+                "Vendor initiated resubmission of the onboarding application. "
+                        + "Status changed from %s to %s.",
+                prevStatus,
+                nextStatus
+        );
 
+        onboardingHistoryService.saveVendorOnBoardingHistory(
+                tenantId,
+                vendor.getId(),
+                remarks,
+                prevStatus,
+                nextStatus
+        );
 
+        return "Resubmit Initiated Successfully";
     }
+
+    public List<OnboardHistoryDTO> getHistory(Long vendorId) {
+
+        List<VendorOnboardingHistory> rows = (vendorId != null)
+                ? vendorOnbaordingRepository.findByVendorIdOrderByCreatedAtDesc(vendorId)
+                : vendorOnbaordingRepository.findAllByOrderByCreatedAtDesc();
+        Set<Long> vendorIds = rows.stream()
+                .map(VendorOnboardingHistory::getVendorId)
+                .collect(Collectors.toSet());
+        Map<Long, String> vendorNames = vendorRepository.findAllById(vendorIds).stream()
+                .collect(Collectors.toMap(Vendor::getId, Vendor::getBussinessName, (a, b) -> a));
+        return rows.stream()
+                .map(h -> toDto(h, vendorNames.get(h.getVendorId())))
+                .toList();
+    }
+
+    private OnboardHistoryDTO toDto(VendorOnboardingHistory h, String vendorName) {
+        boolean isAdmin = "0".equals(h.getTenantId());
+        return OnboardHistoryDTO.builder()
+                .id(h.getId())
+                .vendorId(h.getVendorId())
+                .vendorName(vendorName)
+                .fromStatus(h.getFromStatus() == null ? null : h.getFromStatus().name())
+                .toStatus(h.getToStatus() == null ? null : h.getToStatus().name())
+                .remarks(h.getRemarks())
+                .tenantId(h.getTenantId())
+                .actedBy(isAdmin ? "Super Admin" : "Vendor")
+                .createdAt(h.getCreatedAt())
+                .build();
+    }
+
 }

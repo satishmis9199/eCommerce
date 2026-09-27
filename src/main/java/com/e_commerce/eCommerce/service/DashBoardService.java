@@ -4,28 +4,45 @@ import com.e_commerce.eCommerce.config.R2Properties;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.MyProfileDTO;
 import com.e_commerce.eCommerce.dto.VendorProfileDTO;
+import com.e_commerce.eCommerce.dto.response.VendorDashboardDTO;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.entity.Vendor;
 import com.e_commerce.eCommerce.entity.VendorBranding;
-import com.e_commerce.eCommerce.repository.UserRepos;
-import com.e_commerce.eCommerce.repository.VendorBrandingRepository;
-import com.e_commerce.eCommerce.repository.VendorRepository;
+import com.e_commerce.eCommerce.exception.VendorRequestException;
+import com.e_commerce.eCommerce.exception.vendorNotFoundException;
+import com.e_commerce.eCommerce.repository.*;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Service
+
+
 public class DashBoardService {
     private final UserRepos userRepos;
     private final VendorRepository vendorRepository;
     private final VendorBrandingRepository vendorBrandingRepository;
     private final R2Properties r2Properties;
+    private final OrderRepository orderRepository;
+    private final UserRepos userRepository;
+    private final ProductRepository productRepository;
 
-    public DashBoardService(UserRepos userRepos, VendorRepository vendorRepository, VendorBrandingRepository vendorBrandingRepository, R2Properties r2Properties) {
+    public DashBoardService(UserRepos userRepos, VendorRepository vendorRepository, VendorBrandingRepository vendorBrandingRepository, R2Properties r2Properties, OrderRepository orderRepository, UserRepos userRepository, ProductRepository productRepository) {
         this.userRepos = userRepos;
         this.vendorRepository = vendorRepository;
         this.vendorBrandingRepository = vendorBrandingRepository;
         this.r2Properties = r2Properties;
+        this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
+        this.productRepository = productRepository;
     }
 
     public VendorProfileDTO loadDashBoardData(User user) {
@@ -78,5 +95,206 @@ public class DashBoardService {
         return vendorProfileDTO;
 
 
+    }
+
+    public VendorDashboardDTO getDashBoardData(
+            CustomUserDetail userDetail,
+            String tenantId) {
+
+        if (userDetail == null) {
+            throw new vendorNotFoundException("User is Invalid");
+        }
+
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new VendorRequestException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Tenant Does Not exist"
+            );
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime currentMonthStart =
+                now.withDayOfMonth(1)
+                        .withHour(0)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
+
+        LocalDateTime previousMonthStart =
+                currentMonthStart.minusMonths(1);
+
+        LocalDateTime previousMonthEnd =
+                previousMonthStart
+                        .plusDays(now.getDayOfMonth() - 1L)
+                        .withHour(now.getHour())
+                        .withMinute(now.getMinute())
+                        .withSecond(now.getSecond())
+                        .withNano(now.getNano());
+
+        BigDecimal totalRevenue =
+                orderRepository.findTotalCountOfRevenue(tenantId);
+
+        BigDecimal currentMonthRevenue =
+                orderRepository.findRevenueBetween(
+                        tenantId,
+                        currentMonthStart,
+                        now
+                );
+
+        BigDecimal previousMonthRevenue =
+                orderRepository.findRevenueBetween(
+                        tenantId,
+                        previousMonthStart,
+                        previousMonthEnd
+                );
+
+        if (totalRevenue == null) {
+            totalRevenue = BigDecimal.ZERO;
+        }
+
+        if (currentMonthRevenue == null) {
+            currentMonthRevenue = BigDecimal.ZERO;
+        }
+
+        if (previousMonthRevenue == null) {
+            previousMonthRevenue = BigDecimal.ZERO;
+        }
+
+        BigDecimal revenueChangePercentage = BigDecimal.ZERO;
+
+        if (previousMonthRevenue.compareTo(BigDecimal.ZERO) != 0) {
+            revenueChangePercentage =
+                    currentMonthRevenue
+                            .subtract(previousMonthRevenue)
+                            .divide(
+                                    previousMonthRevenue,
+                                    4,
+                                    RoundingMode.HALF_UP
+                            )
+                            .multiply(BigDecimal.valueOf(100));
+        }
+
+        Long totalOrders =
+                orderRepository.totalOrders(tenantId);
+
+        Long currentMonthOrders =
+                orderRepository.totalOrdersBetween(
+                        tenantId,
+                        currentMonthStart,
+                        now
+                );
+
+        Long previousMonthOrders =
+                orderRepository.totalOrdersBetween(
+                        tenantId,
+                        previousMonthStart,
+                        previousMonthEnd
+                );
+
+        if (totalOrders == null) {
+            totalOrders = 0L;
+        }
+
+        if (currentMonthOrders == null) {
+            currentMonthOrders = 0L;
+        }
+
+        if (previousMonthOrders == null) {
+            previousMonthOrders = 0L;
+        }
+
+        BigDecimal ordersChangePercentage = BigDecimal.ZERO;
+
+        if (previousMonthOrders != 0) {
+            ordersChangePercentage =
+                    BigDecimal.valueOf(currentMonthOrders - previousMonthOrders)
+                            .divide(
+                                    BigDecimal.valueOf(previousMonthOrders),
+                                    4,
+                                    RoundingMode.HALF_UP
+                            )
+                            .multiply(BigDecimal.valueOf(100));
+        }
+
+        Long totalCustomers =
+                userRepository.totalCustomers(tenantId);
+
+        Long currentMonthCustomers =
+                userRepository.totalCustomersBetween(
+                        tenantId,
+                        currentMonthStart,
+                        now
+                );
+
+        Long previousMonthCustomers =
+                userRepository.totalCustomersBetween(
+                        tenantId,
+                        previousMonthStart,
+                        previousMonthEnd
+                );
+
+        if (totalCustomers == null) {
+            totalCustomers = 0L;
+        }
+
+        if (currentMonthCustomers == null) {
+            currentMonthCustomers = 0L;
+        }
+
+        if (previousMonthCustomers == null) {
+            previousMonthCustomers = 0L;
+        }
+
+        BigDecimal customersChangePercentage = BigDecimal.ZERO;
+
+        if (previousMonthCustomers != 0) {
+            customersChangePercentage =
+                    BigDecimal.valueOf(
+                                    currentMonthCustomers - previousMonthCustomers
+                            )
+                            .divide(
+                                    BigDecimal.valueOf(previousMonthCustomers),
+                                    4,
+                                    RoundingMode.HALF_UP
+                            )
+                            .multiply(BigDecimal.valueOf(100));
+        }
+
+        Long pendingOrders =
+                orderRepository.pendingOrders(tenantId);
+
+        Long productsListed =
+                productRepository.totalProducts(tenantId);
+
+        Long lowStockProducts =
+                productRepository.totalLowStockProducts(tenantId);
+
+
+        if (pendingOrders == null) {
+            pendingOrders = 0L;
+        }
+
+        if (productsListed == null) {
+            productsListed = 0L;
+        }
+
+        if (lowStockProducts == null) {
+            lowStockProducts = 0L;
+        }
+        return VendorDashboardDTO.builder()
+                .totalRevenue(totalRevenue)
+                .revenueChangePercentage(revenueChangePercentage)
+                .totalOrders(totalOrders)
+                .ordersChangePercentage(ordersChangePercentage)
+                .totalCustomers(totalCustomers)
+                .customersChangePercentage(customersChangePercentage)
+                .pendingOrders(pendingOrders)
+                .productsListed(productsListed)
+                .lowStockProducts(lowStockProducts)
+                .averageRating((int) 4.5)
+                .returnsRefunds(0L)
+                .returnsRefundsPercentage(BigDecimal.ZERO)
+                .build();
     }
 }

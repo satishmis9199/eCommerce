@@ -591,7 +591,8 @@
             <ul>
                 <li class="active"><a href="#"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a></li>
                 <li><a href="#adsSection"><i class="fa-solid fa-rectangle-ad"></i><span>Ads</span><span class="badge-pill" id="adsBadge" style="display:none;">0</span></a></li>
-                <li><a href="#"><i class="fa-solid fa-shop"></i><span>Vendors</span></a></li>
+                <li><a href="#vendorsSection"><i class="fa-solid fa-shop"></i><span>Vendors</span></a></li>
+                <li><a href="#onboardingHistorySection"><i class="fa-solid fa-timeline"></i><span>Onboarding History</span></a></li>
                 <li><a href="#pendingVendorsSection"><i class="fa-solid fa-user-clock"></i><span>Vendor Requests</span><span class="badge-pill" id="pendingVendorsBadge" style="display:none;">0</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-users"></i><span>Customers</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-box"></i><span>Orders</span><span class="badge-pill">5</span></a>
@@ -603,11 +604,11 @@
                 <li><a href="#planFeatureSection"><i class="fa-solid fa-layer-group"></i><span>Plans & Features</span></a></li>
                 </span></a></li>
                 <li><a href="/s1/admin/u1/v1/auditLog"><i class="fa-solid fa-clock-rotate-left"></i><span
-                <li><a href="#"><i class="fa-solid fa-chart-column"></i><span>Analytics</span></a></li>
-                <li><a href="#"><i class="fa-solid fa-ticket"></i><span>Support</span><span class="badge-pill">41</span></a>
-                </li>
-                <li><a href="#"><i class="fa-solid fa-shield-halved"></i><span>Security</span></a></li>
-                <li><a href="#"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>
+                    <li><a href="#"><i class="fa-solid fa-chart-column"></i><span>Analytics</span></a></li>
+                    <li><a href="#"><i class="fa-solid fa-ticket"></i><span>Support</span><span class="badge-pill">41</span></a>
+                    </li>
+                    <li><a href="#"><i class="fa-solid fa-shield-halved"></i><span>Security</span></a></li>
+                    <li><a href="#"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>
             </ul>
         </nav>
 
@@ -836,7 +837,7 @@
                 </div>
             </section>
 
-            <section class="dashboard-content-grid fade-up">
+            <section class="dashboard-content-grid fade-up" id="vendorsSection">
 
                 <div class="table-card">
                     <div class="card-header">
@@ -951,6 +952,46 @@
                         </div>
                     </div>
 
+                </div>
+            </section>
+
+            <section class="dashboard-content-grid fade-up" id="onboardingHistorySection" style="grid-template-columns:1fr;">
+                <div class="table-card">
+                    <div class="card-header">
+                        <div>
+                            <h2>Vendor Onboarding History</h2>
+                            <p>Every status change of vendor onboarding applications, with remarks and who did it</p>
+                        </div>
+                    </div>
+                    <div class="tabs" id="ohTabs"></div>
+                    <div class="table-actions">
+                        <input type="text" id="ohSearch" placeholder="Search by vendor ID, name or remarks..."
+                               oninput="applyOhFilters()">
+                        <input type="number" id="ohVendorId" placeholder="Vendor ID" min="1"
+                               style="max-width:130px;" title="Filter by Vendor ID (press Enter)"
+                               onchange="loadOnboardingHistory()"
+                               onkeydown="if(event.key==='Enter'){loadOnboardingHistory();}">
+                        <span class="chip" id="ohCount">0 records</span>
+                        <button class="secondary-btn" onclick="loadOnboardingHistory()">
+                            <i class="fa-solid fa-rotate"></i>Refresh
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Vendor</th>
+                                <th>Status Change</th>
+                                <th>Remarks</th>
+                                <th>Done By</th>
+                                <th>Date &amp; Time</th>
+                            </tr>
+                            </thead>
+                            <tbody id="ohTableBody">
+                            <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">Loading history...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -1648,7 +1689,7 @@ ${v.status === 'active'
 
             const data = await response.json();
             const vendor = isRequest ? mapVendorRequestToModal(data) : data;
-            populateVendorModal(vendor);
+            populateVendorModal(vendor, isRequest ? 'request' : 'vendor');
             openModal("vendorModal");
 
         } catch (e) {
@@ -1669,12 +1710,12 @@ ${v.status === 'active'
                 gstNumber: "22AAAAA0000A1Z5",
                 panNumber: "AAAAA0000A"
             };
-            populateVendorModal(demoDetail);
+            populateVendorModal(demoDetail, isRequest ? 'request' : 'vendor');
             openModal("vendorModal");
         }
     }
 
-    function populateVendorModal(vendor) {
+    function populateVendorModal(vendor, source = 'vendor') { // source: 'request' | 'vendor'
         document.getElementById("vendorAvatar").src =
             `https://ui-avatars.com/api/?name=${encodeURIComponent(vendor.fullName)}&background=6366f1&color=fff&size=128`;
         document.getElementById("modalVendorName").innerText = vendor.fullName;
@@ -1706,9 +1747,9 @@ ${v.status === 'active'
         if (st === "PENDING" || st === "CONTACTED") {
             approveBtn.style.display = "inline-flex";
             rejectBtn.style.display = "inline-flex";
-            // Both buttons route through the SAME unified remarks modal + SAME API.
-            approveBtn.onclick = () => { closeModal("vendorModal"); openVendorActionModal(vendor.vendorId, 'APPROVE'); };
-            rejectBtn.onclick  = () => { closeModal("vendorModal"); openVendorActionModal(vendor.vendorId, 'REJECT'); };
+            // Same remarks modal; the API used depends on `source` (request -> /decisions, vendor -> /decision).
+            approveBtn.onclick = () => { closeModal("vendorModal"); openVendorActionModal(vendor.vendorId, 'APPROVE', source); };
+            rejectBtn.onclick  = () => { closeModal("vendorModal"); openVendorActionModal(vendor.vendorId, 'REJECT', source); };
         } else {
             approveBtn.style.display = "none";
             rejectBtn.style.display = "none";
@@ -1738,11 +1779,14 @@ ${v.status === 'active'
        PENDING VENDOR REQUESTS  (VendorRequest rows — not yet Vendors)
        GET   /vendor/s1/v1/super/admin/vendor-requests?status=PENDING|CONTACTED|APPROVED|REJECTED  (VendorRequestStatus)
        PATCH /vendor/s1/v1/super/admin/vendor-requests/{id}/contact
-       Approve / Reject -> POST /vendor/s1/v1/super/admin/vendor/onboarding/decisions
+       Approve / Reject (Vendor Requests section) -> POST /vendor/s1/v1/super/admin/vendor/onboarding/decisions
+       Approve / Reject (Vendors section)         -> POST /vendor/s1/v1/super/admin/vendor/onboarding/decision
        actionId is the raw VendorRequest id (not the row's namespaced id).
     ============================================================ */
     const VENDOR_REQUEST_API  = '/vendor/s1/v1/super/admin/vendor-requests';
-    const VENDOR_DECISION_API = '/vendor/s1/v1/super/admin/vendor/onboarding/decisions';
+    const VENDOR_DECISION_API  = '/vendor/s1/v1/super/admin/vendor/onboarding/decisions'; // Vendor Requests section
+    const VENDOR_DECISION_APIs = '/vendor/s1/v1/super/admin/vendor/onboarding/decision';  // Vendors section
+
 
     function mapVendorRequestRow(vr) {
         const owner = vr.ownerName || '—';
@@ -1950,11 +1994,13 @@ ${v.status === 'active'
     ============================================================ */
     let currentActionVendorId = null;
     let currentActionType = null; // 'APPROVE' | 'REJECT'
+    let currentActionSource = 'request'; // 'request' (Vendor Requests section) | 'vendor' (Vendors section)
 
-    function openVendorActionModal(vendorId, actionType) {
+    function openVendorActionModal(vendorId, actionType, source = 'request') {
 
     currentActionVendorId = vendorId;
     currentActionType = actionType;
+    currentActionSource = source;
 
     const titleEl = document.getElementById('vendorActionModalTitle');
     const confirmBtn = document.getElementById('vendorActionConfirmBtn');
@@ -1994,6 +2040,7 @@ ${v.status === 'active'
         closeModal('vendorActionModalOverlay');
         currentActionVendorId = null;
         currentActionType = null;
+        currentActionSource = 'request';
     }
 
     async function submitVendorAction() {
@@ -2013,12 +2060,14 @@ ${v.status === 'active'
 
         const vendorId = currentActionVendorId;
         const actionType = currentActionType; // APPROVE | REJECT
+        const isVendorSource = currentActionSource === 'vendor';
+        const decisionUrl = isVendorSource ? VENDOR_DECISION_APIs : VENDOR_DECISION_API;
 
         let response;
         try {
             showLoading(actionType === 'APPROVE' ? 'Approving Vendor...' : 'Rejecting Vendor...');
 
-            response = await fetch(VENDOR_DECISION_API, {
+            response = await fetch(decisionUrl, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -2036,10 +2085,10 @@ ${v.status === 'active'
             closeVendorActionModal();
 
             if (actionType === 'APPROVE') {
-                approvePendingVendorLocally(vendorId);
+                if (!isVendorSource) approvePendingVendorLocally(vendorId);
                 showToast('success', 'Vendor Approved', 'Approved (demo mode — backend not connected).');
             } else {
-                setVendorRequestStatusLocally(vendorId, 'rejected');
+                if (!isVendorSource) setVendorRequestStatusLocally(vendorId, 'rejected');
                 showToast('error', 'Vendor Rejected', 'Rejected (demo mode — backend not connected).');
             }
             return;
@@ -2051,10 +2100,14 @@ ${v.status === 'active'
 
         if (response.ok && result.success) {
             closeVendorActionModal();
-            setVendorRequestStatusLocally(vendorId, actionType === 'APPROVE' ? 'approved' : 'rejected');
+            if (isVendorSource) {
+                loadVendors(); // Vendors section: refresh the list from the backend
+            } else {
+                setVendorRequestStatusLocally(vendorId, actionType === 'APPROVE' ? 'approved' : 'rejected');
+            }
 
             if (actionType === 'APPROVE') {
-                loadVendors(); // approved request is now a real Vendor -> shows up in Recent Vendor Registrations
+                if (!isVendorSource) loadVendors(); // approved request is now a real Vendor -> shows up in Recent Vendor Registrations
                 showToast('success', 'Vendor Approved!', result.message || 'Vendor approved successfully.');
             } else {
                 showToast('error', 'Vendor Rejected', result.message || 'Vendor rejected successfully.');
@@ -3104,6 +3157,138 @@ ${v.status === 'active'
     }
 
     /* ============================================================
+       VENDOR ONBOARDING HISTORY (Super Admin)
+       GET /vendor/s1/v1/super/admin/vendor/onboarding/history
+       Row: { id, vendorId, vendorName?, businessName?, fromStatus, toStatus, remarks, tenantId, actedBy?, createdAt }
+       Response can be a plain array, { data: [...] } or a Spring page ({ content: [...] }).
+    ============================================================ */
+    const ONBOARDING_HISTORY_API = '/vendor/s1/v1/super/admin/vendor/onboarding/history';
+    // The DB currently stores from_status / to_status swapped. Set to true to swap them here until the backend is fixed.
+    const OH_SWAP_STATUS = false;
+    const OH_TABS = [
+        { key: 'all',          label: 'All' },
+        { key: 'DRAFT',        label: 'Draft' },
+        { key: 'UNDER_REVIEW', label: 'Under Review' },
+        { key: 'APPROVED',     label: 'Approved' },
+        { key: 'REJECTED',     label: 'Rejected' }
+    ];
+    let ohAll = [];
+    let ohTab = 'all';
+
+    function ohStatusMeta(st) {
+        const map = {
+            DRAFT:        ['inactive', 'Draft'],
+            UNDER_REVIEW: ['pending',  'Under Review'],
+            APPROVED:     ['approved', 'Approved'],
+            REJECTED:     ['rejected', 'Rejected']
+        };
+        return map[st] || ['inactive', st ? st.replace(/_/g, ' ') : 'New'];
+    }
+
+    function mapOnboardingHistory(h) {
+        let from = h.fromStatus ? String(h.fromStatus).toUpperCase() : null;
+        let to   = h.toStatus   ? String(h.toStatus).toUpperCase()   : null;
+        if (OH_SWAP_STATUS) [from, to] = [to, from];
+        const isAdmin = String(h.tenantId) === '0';   // admin actions are stored with tenant_id = 0
+        return {
+            id: h.id,
+            vendorId: h.vendorId,
+            vendorName: h.vendorName || h.businessName || null,
+            from, to,
+            remarks: h.remarks || '—',
+            actedBy: h.actedBy || (isAdmin ? 'Super Admin' : 'Vendor'),
+            createdAt: h.createdAt || null
+        };
+    }
+
+    async function loadOnboardingHistory() {
+        // Vendor ID box -> server-side filter (?vendorId=9); empty = all vendors
+        const vid = (document.getElementById('ohVendorId')?.value || '').trim();
+        const url = vid ? `${ONBOARDING_HISTORY_API}?vendorId=${encodeURIComponent(vid)}` : ONBOARDING_HISTORY_API;
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            const result = await response.json();
+            const list = Array.isArray(result) ? result : (result.data?.content ?? result.data ?? result.content ?? []);
+            ohAll = (Array.isArray(list) ? list : []).map(mapOnboardingHistory);
+        } catch (e) {
+            console.warn('Onboarding history API not reachable, using demo data instead:', e.message);
+            ohAll = getDemoOnboardingHistory().filter(h => !vid || String(h.vendorId) === vid);
+        }
+        ohAll.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        applyOhFilters();
+    }
+
+    function getDemoOnboardingHistory() {
+        const rows = [
+            [1, null,           'DRAFT',        'Vendor onboarding application created with status DRAFT.',                                             'Vendor',      '2026-09-23T21:58:13'],
+            [2, 'DRAFT',        'UNDER_REVIEW', 'Vendor submitted the onboarding application. Status changed from DRAFT to UNDER_REVIEW.',              'Vendor',      '2026-09-24T07:37:06'],
+            [3, 'UNDER_REVIEW', 'REJECTED',     'Vendor onboarding application rejected. Status changed from UNDER_REVIEW to REJECTED.',                'Super Admin', '2026-09-24T08:08:34'],
+            [4, 'REJECTED',     'DRAFT',        'Vendor initiated resubmission of the onboarding application. Status changed from REJECTED to DRAFT.',  'Vendor',      '2026-09-24T08:09:18'],
+            [5, 'DRAFT',        'UNDER_REVIEW', 'Vendor submitted the onboarding application. Status changed from DRAFT to UNDER_REVIEW.',              'Vendor',      '2026-09-24T08:09:23'],
+            [6, 'UNDER_REVIEW', 'APPROVED',     'Vendor onboarding application approved. Status changed from UNDER_REVIEW to APPROVED.',                'Super Admin', '2026-09-24T08:09:48']
+        ];
+        return rows.map(r => ({ id: r[0], vendorId: 9, vendorName: null, from: r[1], to: r[2], remarks: r[3], actedBy: r[4], createdAt: r[5] }));
+    }
+
+    function renderOhTabs() {
+        document.getElementById('ohTabs').innerHTML = OH_TABS.map(t =>
+            `<button class="tab-btn ${t.key === ohTab ? 'active' : ''}" onclick="setOhTab('${t.key}')">${t.label}</button>`
+        ).join('');
+    }
+
+    function setOhTab(key) {
+        ohTab = key;
+        applyOhFilters();
+    }
+
+    function applyOhFilters() {
+        renderOhTabs();
+        const q = (document.getElementById('ohSearch').value || '').toLowerCase();
+        const rows = ohAll.filter(h =>
+            (ohTab === 'all' || h.to === ohTab) &&
+            (!q || String(h.vendorId).toLowerCase().includes(q)
+                || String(h.vendorName || '').toLowerCase().includes(q)
+                || String(h.remarks).toLowerCase().includes(q))
+        );
+        document.getElementById('ohCount').textContent = `${rows.length} record${rows.length === 1 ? '' : 's'}`;
+        renderOnboardingHistory(rows);
+    }
+
+    function renderOnboardingHistory(rows) {
+        const tbody = document.getElementById('ohTableBody');
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">No onboarding history found.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map(h => {
+            const [fromChip, fromLabel] = ohStatusMeta(h.from);
+            const [toChip, toLabel] = ohStatusMeta(h.to);
+            const name = h.vendorName || `Vendor #${h.vendorId}`;
+            return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&size=64">
+              <div><h4>${pfEsc(name)}</h4><span>Vendor ID: ${pfEsc(h.vendorId)}</span></div>
+            </div>
+          </td>
+          <td style="white-space:nowrap;">
+            ${h.from ? `<span class="status ${fromChip}">${pfEsc(fromLabel)}</span> <i class="fa-solid fa-arrow-right" style="font-size:11px;color:var(--text-muted);margin:0 4px;"></i>` : ''}
+            <span class="status ${toChip}">${pfEsc(toLabel)}</span>
+          </td>
+          <td style="min-width:260px;white-space:normal;">${pfEsc(h.remarks)}</td>
+          <td><span class="chip">${pfEsc(h.actedBy)}</span></td>
+          <td style="white-space:nowrap;">${h.createdAt ? new Date(h.createdAt).toLocaleString() : '—'}</td>
+        </tr>`;
+        }).join('');
+    }
+
+    /* ============================================================
        INIT
     ============================================================ */
     window.addEventListener('load', () => {
@@ -3111,6 +3296,8 @@ ${v.status === 'active'
       renderVendorReqTabs();
       renderAdTabs();
       loadPendingVendors();
+      renderOhTabs();
+      loadOnboardingHistory();
       loadAds();
       loadPfData();
       buildRevenueChart('12');

@@ -2467,6 +2467,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       heroIndex: 0,
       heroTimer: null,
       currentListing: { items: [], sort: "popularity", filters: {} },
+      categories: [], // [{id, categoryName, ...}] from /catalog/categories — reused by the filter panel
       // ---- Checkout-specific state ----
       addresses: [],            // list of saved delivery addresses (frontend-only for now)
       addressesLoaded: false,   // guards ensureAddressesLoaded() from refetching every visit
@@ -2651,14 +2652,30 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       });
     }
 
-    function mockFilters() {
-      return Promise.resolve({
-        categories: ["Cement","Bricks & Blocks","TMT Steel","Tiles","Paints","Plumbing & Pipes"],
-        brands: ["UltraTech","Tata Tiscon","Asian Paints","Kajaria","Astral Pipes","Havells"],
-        priceRanges: [[0,999],[1000,2999],[3000,6999],[7000,100000]],
-        ratings: [4,3,2,1],
-      });
+    // ---- Brand filter: no brand master-data endpoint on the backend yet,
+    // so this list is hardcoded on the frontend for now. Swap it for a real
+    // API-driven list once /products/filters (or a dedicated /brands
+    // endpoint) actually returns brands.
+    const BRAND_FILTERS = ["UltraTech","Tata Tiscon","Asian Paints","Kajaria","Astral Pipes","Havells"];
+
+    // ---- Price filter: also hardcoded (no backend-driven price buckets).
+    // Instead of typing every [lo,hi] pair by hand, generate `count` ranges
+    // of `step` width each, where every next range starts right after
+    // (++) the previous one ends. Last range is open-ended (…+).
+    function buildPriceRanges(step, count){
+      const ranges = [];
+      let lo = 0;
+      for (let i = 0; i < count; i++){
+        const hi = (i === count - 1) ? Infinity : lo + step - 1;
+        ranges.push([lo, hi]);
+        lo = hi + 1; // next range starts right after this one
+      }
+      return ranges;
     }
+    const PRICE_FILTERS = buildPriceRanges(1000, 6); // ₹0-999, 1000-1999, ... , 5000+
+
+    // Rating filter: also hardcoded — "4★ & up", "3★ & up", etc.
+    const RATING_FILTERS = [4,3,2,1];
 
     /* ---- Account-area mock data (only ever shown to authenticated users) ---- */
     function mockOrders() {
@@ -3183,7 +3200,9 @@ function renderCategoryGrid(categories) {
       document.getElementById(elId).innerHTML = products.map(p=>`<div class="rail-card">${productCardHtml(p)}</div>`).join("");
     }
     function renderGrid(elId, products){
-      document.getElementById(elId).innerHTML = products.map(p=>productCardHtml(p)).join("");
+      document.getElementById(elId).innerHTML = products.length
+        ? products.map(p=>productCardHtml(p)).join("")
+        : `<div class="empty-state"><div class="es-icon">🔍</div>No products match these filters.</div>`;
     }
 
     function renderReviews(reviews){
@@ -4527,7 +4546,11 @@ async function removeCartItem(itemId){
         ()=>apiRequest(`${API_ENDPOINTS.searchProducts}?q=${encodeURIComponent(query)}`, {}, { silentError:true }),
         ()=>Promise.resolve(PRODUCT_POOL.filter(p=>p.name.toLowerCase().includes(query.toLowerCase()) || p.brand.toLowerCase().includes(query.toLowerCase())))
       );
-      showListingView(`Results for "${query}"`, results.length ? results : PRODUCT_POOL.slice(0,4));
+      showListingView(
+        `Results for "${query}"`,
+        results.length ? results : PRODUCT_POOL.slice(0,4),
+        `${API_ENDPOINTS.searchProducts}?q=${encodeURIComponent(query)}`
+      );
     }
 
     /* "View all" links on each home section, PLUS category tiles/nav links
@@ -4555,12 +4578,13 @@ async function removeCartItem(itemId){
         "new-arrivals":  { endpoint: API_ENDPOINTS.newArrivals,  mock: mockNewArrivals },
       };
 
-      let items;
+      let items, baseEndpoint;
       if (listingKey && listingKey.startsWith("category-")){
         const categoryId = listingKey.replace("category-", "");
+        baseEndpoint = API_ENDPOINTS.productsByCategory(categoryId);
         items = await withFallback(
           async ()=>{
-            const res = await apiRequest(API_ENDPOINTS.productsByCategory(categoryId), {}, { silentError:true });
+            const res = await apiRequest(baseEndpoint, {}, { silentError:true });
             const data = (res && res.data) ? res.data : res;
             if (!Array.isArray(data) || !data.length) throw new Error("empty");
             return data;
@@ -4569,6 +4593,7 @@ async function removeCartItem(itemId){
         );
       } else if (LISTING_SOURCES[listingKey]){
         const src = LISTING_SOURCES[listingKey];
+        baseEndpoint = src.endpoint;
         items = await withFallback(
           async ()=>{
             const res = await apiRequest(src.endpoint, {}, { silentError:true });
@@ -4579,6 +4604,7 @@ async function removeCartItem(itemId){
           src.mock
         );
       } else {
+        baseEndpoint = API_ENDPOINTS.products;
         items = await withFallback(
           async ()=>{
             const response = await apiRequest(API_ENDPOINTS.products, {}, { silentError:true });
@@ -4590,41 +4616,165 @@ async function removeCartItem(itemId){
         );
       }
 
-      showListingView(label, items);
+      // Each of these ("featured", "bestsellers", "recommended",
+      // "new-arrivals", "category-{id}") is its own real API — the filter
+      // panel doesn't call one hardcoded endpoint, it re-queries whichever
+      // endpoint this specific listing came from (see applyFilters below).
+      showListingView(label, items, baseEndpoint);
     });
 
     /* ---------------------------------------------------------------------
        11. LISTING / FILTER VIEW
     --------------------------------------------------------------------- */
-    async function showListingView(title, items){
+    async function showListingView(title, items, baseEndpoint = API_ENDPOINTS.products){
       hideAllViews();
       document.getElementById("listingView").style.display = "block";
       document.getElementById("listingTitle").textContent = title;
-      document.getElementById("listingCount").textContent = `${items.length} products found`;
+      // allItems = untouched master list for this listing; items = current
+      // sorted+filtered view that actually gets rendered. baseEndpoint is
+      // WHICH api this listing came from (featured / bestsellers / a
+      // category / search / plain products) — filters get applied against
+      // that same endpoint, not always the generic products list.
+      AppState.currentListing.allItems = items;
       AppState.currentListing.items = items;
+      AppState.currentListing.baseEndpoint = baseEndpoint;
+      AppState.currentListing.filters = { categoryIds:new Set(), brands:new Set(), price:null, rating:null };
       renderGrid("listingGrid", items);
-      const filters = await withFallback(
-        ()=>apiRequest(API_ENDPOINTS.filters, {}, { silentError:true }),
-        mockFilters
-      );
-      renderFilterPanel(filters);
+      updateListingCount(items.length);
+      // Category list is real: reuse what /catalog/categories already gave
+      // us on page load (AppState.categories = [{id, categoryName}, ...]).
+      // Brand/price/rating have no backend master-data yet, so they're
+      // hardcoded on the frontend for now.
+      renderFilterPanel({
+        categories: AppState.categories.length ? AppState.categories : mockCategories_sync(),
+        brands: BRAND_FILTERS,
+        priceRanges: PRICE_FILTERS,
+        ratings: RATING_FILTERS,
+      });
       window.scrollTo({top:0, behavior:"smooth"});
     }
+    // Sync fallback shape matching /catalog/categories, only used if
+    // AppState.categories somehow never got populated on page load.
+    function mockCategories_sync(){
+      return [
+        {id:1, categoryName:"Cement & Concrete"},
+        {id:2, categoryName:"Bricks & Blocks"},
+        {id:3, categoryName:"Steel And Metal"},
+        {id:4, categoryName:"Balu and Gitti"},
+      ];
+    }
+    function updateListingCount(n){
+      document.getElementById("listingCount").textContent = `${n} product${n===1?"":"s"} found`;
+    }
+
     function renderFilterPanel(filters){
       document.getElementById("filterPanel").innerHTML = `
-        <div class="filter-block"><h4>Category</h4>${filters.categories.map(c=>`<label class="filter-row"><input type="checkbox">${c}</label>`).join("")}</div>
-        <div class="filter-block"><h4>Brand</h4>${filters.brands.map(b=>`<label class="filter-row"><input type="checkbox">${b}</label>`).join("")}</div>
-        <div class="filter-block"><h4>Price</h4>${filters.priceRanges.map(([lo,hi])=>`<label class="filter-row"><input type="radio" name="price">${fmtPrice(lo)} – ${hi>=100000?"+":fmtPrice(hi)}</label>`).join("")}</div>
-        <div class="filter-block"><h4>Rating</h4>${filters.ratings.map(r=>`<label class="filter-row"><input type="radio" name="rating">${"★".repeat(r)} & up</label>`).join("")}</div>
+        <div class="filter-block"><h4>Category</h4>${filters.categories.map(c=>`<label class="filter-row"><input type="checkbox" data-filter="category" value="${c.id}">${escapeHtml(c.categoryName)}</label>`).join("")}</div>
+        <div class="filter-block"><h4>Brand</h4>${filters.brands.map(b=>`<label class="filter-row"><input type="checkbox" data-filter="brand" value="${escapeHtml(b)}">${b}</label>`).join("")}</div>
+        <div class="filter-block"><h4>Price</h4>
+          <label class="filter-row"><input type="radio" name="price" data-filter="price" value=""> Any price</label>
+          ${filters.priceRanges.map(([lo,hi])=>`<label class="filter-row"><input type="radio" name="price" data-filter="price" value="${lo},${hi}">${fmtPrice(lo)} – ${hi===Infinity?"+":fmtPrice(hi)}</label>`).join("")}
+        </div>
+        <div class="filter-block"><h4>Rating</h4>
+          <label class="filter-row"><input type="radio" name="rating" data-filter="rating" value=""> Any rating</label>
+          ${filters.ratings.map(r=>`<label class="filter-row"><input type="radio" name="rating" data-filter="rating" value="${r}">${"★".repeat(r)} & up</label>`).join("")}
+        </div>
       `;
+      document.querySelectorAll('#filterPanel [data-filter]').forEach(input=>{
+        input.addEventListener("change", onFilterChange);
+      });
     }
-    document.getElementById("sortSelect").addEventListener("change", (e)=>{
-      const sort = e.target.value;
-      let items = [...AppState.currentListing.items];
+
+    async function onFilterChange(){
+      const state = AppState.currentListing.filters;
+      // Category checkbox values are numeric category IDs (from /catalog/categories),
+      // NOT names — that's what the backend expects.
+      state.categoryIds = new Set([...document.querySelectorAll('#filterPanel [data-filter="category"]:checked')].map(el=>el.value));
+      state.brands      = new Set([...document.querySelectorAll('#filterPanel [data-filter="brand"]:checked')].map(el=>el.value));
+      const priceEl = document.querySelector('#filterPanel [data-filter="price"]:checked');
+      state.price = (priceEl && priceEl.value) ? priceEl.value.split(",").map(Number) : null;
+      const ratingEl = document.querySelector('#filterPanel [data-filter="rating"]:checked');
+      state.rating = (ratingEl && ratingEl.value) ? Number(ratingEl.value) : null;
+      await applyFilters();
+    }
+
+    // Builds the query string the backend is expected to understand:
+    // ?categoryId=1&categoryId=3&brand=UltraTech&minPrice=&maxPrice=&rating=
+    // (categoryId/brand repeat for multi-select; Spring binds repeated
+    // params straight into a List<Long>/List<String> @RequestParam).
+    function buildFilterQuery(state){
+      const params = new URLSearchParams();
+      state.categoryIds.forEach(id => params.append("categoryId", id));
+      state.brands.forEach(b => params.append("brand", b));
+      if (state.price){
+        params.set("minPrice", state.price[0]);
+        if (state.price[1] !== Infinity) params.set("maxPrice", state.price[1]);
+      }
+      if (state.rating) params.set("rating", state.rating);
+      return params.toString();
+    }
+
+    // Purely local filtering, used ONLY as a fallback if the backend call
+    // fails — keeps the UI usable even when the API is down. Category
+    // matching needs a categoryId field on the product object to work;
+    // the bundled demo pool doesn't have one, so this is best-effort.
+    function applyFiltersLocally(state, allItems){
+      let items = [...allItems];
+      if (state.categoryIds.size) items = items.filter(p => state.categoryIds.has(String(p.categoryId)));
+      if (state.brands.size)      items = items.filter(p => state.brands.has(p.brand));
+      if (state.price){
+        const [lo, hi] = state.price;
+        items = items.filter(p => p.price >= lo && p.price <= hi);
+      }
+      if (state.rating) items = items.filter(p => p.rating >= state.rating);
+      return items;
+    }
+
+    // Appends the filter query string onto whichever base endpoint this
+    // listing came from, correctly whether that endpoint already has its
+    // own "?q=..." (search) or not.
+    function withFilterQuery(baseUrl, qs){
+      if (!qs) return baseUrl;
+      return baseUrl.includes("?") ? `${baseUrl}&${qs}` : `${baseUrl}?${qs}`;
+    }
+
+    async function applyFilters(){
+      const state = AppState.currentListing.filters;
+      const qs = buildFilterQuery(state);
+      const url = withFilterQuery(AppState.currentListing.baseEndpoint, qs);
+
+      document.getElementById("listingGrid").innerHTML = `<div class="skeleton" style="height:220px;"></div>`;
+
+      let items = await withFallback(
+        async ()=>{
+          const res = await apiRequest(url, {}, { silentError:true });
+          const data = (res && res.data) ? res.data : res;
+          if (!Array.isArray(data)) throw new Error("bad response");
+          return data;
+        },
+        ()=>Promise.resolve(applyFiltersLocally(state, AppState.currentListing.allItems))
+      );
+
+      const sort = document.getElementById("sortSelect").value;
+      items = sortItems(items, sort);
+
+      AppState.currentListing.items = items;
+      updateListingCount(items.length);
+      renderGrid("listingGrid", items);
+    }
+
+    function sortItems(items, sort){
+      items = [...items];
       if (sort==="price-low") items.sort((a,b)=>a.price-b.price);
       else if (sort==="price-high") items.sort((a,b)=>b.price-a.price);
       else if (sort==="rating") items.sort((a,b)=>b.rating-a.rating);
       else if (sort==="discount") items.sort((a,b)=>b.discountPercent-a.discountPercent);
+      return items;
+    }
+
+    document.getElementById("sortSelect").addEventListener("change", (e)=>{
+      const items = sortItems(AppState.currentListing.items, e.target.value);
+      AppState.currentListing.items = items;
       renderGrid("listingGrid", items);
     });
     function showHomeView(){
@@ -6481,6 +6631,7 @@ function renderReturnSection(track){
         applyFeatureSettings(featureSettingsRaw);
 
         const categories = toArray(categoriesRaw);
+        AppState.categories = categories; // reused by the listing filter panel — real {id, categoryName} objects
         renderNavCategories(categories);
         renderCategoryGrid(categories);
         renderHero(toArray(banners));

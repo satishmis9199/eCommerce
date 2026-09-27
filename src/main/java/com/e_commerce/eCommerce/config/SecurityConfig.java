@@ -125,7 +125,7 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/tenant-not-found",
                                 "/tenant-not-found.html",
-                                "/employee.html",
+                                "/home1.html",
                                     "/swagger-ui/index.html",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

@@ -140,7 +140,6 @@ public class NotificationService {
                     "Tenant ID cannot be null or blank"
             );
         }
-
         if (page < 0) {
             page = 0;
         }

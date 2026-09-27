@@ -40,7 +40,7 @@ public class ReviewService {
         Optional<Vendor> vendor = vendorRepository.findByTenantId(tenantId);
 
         if (vendor.isEmpty()) {
-            throw new RuntimeException("Tenant Does Not Exist");
+            throw new RuntimeException("Tenant Does Not Exists");
         }
 
 

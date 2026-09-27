@@ -42,6 +42,7 @@ public class FeatureService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .active(request.getActive() == null || request.getActive())
+                .core(false)
                 .build();
 
         Feature saved = featureRepository.save(feature);
@@ -75,9 +76,7 @@ public class FeatureService {
         }
 
         Feature saved = featureRepository.save(feature);
-//        auditLogService.record(admin, "FEATURE_UPDATED", null, saved.getCode(), oldName, saved.getName());
-//        tenantFeatureService.evictAllTenantFeatureCache();
-        return toResponse(saved);
+      return toResponse(saved);
     }
 
     @Transactional

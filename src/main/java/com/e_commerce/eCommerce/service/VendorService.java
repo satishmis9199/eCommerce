@@ -36,6 +36,7 @@ public class VendorService {
     private final PasswordEncoder passwordEncoder;
     private final VendorOnnBRepo vendorOnnBRepo;
     private final UserRepos userRepos;
+    private final OnboardingHistoryService onboardingHistoryService;
     private final vendorBussinesss vendorBussinessAddress;
     private final PasswordResetServiceImpl passwordResetService;
     private final EmailService emailService;
@@ -82,18 +83,21 @@ public class VendorService {
         vendor.setEmail(vendorRequestDto.getEmail());
         vendor.setMobile(vendorRequestDto.getPhone());
         vendor.setStoreName(vendorRequestDto.getBusinessName());
-        logger.error("Vendor email while register {}"+vendorRequestDto.getVendorEmail());
         vendor.setVendorEmail(vendorRequestDto.getVendorEmail());
         vendor.setPlan(vendorRequestDto.getPlan());
         vendor.setSubDomain(vendorRequestDto.getSubDomain() + requesst);
         vendor.setPassword(passwordEncoder.encode("satish123"));
         vendor.setJwtSecret(JwtUtil.generateJwtSecret());
         vendorRepository.save(vendor);
-        VendorOnboardingApplication vendorOnboardingApplication = new VendorOnboardingApplication();
+        VendorOnboardingApplication vendorOnboardingApplication =
+                new VendorOnboardingApplication();
         vendorOnboardingApplication.setVendor(vendor);
+        vendorOnboardingApplication.setStatus(OnboardingStatus.DRAFT);
+
+        VendorOnboardingApplication savedApplication =
+                vendorOnnBRepo.save(vendorOnboardingApplication);
         vendorOnnBRepo.save(vendorOnboardingApplication);
         User user = new User();
-        logger.error("user email while register {}"+vendorRequestDto.getEmail());
         user.setEmail(vendorRequestDto.getEmail());
         user.setPassword(passwordEncoder.encode(vendorRequestDto.getFirstName() + "@" + 123));
         user.setRole(Roles.ADMIN);
@@ -104,7 +108,7 @@ public class VendorService {
         user.setCreatedAt(LocalDateTime.now());
         user.setCreatedBy("SUPER_ADMIN");
         user.setUpdatedAt(LocalDateTime.now());
-        user.setUpdatedBy("Satish");
+        user.setUpdatedBy("System");
         user.setVendorId(vendor.getId());
         User user1 = userRepos.save(user);
         String token = passwordResetService.initiateForVendor(user1);

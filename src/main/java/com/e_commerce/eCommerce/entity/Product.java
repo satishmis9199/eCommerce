@@ -18,10 +18,6 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    /**
-     * Multi Tenant
-     */
     @Column(nullable = false, length = 100)
     private String tenantId;
 
@@ -31,18 +27,11 @@ public class Product {
     @Column(nullable = false)
     private Long categoryId;
 
-    /**
-     * Product Information
-     */
     @Column(nullable = false, length = 200)
     private String productName;
 
     @Lob
     private String description;
-
-    /**
-     * Pricing
-     */
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal sellingPrice;
 
@@ -52,10 +41,6 @@ public class Product {
     @Builder.Default
     @Column(nullable = false)
     private Boolean featured = false;
-
-    /**
-     * Inventory
-     */
     @Column(nullable = false)
     private Integer stockQuantity;
 
@@ -63,6 +48,8 @@ public class Product {
     @Column(nullable = false)
     private ProductUnit unit;
 
+    @Column(nullable = true)
+    private Long brandId;
     @Column
     private String productImage;
 

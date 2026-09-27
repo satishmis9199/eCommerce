@@ -1,6 +1,7 @@
 package com.e_commerce.eCommerce.controller;
 
 import com.e_commerce.eCommerce.dto.*;
+import com.e_commerce.eCommerce.dto.response.OnboardHistoryDTO;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.repository.VendorOnnBRepo;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
@@ -9,11 +10,13 @@ import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -154,7 +157,9 @@ public class OnboardingController {
 
     @PostMapping("/s1/v1/branding")
     public ResponseEntity<?> saveBankDetail(Authentication authentication,
-                                            @RequestBody BrandingInfoDto dto) {
+                                            @RequestBody BrandingInfoDto dto,
+                                            @RequestParam(required = false) boolean editable
+    ) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -173,11 +178,11 @@ public class OnboardingController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            e.printStackTrace();
+
 
             response.put("success", false);
             response.put("message", e.getMessage());
-
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -216,10 +221,8 @@ public class OnboardingController {
             @AuthenticationPrincipal CustomUserDetail userDetails) {
 
         try {
-            logger.info("Application IDs  " + request.getApplicationId());
-
             User loggedInUser = userDetails.getUser();
-            logger.info("Logged User" + loggedInUser.getFirstName());
+            logger.error("Inside makeDecission " +loggedInUser.getFirstName());
 
             String message = onboardingService.makeDecisiion(request, loggedInUser);
 
@@ -231,6 +234,7 @@ public class OnboardingController {
             );
 
         } catch (Exception e) {
+            e.printStackTrace();
 
             return ResponseEntity.badRequest().body(
                     Map.of(
@@ -240,8 +244,6 @@ public class OnboardingController {
             );
         }
     }
-
-    //    GET /vendor
     @GetMapping("/s1/v1/application-status")
     public ResponseEntity<VenddorOnBoardingApplicationStatus> getApplicationStaus(@AuthenticationPrincipal CustomUserDetail userDetail) {
         VenddorOnBoardingApplicationStatus v2 = new VenddorOnBoardingApplicationStatus();
@@ -281,7 +283,17 @@ public class OnboardingController {
                     "message", e.getMessage()
             ));
         }
+
+         }
+    @GetMapping("/s1/v1/super/admin/vendor/onboarding/history")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<OnboardHistoryDTO>>> getOnboardingHistory(
+            @RequestParam(required = false) Long vendorId) {
+
+        List<OnboardHistoryDTO> history = onboardingService.getHistory(vendorId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Onboarding history fetched successfully.", history));
     }
+
 }
 
 
