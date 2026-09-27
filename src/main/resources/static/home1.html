@@ -5440,57 +5440,243 @@ else if (pageId === "change-password") {
     document.getElementById("updatePasswordBtn").addEventListener("click", updatePassword);
 }    }
 
-   function renderOrderDetail(order){
-   console.log("order detail",order);
-      const panel = document.getElementById("accountPanel");
-      panel.innerHTML = `
-        <button class="btn btn-ghost btn-sm" id="backToOrders" style="margin-bottom:16px;">← Back to Orders</button>
+  function renderOrderDetail(order) {
+    console.log("order detail", order);
+
+    const panel = document.getElementById("accountPanel");
+
+    panel.innerHTML = `
+        <button class="btn btn-ghost btn-sm"
+                id="backToOrders"
+                style="margin-bottom:16px;">
+            ← Back to Orders
+        </button>
+
         <h3>${order.orderId}</h3>
-        <p style="color:var(--muted);font-size:13.5px;margin:4px 0 18px;">Placed on ${order.date} · <span class="status-badge ${order.status}">${order.status}</span></p>
-        ${order.items.map(i=>`
-          <div class="order-row" data-order-item-id="${i.itemId || ''}" data-product-id="${i.productId || ''}">
-            <img src="${i.image}">
-            <div style="flex:1;">
-              ${escapeHtml(i.name)}
-              <div class="mono" style="font-size:13px;color:var(--muted);">${fmtPrice(i.price)}</div>
+
+        <p style="color:var(--muted);font-size:13.5px;margin:4px 0 18px;">
+            Placed on ${order.date}
+            ·
+            <span class="status-badge ${order.status}">
+                ${order.status}
+            </span>
+        </p>
+
+        ${order.items.map(i => `
+            <div class="order-row"
+                 data-order-item-id="${i.itemId || ''}"
+                 data-product-id="${i.productId || ''}">
+
+                <img src="${i.image}">
+
+                <div style="flex:1;">
+                    ${escapeHtml(i.name)}
+
+                    <div class="mono"
+                         style="font-size:13px;color:var(--muted);">
+                        ${fmtPrice(i.price)}
+                    </div>
+                </div>
+
+                ${
+                    /*
+                     * Per-item "Write a Review" button.
+                     * Only shown when:
+                     * 1. Order is DELIVERED
+                     * 2. Backend says item is reviewable
+                     * 3. Reviews feature is enabled
+                     */
+                    (order.status === "DELIVERED" &&
+                     i.isReview &&
+                     AppState.features.reviewsEnabled)
+
+                        ? `
+                            <button class="btn btn-ghost btn-sm"
+                                    data-write-review
+                                    data-order-item-id="${i.itemId || ''}"
+                                    data-product-id="${i.productId || ''}">
+                                Write a Review
+                            </button>
+                          `
+                        : ''
+                }
             </div>
+        `).join("")}
+
+        <!-- Total -->
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            margin-top:16px;
+            font-weight:700;
+        ">
+            <span>Total</span>
+            <span class="mono">${fmtPrice(order.total)}</span>
+        </div>
+
+
+        <!-- Order Actions -->
+        <div style="
+            display:flex;
+            gap:10px;
+            margin-top:22px;
+            flex-wrap:wrap;
+            align-items:center;
+        ">
+
+            <!-- Track Order -->
+            <button class="btn btn-ghost btn-sm"
+                    data-track-order="${order.orderId}">
+                Track Order
+            </button>
+
+
+            <!-- Download Invoice -->
+            <button class="btn btn-ghost btn-sm"
+                    onclick="downloadInvoice(this)"
+                    data-order-id="${order.orderId}">
+                Download Invoice
+            </button>
+
+
+            <!-- Invoice Password Information -->
+            <div style="
+                font-size:13px;
+                color:var(--muted);
+                line-height:1.5;
+                padding:6px 10px;
+                border:1px solid var(--border, #ddd);
+                border-radius:6px;
+            ">
+                🔒 <strong>Invoice is Password Protected</strong>
+                <br>
+                <span>
+                    Password: First 4 letters of your first name
+                    + last 4 digits of your phone number
+                </span>
+            </div>
+
+
+            <!-- Return & Replace -->
             ${
-              /* Per-item "Write a Review" button — only rendered when the
-                 backend has explicitly said this item is reviewable
-                 (order delivered AND isReview === true for this item). */
-              (order.status==="DELIVERED" && i.isReview && AppState.features.reviewsEnabled)
-                ? `<button class="btn btn-ghost btn-sm" data-write-review data-order-item-id="${i.itemId || ''}" data-product-id="${i.productId || ''}">Write a Review</button>`
-                : ''
+                order.status === "DELIVERED"
+                    ? `
+                        <button class="btn btn-ghost btn-sm"
+                                data-return-order="${order.orderId}">
+                            Return
+                        </button>
+
+                        <button class="btn btn-ghost btn-sm">
+                            Replace
+                        </button>
+                      `
+                    : ''
             }
-          </div>`).join("")}
-        <div style="display:flex;justify-content:space-between;margin-top:16px;font-weight:700;"><span>Total</span><span class="mono">${fmtPrice(order.total)}</span></div>
-        <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" data-track-order="${order.orderId}">Track Order</button>
-          <button class="btn btn-ghost btn-sm" onclick="downloadInvoice(this)" data-order-id="${order.orderId}">Download Invoice</button>
-          ${order.status==="DELIVERED" ? `<button class="btn btn-ghost btn-sm" data-return-order="${order.orderId}">Return</button><button class="btn btn-ghost btn-sm">Replace</button>` : ''}
-          ${order.status!=="DELIVERED" && order.status!=="CANCELLED" ? `<button class="btn btn-ghost btn-sm" data-cancel-order="${order.orderId}">Cancel Order</button>` : ''}
-        </div>`;
 
-      document.getElementById("backToOrders").addEventListener("click", ()=>renderAccountPage("orders"));
 
-      const trackBtn = panel.querySelector("[data-track-order]");
-      if (trackBtn) trackBtn.addEventListener("click", ()=> openTrackOrder(trackBtn.dataset.trackOrder));
+            <!-- Cancel Order -->
+            ${
+                order.status !== "DELIVERED" &&
+                order.status !== "CANCELLED"
+                    ? `
+                        <button class="btn btn-ghost btn-sm"
+                                data-cancel-order="${order.orderId}">
+                            Cancel Order
+                        </button>
+                      `
+                    : ''
+            }
 
-      const cancelBtn = panel.querySelector("[data-cancel-order]");
-      if (cancelBtn) cancelBtn.addEventListener("click", ()=> openReasonModal("cancel", cancelBtn.dataset.cancelOrder));
+        </div>
+    `;
 
-      const returnBtn = panel.querySelector("[data-return-order]");
-      if (returnBtn) returnBtn.addEventListener("click", ()=> openReasonModal("return", returnBtn.dataset.returnOrder));
 
-      // Wire up every per-item "Write a Review" button rendered above.
-      panel.querySelectorAll("[data-write-review]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const item = order.items.find(i => String(i.itemId) === btn.dataset.orderItemId || String(i.productId) === btn.dataset.productId);
-          openReviewModal(order.orderId, item, btn);
+    // ============================================
+    // Back to Orders
+    // ============================================
+
+    document
+        .getElementById("backToOrders")
+        .addEventListener("click", () => {
+            renderAccountPage("orders");
         });
-      });
+
+
+    // ============================================
+    // Track Order
+    // ============================================
+
+    const trackBtn =
+        panel.querySelector("[data-track-order]");
+
+    if (trackBtn) {
+        trackBtn.addEventListener("click", () => {
+            openTrackOrder(trackBtn.dataset.trackOrder);
+        });
     }
 
+
+    // ============================================
+    // Cancel Order
+    // ============================================
+
+    const cancelBtn =
+        panel.querySelector("[data-cancel-order]");
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => {
+            openReasonModal(
+                "cancel",
+                cancelBtn.dataset.cancelOrder
+            );
+        });
+    }
+
+
+    // ============================================
+    // Return Order
+    // ============================================
+
+    const returnBtn =
+        panel.querySelector("[data-return-order]");
+
+    if (returnBtn) {
+        returnBtn.addEventListener("click", () => {
+            openReasonModal(
+                "return",
+                returnBtn.dataset.returnOrder
+            );
+        });
+    }
+
+
+    // ============================================
+    // Write Review
+    // ============================================
+
+    panel
+        .querySelectorAll("[data-write-review]")
+        .forEach(btn => {
+
+            btn.addEventListener("click", () => {
+
+                const item = order.items.find(i =>
+                    String(i.itemId) ===
+                        btn.dataset.orderItemId
+                    ||
+                    String(i.productId) ===
+                        btn.dataset.productId
+                );
+
+                openReviewModal(
+                    order.orderId,
+                    item,
+                    btn
+                );
+            });
+
+        });
+}
     /* ---------------------------------------------------------------------
        13.5 CHECKOUT FLOW
        ---------------------------------------------------------------------

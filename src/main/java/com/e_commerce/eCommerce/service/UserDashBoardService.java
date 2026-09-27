@@ -290,14 +290,6 @@ public class UserDashBoardService {
             ProductFilterDTO dto,
             String tenant) {
 
-        log.info("===== FEATURED PRODUCT FILTER START =====");
-
-        log.info("Tenant       : {}", tenant);
-        log.info("Category     : {}", dto.getCategory());
-        log.info("Brand        : {}", dto.getBrand());
-        log.info("Min Price    : {}", dto.getMinPrice());
-        log.info("Max Price    : {}", dto.getMaxPrice());
-        log.info("Rating       : {}", dto.getRating());
 
         Optional<Vendor> vendor =
                 vendorRepository.findByTenantId(tenant);
@@ -306,14 +298,11 @@ public class UserDashBoardService {
                 new ArrayList<>();
 
         if (vendor.isEmpty()) {
-            log.error("Vendor not found for tenant: {}", tenant);
+
             throw new RuntimeException("Vendor Does not exist");
         }
 
         Vendor v1 = vendor.get();
-
-        log.info("Vendor ID    : {}", v1.getId());
-        log.info("Vendor Name  : {}", v1.getStoreName());
 
         List<Product> products =
                 productRepository.findFeaturedProductsWithFilter(
@@ -324,20 +313,7 @@ public class UserDashBoardService {
                         dto.getMaxPrice()
                 );
 
-        log.info("Products returned from DB: {}", products.size());
-
         for (Product product : products) {
-
-            log.info(
-                    "Product -> ID: {}, Name: {}, Category: {}, Price: {},  Status: {}",
-                    product.getId(),
-                    product.getProductName(),
-                    product.getCategoryId(),
-                    product.getSellingPrice(),
-
-                    product.getStatus()
-            );
-
             ProductCardResponseDTO productCardResponseDTO =
                     new ProductCardResponseDTO();
 
@@ -384,12 +360,7 @@ public class UserDashBoardService {
             productCardResponseDTOS.add(productCardResponseDTO);
         }
 
-        log.info(
-                "Final featured products returned: {}",
-                productCardResponseDTOS.size()
-        );
 
-        log.info("===== FEATURED PRODUCT FILTER END =====");
 
         return productCardResponseDTOS;
     }
@@ -431,7 +402,6 @@ public class UserDashBoardService {
                         filter.getMinPrice(),
                         filter.getMaxPrice()
                 );
-        log.error("Product kist size{}",products.size());
 
         for (Product product : products) {
 
@@ -741,7 +711,6 @@ public class UserDashBoardService {
                         .findByTenantIdAndEmail(tenantId, email);
 
         if (existingSubscriber.isPresent()) {
-            log.error("Already Present email");
 
             EmailSubscriber subscriber =
                     existingSubscriber.get();
@@ -762,7 +731,8 @@ public class UserDashBoardService {
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
                         .build();
-        log.error("Email Sibscribed");
+
+
 
         newsletterSubscriberRepository.save(subscriber);
         String storeUrl="https://"+v1.getSubDomain();

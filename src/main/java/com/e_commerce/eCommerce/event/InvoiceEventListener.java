@@ -22,7 +22,7 @@ public class InvoiceEventListener {
     public void handleOrderDelivered(
             OrderDeliveredEvent event) {
 
-        log.error("Transaction committed.");
+
 
         pdfInvoiceService.generateInvoicePdfs(
                 event.getOrderNumber(),
@@ -37,8 +37,6 @@ public class InvoiceEventListener {
     public void handlePlacingOrder(
             OrderTrackingEvent event) {
         productSalesAsyncService.createPlacedTracking(event.getOrderId(), event.getTenantId(), event.getVendorId());
-
-        log.error("Transaction committed.");
 
 
     }

@@ -101,7 +101,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     SELECT COUNT(o)
     FROM Order o
     WHERE o.tenantId = :tenantId
-      AND o.orderStatus = com.e_commerce.eCommerce.entity.OrderStatus.PENDING
+      AND o.orderStatus = com.e_commerce.eCommerce.entity.OrderStatus.PLACED
 """)
     Long pendingOrders(
             @Param("tenantId") String tenantId

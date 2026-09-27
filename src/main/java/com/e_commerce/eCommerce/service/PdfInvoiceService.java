@@ -9,6 +9,9 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -28,7 +31,6 @@ import java.util.Optional;
 @Slf4j
 public class PdfInvoiceService {
 
-
     private final TemplateEngine templateEngine;
     private final OrderRepository orderRepository;
     private final VendorRepository vendorRepository;
@@ -40,9 +42,25 @@ public class PdfInvoiceService {
     private final FileStorageService fileStorageService;
     private final vendorBussinesss vendorBussinesssRepository;
     private final VendorBrandingRepository vendorBrandingRepository;
+    private final UserRepos userRepository;
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
+    private String generateInvoicePassword(User user) {
+        String firstName = (user.getFirstName() != null && !user.getFirstName().isBlank())
+                ? user.getFirstName().trim().toUpperCase()
+                : "USER";
+        String namePart = firstName.length() >= 4 ? firstName.substring(0, 4) : firstName;
+
+        String phoneDigits = (user.getPhone() != null)
+                ? user.getPhone().replaceAll("\\D", "")
+                : "0000";
+        String phonePart = phoneDigits.length() >= 4
+                ? phoneDigits.substring(phoneDigits.length() - 4)
+                : String.format("%4s", phoneDigits).replace(' ', '0');
+
+        return namePart + phonePart;
+    }
 
     @Async
     @Transactional
@@ -61,49 +79,43 @@ public class PdfInvoiceService {
         Order order = orderRepository.findByOrderNumberAndTenantIdAndVendorId(
                 orderIds,
                 tenantId,
-
                 vendor.getId()
         );
-
 
         if (order == null) {
             throw new RuntimeException("Order does not exist");
         }
+        Optional<User> user1 = userRepository.findByIdAndTenantId(order.getUserId(), tenantId);
+        if (user1.isEmpty()) {
+            throw new RuntimeException("User Does Not exist");
+        }
+        User user2 = user1.get();
         Long orderId = order.getId();
         if (order.getOrderStatus() != OrderStatus.DELIVERED) {
-            throw new RuntimeException(" Invoice Can Be only Genrated after a Order Delivery");
+            throw new RuntimeException(" Invoice Can Be only Generated after a Order Delivery");
         }
-        Optional<Invoice> existingInvoice =
-                invoiceRepository.findByOrderId(orderId);
+        Optional<Invoice> existingInvoice = invoiceRepository.findByOrderId(orderId);
         VendorAddress vendorAddress = vendorAddresss.findByVendorId(vendor.getId());
         OrderAddress orderAddress = orderAddressRepository.findByOrderIdAndTenantId(order.getId(), tenantId);
-        VendorBusiness vendorBusiness=vendorBussinesssRepository.findByVendorId(vendor.getId());
-        VendorBranding vendorBranding=vendorBrandingRepository.findByVendorId(vendor.getId());
+        VendorBusiness vendorBusiness = vendorBussinesssRepository.findByVendorId(vendor.getId());
+        VendorBranding vendorBranding = vendorBrandingRepository.findByVendorId(vendor.getId());
 
         if (orderAddress == null) {
-            throw new RuntimeException("Order Adress Not Found");
+            throw new RuntimeException("Order Address Not Found");
         }
 
         Invoice invoice;
 
         if (existingInvoice.isPresent() && existingInvoice.get().getStatus() == InvoiceStatus.GENERATED) {
-            System.out.println("Genrated Already");
-
+            log.info("Invoice already generated for orderId={}", orderId);
             return;
-
         } else if (existingInvoice.isPresent() && existingInvoice.get().getStatus() != InvoiceStatus.GENERATED) {
-
             invoice = existingInvoice.get();
             invoice.setStatus(InvoiceStatus.GENERATING);
             invoice.setGeneratedAt(LocalDateTime.now());
         } else {
-
             invoice = new Invoice();
-
-            invoice.setInvoiceNumber(
-                    "INV-" + System.currentTimeMillis()
-            );
-
+            invoice.setInvoiceNumber("INV-" + System.currentTimeMillis());
             invoice.setOrderId(orderId);
             invoice.setTenantId(tenantId);
             invoice.setVendorId(vendor.getId());
@@ -112,11 +124,7 @@ public class PdfInvoiceService {
         }
 
         invoice = invoiceRepository.save(invoice);
-        List<OrderItem> orderItems =
-                orderItemRepository.findAllByOrderIdAndTenantId(
-                        orderId,
-                        tenantId
-                );
+        List<OrderItem> orderItems = orderItemRepository.findAllByOrderIdAndTenantId(orderId, tenantId);
 
         List<Map<String, Object>> items = new ArrayList<>();
 
@@ -128,16 +136,9 @@ public class PdfInvoiceService {
 
             long quantity = orderItem.getQuantity();
 
-            BigDecimal sellingAmount =
-                    orderItem.getSellingPrice()
-                            .multiply(
-                                    BigDecimal.valueOf(quantity)
-                            );
-            BigDecimal mrpAmount =
-                    orderItem.getMrp()
-                            .multiply(
-                                    BigDecimal.valueOf(quantity)
-                            );
+            BigDecimal sellingAmount = orderItem.getSellingPrice().multiply(BigDecimal.valueOf(quantity));
+            BigDecimal mrpAmount = orderItem.getMrp().multiply(BigDecimal.valueOf(quantity));
+
             InvoiceItemsDTO invoiceItemsDTO = new InvoiceItemsDTO();
             invoiceItemsDTO.setProductName(orderItem.getProductName());
             invoiceItemsDTO.setDescription(orderItem.getDescription());
@@ -146,36 +147,27 @@ public class PdfInvoiceService {
             invoiceItemsDTO.setQuantity(String.valueOf(orderItem.getQuantity()));
             invoiceItemsDTO.setUnit("");
             invoiceItemsDTO.setMrp(String.valueOf(orderItem.getMrp()));
-
             invoiceItemsDTO.setDiscountAmount(String.valueOf(orderItem.getMrp().subtract(orderItem.getSellingPrice())));
             invoiceItemsDTO.setSellingPrice(String.valueOf(orderItem.getSellingPrice()));
             invoiceItemsDTO.setTaxAmount("0");
             invoiceItemsDTO.setTotalAmount(String.valueOf(orderItem.getLineTotal()));
             invoiceItemsDTOS.add(invoiceItemsDTO);
+
             sellingTotal = sellingTotal.add(sellingAmount);
-
             totalMrp = totalMrp.add(mrpAmount);
-
         }
-        BigDecimal discount =
-                totalMrp.subtract(sellingTotal);
 
-
+        BigDecimal discount = totalMrp.subtract(sellingTotal);
         if (discount.compareTo(BigDecimal.ZERO) < 0) {
             discount = BigDecimal.ZERO;
         }
-
 
         BigDecimal cgst = BigDecimal.ZERO;
         BigDecimal sgst = BigDecimal.ZERO;
         BigDecimal igst = BigDecimal.ZERO;
         BigDecimal shippingFee = BigDecimal.ZERO;
-        BigDecimal grandTotal =
-                sellingTotal
-                        .add(cgst)
-                        .add(sgst)
-                        .add(igst)
-                        .add(shippingFee);
+        BigDecimal grandTotal = sellingTotal.add(cgst).add(sgst).add(igst).add(shippingFee);
+
         PaymentStatus paymentStatus = order.getPaymentStatus();
         if (paymentStatus == PaymentStatus.PAID) {
             invoiceSummaryDTO.setAmountPaid(grandTotal);
@@ -187,7 +179,7 @@ public class PdfInvoiceService {
 
         invoiceSummaryDTO.setTotalDiscount(discount);
         invoiceSummaryDTO.setSubtotal(totalMrp);
-        invoiceSummaryDTO.setShippingCharge((shippingFee));
+        invoiceSummaryDTO.setShippingCharge(shippingFee);
         invoiceSummaryDTO.setPlatformCharge(BigDecimal.ZERO);
         invoiceSummaryDTO.setGrandTotal(grandTotal);
         invoiceSummaryDTO.setTotalTax(BigDecimal.ZERO);
@@ -218,32 +210,30 @@ public class PdfInvoiceService {
         companyDetailDTO.setCompanyName(vendor.getBussinessName());
         companyDetailDTO.setLogoUrl(vendor.getLogo());
         companyDetailDTO.setAddressLine1(vendorAddress.getAddressLine1());
-        companyDetailDTO.setAddressLine2((vendorAddress.getAddressLine2()));
+        companyDetailDTO.setAddressLine2(vendorAddress.getAddressLine2());
         companyDetailDTO.setCity(vendorAddress.getCity());
         companyDetailDTO.setState(vendorAddress.getCity());
         companyDetailDTO.setPincode(vendorAddress.getPostalCode());
-        if(vendorBranding!=null){
+
+        if (vendorBranding != null) {
             companyDetailDTO.setPhone(vendorBranding.getSupportPhone());
             companyDetailDTO.setEmail(vendorBranding.getSupportEmail());
-
-        }else{
+        } else {
             companyDetailDTO.setPhone("N/A");
             companyDetailDTO.setEmail(vendor.getEmail());
         }
 
-
-
-        if(vendorBusiness==null){
+        if (vendorBusiness == null) {
             companyDetailDTO.setWebsite("N/A");
             companyDetailDTO.setGstin("N/A");
-        }else{
+        } else {
             companyDetailDTO.setWebsite(vendorBusiness.getWebsite());
             companyDetailDTO.setGstin(vendorBusiness.getGstNumber());
         }
 
-        customerDetailDTo.setName(user.getFirstName() + " " + user.getLastName());
-        customerDetailDTo.setPhone(user.getPhone());
-        customerDetailDTo.setEmail(user.getEmail());
+        customerDetailDTo.setName(user2.getFirstName() + " " + user.getLastName());
+        customerDetailDTo.setPhone(user2.getPhone());
+        customerDetailDTo.setEmail(user2.getEmail());
 
         billingAddressDto.setLine1(orderAddress.getAddressLine1());
         billingAddressDto.setLine2(orderAddress.getAddressLine2());
@@ -269,109 +259,66 @@ public class PdfInvoiceService {
         invoiceData.setSummary(invoiceSummaryDTO);
         invoiceData.setVendor(vendorInvoiceDto);
 
-
-//        http://satish.localhost:8086/api/u1/v1/13/pdf
-
-
         Context context = new Context();
+        context.setVariable("invoice", invoiceData);
+        context.setVariable("shipping", null);
+        context.setVariable("bank", null);
 
-        context.setVariable(
-                "invoice",
-                invoiceData
-        );
-        context.setVariable(
-                "shipping",
-                null
-        );
-
-
-        /*
-         * HTML also checks bank != null
-         */
-        context.setVariable(
-                "bank",
-                null
-        );
-
-
-        log.error(
-                "Invoice details gathered -- "
-                        + invoiceData
-        );
         String renderedHtml;
-
         try {
-
-            renderedHtml =
-                    templateEngine.process(
-                            "invoice",
-                            context
-                    );
-
-
+            renderedHtml = templateEngine.process("invoice", context);
         } catch (Exception e) {
-            e.printStackTrace();
-
-            invoice.setStatus(
-                    InvoiceStatus.FAILED
-            );
-
+            log.error("Failed to render invoice HTML for orderId={}", orderId, e);
+            invoice.setStatus(InvoiceStatus.FAILED);
             invoiceRepository.save(invoice);
-
-            throw new RuntimeException(
-                    "Failed to render invoice HTML",
-                    e
-            );
+            throw new RuntimeException("Failed to render invoice HTML", e);
         }
-        try (
-                ByteArrayOutputStream os =
-                        new ByteArrayOutputStream()
-        ) {
 
-            PdfRendererBuilder builder =
-                    new PdfRendererBuilder();
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
 
+            PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.useFastMode();
-
-            builder.withHtmlContent(
-                    renderedHtml,
-                    null
-            );
-
+            builder.withHtmlContent(renderedHtml, null);
             builder.toStream(os);
-
             builder.run();
 
+            byte[] pdfBytes = os.toByteArray();
 
-            byte[] pdfBytes =
-                    os.toByteArray();
+            String password = generateInvoicePassword(user2);
+            log.info("Invoice password generated for orderId={}", orderId);
+
+            byte[] encryptedPdfBytes;
+            try (PDDocument document = PDDocument.load(pdfBytes)) {
+                AccessPermission accessPermission = new AccessPermission();
+                // owner password = user password => opening the PDF itself will ask for this password
+                StandardProtectionPolicy protectionPolicy =
+                        new StandardProtectionPolicy(password, password, accessPermission);
+                protectionPolicy.setEncryptionKeyLength(128);
+                document.protect(protectionPolicy);
+
+                try (ByteArrayOutputStream encryptedOut = new ByteArrayOutputStream()) {
+                    document.save(encryptedOut);
+                    encryptedPdfBytes = encryptedOut.toByteArray();
+                }
+            }
+
             String objectKey = fileStorageService.upload(
-                    pdfBytes,
+                    encryptedPdfBytes,
                     invoice.getInvoiceNumber() + ".pdf",
                     "application/pdf",
                     "invoices/" + tenantId
             );
+
             invoice.setStatus(InvoiceStatus.GENERATED);
             invoice.setGeneratedAt(LocalDateTime.now());
             invoice.setPdfUrl(r2Properties.getPublicUrl() + "/" + objectKey);
             invoice.setPdfKey(objectKey);
-
-
             invoiceRepository.save(invoice);
-
-
         } catch (Exception e) {
-            invoice.setStatus(
-                    InvoiceStatus.FAILED
-            );
-
+            log.error("Failed to generate invoice PDF for orderId={}", orderId, e);
+            invoice.setStatus(InvoiceStatus.FAILED);
             invoiceRepository.save(invoice);
-
-
-            throw new RuntimeException(
-                    "Failed to generate invoice PDF",
-                    e
-            );
+            throw new RuntimeException("Failed to generate invoice PDF", e);
         }
     }
 
@@ -393,42 +340,33 @@ public class PdfInvoiceService {
                 user.getId()
         );
 
-
         if (order == null) {
             throw new RuntimeException("Order does not exist");
         }
         Long orderId = order.getId();
-        Optional<Invoice> existingInvoice =
-                invoiceRepository.findByOrderId(orderId);
+        Optional<Invoice> existingInvoice = invoiceRepository.findByOrderId(orderId);
+
         if (order.getOrderStatus() != OrderStatus.DELIVERED) {
-            throw new RuntimeException(
-                    "Invoice can be downloaded only after the order is delivered."
-            );
+            throw new RuntimeException("Invoice can be downloaded only after the order is delivered.");
         }
 
         if (existingInvoice.isEmpty()) {
-            throw new RuntimeException(
-                    "Invoice is not generated yet. Please try again after some time."
-            );
+            throw new RuntimeException("Invoice is not generated yet. Please try again after some time.");
         }
+
         Invoice invoice = existingInvoice.get();
         if (invoice.getStatus() == InvoiceStatus.GENERATING
                 && invoice.getGeneratedAt().isBefore(LocalDateTime.now().minusMinutes(5))) {
 
+            log.warn("Invoice generation stuck for orderId={}, retrying", orderId);
             invoice.setStatus(InvoiceStatus.FAILED);
             invoiceRepository.save(invoice);
 
-//            applicationEventPublisher.publishEvent(
-//                    new OrderDeliveredEvent(orderIds, user,tenantId)
-//            );
             generateInvoicePdfs(orderIds, user, tenantId);
 
             throw new RuntimeException("Please try in 2 minutes");
         }
+
         return existingInvoice.get().getPdfUrl();
-
-
     }
-
-
 }

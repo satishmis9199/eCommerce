@@ -5782,6 +5782,7 @@ async function uploadCategoryImage(file) {
     ============================================================ */
     let brandList = [];
     let editingBrandId = null;
+    let payoutsLoaded = false; // Payouts (transactions + earnings chart) lazy-loads once, on first visit
 
     async function loadBrands() {
         try {
@@ -6982,6 +6983,10 @@ async function uploadCategoryImage(file) {
         loadOrders();
     }
 
+    if (page === 'products' && productList.length === 0) {
+        loadProducts();
+    }
+
     if (page === 'categories' && categoryList.length === 0) {
         loadCategories();
     }
@@ -6992,6 +6997,12 @@ async function uploadCategoryImage(file) {
 
     if (page === 'flashsales' && flashSaleList.length === 0) {
         loadFlashSales();
+    }
+
+    if (page === 'payouts' && !payoutsLoaded) {
+        payoutsLoaded = true;
+        loadVendorData();
+        buildEarningsChart();
     }
 
 
@@ -9146,19 +9157,21 @@ function renderProducts(list = productList) {
     function whenFeature(codes, fn) { featuresReady.then(() => { if ([].concat(codes).some(hasFeature)) fn(); }); }
 
     window.addEventListener('load', () => {
+      // Global chrome — needed no matter which page is active.
       fetchVendorProfile();
       loadNotifications();
-      loadDashboardOverview();
-      whenFeature(['PRODUCT_MANAGEMENT', 'CATEGORY_MANAGEMENT'], loadCategories);
-      whenFeature('PRODUCT_MANAGEMENT', loadProducts);
-      whenFeature('FLASH_SALE', loadFlashSales);
-      loadOrders();
-      loadCustomers();
-      loadVendorData();
       loadAndApplyStoreTheme();
+
+      // Overview is the default landing page — load only what IT needs.
+      // Every other section (Products, Categories, Brands, Flash Sales,
+      // Payouts, etc.) lazy-loads its own data inside switchPage() the
+      // first time the user actually opens that tab.
+      loadDashboardOverview();
+      loadOrders();     // powers Overview's "Recent Orders" table + status chart
+      loadCustomers();  // powers Overview's "Top Customers" panel
       buildSalesChart('12');
       buildStatusChart();
-      buildEarningsChart();
+
       setTimeout(() => {
         document.getElementById('loader').classList.add('hidden');
         showToast('success','Welcome Back','Your store data is up to date.');
