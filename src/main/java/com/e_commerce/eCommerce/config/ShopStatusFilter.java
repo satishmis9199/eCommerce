@@ -1,7 +1,5 @@
 package com.e_commerce.eCommerce.config;
 
-import com.e_commerce.eCommerce.config.TenantContext;
-import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.service.VendorService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,20 +25,33 @@ public class ShopStatusFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String uri = request.getRequestURI();
-        if (!uri.startsWith("/u1/v1/checkout")
-                && !uri.startsWith("/u1/v1/orders")
-        && !uri.startsWith("/home1.html")
-                && !uri.startsWith("/home.html")) {
+
+        if (uri.equals("/api/shop-closed")) {
+            String tenantId = TenantContext.getTenantId();
+
+            if (vendorService.isShopOpen(tenantId)) {
+                response.sendRedirect("/api/u1/v1/home");
+                return;
+            }
+
             filterChain.doFilter(request, response);
             return;
         }
 
-        String  tenantId = TenantContext.getTenantId();
+        boolean shouldCheckShopStatus =
+                uri.startsWith("/u1/v1/checkout")
+                        || uri.startsWith("/u1/v1/orders")
+                        || uri.startsWith("/home1.html")
+                        || uri.startsWith("/home.html");
 
-        boolean shopOpen =
-                vendorService.isShopOpen(tenantId);
+        if (!shouldCheckShopStatus) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        if (!shopOpen) {
+        String tenantId = TenantContext.getTenantId();
+
+        if (!vendorService.isShopOpen(tenantId)) {
             response.sendRedirect("/api/shop-closed");
             return;
         }
