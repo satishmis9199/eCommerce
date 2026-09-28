@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.controller;
 
+import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.*;
 import com.e_commerce.eCommerce.dto.response.VenodorBusinessProfile;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.stringtemplate.v4.ST;
 
 import java.util.List;
 import java.util.Map;
@@ -588,10 +590,12 @@ public class DashboardController {
             @RequestBody StoreSettingsRequestDto storeSettingsRequestDto) {
 
         try {
+            String tenantId= TenantContext.getTenantId();
 
             StoreSettingsRequestDto storeSettingsRequestDto1 =
                     vendorService.editStoreSettings(
-                            userDetail,
+                            userDetail
+                            ,tenantId,
                             storeSettingsRequestDto
                     );
 

@@ -917,10 +917,10 @@ public class VendorService {
     @Transactional
     @CacheEvict(value = "vendorShopen", key = "#tenantId")
     public StoreSettingsRequestDto editStoreSettings(
-            CustomUserDetail userDetail,
+            CustomUserDetail userDetail,String tenantId,
             StoreSettingsRequestDto request) {
 
-        String tenantId = TenantContext.getTenantId();
+
 
         if (userDetail == null) {
             throw new RuntimeException("Please login again");
