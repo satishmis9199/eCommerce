@@ -743,6 +743,7 @@
             </ul>
             <p class="menu-label">Account</p>
             <ul>
+                <li data-page="shopHistory"><a href="#"><i class="fa-solid fa-clock-rotate-left"></i><span>Shop History</span></a></li>
                 <li data-page="settings"><a href="#" onclick="switchPage('settings')"><i
                         class="fa-solid fa-gear"></i><span>Settings</span></a></li>
             </ul>
@@ -1793,6 +1794,64 @@
                             Select a ticket to view the conversation.
                         </div>
                         <div id="ticketDetailBody" style="display:none;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= SHOP HISTORY ================= -->
+            <section class="page-section" id="page-shopHistory">
+                <div class="section-header fade-up">
+                    <div>
+                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Shop History</span></div>
+                        <h1>Shop History</h1>
+                        <p>Every time your store was opened or closed, with the reason and who changed it.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="secondary-btn" onclick="loadShopHistory()"><i class="fa-solid fa-rotate"></i>Refresh</button>
+                    </div>
+                </div>
+
+                <div class="fade-up fade-up-1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px;">
+                    <div class="table-card" style="padding:16px 18px;">
+                        <small style="color:var(--text-muted);">Current Status</small>
+                        <div id="shHistCurrent" style="font-size:20px;font-weight:700;margin-top:6px;">-</div>
+                    </div>
+                    <div class="table-card" style="padding:16px 18px;">
+                        <small style="color:var(--text-muted);">Total Closures</small>
+                        <div id="shHistClosures" style="font-size:20px;font-weight:700;margin-top:6px;">-</div>
+                    </div>
+                    <div class="table-card" style="padding:16px 18px;">
+                        <small style="color:var(--text-muted);">Last Change</small>
+                        <div id="shHistLast" style="font-size:15px;font-weight:600;margin-top:8px;">-</div>
+                    </div>
+                </div>
+
+                <div class="table-card fade-up fade-up-2">
+                    <div class="card-header">
+                        <div><h2>Status Log</h2><p id="shHistCount">Loading...</p></div>
+                    </div>
+                    <div class="table-actions">
+                        <input type="text" id="shHistSearch" placeholder="Search reason or user..." oninput="renderShopHistory()">
+                        <select id="shHistFilter" onchange="renderShopHistory()">
+                            <option value="all">All Status</option>
+                            <option value="OPEN">Open</option>
+                            <option value="CLOSED">Closed</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th style="width:60px;">#</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                                <th>Changed By</th>
+                                <th>Date &amp; Time</th>
+                                <th>Closed For</th>
+                            </tr>
+                            </thead>
+                            <tbody id="shopHistoryBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -4923,6 +4982,7 @@ async function changeNoticeStatus(id) {
       notificationRead: (id) => `/vendor/s2/v1/notifications/${id}/read`,
       notificationReadAll: '/vendor/s2/v1/notifications/read-all',
       notificationDelete: (id) => `/vendor/s2/v1/notifications/${id}`,
+      shopHistory: '/vendor/s2/v1/shop-status/history',
       ads: '/vendor/s2/v1/ads'
     };
     const CATEGORY_API = '/vendor/s11/v11/create-Category';
@@ -7030,6 +7090,10 @@ if (page === 'sponsoredAds') {
         loadTickets();
     }
 
+    if (page === 'shopHistory') {
+        loadShopHistory();
+    }
+
     if (page === 'settings') {
         const activeTab = document.querySelector('#settingsNavList li.active');
         switchSettingsTab(activeTab ? activeTab.dataset.tab : 'business-profile');   // no-op if already loaded
@@ -9075,6 +9139,7 @@ function renderProducts(list = productList) {
         PRODUCT_REVIEWS:      { pages: ['reviews'],         selectors: [] },
         SUPPORT_TICKETS:      { pages: ['tickets'],         selectors: [] },
         SETTINGS:             { pages: ['settings'],        selectors: [] },
+        SHOP_HISTORY:         { pages: ['shopHistory'],     selectors: [] },
         // ---- sections inside the Overview page ----
         SALES_REPORT:         { pages: [], selectors: ['#salesReportSection'] },
         ANALYTICS:            { pages: [], selectors: ['.analytics-section'] },
@@ -9155,6 +9220,86 @@ function renderProducts(list = productList) {
     const featuresReady = loadPlanFeatures();   // then show what the plan allows
     // run a loader only when the plan includes the feature (avoids 403 noise)
     function whenFeature(codes, fn) { featuresReady.then(() => { if ([].concat(codes).some(hasFeature)) fn(); }); }
+
+    /* ============================================================
+       SHOP STATUS HISTORY  (gated by plan feature SHOP_HISTORY)
+    ============================================================ */
+    let shopHistoryList = [];
+    const SHOP_REASON_LABELS = {
+      WEEKLY_HOLIDAY: 'Weekly Holiday', PUBLIC_HOLIDAY: 'Public Holiday', MAINTENANCE: 'Maintenance',
+      INVENTORY: 'Inventory / Stock Taking', STAFF_UNAVAILABLE: 'Staff Unavailable', EMERGENCY: 'Emergency',
+      TEMPORARY_CLOSURE: 'Temporary Closure', OWNER_DECISION: 'Owner Decision', OTHER: 'Other'
+    };
+
+    function shTime(v) { return new Date(String(v || '').replace(' ', 'T')).getTime(); }
+
+    function shDuration(ms) {
+      if (!isFinite(ms) || ms < 0) return '-';
+      const m = Math.floor(ms / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+      if (d > 0) return `${d}d ${h % 24}h`;
+      if (h > 0) return `${h}h ${m % 60}m`;
+      return m < 1 ? '< 1m' : `${m}m`;
+    }
+
+    async function loadShopHistory() {
+      const body = document.getElementById('shopHistoryBody');
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr>';
+      try {
+        const res = await fetch(API_ENDPOINTS.shopHistory, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await res.json();
+        if (!res.ok || data.success === false) throw new Error(data.message || `HTTP ${res.status}`);
+        const raw = Array.isArray(data) ? data : (data.data || data.history || []);
+        const asc = raw.map(r => ({ ...r, _t: shTime(r.changedAt) })).sort((a, b) => a._t - b._t);
+        asc.forEach((r, i) => {
+          const next = asc[i + 1];
+          r._closedFor = r.status === 'CLOSED' ? (next ? shDuration(next._t - r._t) : 'Ongoing') : '';
+        });
+        shopHistoryList = asc.reverse();   // latest first
+        renderShopHistory();
+      } catch (e) {
+        console.warn('Shop history error:', e.message);
+        shopHistoryList = [];
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--red);">Could not load shop history.</td></tr>';
+        document.getElementById('shHistCount').innerText = 'Failed to load';
+        showToast('error', 'Shop History', e.message || 'Could not load shop history.');
+      }
+    }
+
+    function renderShopHistory() {
+      const q = (document.getElementById('shHistSearch').value || '').trim().toLowerCase();
+      const f = document.getElementById('shHistFilter').value;
+      const label = r => SHOP_REASON_LABELS[r.reason] || r.reason || '-';
+      const who = r => r.changedByName || (r.changedBy != null ? 'User #' + r.changedBy : '-');
+
+      const rows = shopHistoryList.filter(r =>
+        (f === 'all' || r.status === f) &&
+        (!q || label(r).toLowerCase().includes(q) || who(r).toLowerCase().includes(q)));
+
+      // summary cards (always from the full list)
+      const latest = shopHistoryList[0];
+      const cur = document.getElementById('shHistCurrent');
+      cur.innerHTML = latest
+        ? `<span class="status ${latest.status === 'OPEN' ? 'active' : 'cancelled'}">${latest.status === 'OPEN' ? 'Open' : 'Closed'}</span>`
+        : '-';
+      document.getElementById('shHistClosures').innerText = shopHistoryList.filter(r => r.status === 'CLOSED').length;
+      document.getElementById('shHistLast').innerText = latest ? formatDateTime(latest.changedAt) : '-';
+      document.getElementById('shHistCount').innerText = `${rows.length} of ${shopHistoryList.length} records`;
+
+      const body = document.getElementById('shopHistoryBody');
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">No history found.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map((r, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td><span class="status ${r.status === 'OPEN' ? 'active' : 'cancelled'}">${r.status === 'OPEN' ? 'Open' : 'Closed'}</span></td>
+          <td>${escapeHtml(label(r))}</td>
+          <td>${escapeHtml(who(r))}</td>
+          <td>${escapeHtml(formatDateTime(r.changedAt))}</td>
+          <td>${r._closedFor ? escapeHtml(r._closedFor) : '-'}</td>
+        </tr>`).join('');
+    }
 
     window.addEventListener('load', () => {
       // Global chrome — needed no matter which page is active.
