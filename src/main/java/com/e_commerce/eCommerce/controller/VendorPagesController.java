@@ -29,5 +29,10 @@ public class VendorPagesController {
     public String openPolicy() {
         return "vendorPoliciesAdmin";
     }
+
+    @GetMapping("/u1/v1/s1/suspend")
+    public String suspendPage(){
+        return "vendor-suspend";
+    }
 }
 

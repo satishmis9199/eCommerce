@@ -46,6 +46,14 @@ public class CaffeineConfig {
                         .recordStats()
                         .build()
         );
+        CaffeineCache shopOpen = new CaffeineCache(
+                "vendorShopen",
+                Caffeine.newBuilder()
+                        .expireAfterWrite(Duration.ofMinutes(20))
+                        .maximumSize(1000)
+                        .recordStats()
+                        .build()
+        );
 
         CaffeineCache productsCache = new CaffeineCache(
                 "products",
@@ -124,6 +132,7 @@ public class CaffeineConfig {
         cacheManager.setCaches(Arrays.asList(
                 tenantsCache,
                 bannersCache,
+                shopOpen,
                 allBannerCache,
                 productsCache,
                 adminProductCache,

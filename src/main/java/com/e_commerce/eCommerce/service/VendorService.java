@@ -915,6 +915,7 @@ public class VendorService {
 
 
     @Transactional
+    @CacheEvict(value = "vendorShopen", key = "#tenantId")
     public StoreSettingsRequestDto editStoreSettings(
             CustomUserDetail userDetail,
             StoreSettingsRequestDto request) {
@@ -1003,4 +1004,17 @@ public class VendorService {
 
         return vendor.getPlanId();
     }
+    @Cacheable(value = "vendorShopen", key = "#tenantId")
+    public boolean isShopOpen(String tenantId) {
+        Vendor vendor = vendorRepository
+                .findByTenantId(tenantId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Vendor not found for tenant: " + tenantId
+                        )
+                );
+
+        return vendor.getShopStatus() == ShopStatus.OPEN;
+    }
+
 }

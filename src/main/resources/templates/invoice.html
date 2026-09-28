@@ -1,21 +1,5 @@
 <!DOCTYPE html>
-<!--
-  ============================================================================
-  ENTERPRISE INVOICE TEMPLATE
-  Stack        : Spring Boot + Thymeleaf + OpenHTMLToPDF
-  Purpose      : Multi-Tenant Construction Materials E-Commerce SaaS Invoice
-  Backing Bean : InvoiceResponseDTO invoice  (added to model as "invoice")
-  Notes        :
-    - No JavaScript. No external CSS/fonts/CDNs. Fully offline-safe.
-    - Layout uses tables/blocks (NOT flexbox/grid) because OpenHTMLToPDF
-      has inconsistent support for modern CSS layout modules. Tables and
-      floats render 100% reliably in OpenHTMLToPDF.
-    - All monetary/number formatting is expected to be done in the DTO
-      or via Thymeleaf's #numbers utility (examples included below).
-    - Expected DTO shape is documented at the bottom of this file as a
-      comment block for backend reference.
-  ============================================================================
--->
+
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
@@ -841,9 +825,6 @@
         </tr>
     </table>
 
-    <!-- ==================================================================
-         SECTION 6: FOOTER — TERMS, SIGNATURE, THANK YOU
-         ================================================================== -->
     <div class="footer-section">
 
         <table class="terms-table">
@@ -898,84 +879,3 @@
 </body>
 </html>
 
-<!--
-  ============================================================================
-  EXPECTED InvoiceResponseDTO SHAPE (backend reference — remove in production)
-  ============================================================================
-  InvoiceResponseDTO {
-      String invoiceNumber;
-      LocalDate invoiceDate;
-      String orderNumber;
-      LocalDate orderDate;
-      LocalDate deliveryDate;
-      String paymentStatus;        // PAID | PENDING | FAILED
-      String orderStatus;          // DELIVERED | SHIPPED | PROCESSING ...
-      String paymentMethod;
-      String transactionId;
-      String referenceNumber;
-      String currencySymbol;       // e.g. "₹"
-      String thankYouMessage;
-      String termsAndConditions;   // HTML-safe string
-      String returnPolicy;         // HTML-safe string
-      LocalDateTime generatedAt;
-
-      CompanyDTO company {
-          String companyName;
-          String logoUrl;
-          String gstin;
-          String addressLine1;
-          String addressLine2;
-          String city;
-          String state;
-          String pincode;
-          String phone;
-          String email;
-          String website;
-      }
-
-      CustomerDTO customer {
-          String name;
-          String phone;
-          String email;
-      }
-
-      AddressDTO billingAddress / shippingAddress {
-          String line1;
-          String line2;
-          String city;
-          String state;
-          String pincode;
-          String landmark;
-      }
-
-      VendorDTO vendor {
-          String name;
-      }
-
-      List<InvoiceItemDTO> items {
-          String productName;
-          String description;
-          String imageUrl;
-          String hsnCode;
-          Integer quantity;
-          String unit;
-          BigDecimal mrp;
-          BigDecimal discountAmount;
-          BigDecimal sellingPrice;
-          BigDecimal taxAmount;
-          BigDecimal totalAmount;
-      }
-
-      SummaryDTO summary {
-          BigDecimal subtotal;
-          BigDecimal totalDiscount;
-          BigDecimal shippingCharge;
-          BigDecimal platformCharge;
-          BigDecimal totalTax;
-          BigDecimal grandTotal;
-          BigDecimal amountPaid;
-          BigDecimal amountDue;
-      }
-  }
-  ============================================================================
--->

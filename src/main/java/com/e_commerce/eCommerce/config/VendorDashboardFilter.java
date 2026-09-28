@@ -1,5 +1,6 @@
 package com.e_commerce.eCommerce.config;
 
+import com.e_commerce.eCommerce.entity.Roles;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.entity.Vendor;
 import com.e_commerce.eCommerce.repository.UserRepos;
@@ -29,7 +30,7 @@ public class VendorDashboardFilter extends OncePerRequestFilter {
     private VendorRepository vendorRepository;
 
     private static final String DASHBOARD_URI = "/vendor/s1/v1/dashboard";
-    private static final String ONBOARD_URI = "/vendor/s1/v1/dashboard";
+//    private static final String ONBOARD_URI = "/vendor/s1/v1/dashboard";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -56,8 +57,12 @@ public class VendorDashboardFilter extends OncePerRequestFilter {
 
         User user = userRepository.findById(userDetail.getId()).orElse(null);
 
-        if (user == null) {
+        if (user == null ) {
 
+            response.sendRedirect("/api/vendor/v1/login");
+            return;
+        }
+        if(user.getRole()!= Roles.ADMIN){
             response.sendRedirect("/api/vendor/v1/login");
             return;
         }
@@ -88,8 +93,8 @@ public class VendorDashboardFilter extends OncePerRequestFilter {
                 return;
 
             case SUSPENDED:
-                response.sendRedirect("/v1/s1/suspend");
-
+                response.sendRedirect("/vendor/u1/v1/s1/suspend");
+                return;
 
             case BLOCKED:
                 response.sendRedirect("/vendor/s1/account-blocked");

@@ -202,6 +202,7 @@ public class PdfInvoiceService {
         invoiceData.setTransactionId(order.getPaymentReferenceId());
         invoiceData.setReferenceNumber(order.getPaymentReferenceId());
         invoiceData.setCurrencySymbol("Rs.");
+
         invoiceData.setThankYouMessage("Thank you for choosing " + vendor.getBussinessName() + " Supplies");
         invoiceData.setTermsAndConditions("Payment is due within 15 days from the invoice date. Goods once dispatched cannot be exchanged unless damaged in transit. All disputes are subject to Lucknow jurisdiction only");
         invoiceData.setReturnPolicy("Returns accepted within 7 days of delivery for unopened cement bags, unused steel, and undamaged fittings. Custom-cut or made-to-order materials are non-returnable");
@@ -285,12 +286,11 @@ public class PdfInvoiceService {
             byte[] pdfBytes = os.toByteArray();
 
             String password = generateInvoicePassword(user2);
-            log.info("Invoice password generated for orderId={}", orderId);
+//            log.info("Invoice password generated for orderId={}", orderId);
 
             byte[] encryptedPdfBytes;
             try (PDDocument document = PDDocument.load(pdfBytes)) {
                 AccessPermission accessPermission = new AccessPermission();
-                // owner password = user password => opening the PDF itself will ask for this password
                 StandardProtectionPolicy protectionPolicy =
                         new StandardProtectionPolicy(password, password, accessPermission);
                 protectionPolicy.setEncryptionKeyLength(128);
@@ -357,8 +357,6 @@ public class PdfInvoiceService {
         Invoice invoice = existingInvoice.get();
         if (invoice.getStatus() == InvoiceStatus.GENERATING
                 && invoice.getGeneratedAt().isBefore(LocalDateTime.now().minusMinutes(5))) {
-
-            log.warn("Invoice generation stuck for orderId={}, retrying", orderId);
             invoice.setStatus(InvoiceStatus.FAILED);
             invoiceRepository.save(invoice);
 

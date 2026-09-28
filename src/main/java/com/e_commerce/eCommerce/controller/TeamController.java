@@ -11,5 +11,9 @@ public class TeamController {
     public String team(){
         return "team";
     }
+    @GetMapping("/shop-closed")
+    public String shopClosed(){
+        return "store-closed";
+    }
 }
 
