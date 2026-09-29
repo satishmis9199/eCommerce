@@ -21,10 +21,8 @@ public class ShopHistoryService {
         }
             if (tenantid == null) {
                 throw new vendorNotFoundException(
-                        "tenant NoT found");
-
+                        "Tenant Not found");
             }
-
             List<ShopHistoryResponse> shop = shopStatusHistoryRepository.findAllWithTenant(tenantid);
             return shop;
         }

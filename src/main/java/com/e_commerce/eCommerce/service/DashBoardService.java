@@ -5,6 +5,7 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.MyProfileDTO;
 import com.e_commerce.eCommerce.dto.VendorProfileDTO;
 import com.e_commerce.eCommerce.dto.response.VendorDashboardDTO;
+import com.e_commerce.eCommerce.entity.Plan;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.entity.Vendor;
 import com.e_commerce.eCommerce.entity.VendorBranding;
@@ -25,7 +26,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 
-
+@AllArgsConstructor
 public class DashBoardService {
     private final UserRepos userRepos;
     private final VendorRepository vendorRepository;
@@ -34,28 +35,31 @@ public class DashBoardService {
     private final OrderRepository orderRepository;
     private final UserRepos userRepository;
     private final ProductRepository productRepository;
+    private final  PlanRepository planRepository;
 
-    public DashBoardService(UserRepos userRepos, VendorRepository vendorRepository, VendorBrandingRepository vendorBrandingRepository, R2Properties r2Properties, OrderRepository orderRepository, UserRepos userRepository, ProductRepository productRepository) {
-        this.userRepos = userRepos;
-        this.vendorRepository = vendorRepository;
-        this.vendorBrandingRepository = vendorBrandingRepository;
-        this.r2Properties = r2Properties;
-        this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
-        this.productRepository = productRepository;
-    }
 
     public VendorProfileDTO loadDashBoardData(User user) {
         VendorProfileDTO vendorProfileDTO = new VendorProfileDTO();
         Optional<Vendor> vendor = vendorRepository.findById(user.getVendorId());
         VendorBranding vendorBranding = vendorBrandingRepository.findByVendorId(user.getVendorId());
-        if (!vendor.isPresent()) {
+        if (vendor.isEmpty()) {
             throw new RuntimeException("Vendor Not Found");
         }
         if (vendorBranding == null) {
-            throw new RuntimeException(" Branding data Not Availble");
+            throw new RuntimeException("Branding data Not Available");
         }
         Vendor v2 = vendor.get();
+        log.error(String.valueOf(v2.getId()));
+        Optional<Plan> plan=planRepository.findById(v2.getPlanId());
+        if(plan.isEmpty()){
+            vendorProfileDTO.setSubscriptionPlan("Not Availble");
+        }
+        else{
+
+            vendorProfileDTO.setSubscriptionPlan(plan.get().getName());
+        }
+
+
         vendorProfileDTO.setVendorId(user.getVendorId());
         vendorProfileDTO.setTenantId(TenantContext.getTenantId());
         vendorProfileDTO.setFullName(user.getFirstName() + " " + user.getLastName());
@@ -66,7 +70,7 @@ public class DashBoardService {
         vendorProfileDTO.setLastLogin(user.getLastLoginTime());
         vendorProfileDTO.setStatus(v2.getStatus());
         vendorProfileDTO.setBusinessName(v2.getBussinessName());
-        vendorProfileDTO.setSubscriptionPlan(v2.getPlan());
+//        vendorProfileDTO.setSubscriptionPlan(v2.getPlan());
         vendorProfileDTO.setLogo(r2Properties.getPublicUrl() + "/" + vendorBranding.getLogoUrl());
         vendorProfileDTO.setStoreName(v2.getStoreName());
         return vendorProfileDTO;

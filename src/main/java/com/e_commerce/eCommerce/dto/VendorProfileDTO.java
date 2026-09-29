@@ -1,6 +1,5 @@
 package com.e_commerce.eCommerce.dto;
 
-import com.e_commerce.eCommerce.entity.SubscriptionPlan;
 import com.e_commerce.eCommerce.entity.VendorStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +30,7 @@ public class VendorProfileDTO {
 
     private String logo;
 
-    private SubscriptionPlan subscriptionPlan;
+    private String subscriptionPlan;
 
     private VendorStatus status;
 

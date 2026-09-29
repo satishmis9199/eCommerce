@@ -57,7 +57,7 @@ public class DashboardController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/s1/v1/view/profile")
     public ResponseEntity<MyProfileResponseDTO> getProfileData(
             @AuthenticationPrincipal CustomUserDetail userDetail) {

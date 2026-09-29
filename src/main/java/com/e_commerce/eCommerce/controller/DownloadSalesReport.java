@@ -34,10 +34,9 @@ public class DownloadSalesReport {
     private final OrderItemRepository orderItemRepository;
     private final VendorRepository vendorRepository;
 
-    @RequiresFeature("EXPORT_DATA")
+    @RequiresFeature("ORDER_EXPORT")
     @GetMapping("/sales")
     public ResponseEntity<byte[]> downloadSalesReport(
-
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate startDate,
