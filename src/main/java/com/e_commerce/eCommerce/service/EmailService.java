@@ -29,13 +29,10 @@ public class EmailService {
     private final TemplateEngine templateEngine;
     @Value("${app.mail.from:no-reply@example.com}")
     private String defaultFrom;
-
-    // --- Reminder email tuning — templates niche resolveReminderTemplate() me set hain ---
     private static final String MISS_YOU_TEMPLATE = "email/miss-you-reminder";
     private static final String SPECIAL_OFFER_TEMPLATE = "email/special-offer-reminder";
     private static final String SPECIAL_OFFER_DISCOUNT_CODE = "WELCOME15";
     private static final int SPECIAL_OFFER_DISCOUNT_PERCENTAGE = 15;
-
 
     public void sendEmail(EmailRequestDto request) {
 
