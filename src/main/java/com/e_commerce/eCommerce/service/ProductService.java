@@ -4,14 +4,14 @@ import com.e_commerce.eCommerce.config.R2Properties;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.entity.*;
-import com.e_commerce.eCommerce.exception.BrandDoesNotExist;
-import com.e_commerce.eCommerce.exception.ProductAlreadyExist;
+import com.e_commerce.eCommerce.exception.*;
 import com.e_commerce.eCommerce.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,16 +53,11 @@ public class ProductService {
         String tenantId = TenantContext.getTenantId();
 
         if (!tenantId.equals(user.getTenantId())) {
-            throw new RuntimeException("Invalid Tenant");
+            throw new TenantNoFoundException("Invalid Tenant");
         }
-        System.out.println(" VendorIdd " + user.getVendorId());
-        System.out.println("Category Id is {}" + dto.getCategoryId());
-        ProductCategory category = categoryRepository.findByIdAndVendorId(dto.getCategoryId(), user.getVendorId()).orElseThrow(() -> new RuntimeException("Category does not exist."));
-
-        Vendor vendor = vendorRepos.findById(user.getVendorId()).orElseThrow(() -> new RuntimeException("Vendor Not Found"));
-
+        ProductCategory category = categoryRepository.findByIdAndVendorId(dto.getCategoryId(), user.getVendorId()).orElseThrow(() -> new CategoryNotFoundException("Category does not exist."));
+        Vendor vendor = vendorRepos.findById(user.getVendorId()).orElseThrow(() -> new vendorNotFoundException("Vendor Not Found"));
         LocalDateTime now = LocalDateTime.now();
-
         Product product = new Product();
         product.setTenantId(tenantId);
         product.setVendorId(vendor.getId());
@@ -80,45 +75,29 @@ public class ProductService {
         product.setCreatedBy(userDetail.getId());
         product.setUpdatedBy(userDetail.getId());
         product.setFeatured(Boolean.TRUE.equals(dto.getFeatured()));
-
         Product savedProduct = productRepository.save(product);
-
         List<ProductSpecificationRequestDto> specifications = dto.getSpecifications();
-
         if (specifications != null && !specifications.isEmpty()) {
-
             Set<Long> specificationIds = new HashSet<>();
             List<ProductSpecificationValue> specificationValues = new ArrayList<>();
-
             for (ProductSpecificationRequestDto specificationDto : specifications) {
-
                 if (!specificationIds.add(specificationDto.getCategorySpecificationId())) {
-                    throw new RuntimeException("Duplicate specification found.");
+                    throw new InvalidStateException("Duplicate specification found.");
                 }
-
                 CategorySpecification specification = categorySpecificationRepository.findByIdAndCategoryIdAndTenantId(specificationDto.getCategorySpecificationId(), category.getId(), tenantId);
                 if (specification == null) {
                     throw new RuntimeException("Invalid Value");
                 }
-
                 ProductSpecificationValue value = new ProductSpecificationValue();
-
                 value.setTenantId(tenantId);
                 value.setVendorId(user.getVendorId());
-
                 value.setProduct(savedProduct);
-
-
                 value.setCategorySpecification(specification);
-
-
                 value.setValue(specificationDto.getValue());
-
                 value.setCreatedAt(now);
                 value.setUpdatedAt(now);
                 value.setCreatedBy(userDetail.getId());
                 value.setUpdatedBy(userDetail.getId());
-
                 specificationValues.add(value);
             }
 
@@ -134,7 +113,7 @@ public class ProductService {
         User user = userDetail.getUser();
         String tenantId = TenantContext.getTenantId();
         if (!tenantId.equalsIgnoreCase(user.getTenantId())) {
-            throw new RuntimeException("Invalid Tenant");
+            throw new TenantNoFoundException("Invalid Tenant");
         }
         List<ProductResponseDTO> products = productRepository.loadAllProducts(tenantId, user.getVendorId());
 
@@ -168,24 +147,24 @@ public class ProductService {
         User user = userDetail.getUser();
 
         if (!tenantId.equalsIgnoreCase(user.getTenantId())) {
-            throw new RuntimeException("Vendor does not exist.");
+            throw new vendorNotFoundException("Vendor does not exist.");
         }
         Product product = productRepository.findByIdAndTenantIdAndVendorId(id, tenantId, user.getVendorId());
         if (product == null) {
-            throw new RuntimeException("Product does not exist.");
+            throw new ProductNotFoundException("Product does not exist.");
         }
 
-        ProductCategory category = categoryRepository.findByIdAndVendorId(dto.getCategoryId(), user.getVendorId()).orElseThrow(() -> new RuntimeException("Category does not exist."));
+        ProductCategory category = categoryRepository.findByIdAndVendorId(dto.getCategoryId(), user.getVendorId()).orElseThrow(() -> new CategoryNotFoundException("Category does not exist."));
         if (category.getId() != dto.getCategoryId()) {
-            throw new RuntimeException("Category cannot be Changed ...");
+            throw new InvalidStateException("Category cannot be Changed ...");
         }
 
         if (dto.getMrp() != null && dto.getSellingPrice().compareTo(dto.getMrp()) > 0) {
-            throw new RuntimeException("Selling Price cannot be greater than MRP.");
+            throw new InvaidPriceException("Selling Price cannot be greater than MRP.");
         }
         boolean isActiveBrand=brandService.isActivebrand(dto.getBrandId(), tenantId);
         if(!isActiveBrand){
-            throw new BrandDoesNotExist("Brand does Not exisr");
+            throw new BrandDoesNotExist("Brand does Not Exist");
         }
         product.setBrandId(dto.getBrandId());
         product.setCategoryId(category.getId());
@@ -249,13 +228,13 @@ public class ProductService {
         User user = userDetail.getUser();
 
         if (!tenantId.equalsIgnoreCase(user.getTenantId())) {
-            throw new RuntimeException("Vendor does not exist.");
+            throw new vendorNotFoundException("Vendor does not exist.");
         }
 
         Product product = productRepository.findByIdAndTenantIdAndVendorId(id, tenantId, user.getVendorId());
 
         if (product == null) {
-            throw new RuntimeException("Product does not exist.");
+            throw new ProductNotFoundException("Product does not exist.");
         }
         productRepository.delete(product);
         return "Product Deleted Successfully";
@@ -270,7 +249,7 @@ public class ProductService {
         Product product = productRepository.findByIdAndTenantIdAndStatus(ids, tenantId, ProductStatus.ACTIVE);
 
         if (product == null) {
-            throw new RuntimeException("Product not found.");
+            throw new ProductNotFoundException("Product not found.");
         }
 
         ProductCategory productCategory = categoryRepository.findByIdAndTenantIdAndStatus(product.getCategoryId(), tenantId, CategoryStatus.ACTIVE
@@ -306,23 +285,23 @@ public class ProductService {
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null || tenantId.isBlank()) {
-            throw new RuntimeException("Invalid Tenant");
+            throw new TenantNoFoundException("Invalid Tenant");
         }
-        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new RuntimeException("Vendor Does Not Exist"));
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new vendorNotFoundException("Vendor Does Not Exist"));
         Product product = productRepository.findByIdAndTenantIdAndStatus(productId, tenantId, ProductStatus.ACTIVE);
 
         if (product == null) {
-            throw new RuntimeException("Product Does Not Exist");
+            throw new ProductNotFoundException("Product Does Not Exist");
         }
         Long categoryId = product.getCategoryId();
 
         if (categoryId == null) {
-            throw new RuntimeException("Category is not assigned to this product");
+            throw new CategoryNotFoundException("Category is not assigned to this product");
         }
         ProductCategory category = categoryRepository.findByIdAndVendorIdAndTenantId(categoryId, vendor.getId(), tenantId);
 
         if (category == null) {
-            throw new RuntimeException("Product Category Does Not Exist");
+            throw new CategoryNotFoundException("Product Category Does Not Exist");
         }
         ProductResponseDTOs response = new ProductResponseDTOs();
 
@@ -402,9 +381,9 @@ public class ProductService {
     public List<RelatedProductDTO> getReleatedproducts(Long productId) {
         String tenantId = TenantContext.getTenantId();
         if (tenantId == null || tenantId.isBlank()) {
-            throw new RuntimeException("Invalid Tenant");
+            throw new TenantNoFoundException("Invalid Tenant");
         }
-        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new RuntimeException("Vendor Does Not Exist"));
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new vendorNotFoundException("Vendor Does Not Exist"));
         Product product = productRepository.findByIdAndTenantIdAndStatus(productId, tenantId, ProductStatus.ACTIVE);
         Long categoryId = product.getCategoryId();
         List<Product> relatedProducts = productRepository.findTop4ByTenantIdAndVendorIdAndCategoryIdAndStatusAndIdNotOrderByTotalSoldDesc(tenantId, vendor.getId(), categoryId, ProductStatus.ACTIVE, product.getId());
@@ -441,10 +420,10 @@ public class ProductService {
     public List<OrderResponseDto> getOrerdetail(CustomUserDetail customUserDetail) {
         String tenantId = TenantContext.getTenantId();
         if (customUserDetail == null) {
-            throw new RuntimeException("Please login");
+            throw new UsernameNotFoundException("Please login");
         }
         if (!customUserDetail.getUser().getRole().equals(Roles.ADMIN)) {
-            throw new RuntimeException("Unauthorized To access");
+            throw new UnauthorizedException("Unauthorized To access");
 
         }
         HashMap<Long, HashMap<Long, String>> customerDetail = getAllCustomerWithOrder(tenantId);
@@ -520,24 +499,24 @@ public class ProductService {
     public FlashSaleRequestDto createFlashSale(CustomUserDetail userDetail, FlashSaleRequestDto request) {
         String tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new RuntimeException("Invalid tenant.");
+            throw new TenantNoFoundException("Invalid tenant.");
         }
         if (userDetail == null || userDetail.getRole() != Roles.ADMIN) {
-            throw new RuntimeException("Unauthorized access.");
+            throw new UnauthorizedException("Unauthorized access.");
         }
-        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new RuntimeException("Vendor not found."));
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new vendorNotFoundException("Vendor not found."));
 
         if (request.getEndDateTime().isBefore(request.getStartDateTime()) || request.getEndDateTime().isEqual(request.getStartDateTime())) {
-            throw new RuntimeException("End date must be after start date.");
+            throw new InvalidStateException("End date must be after start date.");
         }
 
         if (request.getDiscountType() == DiscountType.PERCENTAGE && request.getDiscountValue().compareTo(BigDecimal.valueOf(100)) > 0) {
-            throw new RuntimeException("Percentage cannot exceed 100.");
+            throw new InvalidStateException("Percentage cannot exceed 100.");
         }
         List<FlashSale> conflictingFlashSales = flashSaleReporsitory.findConflictingFlashSales(tenantId, vendor.getId(), request.getStartDateTime(), request.getEndDateTime(), FlashSaleStatus.ACTIVE);
 
         if (!conflictingFlashSales.isEmpty()) {
-            throw new RuntimeException("Another Flash Sale already exists for the selected duration. Please choose different start and end date.");
+            throw new InvalidStateException("Another Flash Sale already exists for the selected duration. Please choose different start and end date.");
         }
         FlashSale flashSale = FlashSale.builder().tenantId(tenantId).vendorId(vendor.getId()).saleName(request.getSaleName()).description(request.getDescription()).discountType(request.getDiscountType()).discountValue(request.getDiscountValue()).maxDiscountCap(request.getMaxDiscountCap()).startDateTime(request.getStartDateTime()).endDateTime(request.getEndDateTime()).status(request.getStatus()).createdBy(userDetail.getId()).updatedBy(userDetail.getId()).build();
 
@@ -547,7 +526,7 @@ public class ProductService {
 
             Product product = productRepository.findByIdAndTenantIdAndVendorId(dto.getProductId(), tenantId, vendor.getId());
             if (product == null) {
-                throw new RuntimeException("Product not Found : " + dto.getProductId());
+                throw new ProductNotFoundException("Product not Found : " + dto.getProductId());
             }
 
             BigDecimal originalPrice1 = product.getMrp();
@@ -594,14 +573,14 @@ public class ProductService {
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null) {
-            throw new RuntimeException("Invalid tenant.");
+            throw new TenantNoFoundException("Invalid tenant.");
         }
 
         if (userDetail == null || userDetail.getRole() != Roles.ADMIN) {
-            throw new RuntimeException("Unauthorized access.");
+            throw new UnauthorizedException("Unauthorized access.");
         }
 
-        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new RuntimeException("Vendor not found."));
+        Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> new vendorNotFoundException("Vendor not found."));
 
         List<FlashSale> flashSales = flashSaleReporsitory.findAllByTenantIdAndVendorId(tenantId, vendor.getId());
 
@@ -664,15 +643,15 @@ public class ProductService {
 
         if (tenantId == null) {
 
-            throw new RuntimeException("Invalid tenant.");
+            throw new TenantNoFoundException("Invalid tenant.");
         }
 
         if (userDetail == null || userDetail.getRole() != Roles.ADMIN) {
-            throw new RuntimeException("Unauthorized access.");
+            throw new UnauthorizedException("Unauthorized access.");
         }
 
         Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> {
-            return new RuntimeException("Vendor not found.");
+            return new vendorNotFoundException("Vendor not found.");
         });
 
 
@@ -684,18 +663,17 @@ public class ProductService {
         }
 
         if (!request.getEndDateTime().isAfter(request.getStartDateTime())) {
-            throw new RuntimeException("End date must be after start date.");
+            throw new InvalidStateException("End date must be after start date.");
         }
 
         if (request.getDiscountType() == DiscountType.PERCENTAGE && request.getDiscountValue().compareTo(BigDecimal.valueOf(100)) > 0) {
-            throw new RuntimeException("Percentage discount cannot exceed 100.");
+            throw new InvalidStateException("Percentage discount cannot exceed 100.");
         }
         List<FlashSale> conflictingFlashSales = flashSaleReporsitory.findConflictingFlashSalesForUpdate(tenantId, vendor.getId(), request.getStartDateTime(), request.getEndDateTime(), FlashSaleStatus.ACTIVE, flashSaleId);
 
         if (!conflictingFlashSales.isEmpty()) {
-            throw new RuntimeException("Another Flash Sale already exists for the selected duration. Please choose different start and end date.");
+            throw new InvalidStateException("Another Flash Sale already exists for the selected duration. Please choose different start and end date.");
         }
-        // Update Master
         flashSale.setSaleName(request.getSaleName());
         flashSale.setDescription(request.getDescription());
         flashSale.setDiscountType(request.getDiscountType());
@@ -705,12 +683,9 @@ public class ProductService {
         flashSale.setEndDateTime(request.getEndDateTime());
         flashSale.setStatus(request.getStatus());
         flashSale.setUpdatedBy(userDetail.getId());
-
-        // Delete old items
         flashSaleItemRepository.deleteAllByFlashSaleId(flashSale.getId());
         flashSaleItemRepository.flush();
 
-        // Clear persistence collection
         flashSale.getItems().clear();
 
         for (FlashSaleItemDto dto : request.getItems()) {
@@ -718,7 +693,7 @@ public class ProductService {
             Product product = productRepository.findByIdAndTenantIdAndVendorId(dto.getProductId(), tenantId, vendor.getId());
 
             if (product == null) {
-                throw new RuntimeException("Product not found : " + dto.getProductId());
+                throw new ProductNotFoundException("Product not found : " + dto.getProductId());
             }
 
             BigDecimal originalPrice = product.getSellingPrice();
@@ -752,30 +727,24 @@ public class ProductService {
         }
 
         flashSaleReporsitory.saveAndFlush(flashSale);
-
-        log.info("Flash sale updated successfully. FlashSaleId : {}", flashSaleId);
-
         return "Flash Sale Updated Successfully";
     }
 
     public String deleteFlashSale(CustomUserDetail userDetail, Long flashSaleId) {
-        log.info("Updating flash sale. FlashSaleId : {}", flashSaleId);
-
         String tenantId = TenantContext.getTenantId();
-
         if (tenantId == null) {
 
-            throw new RuntimeException("Invalid tenant.");
+            throw new TenantNoFoundException("Invalid tenant.");
         }
 
         if (userDetail == null || userDetail.getRole() != Roles.ADMIN) {
 
-            throw new RuntimeException("Unauthorized access.");
+            throw new UnauthorizedException("Unauthorized access.");
         }
 
         Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> {
 
-            return new RuntimeException("Vendor not found.");
+            return new vendorNotFoundException("Vendor not found.");
         });
 
         FlashSale flashSale = flashSaleReporsitory.findByTenantIdAndVendorIdAndId(tenantId, vendor.getId(), flashSaleId);
@@ -795,11 +764,11 @@ public class ProductService {
 
         if (tenantId == null) {
 
-            throw new RuntimeException("Invalid tenant.");
+            throw new TenantNoFoundException("Invalid tenant.");
         }
         Vendor vendor = vendorRepository.findByTenantId(tenantId).orElseThrow(() -> {
 
-            return new RuntimeException("Vendor not found.");
+            return new vendorNotFoundException("Vendor not found.");
         });
         LocalDateTime now = LocalDateTime.now();
 
@@ -852,34 +821,34 @@ public class ProductService {
     public String addreviewToProduct(CustomUserDetail userDetail, ReviewRequetDTO reviewRequetDTO, String orderNum) {
         String tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new RuntimeException("No tenant");
+            throw new TenantNoFoundException("No tenant");
         }
         Optional<Vendor> vendor = vendorRepository.findByTenantId(tenantId);
         if (vendor.isEmpty()) {
-            throw new RuntimeException("Tenant does Not Exists");
+            throw new vendorNotFoundException("Tenant does Not Exists");
         }
         if (userDetail == null) {
-            throw new RuntimeException("Please Login First");
+            throw new UnauthorizedException ("Please Login First");
         }
         String orderId = orderNum;
         Order order = orderRepository.findByTenantIdAndOrderNumber(tenantId, orderId);
         if (order == null) {
-            throw new RuntimeException("Order does Not exist");
+            throw new OrderNotFoundException("Order does Not exist");
         }
         if (order.getOrderStatus() != OrderStatus.DELIVERED) {
-            throw new RuntimeException("You cannot review before order delivery.");
+            throw new InvalidStateException("You cannot review before order delivery.");
         }
 
         if (order.getReturnStatus() != ReturnStatus.NONE) {
-            throw new RuntimeException("You cannot review this product because a return has been initiated.");
+            throw new InvalidStateException("You cannot review this product because a return has been initiated.");
         }
         Long pid = Long.valueOf(reviewRequetDTO.getProductId());
         OrderItem existence = orderItemRepository.findByOrderIdAndProductIdAndTenantId(order.getId(), pid, tenantId);
         if (existence == null) {
-            throw new RuntimeException("You cnnot review this item..Purchase it to review");
+            throw new InvalidStateException("You cnnot review this item..Purchase it to review");
         }
         if (existence.isReview()) {
-            throw new RuntimeException("Already reviewed");
+            throw new InvalidStateException("Already reviewed");
         }
         existence.setReview(true);
 

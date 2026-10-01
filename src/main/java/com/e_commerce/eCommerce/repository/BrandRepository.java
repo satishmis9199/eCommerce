@@ -44,4 +44,18 @@ public interface BrandRepository extends JpaRepository<Brands,Long> {
     Brands findByTenantIdAndIdAndBrandStatus(String tenantId, Long id, BrandStatus brandStatus);
 
     List<Brands> findAllByTenantId(String tenantId);
+    @Query("""
+                SELECT new com.e_commerce.eCommerce.dto.response.BrandResponseDTO(
+                    b.id,
+                    b.brandName,
+                    b.brandDesc,
+                    b.brandStatus
+                )
+                FROM Brands b
+                WHERE b.tenantId = :tenantId
+                AND brandStatus = :status
+                ORDER BY b.id DESC
+            """)
+    List<BrandResponseDTO> getActiveBrandfortenant(@Param("tenantId") String tenantId,
+                                                   @Param("status") BrandStatus status);
 }

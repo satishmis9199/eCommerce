@@ -70,12 +70,9 @@ public class DashBoardService {
         vendorProfileDTO.setLastLogin(user.getLastLoginTime());
         vendorProfileDTO.setStatus(v2.getStatus());
         vendorProfileDTO.setBusinessName(v2.getBussinessName());
-//        vendorProfileDTO.setSubscriptionPlan(v2.getPlan());
         vendorProfileDTO.setLogo(r2Properties.getPublicUrl() + "/" + vendorBranding.getLogoUrl());
         vendorProfileDTO.setStoreName(v2.getStoreName());
         return vendorProfileDTO;
-
-
     }
 
     public MyProfileDTO getPrrofileData(User userDetail) {
@@ -100,34 +97,27 @@ public class DashBoardService {
 
 
     }
-
     public VendorDashboardDTO getDashBoardData(
             CustomUserDetail userDetail,
             String tenantId) {
-
         if (userDetail == null) {
             throw new vendorNotFoundException("User is Invalid");
         }
-
         if (tenantId == null || tenantId.isBlank()) {
             throw new VendorRequestException(
                     HttpStatus.UNAUTHORIZED,
                     "Tenant Does Not exist"
             );
         }
-
         LocalDateTime now = LocalDateTime.now();
-
         LocalDateTime currentMonthStart =
                 now.withDayOfMonth(1)
                         .withHour(0)
                         .withMinute(0)
                         .withSecond(0)
                         .withNano(0);
-
         LocalDateTime previousMonthStart =
                 currentMonthStart.minusMonths(1);
-
         LocalDateTime previousMonthEnd =
                 previousMonthStart
                         .plusDays(now.getDayOfMonth() - 1L)
@@ -135,38 +125,30 @@ public class DashBoardService {
                         .withMinute(now.getMinute())
                         .withSecond(now.getSecond())
                         .withNano(now.getNano());
-
         BigDecimal totalRevenue =
                 orderRepository.findTotalCountOfRevenue(tenantId);
-
         BigDecimal currentMonthRevenue =
                 orderRepository.findRevenueBetween(
                         tenantId,
                         currentMonthStart,
                         now
                 );
-
         BigDecimal previousMonthRevenue =
                 orderRepository.findRevenueBetween(
                         tenantId,
                         previousMonthStart,
                         previousMonthEnd
                 );
-
         if (totalRevenue == null) {
             totalRevenue = BigDecimal.ZERO;
         }
-
         if (currentMonthRevenue == null) {
             currentMonthRevenue = BigDecimal.ZERO;
         }
-
         if (previousMonthRevenue == null) {
             previousMonthRevenue = BigDecimal.ZERO;
         }
-
         BigDecimal revenueChangePercentage = BigDecimal.ZERO;
-
         if (previousMonthRevenue.compareTo(BigDecimal.ZERO) != 0) {
             revenueChangePercentage =
                     currentMonthRevenue
@@ -178,7 +160,6 @@ public class DashBoardService {
                             )
                             .multiply(BigDecimal.valueOf(100));
         }
-
         Long totalOrders =
                 orderRepository.totalOrders(tenantId);
 
@@ -188,28 +169,22 @@ public class DashBoardService {
                         currentMonthStart,
                         now
                 );
-
         Long previousMonthOrders =
                 orderRepository.totalOrdersBetween(
                         tenantId,
                         previousMonthStart,
                         previousMonthEnd
                 );
-
         if (totalOrders == null) {
             totalOrders = 0L;
         }
-
         if (currentMonthOrders == null) {
             currentMonthOrders = 0L;
         }
-
         if (previousMonthOrders == null) {
             previousMonthOrders = 0L;
         }
-
         BigDecimal ordersChangePercentage = BigDecimal.ZERO;
-
         if (previousMonthOrders != 0) {
             ordersChangePercentage =
                     BigDecimal.valueOf(currentMonthOrders - previousMonthOrders)
@@ -220,38 +195,31 @@ public class DashBoardService {
                             )
                             .multiply(BigDecimal.valueOf(100));
         }
-
         Long totalCustomers =
                 userRepository.totalCustomers(tenantId);
-
         Long currentMonthCustomers =
                 userRepository.totalCustomersBetween(
                         tenantId,
                         currentMonthStart,
                         now
                 );
-
         Long previousMonthCustomers =
                 userRepository.totalCustomersBetween(
                         tenantId,
                         previousMonthStart,
                         previousMonthEnd
                 );
-
         if (totalCustomers == null) {
             totalCustomers = 0L;
         }
-
         if (currentMonthCustomers == null) {
             currentMonthCustomers = 0L;
         }
-
         if (previousMonthCustomers == null) {
             previousMonthCustomers = 0L;
         }
 
         BigDecimal customersChangePercentage = BigDecimal.ZERO;
-
         if (previousMonthCustomers != 0) {
             customersChangePercentage =
                     BigDecimal.valueOf(
@@ -264,7 +232,6 @@ public class DashBoardService {
                             )
                             .multiply(BigDecimal.valueOf(100));
         }
-
         Long pendingOrders =
                 orderRepository.pendingOrders(tenantId);
 

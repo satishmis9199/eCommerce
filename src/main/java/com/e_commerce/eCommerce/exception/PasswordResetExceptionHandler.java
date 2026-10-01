@@ -70,5 +70,97 @@ public class PasswordResetExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(
+            Exception ex) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse<>(
+                        false,
+                        "Something went wrong. Please try again later."
+                ));
+    }
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> orderNotFound(OrderNotFoundException exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+    @ExceptionHandler(TenantNoFoundException.class)
+    public ResponseEntity<ApiResponse<?>> orderNotFound(TenantNoFoundException exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> productNotFound(ProductNotFoundException exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+    @ExceptionHandler(InvaidPriceException.class)
+    public ResponseEntity<ApiResponse<?>> invalidPrice(InvaidPriceException exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> categoryNotFond(CategoryNotFoundException exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<?>> Unautorized(UnauthorizedException exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+    @ExceptionHandler(InvalidStateException.class)
+    public ResponseEntity<ApiResponse<?>> invalidState(InvalidStateException exist){
+        exist.printStackTrace();
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(
+                        new ApiResponse<>(
+                                false,
+                                exist.getMessage()
+                        )
+                );
+    }
+
+
+
+
+
 
 }

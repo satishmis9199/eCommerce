@@ -4,6 +4,9 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.OrderUpdatRequestDTO;
 import com.e_commerce.eCommerce.entity.*;
 import com.e_commerce.eCommerce.event.OrderDeliveredEvent;
+import com.e_commerce.eCommerce.exception.OrderNotFoundException;
+import com.e_commerce.eCommerce.exception.VendorRequestException;
+import com.e_commerce.eCommerce.exception.vendorNotFoundException;
 import com.e_commerce.eCommerce.repository.OrderRepository;
 import com.e_commerce.eCommerce.repository.OrderTrackingrepository;
 import com.e_commerce.eCommerce.repository.VendorRepository;
@@ -11,6 +14,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,16 +39,16 @@ public class AdminOrderService {
         String tenantId = TenantContext.getTenantId();
 
         if (tenantId == null) {
-            throw new RuntimeException("Invalid Tenant Id.");
+            throw new VendorRequestException(HttpStatus.NOT_FOUND,"Invalid Tenant Id.");
         }
 
         if (userDetail == null || userDetail.getRole() != Roles.ADMIN) {
-            throw new RuntimeException("Unauthorized Access.");
+            throw new UsernameNotFoundException("Unauthorized Access.");
         }
 
         Vendor vendor = vendorRepository.findByTenantId(tenantId)
                 .orElseThrow(() -> {
-                    return new RuntimeException("Vendor does not exist.");
+                    return new vendorNotFoundException("Vendor does not exist.");
                 });
 
         Order order = orderRepository.findByTenantIdAndOrderNumber(
@@ -51,18 +56,18 @@ public class AdminOrderService {
                 orderUpdatRequestDTO.getOrderId());
 
         if (order == null) {
-            throw new RuntimeException("Order does not exist.");
+            throw new OrderNotFoundException("Order does not exist.");
         }
 
         OrderStatus previousStatus = order.getOrderStatus();
         OrderStatus newStatus = OrderStatus.valueOf(orderUpdatRequestDTO.getStatus().toUpperCase());
         if (previousStatus == newStatus) {
-            throw new RuntimeException("Order is already in " + previousStatus + " status.");
+            throw new OrderNotFoundException("Order is already in " + previousStatus + " status.");
         }
 
 
         if (newStatus.getSequence() <= previousStatus.getSequence()) {
-            throw new RuntimeException(
+            throw new OrderNotFoundException(
                     "Order cannot move back from "
                             + previousStatus + " to " + newStatus
             );

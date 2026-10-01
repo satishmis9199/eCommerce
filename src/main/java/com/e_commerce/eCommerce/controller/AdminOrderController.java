@@ -34,26 +34,16 @@ public class AdminOrderController {
     )
     public ResponseEntity<ApiResponse<String>> updateOrderStatusByAdmin(@AuthenticationPrincipal CustomUserDetail userDetail,
                                                                         @RequestBody OrderUpdatRequestDTO orderUpdatRequestDTO) {
-        try {
-            String message = adminOrderService.updateStatus(userDetail, orderUpdatRequestDTO);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(
-                            new ApiResponse<>(
-                                    true,
-                                    "product Updated",
-                                    message
-                            )
-                    );
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            new ApiResponse<>(
-                                    false,
-                                    e.getMessage(),
-                                    e.getMessage()
-                            )
-                    );
-        }
-    }
+        String message = adminOrderService.updateStatus(userDetail, orderUpdatRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(
+                        new ApiResponse<>(
+                                true,
+                                "product Updated",
+                                message
+                        )
+                );
 
+
+    }
 }

@@ -5,15 +5,21 @@ import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.EmailRequestDto;
 import com.e_commerce.eCommerce.dto.request.ProductFilterDTO;
+import com.e_commerce.eCommerce.dto.response.BrandResponseDTO;
 import com.e_commerce.eCommerce.entity.*;
+import com.e_commerce.eCommerce.enums.BrandStatus;
 import com.e_commerce.eCommerce.enums.PolicyStatus;
 import com.e_commerce.eCommerce.enums.PolicyType;
+import com.e_commerce.eCommerce.exception.InvalidStateException;
+import com.e_commerce.eCommerce.exception.TenantNoFoundException;
+import com.e_commerce.eCommerce.exception.UnauthorizedException;
 import com.e_commerce.eCommerce.exception.vendorNotFoundException;
 import com.e_commerce.eCommerce.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +50,7 @@ public class UserDashBoardService {
     private final EmailService emailService;
     private final VendorPolicyRepository vendorPolicyRepository;
     private final WiShlistRepositorye wiShlistRepositorye;
+    private final BrandRepository brandRepository;
 
     public StoreInfoResponseDTO getStoreInfo() {
 
@@ -55,7 +62,7 @@ public class UserDashBoardService {
 
         Vendor vendor = vendorRepository.findByTenantId(tenantId)
                 .orElseThrow(() ->
-                        new RuntimeException("Vendor does not exist"));
+                        new vendorNotFoundException("Vendor does not exist"));
 
         VendorBusiness vendorBusiness =
                 vendorBussinesss.findByVendorId(vendor.getId());
@@ -299,7 +306,7 @@ public class UserDashBoardService {
 
         if (vendor.isEmpty()) {
 
-            throw new RuntimeException("Vendor Does not exist");
+            throw new vendorNotFoundException("Vendor Does not exist");
         }
 
         Vendor v1 = vendor.get();
@@ -527,11 +534,11 @@ public class UserDashBoardService {
         List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
         String tenanId = TenantContext.getTenantId();
         if (tenanId == null) {
-            throw new RuntimeException("Invalid Tenant");
+            throw new TenantNoFoundException("Invalid Tenant");
         }
         Optional<Vendor> vendor = vendorRepository.findByTenantId(tenanId);
         if (vendor.isEmpty()) {
-            throw new RuntimeException("Vendor Does Not existt");
+            throw new vendorNotFoundException("Vendor Does Not existt");
         }
         Vendor v1 = vendor.get();
         List<Product> products = productRepository.findAllByTenantIdAndStatus(tenanId, ProductStatus.ACTIVE);
@@ -568,11 +575,11 @@ public class UserDashBoardService {
         List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
         String tenanId = TenantContext.getTenantId();
         if (tenanId == null) {
-            throw new RuntimeException("Invalid Tenant");
+            throw new TenantNoFoundException("Invalid Tenant");
         }
         Optional<Vendor> vendor = vendorRepository.findByTenantId(tenanId);
         if (vendor.isEmpty()) {
-            throw new RuntimeException("Vendor Does Not exist");
+            throw new vendorNotFoundException("Vendor Does Not exist");
         }
         Vendor v1 = vendor.get();
         List<Product> products =
@@ -615,11 +622,11 @@ public class UserDashBoardService {
         List<ProductCardResponseDTO> productCardResponseDTOS = new ArrayList<>();
         String tenanId = TenantContext.getTenantId();
         if (tenanId == null) {
-            throw new RuntimeException("Invalid Tenant");
+            throw new TenantNoFoundException("Invalid Tenant");
         }
         Optional<Vendor> vendor = vendorRepository.findByTenantId(tenanId);
         if (vendor.isEmpty()) {
-            throw new RuntimeException("Vendor Does Not exist");
+            throw new vendorNotFoundException("Vendor Does Not exist");
         }
         Vendor v1 = vendor.get();
         List<Product> products =
@@ -661,17 +668,17 @@ public class UserDashBoardService {
     public String changeMyPassword(ChangePasswordDTO changePasswordDTO, CustomUserDetail userDetail) {
         String tenaantId = TenantContext.getTenantId();
         if (tenaantId == null) {
-            throw new RuntimeException("Invalid tenent");
+            throw new TenantNoFoundException("Invalid tenent");
         }
         if (userDetail == null) {
-            throw new RuntimeException("Please Login...");
+            throw new UnauthorizedException("Please Login...");
         }
         User user = userDetail.getUser();
         if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
-            throw new RuntimeException("New Password and Confirmm passWord should be same...");
+            throw new InvalidStateException("New Password and Confirmm passWord should be same...");
         }
         if (!passwordEncoder.matches(changePasswordDTO.getCurrentPassword(), user.getPassword())) {
-            throw new RuntimeException("Current passwor is not matching");
+            throw new RuntimeException("Current password is not matching");
 
         }
         user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
@@ -774,5 +781,13 @@ public class UserDashBoardService {
         wishlist.setTenantId(tenantId);
 
         wiShlistRepositorye.save(wishlist);
+    }
+
+    public List<BrandResponseDTO> getActiveBrand(String tenantId) {
+        if(tenantId==null){
+            throw new TenantNoFoundException("Tenant Does Not exist");
+        }
+        List<BrandResponseDTO> brandResponseDTOS=brandRepository.getActiveBrandfortenant(tenantId, BrandStatus.ACTIVE);
+        return brandResponseDTOS;
     }
 }

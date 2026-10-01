@@ -916,6 +916,10 @@
         .filter-block{margin-bottom:24px;}
         .filter-block h4{font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px;color:var(--muted);}
         .filter-row{display:flex;align-items:center;gap:9px;font-size:13.5px;margin-bottom:10px;color:var(--ink-soft);}
+        .brand-filter-search{width:100%;height:36px;border:1.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;margin-bottom:10px;outline:none;}
+        .brand-filter-search:focus{border-color:var(--brand-primary);box-shadow:0 0 0 3px var(--brand-primary-light);}
+        .brand-filter-list{max-height:240px;overflow-y:auto;padding-right:4px;}
+        .brand-filter-empty{display:none;font-size:12.5px;color:var(--muted);}
         .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;}
         .listing-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
         .filter-toggle-btn{display:none;}
@@ -2021,6 +2025,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       searchProducts:        `${API_BASE}/products/search`,
       searchSuggestions:     `${API_BASE}/products/search/suggestions`,
       filters:               `${API_BASE}/products/filters`,
+      brandDetails:          `${API_BASE}/brand-details`,
       reviews:        (productId) => `${API_BASE}/products/${productId}/reviews`,
       ratings:        (productId) => `${API_BASE}/products/${productId}/ratings`,
       relatedProducts:(productId) => `${API_BASE}/products/${productId}/related`,
@@ -2652,11 +2657,37 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       });
     }
 
-    // ---- Brand filter: no brand master-data endpoint on the backend yet,
-    // so this list is hardcoded on the frontend for now. Swap it for a real
-    // API-driven list once /products/filters (or a dedicated /brands
-    // endpoint) actually returns brands.
-    const BRAND_FILTERS = ["UltraTech","Tata Tiscon","Asian Paints","Kajaria","Astral Pipes","Havells"];
+    // ---- Brand filter: loaded from GET /api/u1/v1/brand-details
+    // ({ data:[{ id, brandName, description, status }], success }).
+    // Only ACTIVE brands, de-duplicated by name, sorted A-Z. Cached after
+    // the first successful load. Empty list => Brand block is hidden.
+    let BRAND_FILTERS = [];
+    async function loadBrandFilters(){
+      if (BRAND_FILTERS.length) return BRAND_FILTERS;
+      try{
+        const res = await apiRequest(API_ENDPOINTS.brandDetails, {}, { silentError:true });
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        const seen = new Set();
+        const names = [];
+        list.forEach(b=>{
+          const name = String(b?.brandName ?? "").trim();
+          if (!name) return;
+          if (b.status && String(b.status).toUpperCase() !== "ACTIVE") return;
+          const key = name.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          names.push(name);
+        });
+        names.sort((a,b)=>a.localeCompare(b, undefined, { sensitivity:"base" }));
+        BRAND_FILTERS = names;
+      }catch(e){
+        console.warn("brand-details failed:", e && e.message);
+      }
+      return BRAND_FILTERS;
+    }
+    function escapeAttr(str){
+      return escapeHtml(String(str)).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
 
     // ---- Price filter: also hardcoded (no backend-driven price buckets).
     // Instead of typing every [lo,hi] pair by hand, generate `count` ranges
@@ -4643,11 +4674,11 @@ async function removeCartItem(itemId){
       updateListingCount(items.length);
       // Category list is real: reuse what /catalog/categories already gave
       // us on page load (AppState.categories = [{id, categoryName}, ...]).
-      // Brand/price/rating have no backend master-data yet, so they're
-      // hardcoded on the frontend for now.
+      // Brands come from /brand-details; price/rating are still hardcoded.
+      const brands = await loadBrandFilters();
       renderFilterPanel({
         categories: AppState.categories.length ? AppState.categories : mockCategories_sync(),
-        brands: BRAND_FILTERS,
+        brands,
         priceRanges: PRICE_FILTERS,
         ratings: RATING_FILTERS,
       });
@@ -4670,7 +4701,11 @@ async function removeCartItem(itemId){
     function renderFilterPanel(filters){
       document.getElementById("filterPanel").innerHTML = `
         <div class="filter-block"><h4>Category</h4>${filters.categories.map(c=>`<label class="filter-row"><input type="checkbox" data-filter="category" value="${c.id}">${escapeHtml(c.categoryName)}</label>`).join("")}</div>
-        <div class="filter-block"><h4>Brand</h4>${filters.brands.map(b=>`<label class="filter-row"><input type="checkbox" data-filter="brand" value="${escapeHtml(b)}">${b}</label>`).join("")}</div>
+        ${(filters.brands && filters.brands.length) ? `<div class="filter-block"><h4>Brand</h4>
+          ${filters.brands.length > 8 ? `<input type="search" class="brand-filter-search" id="brandFilterSearch" placeholder="Search brands" autocomplete="off">` : ""}
+          <div class="brand-filter-list" id="brandFilterList">${filters.brands.map(b=>`<label class="filter-row" data-brand-name="${escapeAttr(b.toLowerCase())}"><input type="checkbox" data-filter="brand" value="${escapeAttr(b)}">${escapeHtml(b)}</label>`).join("")}</div>
+          <p class="brand-filter-empty" id="brandFilterEmpty">No brands found</p>
+        </div>` : ""}
         <div class="filter-block"><h4>Price</h4>
           <label class="filter-row"><input type="radio" name="price" data-filter="price" value=""> Any price</label>
           ${filters.priceRanges.map(([lo,hi])=>`<label class="filter-row"><input type="radio" name="price" data-filter="price" value="${lo},${hi}">${fmtPrice(lo)} – ${hi===Infinity?"+":fmtPrice(hi)}</label>`).join("")}
@@ -4683,6 +4718,19 @@ async function removeCartItem(itemId){
       document.querySelectorAll('#filterPanel [data-filter]').forEach(input=>{
         input.addEventListener("change", onFilterChange);
       });
+      const brandSearch = document.getElementById("brandFilterSearch");
+      if (brandSearch){
+        brandSearch.addEventListener("input", ()=>{
+          const q = brandSearch.value.trim().toLowerCase();
+          let visible = 0;
+          document.querySelectorAll("#brandFilterList .filter-row").forEach(row=>{
+            const show = !q || row.dataset.brandName.includes(q);
+            row.style.display = show ? "" : "none";
+            if (show) visible++;
+          });
+          document.getElementById("brandFilterEmpty").style.display = visible ? "none" : "block";
+        });
+      }
     }
 
     async function onFilterChange(){
@@ -4721,7 +4769,7 @@ async function removeCartItem(itemId){
     function applyFiltersLocally(state, allItems){
       let items = [...allItems];
       if (state.categoryIds.size) items = items.filter(p => state.categoryIds.has(String(p.categoryId)));
-      if (state.brands.size)      items = items.filter(p => state.brands.has(p.brand));
+      if (state.brands.size)      items = items.filter(p => state.brands.has(typeof p.brand === "string" ? p.brand : (p.brand?.brandName || p.brandName)));
       if (state.price){
         const [lo, hi] = state.price;
         items = items.filter(p => p.price >= lo && p.price <= hi);

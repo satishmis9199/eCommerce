@@ -787,6 +787,14 @@
         .filter-block{margin-bottom:24px;}
         .filter-block h4{font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px;color:var(--muted);}
         .filter-row{display:flex;align-items:center;gap:9px;font-size:13.5px;margin-bottom:10px;color:var(--ink-soft);}
+        .brand-filter-search{width:100%;height:36px;border:1.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;margin-bottom:10px;outline:none;}
+        .brand-filter-search:focus{border-color:var(--brand-primary);box-shadow:0 0 0 3px var(--brand-primary-light);}
+        .brand-filter-list{max-height:240px;overflow-y:auto;padding-right:4px;}
+        .brand-filter-empty{display:none;font-size:12.5px;color:var(--muted);}
+        .brand-chips{display:flex;flex-wrap:wrap;gap:10px;}
+        .brand-chip{border:1.5px solid var(--border);background:var(--surface);color:var(--ink-soft);border-radius:999px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;}
+        .brand-chip:hover{border-color:var(--brand-primary);color:var(--brand-primary);background:var(--brand-primary-light);}
+        .listing-empty{grid-column:1/-1;padding:28px 8px;color:var(--muted);font-size:14px;}
         .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;}
         .listing-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
 
@@ -1170,6 +1178,14 @@
                 <div><h2 class="section-title">Explore the Menu</h2></div>
             </div>
             <div class="cat-grid" id="categoryGrid"></div>
+        </section>
+
+        <!-- ================= SHOP BY BRAND ================= -->
+        <section class="section" id="brandsSection" style="display:none;">
+            <div class="section-head">
+                <div><h2 class="section-title">Shop by Brand</h2></div>
+            </div>
+            <div class="brand-chips" id="brandChips"></div>
         </section>
 
         <!-- ================= FLASH SALE (Today's Special) ================= -->
@@ -1728,6 +1744,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";
       searchProducts:        `${API_BASE}/products/search`,
       searchSuggestions:     `${API_BASE}/products/search/suggestions`,
       filters:               `${API_BASE}/products/filters`,
+      brandDetails:          `${API_BASE}/brand-details`,
       reviews:        (productId) => `${API_BASE}/products/${productId}/reviews`,
       ratings:        (productId) => `${API_BASE}/products/${productId}/ratings`,
       relatedProducts:(productId) => `${API_BASE}/products/${productId}/related`,
@@ -2153,7 +2170,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";
     function mockFilters() {
       return Promise.resolve({
         categories: ["Hot Beverages","Cold Beverages","Breakfast","Sandwiches & Wraps","Pizza & Pasta","Burgers","Bakery","Desserts"],
-        brands: ["Continental","Italian","North Indian","Bakery & Patisserie","Cafe Signature","Healthy Bowls"],
+        brands: [],
         priceRanges: [[0,149],[150,299],[300,599],[600,5000]],
         ratings: [4,3,2,1],
       });
@@ -3776,37 +3793,165 @@ async function removeCartItem(itemId){
     /* ---------------------------------------------------------------------
        11. LISTING / FILTER VIEW (unchanged logic; "Brand" relabelled "Cuisine")
     --------------------------------------------------------------------- */
-    async function showListingView(title, items){
+    async function showListingView(title, items, preselectBrand){
       hideAllViews();
       document.getElementById("listingView").style.display = "block";
       document.getElementById("listingTitle").textContent = title;
-      document.getElementById("listingCount").textContent = `${items.length} items found`;
       AppState.currentListing.items = items;
-      renderGrid("listingGrid", items);
-      const filters = await withFallback(
-        ()=>apiRequest(API_ENDPOINTS.filters, {}, { silentError:true }),
-        mockFilters
-      );
-      renderFilterPanel(filters);
+      AppState.currentListing.selectedBrands = preselectBrand ? [{ id: preselectBrand.id ?? null, name: preselectBrand.name }] : [];
+      document.getElementById("sortSelect").value = "popularity";
+      applyListingFilters();
+      const [filters, brands] = await Promise.all([
+        withFallback(
+          ()=>apiRequest(API_ENDPOINTS.filters, {}, { silentError:true }),
+          mockFilters
+        ),
+        loadBrandOptions(),
+      ]);
+      renderFilterPanel(filters, brands);
+      if (preselectBrand){
+        const want = preselectBrand.name.toLowerCase();
+        const cb = [...document.querySelectorAll("#filterPanel .brand-check")].find(el=>el.value.toLowerCase() === want);
+        if (cb){
+          cb.checked = true;
+          AppState.currentListing.selectedBrands = [{ id: cb.dataset.brandId || null, name: cb.value }];
+          applyListingFilters();
+        }
+      }
       window.scrollTo({top:0, behavior:"smooth"});
     }
-    function renderFilterPanel(filters){
+
+    /* ---- Brand filter: loaded from GET /api/u1/v1/brand-details ---- */
+    let brandOptionsCache = null;
+    async function loadBrandOptions(){
+      if (brandOptionsCache) return brandOptionsCache;
+      try{
+        const res = await apiRequest(API_ENDPOINTS.brandDetails, {}, { silentError:true });
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        const seen = new Set();
+        const brands = [];
+        list.forEach(b=>{
+          const name = String(b?.brandName ?? "").trim();
+          if (!name) return;
+          if (b.status && String(b.status).toUpperCase() !== "ACTIVE") return;
+          const key = name.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          brands.push({ id: b.id, name });
+        });
+        brands.sort((a,b)=>a.name.localeCompare(b.name, undefined, { sensitivity:"base" }));
+        if (brands.length) brandOptionsCache = brands;
+        return brands;
+      }catch(e){
+        return [];
+      }
+    }
+    function escapeAttr(str){
+      return escapeHtml(String(str)).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function renderFilterPanel(filters, brands){
+      const f = (filters && filters.data) ? filters.data : (filters || {});
+      const categories = f.categories || [];
+      const priceRanges = f.priceRanges || [];
+      const ratings = f.ratings || [];
+      const brandList = (brands && brands.length)
+        ? brands
+        : (f.brands || [])
+            .map(n=>({ id:null, name: typeof n === "string" ? n : (n.brandName || n.name || "") }))
+            .filter(b=>b.name);
+
+      const brandBlock = brandList.length ? `
+        <div class="filter-block"><h4>Brand</h4>
+          ${brandList.length > 8 ? `<input type="search" class="brand-filter-search" id="brandFilterSearch" placeholder="Search brands" autocomplete="off">` : ""}
+          <div class="brand-filter-list" id="brandFilterList">
+            ${brandList.map(b=>`<label class="filter-row" data-brand-name="${escapeAttr(b.name.toLowerCase())}"><input type="checkbox" class="brand-check" value="${escapeAttr(b.name)}" data-brand-id="${b.id ?? ""}">${escapeHtml(b.name)}</label>`).join("")}
+          </div>
+          <p class="brand-filter-empty" id="brandFilterEmpty">No brands found</p>
+        </div>` : "";
+
       document.getElementById("filterPanel").innerHTML = `
-        <div class="filter-block"><h4>Category</h4>${filters.categories.map(c=>`<label class="filter-row"><input type="checkbox">${c}</label>`).join("")}</div>
-        <div class="filter-block"><h4>Cuisine</h4>${filters.brands.map(b=>`<label class="filter-row"><input type="checkbox">${b}</label>`).join("")}</div>
-        <div class="filter-block"><h4>Price</h4>${filters.priceRanges.map(([lo,hi])=>`<label class="filter-row"><input type="radio" name="price">${fmtPrice(lo)} – ${hi>=5000?"+":fmtPrice(hi)}</label>`).join("")}</div>
-        <div class="filter-block"><h4>Rating</h4>${filters.ratings.map(r=>`<label class="filter-row"><input type="radio" name="rating">${"★".repeat(r)} & up</label>`).join("")}</div>
+        <div class="filter-block"><h4>Category</h4>${categories.map(c=>`<label class="filter-row"><input type="checkbox">${c}</label>`).join("")}</div>
+        ${brandBlock}
+        <div class="filter-block"><h4>Price</h4>${priceRanges.map(([lo,hi])=>`<label class="filter-row"><input type="radio" name="price">${fmtPrice(lo)} – ${hi>=5000?"+":fmtPrice(hi)}</label>`).join("")}</div>
+        <div class="filter-block"><h4>Rating</h4>${ratings.map(r=>`<label class="filter-row"><input type="radio" name="rating">${"★".repeat(r)} & up</label>`).join("")}</div>
       `;
     }
-    document.getElementById("sortSelect").addEventListener("change", (e)=>{
-      const sort = e.target.value;
-      let items = [...AppState.currentListing.items];
+
+    // Applies the selected brands + current sort to the listing and re-renders the grid.
+    function applyListingFilters(){
+      const L = AppState.currentListing;
+      let items = [...L.items];
+      const sel = L.selectedBrands || [];
+      if (sel.length){
+        const ids = new Set(sel.filter(b=>b.id !== null && b.id !== "").map(b=>String(b.id)));
+        const names = new Set(sel.map(b=>b.name.toLowerCase()));
+        items = items.filter(p=>{
+          const pid = p.brandId ?? (p.brand && typeof p.brand === "object" ? p.brand.id : null);
+          if (pid !== null && pid !== undefined && ids.has(String(pid))) return true;
+          const pn = (typeof p.brand === "string") ? p.brand : (p.brand?.brandName || p.brandName || "");
+          return names.has(String(pn).trim().toLowerCase());
+        });
+      }
+      const sort = document.getElementById("sortSelect").value;
       if (sort==="price-low") items.sort((a,b)=>a.price-b.price);
       else if (sort==="price-high") items.sort((a,b)=>b.price-a.price);
       else if (sort==="rating") items.sort((a,b)=>b.rating-a.rating);
       else if (sort==="discount") items.sort((a,b)=>b.discountPercent-a.discountPercent);
+      document.getElementById("listingCount").textContent = `${items.length} items found`;
+      if (!items.length){
+        document.getElementById("listingGrid").innerHTML = `<div class="listing-empty">No items match the selected brands.</div>`;
+        return;
+      }
       renderGrid("listingGrid", items);
+    }
+
+    document.getElementById("filterPanel").addEventListener("change", (e)=>{
+      if (!e.target.classList || !e.target.classList.contains("brand-check")) return;
+      AppState.currentListing.selectedBrands = [...document.querySelectorAll("#filterPanel .brand-check:checked")]
+        .map(el=>({ id: el.dataset.brandId || null, name: el.value }));
+      applyListingFilters();
     });
+    document.getElementById("filterPanel").addEventListener("input", (e)=>{
+      if (e.target.id !== "brandFilterSearch") return;
+      const q = e.target.value.trim().toLowerCase();
+      let visible = 0;
+      document.querySelectorAll("#brandFilterList .filter-row").forEach(row=>{
+        const show = !q || row.dataset.brandName.includes(q);
+        row.style.display = show ? "" : "none";
+        if (show) visible++;
+      });
+      const empty = document.getElementById("brandFilterEmpty");
+      if (empty) empty.style.display = visible ? "none" : "block";
+    });
+    document.getElementById("sortSelect").addEventListener("change", applyListingFilters);
+
+    /* ---- Home page: "Shop by Brand" chips (same /brand-details data) ---- */
+    async function renderHomeBrands(){
+      const brands = await loadBrandOptions();
+      const section = document.getElementById("brandsSection");
+      if (!brands.length){ console.warn("brand-details returned no brands"); section.style.display = "none"; return; }
+      document.getElementById("brandChips").innerHTML = brands.map(b=>
+        `<button type="button" class="brand-chip" data-brand-chip="${escapeAttr(b.name)}" data-brand-id="${b.id ?? ""}">${escapeHtml(b.name)}</button>`
+      ).join("");
+      section.style.display = "";
+    }
+    document.getElementById("brandChips").addEventListener("click", async (e)=>{
+      const chip = e.target.closest("[data-brand-chip]");
+      if (!chip) return;
+      const brand = { id: chip.dataset.brandId || null, name: chip.dataset.brandChip };
+      const items = await withFallback(
+        async ()=>{
+          const res = await apiRequest(API_ENDPOINTS.products, {}, { silentError:true });
+          const data = (res && res.data) ? res.data : res;
+          if (!Array.isArray(data) || !data.length) throw new Error("empty");
+          return data;
+        },
+        ()=>Promise.resolve(PRODUCT_POOL)
+      );
+      showListingView(brand.name, items, brand);
+    });
+    renderHomeBrands();
     function showHomeView(){
       hideAllViews();
       document.getElementById("homeView").style.display="block";

@@ -5,6 +5,7 @@ import com.e_commerce.eCommerce.CustomAnnotation.RequiresFeature;
 import com.e_commerce.eCommerce.config.TenantContext;
 import com.e_commerce.eCommerce.dto.*;
 import com.e_commerce.eCommerce.dto.request.ProductFilterDTO;
+import com.e_commerce.eCommerce.dto.response.BrandResponseDTO;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.UserDashBoardService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,22 @@ public class UserDashBoardController {
 
     private final UserDashBoardService userDashBoardService;
     @AuditLogs("StoreInfo")
+
+
+
+    @GetMapping("/brand-details")
+    public ResponseEntity<ApiResponse<?>> getActiveBrand(){
+        String tenantId=TenantContext.getTenantId();
+        List<BrandResponseDTO> brandResponseDTOS=userDashBoardService.getActiveBrand(tenantId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(
+                        new ApiResponse<>(
+                                true,
+                                "Active Brand",
+                                brandResponseDTOS
+                        )
+                );
+    }
     @GetMapping("/store/info")
     public StoreInfoResponseDTO getStoreInfo() {
         return userDashBoardService.getStoreInfo();
@@ -66,7 +83,7 @@ public class UserDashBoardController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Integer rating){
-        try {
+
 
             ProductFilterDTO filterDTO=new ProductFilterDTO(categoryId,brand,minPrice,maxPrice,rating);
             String tenant = TenantContext.getTenantId();
@@ -79,16 +96,7 @@ public class UserDashBoardController {
                                     productCardResponseDTOS
                             )
                     );
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            new ApiResponse<>(
-                                    false,
-                                    "Error While Featured Product Fetching",
-                                    null
-                            )
-                    );
-        }
+
     }
     @AuditLogs("GetAllProduct")
     @GetMapping("/products")
@@ -99,24 +107,20 @@ public class UserDashBoardController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Integer rating) {
-        try {
+
             String tenant = TenantContext.getTenantId();
             ProductFilterDTO filter = new ProductFilterDTO(categoryId, brand, minPrice, maxPrice, rating);
             List<ProductCardResponseDTO> productCardResponseDTOS =
                     userDashBoardService.getAllProducts(tenant, filter);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ApiResponse<>(true, "Product Fetched Successfully", productCardResponseDTOS));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(false, "Error While Product Fetching", null));
-        }
+
     }
     @AuditLogs("getProductsByCategory")
     @RequiresFeature("CATEGORY_MANAGEMENT")
     @GetMapping("/products/category/{categoryId}")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getProductsByCategory(@PathVariable Long categoryId) {
-        try {
+
             List<ProductCardResponseDTO> productCardResponseDTOS = userDashBoardService.getProductsByCategory(categoryId);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ApiResponse<>(
@@ -126,23 +130,13 @@ public class UserDashBoardController {
 
                     ));
 
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            new ApiResponse<>(
-                                    false,
-                                    e.getMessage(),
-                                    null
-                            )
-                    );
-        }
+
     }
     @AuditLogs("Recommended products")
     @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/recommended")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getRecommendedProducts() {
-        try {
+
             List<ProductCardResponseDTO> data = userDashBoardService.findRecommendedProd();
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
@@ -153,22 +147,13 @@ public class UserDashBoardController {
                             )
                     );
 
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            new ApiResponse<>(
-                                    false,
-                                    e.getMessage(),
-                                    null
-                            )
-                    );
-        }
+
     }
     @AuditLogs("New Arrivals")
     @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/new-arrivals")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getNewArrivals() {
-        try {
+
             List<ProductCardResponseDTO> data = userDashBoardService.findNewArrivals();
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
@@ -179,23 +164,14 @@ public class UserDashBoardController {
                             )
                     );
 
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            new ApiResponse<>(
-                                    false,
-                                    e.getMessage(),
-                                    null
-                            )
-                    );
-        }
+
 
     }
     @AuditLogs("Best Seller")
     @RequiresFeature("PRODUCT_MANAGEMENT")
     @GetMapping("/products/best-sellers")
     public ResponseEntity<ApiResponse<List<ProductCardResponseDTO>>> getBestSellProducts() {
-        try {
+
             List<ProductCardResponseDTO> data = userDashBoardService.findBestSeller();
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(
@@ -206,16 +182,7 @@ public class UserDashBoardController {
                             )
                     );
 
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            new ApiResponse<>(
-                                    false,
-                                    e.getMessage(),
-                                    null
-                            )
-                    );
-        }
+
 
     }
 
@@ -223,7 +190,6 @@ public class UserDashBoardController {
     public ResponseEntity<ApiResponse<?>> changePassword(
             @RequestBody ChangePasswordDTO changePasswordDTO,
             @AuthenticationPrincipal CustomUserDetail userDetail) {
-        try {
 
             String message = userDashBoardService.changeMyPassword(changePasswordDTO, userDetail);
 
@@ -232,14 +198,7 @@ public class UserDashBoardController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ApiResponse<>(true, message));
 
-        } catch (Exception e) {
-            log.error("Stack Trace :", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(
-                            false,
-                            e.getMessage() != null ? e.getMessage() : "Something went wrong."
-                    ));
-        }
+
     }
     @AuditLogs("Loaded Festival banner")
     @RequiresFeature("FESTIVAL_BANNER")
@@ -247,7 +206,7 @@ public class UserDashBoardController {
     public ResponseEntity<ApiResponse<List<UserBannerResponseDTo>>> loadBanner(
             @AuthenticationPrincipal CustomUserDetail userDetail) {
 
-        try {
+
 
             List<UserBannerResponseDTo> banners =
                     userDashBoardService.loadBanners();
@@ -260,21 +219,12 @@ public class UserDashBoardController {
                     )
             );
 
-        } catch (Exception e) {
 
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(
-                            false,
-                            e.getMessage()
-                    ));
-        }
     }
     @AuditLogs("Saved Subscribed Email")
     @PostMapping("/marketing/newsletter/subscribe")
     public ResponseEntity<ApiResponse<?>> saveSubscribedEmail(
             @RequestBody Map<String, String> request) {
-
-        try {
 
             String email = request.get("email");
 
@@ -298,13 +248,6 @@ public class UserDashBoardController {
                     )
             );
 
-        } catch (Exception e) {
 
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(
-                            false,
-                            e.getMessage()
-                    ));
-        }
     }
 }
