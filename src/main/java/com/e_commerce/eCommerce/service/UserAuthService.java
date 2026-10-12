@@ -5,10 +5,17 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
+import com.e_commerce.eCommerce.dto.request.NotificationPreferencesRequestDto;
+import com.e_commerce.eCommerce.dto.request.UserProfileUpdateRequest;
+import com.e_commerce.eCommerce.dto.response.NotificationPreferencesDTO;
+import com.e_commerce.eCommerce.dto.response.UserProfileUpdateResponse;
 import com.e_commerce.eCommerce.enums.NotificationType;
 import com.e_commerce.eCommerce.event.VendorNotificationEvent;
+import com.e_commerce.eCommerce.exception.TenantNoFoundException;
+import com.e_commerce.eCommerce.exception.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +29,7 @@ import com.e_commerce.eCommerce.repository.UserRepos;
 import com.e_commerce.eCommerce.repository.VendorRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -291,5 +299,98 @@ public class UserAuthService {
                         .build()
         );
         return savedUser;
+    }
+
+    @Transactional
+    public UserProfileUpdateResponse updateProfile(
+            CustomUserDetail userDetail,
+            String tenantId,
+            UserProfileUpdateRequest request) {
+
+        if (userDetail == null) {
+            throw new UnauthorizedException("Please login First");
+        }
+
+        if (tenantId == null) {
+            throw new TenantNoFoundException("Tenant Does Not exist");
+        }
+
+        User user = userRepos.findByTenantIdAndId(
+                tenantId, userDetail.getUser().getId());
+
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhone(request.getMobileNumber());
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedBy(String.valueOf(userDetail.getId()));
+
+        userRepos.saveAndFlush(user);
+
+        return new UserProfileUpdateResponse(
+                new UserProfileUpdateResponse.UserResponse(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getEmail(),
+                        user.getPhone()
+                )
+        );
+    }
+
+    public NotificationPreferencesDTO getPrefence(
+            CustomUserDetail userDetail, String tenantid) {
+
+        Long userId = userDetail.getId();
+
+        User user = userRepos
+                .findByIdAndTenantId(userId, tenantid)
+                .orElseThrow(() ->
+                        new RuntimeException("Notification preferences not found"));
+
+        NotificationPreferencesDTO dto = new NotificationPreferencesDTO();
+
+        NotificationPreferencesDTO.Preferences preferences =
+                new NotificationPreferencesDTO.Preferences();
+
+        preferences.setOrderUpdatesEmail(
+                user.isEmailNotified());
+
+        preferences.setPromotionalOffers(
+                user.isIspromotionalOffer());
+
+        preferences.setSmsNotifications(
+                user.isSMSNotified());
+
+        dto.setPreferences(preferences);
+
+        return dto;
+    }
+
+    @Transactional
+    public NotificationPreferencesDTO updateprefences(
+            CustomUserDetail userDetail,
+            String tenantId,
+            NotificationPreferencesRequestDto dto) {
+
+        Long userId = userDetail.getId();
+
+        User user = userRepos
+                .findByIdAndTenantId(userId, tenantId)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        user.setEmailNotified(dto.isOrderUpdatesEmail());
+
+        user.setIspromotionalOffer(dto.isPromotionalOffers());
+
+        user.setSMSNotified(dto.isSmsNotifications());
+
+        userRepos.save(user);
+
+        return getPrefence(userDetail, tenantId);
     }
 }

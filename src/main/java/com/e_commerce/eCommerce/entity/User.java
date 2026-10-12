@@ -104,6 +104,15 @@ public class User {
     private Boolean emailVerified = true;
 
     @Column(nullable = false)
+    private boolean isEmailNotified = false;
+
+    @Column(nullable = false)
+    private boolean isSMSNotified = false;
+
+    @Column(nullable = false)
+    private boolean ispromotionalOffer = false;
+
+    @Column(nullable = false)
     private Integer failedLoginAttempt = 0;
 
     @Column

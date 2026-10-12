@@ -2,9 +2,14 @@ package com.e_commerce.eCommerce.controller;
 
 import com.e_commerce.eCommerce.config.JwtUtil;
 import com.e_commerce.eCommerce.config.TenantContext;
+import com.e_commerce.eCommerce.dto.ApiResponse;
 import com.e_commerce.eCommerce.dto.AuthMeResponse;
 import com.e_commerce.eCommerce.dto.LoginRequestDTO;
 import com.e_commerce.eCommerce.dto.RegisterRequestDTO;
+import com.e_commerce.eCommerce.dto.request.NotificationPreferencesRequestDto;
+import com.e_commerce.eCommerce.dto.request.UserProfileUpdateRequest;
+import com.e_commerce.eCommerce.dto.response.NotificationPreferencesDTO;
+import com.e_commerce.eCommerce.dto.response.UserProfileUpdateResponse;
 import com.e_commerce.eCommerce.entity.Roles;
 import com.e_commerce.eCommerce.entity.User;
 import com.e_commerce.eCommerce.enums.NotificationType;
@@ -14,12 +19,16 @@ import com.e_commerce.eCommerce.repository.VendorRepository;
 import com.e_commerce.eCommerce.service.CustomUserDetail;
 import com.e_commerce.eCommerce.service.NotificationService;
 import com.e_commerce.eCommerce.service.UserAuthService;
+import com.sun.nio.sctp.NotificationHandler;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.units.qual.A;
+import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -356,9 +365,53 @@ public class UserAuthController {
         );
     }
 
+    @PutMapping("/u1/v1/users/me")
+    public ResponseEntity<ApiResponse<UserProfileUpdateResponse>> updateUserProfile(
+            @Valid @RequestBody UserProfileUpdateRequest userProfileUpdateRequest,
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+
+        String tenantId = TenantContext.getTenantId();
+
+        UserProfileUpdateResponse response = userAuthService.updateProfile(
+                userDetail,
+                tenantId,
+                userProfileUpdateRequest
+        );
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Updated Successfully",
+                        response
+                )
+        );
+    }
 
 
-
+    @GetMapping("/u1/v1/users/me/preferences")
+    public ResponseEntity<ApiResponse<NotificationPreferencesDTO>> getprefence(@AuthenticationPrincipal CustomUserDetail userDetail){
+        String tenanatId=TenantContext.getTenantId();
+        NotificationPreferencesDTO notificationPreferencesDTO=userAuthService.getPrefence(userDetail,tenanatId);
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "fetched Prefences",
+                        notificationPreferencesDTO
+                )
+        );
+    }
+    @PutMapping("/u1/v1/users/me/preferences")
+    public ResponseEntity<ApiResponse<NotificationPreferencesDTO>> updatePrefences(@AuthenticationPrincipal CustomUserDetail userDetail, @RequestBody NotificationPreferencesRequestDto notificationPreferencesRequestDto){
+        String tenanatId=TenantContext.getTenantId();
+        NotificationPreferencesDTO notificationPreferencesDTO=userAuthService.updateprefences(userDetail,tenanatId,notificationPreferencesRequestDto);
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Updated Prefences",
+                        notificationPreferencesDTO
+                )
+        );
+    }
 
 
 }

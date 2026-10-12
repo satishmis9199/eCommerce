@@ -2049,6 +2049,7 @@ const url_verify_payment = "/user/u1/v1/payments/verify";   // ← add this line
       userProfile:           `${API_BASE}/users/me`,
       updateProfile:         `${API_BASE}/users/me`,
       changePassword:        `${API_BASE}/users/me/change-password`,
+      preferences:           `${API_BASE}/users/me/preferences`,   // GET + PUT — notification settings
 
       addresses:             `${API_BASE}/users/me/addresses`,
       addAddress:            `${API_BASE}/users/me/addresses`,
@@ -5240,6 +5241,129 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
       if (link){ e.preventDefault(); navigateAccount(link.dataset.account); }
     });
 
+    /* ---------------------------------------------------------------------
+       EDITABLE PROFILE — name / email / mobile
+       PUT /api/u1/v1/users/me   (API_ENDPOINTS.updateProfile)
+       Request : { firstName, lastName, email, mobileNumber }
+       Response: { message, user:{ id, firstName, lastName, email, mobileNumber } }
+       Errors  : 400 validation, 401 not logged in, 409 email/mobile already used
+                 body: { message, errors?:{ email?, mobileNumber?, firstName? } }
+       --------------------------------------------------------------------- */
+    function normalizeMobile(raw){
+      let d = String(raw || "").replace(/\D/g, "");
+      if (d.length === 12 && d.startsWith("91")) d = d.slice(2);
+      return d;
+    }
+    function bindProfileForm(original){
+      const form = document.getElementById("profileForm");
+      if (!form) return;
+      const saveBtn = document.getElementById("profileSaveBtn");
+      const fieldMap = { firstName:"profFirstField", lastName:"profLastField", email:"profEmailField", mobileNumber:"profMobileField" };
+      const orig = { ...original, email: original.email.trim().toLowerCase(), mobileNumber: normalizeMobile(original.mobileNumber) };
+
+      const read = () => ({
+        firstName:    document.getElementById("profFirst").value.trim(),
+        lastName:     document.getElementById("profLast").value.trim(),
+        email:        document.getElementById("profEmail").value.trim().toLowerCase(),
+        mobileNumber: normalizeMobile(document.getElementById("profMobile").value),
+      });
+      const isDirty = () => JSON.stringify(read()) !== JSON.stringify(orig);
+      const refreshBtn = () => { saveBtn.disabled = !isDirty(); };
+
+      form.addEventListener("input", (e) => {
+        const f = e.target.closest(".field");
+        if (f) f.classList.remove("invalid");
+        refreshBtn();
+      });
+
+      document.getElementById("profileResetBtn").addEventListener("click", () => renderAccountPage("profile"));
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = read();
+
+        const firstOk  = data.firstName.length >= 2;
+        const lastOk   = data.lastName === "" || data.lastName.length >= 2;
+        const emailOk  = /^\S+@\S+\.\S+$/.test(data.email);
+        const mobileOk = /^\d{10}$/.test(data.mobileNumber);
+        setFieldError("profFirstField",  !firstOk);
+        setFieldError("profLastField",   !lastOk);
+        setFieldError("profEmailField",  !emailOk);
+        setFieldError("profMobileField", !mobileOk);
+        if (!firstOk || !lastOk || !emailOk || !mobileOk) return;
+        if (!isDirty()) return;
+
+        saveBtn.disabled = true;
+        const label = saveBtn.textContent;
+        saveBtn.textContent = "Saving…";
+        try {
+          const res = await apiRequest(API_ENDPOINTS.updateProfile, {
+            method: "PUT",
+            body: JSON.stringify(data),
+          });
+          const body = (res && res.data) ? res.data : res;
+          AppState.user = { ...(AppState.user || {}), ...(body.user || body.id ? (body.user || body) : data) };
+          toast(res.message || "Profile updated successfully.", "success");
+          await renderAccountPage("profile");   // re-render with the saved values
+        } catch (err) {
+          // apiRequest already showed the error toast; also flag the exact field if the backend told us which.
+          const errs = (err && err.body && err.body.errors) || {};
+          Object.keys(errs).forEach((k) => {
+            const id = fieldMap[k];
+            if (!id) return;
+            const box = document.getElementById(id);
+            if (!box) return;
+            box.classList.add("invalid");
+            const msg = box.querySelector(".field-error");
+            if (msg) msg.textContent = errs[k];
+          });
+          saveBtn.textContent = label;
+          refreshBtn();
+        }
+      });
+    }
+
+    /* ---------------------------------------------------------------------
+       SETTINGS — 3 notification toggles
+       GET /api/u1/v1/users/me/preferences
+         -> { data:{ preferences:{ orderUpdatesEmail, promotionalOffers, smsNotifications } }, message, success }
+       PUT /api/u1/v1/users/me/preferences
+         Request : { orderUpdatesEmail:true, promotionalOffers:false, smsNotifications:true }
+         Response: { data:{ preferences:{ ...same 3 booleans } }, message, success }
+       --------------------------------------------------------------------- */
+    function bindSettingsForm(saved){
+      const form = document.getElementById("settingsForm");
+      if (!form) return;
+      const btn = document.getElementById("savePrefsBtn");
+      let baseline = { orderUpdatesEmail:!!saved.orderUpdatesEmail, promotionalOffers:!!saved.promotionalOffers, smsNotifications:!!saved.smsNotifications };
+      const read = () => ({
+        orderUpdatesEmail: document.getElementById("prefOrderUpdates").checked,
+        promotionalOffers: document.getElementById("prefPromos").checked,
+        smsNotifications:  document.getElementById("prefSms").checked,
+      });
+      const dirty = () => JSON.stringify(read()) !== JSON.stringify(baseline);
+      form.addEventListener("change", () => { btn.disabled = !dirty(); });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!dirty()) return;
+        btn.disabled = true;
+        const label = btn.textContent;
+        btn.textContent = "Saving…";
+        try{
+          const res = await apiRequest(API_ENDPOINTS.preferences, { method:"PUT", body: JSON.stringify(read()) });
+          const body = (res && res.data) ? res.data : res;
+          baseline = { ...baseline, ...(body.preferences || read()) };
+          toast(res.message || "Preferences saved.", "success");
+        }catch(err){
+          /* apiRequest already showed the error toast */
+        }finally{
+          btn.textContent = label;
+          btn.disabled = !dirty();
+        }
+      });
+    }
+
     async function renderAccountPage(pageId){
       const panel = document.getElementById("accountPanel");
       panel.innerHTML = `<div class="skeleton" style="height:220px;"></div>`;
@@ -5247,12 +5371,39 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
       const displayName = user.name || [user.firstName, user.lastName].filter(Boolean).join(" ");
 
       if (pageId==="profile"){
+        const nameParts = displayName.trim().split(/\s+/);
+        const firstName = user.firstName || nameParts[0] || "";
+        const lastName  = user.lastName  || (user.firstName ? "" : nameParts.slice(1).join(" "));
         panel.innerHTML = `
           <h3 style="margin-bottom:18px;">My Profile</h3>
-          <div class="field"><label>Full Name</label><input value="${escapeHtml(displayName)}"></div>
-          <div class="field"><label>Email</label><input value="${escapeHtml(user.email||"")}"></div>
-          <div class="field"><label>Mobile Number</label><input value="${escapeHtml(user.mobileNumber||"")}" placeholder="Add mobile number"></div>
-          <button class="btn btn-primary">Save Changes</button>`;
+          <form id="profileForm" novalidate>
+            <div class="field" id="profFirstField">
+              <label for="profFirst">First Name</label>
+              <input id="profFirst" autocomplete="given-name" value="${escapeHtml(firstName)}">
+              <div class="field-error">Name must be at least 2 characters.</div>
+            </div>
+            <div class="field" id="profLastField">
+              <label for="profLast">Last Name (optional)</label>
+              <input id="profLast" autocomplete="family-name" value="${escapeHtml(lastName)}">
+              <div class="field-error">Please enter a valid last name.</div>
+            </div>
+            <div class="field" id="profEmailField">
+              <label for="profEmail">Email</label>
+              <input type="email" id="profEmail" autocomplete="email" value="${escapeHtml(user.email||"")}">
+              <div class="field-error">Please enter a valid email address.</div>
+            </div>
+            <div class="field" id="profMobileField">
+              <label for="profMobile">Mobile Number</label>
+              <input type="tel" id="profMobile" inputmode="numeric" maxlength="14" autocomplete="tel"
+                     value="${escapeHtml(user.mobileNumber||"")}" placeholder="Add mobile number">
+              <div class="field-error">Please enter a valid 10-digit mobile number.</div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button type="submit" class="btn btn-primary" id="profileSaveBtn" disabled>Save Changes</button>
+              <button type="button" class="btn btn-ghost" id="profileResetBtn">Reset</button>
+            </div>
+          </form>`;
+        bindProfileForm({ firstName, lastName, email: user.email || "", mobileNumber: user.mobileNumber || "" });
       }
       else if (pageId === "orders") {
 
@@ -5455,11 +5606,22 @@ document.getElementById("newsletterForm").addEventListener("submit", async (e) =
           `<div style="margin-bottom:16px;"><div style="font-weight:600;font-size:14px;margin-bottom:4px;">${escapeHtml(f.q)}</div><div style="font-size:13.5px;color:var(--muted);">${escapeHtml(f.a)}</div></div>`).join("");
       }
       else if (pageId==="settings"){
+        // Load saved preferences; if the call fails, fall back to sensible defaults.
+        let prefs = { orderUpdatesEmail:true, promotionalOffers:true, smsNotifications:false };
+        try{
+          const res = await apiRequest(API_ENDPOINTS.preferences, {}, { silentError:true });
+          const body = (res && res.data) ? res.data : res;          // backend wraps payload in { data, message, success }
+          prefs = { ...prefs, ...(body.preferences || body) };
+        }catch(e){ /* keep defaults */ }
+
         panel.innerHTML = `<h3 style="margin-bottom:14px;">Settings</h3>
-          <label class="filter-row"><input type="checkbox" checked> Email me about order updates</label>
-          <label class="filter-row"><input type="checkbox" checked> Send me promotional offers</label>
-          <label class="filter-row"><input type="checkbox"> SMS notifications</label>
-          <button class="btn btn-primary" style="margin-top:14px;">Save Preferences</button>`;
+          <form id="settingsForm">
+            <label class="filter-row"><input type="checkbox" id="prefOrderUpdates" ${prefs.orderUpdatesEmail?"checked":""}> Email me about order updates</label>
+            <label class="filter-row"><input type="checkbox" id="prefPromos" ${prefs.promotionalOffers?"checked":""}> Send me promotional offers</label>
+            <label class="filter-row"><input type="checkbox" id="prefSms" ${prefs.smsNotifications?"checked":""}> SMS notifications</label>
+            <button type="submit" class="btn btn-primary" id="savePrefsBtn" style="margin-top:14px;" disabled>Save Preferences</button>
+          </form>`;
+        bindSettingsForm(prefs);
       }
 else if (pageId === "change-password") {
     panel.innerHTML = `
