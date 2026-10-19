@@ -58,6 +58,8 @@ public class FeatureAccessAspect {
                 );
 
         if (!allowed) {
+            log.error("Feature '" + featureCode +
+                    "' is not available in your plan");
             throw new AccessDeniedException(
                     "Feature '" + featureCode +
                             "' is not available in your plan"

@@ -4,9 +4,11 @@ package com.e_commerce.eCommerce.exception;
 import com.e_commerce.eCommerce.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.util.stream.Collectors;
 
@@ -159,7 +161,24 @@ public class PasswordResetExceptionHandler {
     }
 
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ModelAndView handleAccessDenied(
+            AccessDeniedException ex) {
 
+        ModelAndView modelAndView =
+                new ModelAndView("access-denied");
+
+        modelAndView.addObject(
+                "message",
+                ex.getMessage()
+        );
+
+        modelAndView.setStatus(
+                org.springframework.http.HttpStatus.FORBIDDEN
+        );
+
+        return modelAndView;
+    }
 
 
 
