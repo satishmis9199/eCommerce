@@ -13,6 +13,7 @@ import com.e_commerce.eCommerce.enums.NotificationType;
 import com.e_commerce.eCommerce.event.VendorNotificationEvent;
 import com.e_commerce.eCommerce.exception.TenantNoFoundException;
 import com.e_commerce.eCommerce.exception.UnauthorizedException;
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -43,6 +44,7 @@ public class UserAuthService {
     private final NotificationService notificationService;
     private final ApplicationEventPublisher eventPublisher;
     private  final String notificationTitle="New User Registered";
+    private final EntityManager entityManager;
 
     public User registerUser(
             RegisterRequestDTO registerRequestDTO,
@@ -329,6 +331,7 @@ public class UserAuthService {
         user.setUpdatedBy(String.valueOf(userDetail.getId()));
 
         userRepos.saveAndFlush(user);
+
 
         return new UserProfileUpdateResponse(
                 new UserProfileUpdateResponse.UserResponse(

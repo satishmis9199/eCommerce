@@ -17,6 +17,4 @@ public class GoogleUserInfo {
     private String lastName;
     private String picture;
     private boolean emailVerified;
-
-    // getters and setters
 }

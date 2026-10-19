@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gallery</title>
+    <style>
+        :root{
+          --accent:#5b0135; --on-accent:#fff; --accent-ink:var(--accent);
+          --bg:#f8f6f4; --surface:#fff; --text:#1f1b1d; --muted:#6a6266; --line:#e6e0dd;
+          --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+          --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+        }
+        @media (prefers-color-scheme:dark){
+          :root{--bg:#151314;--surface:#1f1c1d;--text:#f3efed;--muted:#a69ea2;--line:#363133;
+                --accent-ink:color-mix(in srgb,var(--accent) 40%,#fff)}
+        }
+        *{box-sizing:border-box}
+        html{scroll-behavior:smooth;scroll-padding-top:72px}
+        body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+        img,video{max-width:100%;display:block}
+        a{color:var(--accent-ink)}
+        button{font:inherit;color:inherit;cursor:pointer}
+        :focus-visible{outline:3px solid var(--accent-ink);outline-offset:2px}
+        .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+        /* header */
+        .top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+        .top .wrap{display:flex;align-items:center;gap:14px;height:62px}
+        .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);font:600 19px var(--serif);min-width:0}
+        .brand img{width:36px;height:36px;border-radius:8px;object-fit:cover;background:var(--surface)}
+        .brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .top nav{margin-left:auto;display:flex;gap:4px}
+        .top nav a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:15px}
+        .top nav a:hover{color:var(--text);background:var(--surface)}
+
+        /* hero */
+        .hero{position:relative;color:#fff;background:var(--accent) center/cover no-repeat;isolation:isolate}
+        .hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 92%,#000) 0%,color-mix(in srgb,var(--accent) 55%,transparent) 60%,transparent 100%)}
+        .hero .wrap{padding-top:clamp(56px,11vw,120px);padding-bottom:clamp(40px,8vw,84px)}
+        .hero h1{margin:0;font:700 clamp(34px,6vw,64px)/1.05 var(--serif);letter-spacing:-.01em;max-width:14ch;text-wrap:balance}
+        .hero p{margin:14px 0 0;max-width:46ch;font-size:clamp(16px,2vw,19px);opacity:.92}
+
+        /* sections */
+        section{padding:48px 0}
+        h2{margin:0 0 6px;font:700 clamp(26px,3.4vw,34px)/1.15 var(--serif)}
+        .sub{margin:0 0 22px;color:var(--muted)}
+
+        /* filters */
+        .filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px}
+        .chip{border:1px solid var(--line);background:var(--surface);padding:7px 16px;border-radius:999px;font-size:14px;transition:background .15s,color .15s}
+        .chip:hover{border-color:var(--accent-ink)}
+        .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+        .filters .gap{flex-basis:1px;width:1px;background:var(--line);margin:4px 4px}
+
+        /* masonry */
+        .grid{columns:3 280px;column-gap:16px}
+        .card{break-inside:avoid;margin:0 0 16px;position:relative;border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--line)}
+        .card>button{display:block;width:100%;padding:0;border:0;background:none;text-align:left;position:relative}
+        .card img,.card video{width:100%;height:auto;opacity:0;transition:opacity .35s}
+        .card .ph{aspect-ratio:16/9;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 80%,#000),var(--accent))}
+        .card .ready{opacity:1}
+        .cap{position:absolute;left:0;right:0;bottom:0;padding:28px 14px 12px;color:#fff;font-size:14px;line-height:1.35;background:linear-gradient(transparent,rgba(0,0,0,.72));opacity:0;transform:translateY(6px);transition:.2s}
+        .card:hover .cap,.card>button:focus-visible .cap{opacity:1;transform:none}
+        @media (hover:none){.cap{opacity:1;transform:none}}
+        .cap b{display:block;font-weight:600}
+        .play{position:absolute;top:50%;left:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;border:2px solid rgba(255,255,255,.9)}
+        .play::after{content:"";margin-left:4px;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
+        .skel{height:200px;background:linear-gradient(100deg,var(--surface) 30%,var(--line) 50%,var(--surface) 70%) 0 0/300% 100%;animation:sh 1.3s linear infinite}
+        .skel:nth-child(3n+2){height:280px}.skel:nth-child(3n){height:160px}
+        @keyframes sh{to{background-position:-300% 0}}
+        .state{padding:48px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+        .state strong{display:block;color:var(--text);font:600 18px var(--serif);margin-bottom:4px}
+        .btn{display:inline-block;margin-top:14px;padding:10px 22px;border-radius:10px;border:0;background:var(--accent);color:var(--on-accent);font-weight:600;text-decoration:none}
+        .more{text-align:center;margin-top:8px}
+
+        /* about + contact */
+        .about{display:grid;grid-template-columns:3fr 2fr;gap:40px;align-items:start}
+        .about .body{max-width:68ch}
+        .about .body ul{padding-left:20px}
+        .contact{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px}
+        .contact h3{margin:0 0 12px;font:600 20px var(--serif)}
+        .contact dl{margin:0;display:grid;gap:12px}
+        .contact dt{font-size:13px;color:var(--muted)}
+        .contact dd{margin:0;overflow-wrap:anywhere}
+        .social{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+        .social a{padding:6px 14px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:14px;color:var(--text)}
+        .social a:hover{border-color:var(--accent-ink);color:var(--accent-ink)}
+        footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);font-size:14px}
+        footer .wrap{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center}
+        footer .pol{display:flex;flex-wrap:wrap;gap:4px 18px;margin-left:auto}
+        .link{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+        .link:hover{color:var(--accent-ink)}
+
+        /* dialogs */
+        dialog{border:0;padding:0;color:var(--text)}
+        dialog::backdrop{background:rgba(10,8,9,.82)}
+        #policy{width:min(720px,94vw);max-height:86vh;border-radius:14px;background:var(--surface)}
+        #policy .in{padding:26px 26px 30px;overflow:auto;max-height:86vh}
+        #policy h3{margin:0 40px 14px 0;font:700 24px var(--serif)}
+        .x{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(127,127,127,.2);font-size:22px;line-height:1;color:inherit}
+        #lb{width:100vw;height:100vh;max-width:none;max-height:none;background:transparent}
+        #lb .stage{position:absolute;inset:56px 64px 74px;display:grid;place-items:center}
+        #lb .stage img,#lb .stage video{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
+        #lb .stage iframe{width:min(1000px,100%);aspect-ratio:16/9;border:0;border-radius:8px;background:#000}
+        #lb .meta{position:absolute;left:0;right:0;bottom:14px;padding:0 70px;text-align:center;color:#fff;font-size:15px}
+        #lb .meta small{display:block;opacity:.7}
+        #lb .x{background:rgba(255,255,255,.18);color:#fff;top:12px;right:12px}
+        .nav{position:absolute;top:50%;margin-top:-24px;width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:26px}
+        .nav:hover,#lb .x:hover{background:rgba(255,255,255,.32)}
+        .prev{left:10px}.next{right:10px}
+        @media (max-width:760px){
+          .about{grid-template-columns:1fr;gap:28px}
+          #lb .stage{inset:56px 8px 90px}
+          #lb .meta{padding:0 12px}
+          .nav{top:auto;bottom:18px;margin:0}.prev{left:12px}.next{right:12px}
+          .top nav a{padding:8px}
+        }
+        @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+    </style>
+</head>
+<body>
+
+<header class="top">
+    <div class="wrap">
+        <a class="brand" href="#top"><img id="logo" alt="" hidden><span id="brandName">Gallery</span></a>
+        <nav aria-label="Page">
+            <a href="#gallery">Gallery</a><a href="#about">About</a><a href="#contact">Contact</a>
+        </nav>
+    </div>
+</header>
+
+<main id="top">
+    <div class="hero" id="hero">
+        <div class="wrap">
+            <h1 id="heroTitle">Gallery</h1>
+            <p id="heroTag">Photos and videos from our store.</p>
+        </div>
+    </div>
+
+    <section id="gallery">
+        <div class="wrap">
+            <h2>Gallery</h2>
+            <p class="sub" id="count" aria-live="polite">Loading…</p>
+            <div class="filters" id="filters" role="group" aria-label="Filter gallery"></div>
+            <div class="grid" id="grid" aria-busy="true"></div>
+            <div id="status"></div>
+            <div class="more"><button class="btn" id="more" hidden>Load more</button></div>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="wrap about">
+            <div>
+                <h2>About us</h2>
+                <div class="body" id="aboutBody"></div>
+            </div>
+            <aside class="contact" id="contact">
+                <h3>Visit or contact us</h3>
+                <dl id="contactList"></dl>
+                <div class="social" id="social"></div>
+            </aside>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="wrap">
+        <span id="copy"></span>
+        <div class="pol" id="policies"></div>
+    </div>
+</footer>
+
+<dialog id="policy" aria-labelledby="policyTitle">
+    <div class="in"><h3 id="policyTitle"></h3><div id="policyBody" class="body"></div></div>
+    <button class="x" data-close aria-label="Close">&times;</button>
+</dialog>
+
+<dialog id="lb" aria-label="Media viewer">
+    <button class="x" data-close aria-label="Close">&times;</button>
+    <button class="nav prev" id="prev" aria-label="Previous">&#8249;</button>
+    <div class="stage" id="stage"></div>
+    <button class="nav next" id="next" aria-label="Next">&#8250;</button>
+    <div class="meta" id="meta"></div>
+</dialog>
+
+<script th:inline="none">
+    (() => {
+    'use strict';
+
+    /* ---------- CONFIG: change these for your setup ---------- */
+    const CONFIG = {
+      API_BASE: '',                       // '' = same origin. Example: 'https://api.mystore.com'
+      FILE_BASE: 'https://pub-4fa6214a201a4173bb0677e8da8390b1.r2.dev',   // R2 public base: "logo/x.png" becomes FILE_BASE + "/logo/x.png"
+      STORE_INFO: '/api/u1/v1/store/info',
+      GALLERY: '/api/u1/v1/gallery',
+      PAGE_SIZE: 12,
+      DEFAULT_COUNTRY_CODE: '91'          // used to build the WhatsApp link from a 10-digit number
+    };
+
+    /* ---------- helpers ---------- */
+    const $ = s => document.querySelector(s);
+    const el = (tag, attrs = {}, ...kids) => {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (v == null || v === false) continue;
+        if (k === 'class') e.className = v;
+        else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v === true ? '' : v);
+      }
+      kids.flat().forEach(c => e.append(c));
+      return e;
+    };
+    const fileUrl = p => {
+      if (!p) return null;
+      if (/^(https?:)?\/\//i.test(p) || p.startsWith('data:')) return p;
+      return (CONFIG.FILE_BASE || CONFIG.API_BASE) + '/' + String(p).replace(/^\/+/, '');
+    };
+    const safeHref = u => (/^https?:\/\//i.test(u || '') ? u : null);
+
+    async function api(path, params) {
+      const url = new URL(CONFIG.API_BASE + path, location.href);
+      Object.entries(params || {}).forEach(([k, v]) => v !== '' && v != null && url.searchParams.set(k, v));
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json();
+      if (json && json.success === false) throw new Error(json.message || 'Request failed');
+      return json && json.data !== undefined ? json.data : json;   // supports ApiResponse<T> and raw JSON
+    }
+
+    // Policies and "about" come from the vendor as HTML, so keep only simple formatting tags.
+    const ALLOWED = new Set(['P','BR','UL','OL','LI','STRONG','B','EM','I','U','DIV','SPAN','H3','H4']);
+    function clean(html) {
+      const doc = new DOMParser().parseFromString(html || '', 'text/html');
+      (function walk(node) {
+        [...node.childNodes].forEach(c => {
+          if (c.nodeType === 8) return c.remove();
+          if (c.nodeType !== 1) return;
+          if (['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','LINK','META'].includes(c.tagName)) return c.remove();
+          walk(c);
+          if (ALLOWED.has(c.tagName)) [...c.attributes].forEach(a => c.removeAttribute(a.name));
+          else c.replaceWith(...c.childNodes);
+        });
+      })(doc.body);
+      return doc.body.innerHTML;
+    }
+
+    function setAccent(hex) {
+      if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return;
+      const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+      const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      const root = document.documentElement.style;
+      root.setProperty('--accent', hex);
+      root.setProperty('--on-accent', lum > 0.6 ? '#111' : '#fff');
+    }
+
+    /* ---------- store info ---------- */
+    async function loadStore() {
+      let s = {};
+      try { s = await api(CONFIG.STORE_INFO); } catch (e) { console.warn('Store info failed', e); }
+      const name = s.storeName || s.businessName || 'Our store';
+      setAccent(s.themeColor);
+      document.title = name + ' – Gallery';
+      $('#brandName').textContent = name;
+      $('#heroTitle').textContent = name;
+      if (s.tagline && s.tagline !== name) $('#heroTag').textContent = s.tagline;
+
+      const logo = fileUrl(s.logoUrl);
+      if (logo) { const i = $('#logo'); i.src = logo; i.hidden = false; i.onerror = () => (i.hidden = true); }
+      const fav = fileUrl(s.faviconUrl);
+      if (fav) document.head.append(el('link', { rel: 'icon', href: fav }));
+      const banner = fileUrl(s.bannerUrl);
+      if (banner) $('#hero').style.backgroundImage = `url("${banner.replace(/"/g, '%22')}")`;
+
+      const about = $('#aboutBody');
+      about.innerHTML = clean(s.aboutUs) || '<p>Welcome to our store.</p>';
+
+      // contact
+      const list = $('#contactList');
+      const row = (label, node) => list.append(el('div', {}, el('dt', {}, label), el('dd', {}, node)));
+      if (s.address) row('Address', s.address);
+      if (s.supportPhone) row('Phone', el('a', { href: 'tel:' + s.supportPhone.replace(/\s/g, '') }, s.supportPhone));
+      if (s.supportEmail) row('Email', el('a', { href: 'mailto:' + s.supportEmail }, s.supportEmail));
+      const social = $('#social');
+      const wa = (s.socialMedia && s.socialMedia.whatsapp || '').replace(/\D/g, '');
+      if (wa) social.append(el('a', { href: 'https://wa.me/' + (wa.length === 10 ? CONFIG.DEFAULT_COUNTRY_CODE : '') + wa, target: '_blank', rel: 'noopener' }, 'WhatsApp'));
+      ['facebook', 'instagram', 'youtube', 'linkedin', 'twitter'].forEach(k => {
+        const href = safeHref(s.socialMedia && s.socialMedia[k]);
+        if (href) social.append(el('a', { href, target: '_blank', rel: 'noopener' }, k[0].toUpperCase() + k.slice(1)));
+      });
+      if (!list.children.length && !social.children.length) $('#contact').hidden = true;
+
+      // footer + policies
+      $('#copy').textContent = '© ' + new Date().getFullYear() + ' ' + (s.businessName || name);
+      const pol = s.policies || {};
+      [ ['privacyPolicy', 'Privacy policy'], ['termsAndConditions', 'Terms and conditions'], ['shippingPolicy', 'Shipping policy'],
+       ['returnPolicy', 'Return policy'], ['cancellationPolicy', 'Cancellation policy'] ].forEach(([key, label]) => {
+        if (!pol[key]) return;
+        $('#policies').append(el('button', { class: 'link', type: 'button', onclick: () => {
+          $('#policyTitle').textContent = label;
+          $('#policyBody').innerHTML = clean(pol[key]);
+          $('#policy').showModal();
+        } }, label));
+      });
+    }
+
+    /* ---------- gallery ---------- */
+    const state = { type: '', category: '', page: 0, last: false, items: [], loading: false, categories: new Set(), total: null };
+    const grid = $('#grid'), more = $('#more'), statusBox = $('#status');
+
+    function renderFilters() {
+      const box = $('#filters');
+      box.replaceChildren();
+      const chip = (label, kind, value) => el('button', {
+        class: 'chip', type: 'button', 'aria-pressed': String(state[kind] === value),
+        onclick: () => { state[kind] = value; renderFilters(); loadGallery(true); }
+      }, label);
+      [ ['All', ''], ['Photos', 'IMAGE'], ['Videos', 'VIDEO'] ].forEach(([l, v]) => box.append(chip(l, 'type', v)));
+      if (state.categories.size) {
+        box.append(el('span', { class: 'gap' }));
+        box.append(chip('Everything', 'category', ''));
+        [...state.categories].sort().forEach(c => box.append(chip(c, 'category', c)));
+      }
+    }
+
+    function card(item, index) {
+      const isVideo = item.mediaType === 'VIDEO';
+      const alt = item.altText || item.title || (isVideo ? 'Store video' : 'Store photo');
+      let media;
+      if (!isVideo) {
+        media = el('img', { src: fileUrl(item.mediaUrl), alt, loading: 'lazy', decoding: 'async' });
+        media.onload = () => media.classList.add('ready');
+      } else if (item.thumbnailUrl) {
+        media = el('img', { src: fileUrl(item.thumbnailUrl), alt, loading: 'lazy', decoding: 'async' });
+        media.onload = () => media.classList.add('ready');
+      } else if (/\.(mp4|webm|mov)(\?|#|$)/i.test(item.mediaUrl || '')) {
+        media = el('video', { src: fileUrl(item.mediaUrl) + '#t=0.5', preload: 'metadata', muted: true, playsinline: true, 'aria-label': alt });
+        media.onloadeddata = () => media.classList.add('ready');
+      } else {
+        media = el('div', { class: 'ph' });
+      }
+      media.onerror = () => { media.replaceWith(el('div', { class: 'ph', role: 'img', 'aria-label': 'Media unavailable' })); };
+      const btn = el('button', { type: 'button', 'aria-label': (isVideo ? 'Play video: ' : 'View photo: ') + alt, onclick: () => openLb(index) },
+        media,
+        isVideo ? el('span', { class: 'play', 'aria-hidden': 'true' }) : null,
+        (item.title || item.caption) ? el('span', { class: 'cap' }, item.title ? el('b', {}, item.title) : null, item.caption || '') : null);
+      return el('figure', { class: 'card' }, btn);
+    }
+
+    function skeletons() {
+      grid.replaceChildren(...Array.from({ length: 6 }, () => el('div', { class: 'card skel' })));
+    }
+
+    async function loadGallery(reset) {
+      if (state.loading) return;
+      state.loading = true;
+      statusBox.replaceChildren();
+      more.hidden = true;
+      if (reset) { state.page = 0; state.items = []; state.last = false; skeletons(); }
+      grid.setAttribute('aria-busy', 'true');
+      try {
+        const res = await api(CONFIG.GALLERY, { page: state.page, size: CONFIG.PAGE_SIZE, type: state.type, category: state.category });
+        const list = Array.isArray(res) ? res : (res.content || []);
+        state.last = Array.isArray(res) ? true : (res.last ?? list.length < CONFIG.PAGE_SIZE);
+        state.total = (res.totalElements ?? null);
+        if (reset) grid.replaceChildren();
+        const start = state.items.length;
+        state.items.push(...list);
+        list.forEach((it, i) => {
+          if (it.category) state.categories.add(it.category);
+          grid.append(card(it, start + i));
+        });
+        state.page += 1;
+        if (reset) renderFilters();
+        const n = state.total ?? state.items.length;
+        $('#count').textContent = state.items.length
+          ? n + (n === 1 ? ' item' : ' items') + (state.type === 'IMAGE' ? ' · photos' : state.type === 'VIDEO' ? ' · videos' : '')
+          : 'Nothing here yet';
+        if (!state.items.length) {
+          statusBox.append(el('div', { class: 'state' }, el('strong', {}, 'No media found'),
+            state.type || state.category ? 'Try a different filter.' : 'Photos and videos will show up here once the store adds them.'));
+        }
+        more.hidden = state.last;
+      } catch (e) {
+        console.error(e);
+        if (reset) grid.replaceChildren();
+        $('#count').textContent = 'Could not load the gallery';
+        statusBox.append(el('div', { class: 'state' }, el('strong', {}, 'The gallery did not load'),
+          'Check your connection, then try again.', el('br'),
+          el('button', { class: 'btn', type: 'button', onclick: () => loadGallery(state.items.length === 0) }, 'Try again')));
+      } finally {
+        state.loading = false;
+        grid.setAttribute('aria-busy', 'false');
+      }
+    }
+    more.addEventListener('click', () => loadGallery(false));
+    new IntersectionObserver(es => { if (es[0].isIntersecting && !state.loading && !state.last) loadGallery(false); }, { rootMargin: '300px' }).observe(more);
+
+    /* ---------- lightbox ---------- */
+    const lb = $('#lb'), stage = $('#stage'), meta = $('#meta');
+    let cur = 0;
+
+    function embedUrl(u) {
+      let m;
+      if ((m = u.match(/youtu\.be\/([\w-]{6,})/) || u.match(/youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)([\w-]{6,})/)))
+        return 'https://www.youtube-nocookie.com/embed/' + m[1] + '?autoplay=1&rel=0';
+      if ((m = u.match(/vimeo\.com\/(\d+)/))) return 'https://player.vimeo.com/video/' + m[1] + '?autoplay=1';
+      return null;
+    }
+
+    function showLb() {
+      const it = state.items[cur];
+      if (!it) return;
+      stage.replaceChildren();
+      const url = fileUrl(it.mediaUrl);
+      const alt = it.altText || it.title || '';
+      if (it.mediaType === 'IMAGE') {
+        stage.append(el('img', { src: url, alt }));
+      } else {
+        const emb = embedUrl(it.mediaUrl || '');
+        stage.append(emb
+          ? el('iframe', { src: emb, title: alt || 'Video', allow: 'autoplay; fullscreen; picture-in-picture', allowfullscreen: true })
+          : el('video', { src: url, poster: fileUrl(it.thumbnailUrl), controls: true, autoplay: true, playsinline: true }));
+      }
+      meta.replaceChildren(it.title ? el('b', {}, it.title) : '', it.caption ? el('div', {}, it.caption) : '',
+        el('small', {}, (cur + 1) + ' of ' + state.items.length));
+      $('#prev').hidden = state.items.length < 2;
+      $('#next').hidden = state.items.length < 2;
+    }
+    function openLb(i) { cur = i; showLb(); if (!lb.open) lb.showModal(); }
+    function step(d) {
+      const n = state.items.length;
+      cur = (cur + d + n) % n;
+      showLb();
+      if (cur >= n - 3 && !state.last) loadGallery(false);   // pre-load the next page while browsing
+    }
+    $('#prev').onclick = () => step(-1);
+    $('#next').onclick = () => step(1);
+    lb.addEventListener('close', () => stage.replaceChildren());   // stops playing video/iframe
+    lb.addEventListener('click', e => { if (e.target === lb || e.target === stage) lb.close(); });
+    lb.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') step(-1);
+      if (e.key === 'ArrowRight') step(1);
+    });
+    let sx = null;
+    lb.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', e => {
+      if (sx == null) return;
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1);
+      sx = null;
+    });
+    document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+    $('#policy').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+    /* ---------- go ---------- */
+    renderFilters();
+    loadStore();
+    loadGallery(true);
+    })();
+</script>
+</body>
+</html>

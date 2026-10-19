@@ -310,6 +310,7 @@
         }
         @media (max-width:480px){
           .header-row{gap:10px;}
+          #galleryHeaderBtn{display:none;} /* footer link covers tiny screens */
           .btn{padding:9.5px 14px;font-size:13px;}
           .btn-lg{padding:13px 18px;font-size:14px;}
           .brand-name{font-size:14.5px;}
@@ -396,6 +397,7 @@
             <a href="/api/vendor/v1/login" class="btn btn-outline" id="vendorHeaderBtn">
                 Sign in<span class="btn-label-full"> as Vendor</span>
             </a>
+            <a href="/api/store-gallery" class="btn btn-outline" id="galleryHeaderBtn">Gallery</a>
             <a href="/home1.html" class="btn btn-primary" id="shopHeaderBtn">Shop Now</a>
         </div>
     </div>
@@ -515,6 +517,7 @@
         </div>
         <nav class="footer-links" aria-label="Footer">
             <a href="/api/team/info">The People Behind the Project</a>
+            <a href="/api/store-gallery">Gallery</a>
             <a href="/api/product-document">Product Documentation</a>
         </nav>
     </div>

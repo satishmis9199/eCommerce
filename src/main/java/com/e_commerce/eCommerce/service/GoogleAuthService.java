@@ -55,49 +55,26 @@ public class GoogleAuthService {
             );
         }
     }
-
-    // ============================================================
-    // VERIFY GOOGLE TOKEN
-    // ============================================================
-
     public GoogleUserInfo verifyToken(String idToken) {
 
         try {
-
-            // ----------------------------------------------------
-            // Token validation
-            // ----------------------------------------------------
-
             if (idToken == null || idToken.isBlank()) {
 
                 throw new RuntimeException(
                         "Google ID token is required"
                 );
             }
-
-            // ----------------------------------------------------
-            // Verify token
-            // ----------------------------------------------------
-
             GoogleIdToken googleIdToken =
                     verifier.verify(idToken);
-
             if (googleIdToken == null) {
-
                 throw new RuntimeException(
                         "Invalid Google ID token"
                 );
             }
-
-            // ----------------------------------------------------
-            // Payload
-            // ----------------------------------------------------
-
             GoogleIdToken.Payload payload =
                     googleIdToken.getPayload();
 
             if (payload == null) {
-
                 throw new RuntimeException(
                         "Google token payload not found"
                 );
@@ -106,22 +83,17 @@ public class GoogleAuthService {
             String googleId = payload.getSubject();
             String email = payload.getEmail();
             Boolean emailVerified = payload.getEmailVerified();
-
-            // ----------------------------------------------------
-            // Google ID validation
-            // ----------------------------------------------------
-
+            String issuer= payload.getIssuer();
+            if (!"https://accounts.google.com".equals(issuer)
+                    && !"accounts.google.com".equals(issuer)) {
+                throw new RuntimeException("Invalid token issuer");
+            }
             if (googleId == null || googleId.isBlank()) {
 
                 throw new RuntimeException(
                         "Google account ID not found"
                 );
             }
-
-            // ----------------------------------------------------
-            // Email validation
-            // ----------------------------------------------------
-
             if (email == null || email.isBlank()) {
 
                 throw new RuntimeException(
@@ -130,22 +102,12 @@ public class GoogleAuthService {
             }
 
             email = email.trim().toLowerCase();
-
-            // ----------------------------------------------------
-            // Email verification
-            // ----------------------------------------------------
-
             if (!Boolean.TRUE.equals(emailVerified)) {
 
                 throw new RuntimeException(
                         "Google email is not verified"
                 );
             }
-
-            // ----------------------------------------------------
-            // User info
-            // ----------------------------------------------------
-
             GoogleUserInfo userInfo =
                     new GoogleUserInfo();
 
@@ -188,19 +150,13 @@ public class GoogleAuthService {
         }
     }
 
-    // ============================================================
-    // GOOGLE AUTHENTICATION
-    // ============================================================
-
     public User authenticateWithGoogle(
             String idToken,
             String tenantId) {
 
         try {
 
-            // ----------------------------------------------------
-            // Tenant validation
-            // ----------------------------------------------------
+
 
             if (tenantId == null || tenantId.isBlank()) {
 
@@ -211,9 +167,7 @@ public class GoogleAuthService {
 
             tenantId = tenantId.trim();
 
-            // ----------------------------------------------------
-            // Verify Google token
-            // ----------------------------------------------------
+
 
             GoogleUserInfo googleUser =
                     verifyToken(idToken);
@@ -247,11 +201,6 @@ public class GoogleAuthService {
 
             googleId = googleId.trim();
             email = email.trim().toLowerCase();
-
-            // ----------------------------------------------------
-            // Search by Google ID + Tenant
-            // ----------------------------------------------------
-
             Optional<User> existingUser =
                     userRepository.findByGoogleIdAndTenantId(
                             googleId,
@@ -264,11 +213,6 @@ public class GoogleAuthService {
 
                 return user;
             }
-
-            // ----------------------------------------------------
-            // Search by Email + Tenant
-            // ----------------------------------------------------
-
             User emailUser =
                     userRepository.findByEmailAndTenantId(
                             email,
@@ -276,11 +220,6 @@ public class GoogleAuthService {
                     );
 
             if (emailUser != null) {
-
-                // ------------------------------------------------
-                // Link Google account
-                // ------------------------------------------------
-
                 emailUser.setGoogleId(googleId);
 
                 User savedUser =
@@ -288,18 +227,6 @@ public class GoogleAuthService {
 
                 return savedUser;
             }
-
-            // ----------------------------------------------------
-            // IMPORTANT:
-            // No user found by Google ID
-            // AND
-            // No user found by Email + Tenant
-            // ----------------------------------------------------
-
-            // ----------------------------------------------------
-            // Registration DTO
-            // ----------------------------------------------------
-
             RegisterRequestDTO registerRequestDTO =
                     new RegisterRequestDTO();
 
@@ -324,11 +251,6 @@ public class GoogleAuthService {
             registerRequestDTO.setMobileNumber(
                     "0000000000"
             );
-
-            // ----------------------------------------------------
-            // Register new user
-            // ----------------------------------------------------
-
             User savedUser =
                     userAuthService.registerUser(
                             registerRequestDTO,

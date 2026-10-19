@@ -10,4 +10,8 @@ public class ProductDocumentController {
     public String getProductImage(){
         return "ProductDocumenatation";
     }
+    @GetMapping("/festive-animation")
+    public String getFestiveBanner(){
+        return "festive-animation";
+    }
 }

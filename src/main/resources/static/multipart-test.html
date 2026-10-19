@@ -1,0 +1,775 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudflare R2 Multipart Upload</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px 16px;
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            color: #202938;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: auto;
+            background: white;
+            padding: 28px;
+            border-radius: 14px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.07);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 26px;
+        }
+
+        .subtitle {
+            color: #667085;
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #d0d5dd;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            background: #fafafa;
+        }
+
+        button {
+            border: 0;
+            border-radius: 7px;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .primary {
+            width: 100%;
+            margin-top: 22px;
+            background: #2457d6;
+            color: white;
+        }
+
+        .secondary {
+            margin-top: 10px;
+            background: #e8edf5;
+            color: #202938;
+        }
+
+        .progress-container {
+            margin-top: 22px;
+            height: 13px;
+            background: #e7eaf0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #247a4b;
+            transition: width 0.2s;
+        }
+
+        .progress-text {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #475467;
+        }
+
+        .info {
+            margin-top: 18px;
+            padding: 14px;
+            background: #f7f8fa;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #101828;
+            color: #d1fadf;
+            border-radius: 8px;
+            min-height: 150px;
+            max-height: 350px;
+            overflow: auto;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .note {
+            margin-top: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #667085;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>Cloudflare R2 Multipart Upload</h1>
+
+    <p class="subtitle">
+        Upload file parts directly from your browser to Cloudflare R2
+        using Spring Boot presigned URLs. Resume incomplete uploads.
+    </p>
+
+    <label for="apiBase">Backend API Base URL</label>
+    <input
+            id="apiBase"
+            type="url"
+            value="http://localhost:8086"
+            placeholder="http://localhost:8086"
+    >
+
+    <label for="token">Bearer Token</label>
+    <input
+            id="token"
+            type="password"
+            placeholder="Paste your JWT token here"
+            autocomplete="off"
+    >
+
+    <label for="file">Select File</label>
+    <input id="file" type="file">
+
+    <div class="info" id="fileInfo">
+        No file selected.
+    </div>
+
+    <button class="primary" id="uploadButton">
+        Start New Upload
+    </button>
+
+    <button class="secondary" id="resumeButton" disabled>
+        Resume Upload
+    </button>
+
+    <button class="secondary" id="statusButton" disabled>
+        Check Upload Status
+    </button>
+
+    <button class="secondary" id="clearSessionButton">
+        Clear Saved Session
+    </button>
+
+    <button class="secondary" id="clearButton">
+        Clear Logs
+    </button>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="progress-text" id="progressText">
+        Waiting for upload...
+    </div>
+
+    <div class="info" id="uploadInfo">
+        Upload session details will appear here.
+    </div>
+
+    <h3>Execution Logs</h3>
+    <div class="log" id="logs">Ready to test.</div>
+
+    <p class="note">
+        Serve this HTML through localhost or your frontend server.
+        Configure backend CORS and R2 bucket CORS.
+        R2 CORS must allow PUT and expose the ETag response header.
+    </p>
+
+</div>
+
+<script>
+    const apiBaseInput = document.getElementById("apiBase");
+    const tokenInput = document.getElementById("token");
+    const fileInput = document.getElementById("file");
+    const fileInfo = document.getElementById("fileInfo");
+    const uploadInfo = document.getElementById("uploadInfo");
+
+    const uploadButton = document.getElementById("uploadButton");
+    const resumeButton = document.getElementById("resumeButton");
+    const statusButton = document.getElementById("statusButton");
+    const clearSessionButton =
+        document.getElementById("clearSessionButton");
+    const clearButton = document.getElementById("clearButton");
+
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const logs = document.getElementById("logs");
+
+    const SESSION_KEY = "r2-upload-session";
+
+    let uploading = false;
+    let currentSession = loadSession();
+
+    function log(message) {
+        const time = new Date().toLocaleTimeString();
+        logs.textContent += "\n[" + time + "] " + message;
+        logs.scrollTop = logs.scrollHeight;
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+
+        const units = ["KB", "MB", "GB", "TB"];
+        let size = bytes / 1024;
+        let index = 0;
+
+        while (size >= 1024 && index < units.length - 1) {
+            size /= 1024;
+            index++;
+        }
+
+        return size.toFixed(2) + " " + units[index];
+    }
+
+    function getApiBase() {
+        return apiBaseInput.value.trim().replace(/\/+$/, "");
+    }
+
+    function getHeaders() {
+        const headers = {
+            "Content-Type": "application/json"
+        };
+
+        const token = tokenInput.value.trim();
+
+        if (token) {
+            headers["Authorization"] = "Bearer " + token;
+        }
+
+        return headers;
+    }
+
+    async function apiRequest(path, options = {}) {
+        const response = await fetch(getApiBase() + path, {
+            ...options,
+            headers: {
+                ...getHeaders(),
+                ...(options.headers || {})
+            }
+        });
+
+        const responseText = await response.text();
+        let data = null;
+
+        if (responseText) {
+            try {
+                data = JSON.parse(responseText);
+            } catch {
+                data = responseText;
+            }
+        }
+
+        if (!response.ok) {
+            const message = typeof data === "string"
+                ? data
+                : JSON.stringify(data);
+
+            throw new Error(
+                "HTTP " + response.status + " - " + message
+            );
+        }
+
+        return data;
+    }
+
+    function loadSession() {
+        try {
+            return JSON.parse(localStorage.getItem(SESSION_KEY));
+        } catch {
+            return null;
+        }
+    }
+
+    function saveSession(session) {
+        currentSession = session;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        updateSessionButtons();
+    }
+
+    function clearSavedSession() {
+        localStorage.removeItem(SESSION_KEY);
+        currentSession = null;
+        updateSessionButtons();
+        uploadInfo.textContent = "Saved upload session cleared.";
+        log("Saved session removed from this browser.");
+    }
+
+    function updateSessionButtons() {
+        const available = Boolean(
+            currentSession && currentSession.uploadId
+        );
+
+        resumeButton.disabled = uploading || !available;
+        statusButton.disabled = uploading || !available;
+
+        if (available) {
+            uploadInfo.textContent =
+                "Saved Upload ID: " + currentSession.uploadId +
+                "\nFile: " + currentSession.fileName +
+                "\nSize: " + formatBytes(currentSession.fileSize) +
+                "\nParts: " + currentSession.totalParts +
+                "\nSelect the same file to resume.";
+        }
+    }
+
+    function setBusy(busy) {
+        uploading = busy;
+        uploadButton.disabled = busy;
+        resumeButton.disabled = busy || !currentSession;
+        statusButton.disabled = busy || !currentSession;
+        clearSessionButton.disabled = busy;
+        fileInput.disabled = busy;
+    }
+
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+
+        if (!file) {
+            fileInfo.textContent = "No file selected.";
+            return;
+        }
+
+        fileInfo.textContent =
+            "Name: " + file.name + "\n" +
+            "Size: " + formatBytes(file.size) + "\n" +
+            "Last Modified: " +
+            new Date(file.lastModified).toLocaleString();
+
+        log("Selected file: " + file.name);
+    });
+
+    clearButton.addEventListener("click", () => {
+        logs.textContent = "Logs cleared.";
+    });
+
+    clearSessionButton.addEventListener("click", () => {
+        if (uploading) return;
+
+        const confirmed = confirm(
+            "Remove the saved session from this browser? " +
+            "This does not abort the multipart upload on R2."
+        );
+
+        if (confirmed) clearSavedSession();
+    });
+
+    function updateProgress(uploadedBytes, totalBytes) {
+        const percent = totalBytes === 0
+            ? 0
+            : Math.min(100, (uploadedBytes / totalBytes) * 100);
+
+        progressBar.style.width = percent.toFixed(2) + "%";
+
+        progressText.textContent =
+            percent.toFixed(2) + "% uploaded (" +
+            formatBytes(uploadedBytes) + " / " +
+            formatBytes(totalBytes) + ")";
+    }
+
+    function getUploadedParts(statusResponse) {
+        /*
+         * Adapt these property names to your UploadStatusResponse DTO.
+         * Your backend's final list field may be named differently.
+         */
+        const candidates = [
+            statusResponse?.uploadedParts,
+            statusResponse?.parts,
+            statusResponse?.result
+        ];
+
+        return candidates.find(Array.isArray) || [];
+    }
+
+    async function getUploadStatus(uploadId) {
+        log("Calling status endpoint...");
+
+        const response = await apiRequest(
+            "/api/uploads/" + encodeURIComponent(uploadId) + "/status",
+            { method: "GET" }
+        );
+
+        log("Status response received.");
+        log(JSON.stringify(response, null, 2));
+
+        return response;
+    }
+
+    async function uploadOnePart(
+        uploadId,
+        file,
+        partNumber,
+        partSize
+    ) {
+        const start = (partNumber - 1) * partSize;
+        const end = Math.min(start + partSize, file.size);
+        const chunk = file.slice(start, end);
+
+        log(
+            "Requesting presigned URL for part " + partNumber +
+            " (" + formatBytes(chunk.size) + ")"
+        );
+
+        const urlResponse = await apiRequest(
+            "/api/uploads/" + encodeURIComponent(uploadId) +
+            "/parts/" + partNumber + "/url",
+            {
+                method: "POST",
+                body: "{}"
+            }
+        );
+
+        if (!urlResponse || !urlResponse.url) {
+            throw new Error(
+                "Presigned URL missing in backend response."
+            );
+        }
+
+        const startedAt = performance.now();
+
+        log("Uploading part " + partNumber + " to R2...");
+
+        const r2Response = await fetch(urlResponse.url, {
+            method: "PUT",
+            body: chunk
+        });
+
+        const durationMs = Math.round(
+            performance.now() - startedAt
+        );
+
+        if (!r2Response.ok) {
+            const errorText = await r2Response.text();
+
+            throw new Error(
+                "R2 part " + partNumber +
+                " failed: HTTP " + r2Response.status +
+                " " + errorText
+            );
+        }
+
+        const eTag = r2Response.headers.get("ETag");
+
+        if (!eTag) {
+            throw new Error(
+                "ETag not available. Configure R2 CORS " +
+                "ExposeHeaders to include ETag."
+            );
+        }
+
+        log("Part " + partNumber + " uploaded to R2.");
+
+        await apiRequest(
+            "/api/uploads/" + encodeURIComponent(uploadId) +
+            "/parts/" + partNumber + "/report",
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    eTag: eTag,
+                    size: chunk.size,
+                    attemptNumber: 1,
+                    durationMs: durationMs
+                })
+            }
+        );
+
+        log("Part " + partNumber + " reported to backend.");
+
+        return chunk.size;
+    }
+
+    async function completeUpload(uploadId, file) {
+        log("All parts accounted for. Calling complete endpoint...");
+
+        const response = await apiRequest(
+            "/api/uploads/" + encodeURIComponent(uploadId) + "/complete",
+            {
+                method: "POST",
+                body: "{}"
+            }
+        );
+
+        updateProgress(file.size, file.size);
+
+        uploadInfo.textContent =
+            "Upload ID: " + uploadId +
+            "\nFile: " + file.name +
+            "\n\nCompletion response:\n" +
+            JSON.stringify(response, null, 2);
+
+        progressText.textContent = "Upload completed successfully.";
+
+        log("Multipart upload completed successfully.");
+        log(JSON.stringify(response, null, 2));
+
+        clearSavedSession();
+    }
+
+    async function runUpload({ resume }) {
+        if (uploading) return;
+
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert("Please select the file first.");
+            return;
+        }
+
+        if (!getApiBase()) {
+            alert("Please enter the backend API base URL.");
+            return;
+        }
+
+        if (resume && !currentSession) {
+            alert("No saved upload session was found.");
+            return;
+        }
+
+        if (resume &&
+            (file.name !== currentSession.fileName ||
+             file.size !== currentSession.fileSize)) {
+            alert(
+                "Please select the same file name and size " +
+                "as the saved upload session."
+            );
+            return;
+        }
+
+        setBusy(true);
+        progressBar.style.width = "0%";
+
+        try {
+            let session;
+
+            if (resume) {
+                session = currentSession;
+
+                log("Resuming upload: " + session.uploadId);
+
+                /*
+                 * Status is checked against R2. This lets us skip parts
+                 * that R2 already has, even if the browser did not receive
+                 * the previous request's response.
+                 */
+                const statusResponse =
+                    await getUploadStatus(session.uploadId);
+
+                if (statusResponse.status !== "IN_PROGRESS") {
+                    throw new Error(
+                        "Upload is not resumable. Server status: " +
+                        statusResponse.status
+                    );
+                }
+
+                const uploadedParts = getUploadedParts(statusResponse);
+
+                const uploadedPartNumbers = new Set(
+                    uploadedParts.map(part => Number(
+                        part.partNumber ?? part.number
+                    ))
+                );
+
+                let uploadedBytes = 0;
+
+                /*
+                 * Count only parts that R2 reports as uploaded.
+                 * This assumes the response list contains actual R2 parts
+                 * with partNumber and size fields.
+                 */
+                for (const part of uploadedParts) {
+                    uploadedBytes += Number(part.size || 0);
+                }
+
+                updateProgress(uploadedBytes, file.size);
+
+                log(
+                    "R2 reports " + uploadedPartNumbers.size +
+                    " uploaded parts."
+                );
+
+                for (let partNumber = 1;
+                     partNumber <= session.totalParts;
+                     partNumber++) {
+
+                    if (uploadedPartNumbers.has(partNumber)) {
+                        log(
+                            "Skipping part " + partNumber +
+                            "; already present in R2."
+                        );
+                        continue;
+                    }
+
+                    const bytes = await uploadOnePart(
+                        session.uploadId,
+                        file,
+                        partNumber,
+                        session.partSize
+                    );
+
+                    uploadedBytes += bytes;
+                    updateProgress(uploadedBytes, file.size);
+                }
+
+            } else {
+                log("Calling initiate endpoint...");
+
+                const initResponse = await apiRequest(
+                    "/api/uploads/initiate",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            fileName: file.name,
+                            fileSize: file.size
+                        })
+                    }
+                );
+
+                if (!initResponse ||
+                    !initResponse.uploadId ||
+                    !initResponse.partSize) {
+                    throw new Error(
+                        "Initiate response must contain uploadId and partSize."
+                    );
+                }
+
+                session = {
+                    uploadId: initResponse.uploadId,
+                    fileName: file.name,
+                    fileSize: file.size,
+                    partSize: Number(initResponse.partSize),
+                    totalParts: Number(
+                        initResponse.totalParts ??
+                        Math.ceil(file.size / Number(initResponse.partSize))
+                    ),
+                    objectKey: initResponse.objectKey || null
+                };
+
+                saveSession(session);
+
+                uploadInfo.textContent =
+                    "Upload ID: " + session.uploadId +
+                    "\nObject Key: " + (session.objectKey || "Not returned") +
+                    "\nPart Size: " + formatBytes(session.partSize) +
+                    "\nTotal Parts: " + session.totalParts;
+
+                log("Upload session created: " + session.uploadId);
+
+                let uploadedBytes = 0;
+
+                for (let partNumber = 1;
+                     partNumber <= session.totalParts;
+                     partNumber++) {
+
+                    const bytes = await uploadOnePart(
+                        session.uploadId,
+                        file,
+                        partNumber,
+                        session.partSize
+                    );
+
+                    uploadedBytes += bytes;
+                    updateProgress(uploadedBytes, file.size);
+                }
+            }
+
+            await completeUpload(session.uploadId, file);
+
+        } catch (error) {
+            log("ERROR: " + error.message);
+
+            progressText.textContent =
+                "Upload interrupted. Use Resume Upload to retry.";
+
+            uploadInfo.textContent +=
+                "\n\nError: " + error.message +
+                "\n\nSaved session: " +
+                (currentSession?.uploadId || "Not available");
+
+        } finally {
+            setBusy(false);
+            updateSessionButtons();
+        }
+    }
+
+    uploadButton.addEventListener("click", () => {
+        runUpload({ resume: false });
+    });
+
+    resumeButton.addEventListener("click", () => {
+        runUpload({ resume: true });
+    });
+
+    statusButton.addEventListener("click", async () => {
+        if (uploading || !currentSession) return;
+
+        setBusy(true);
+
+        try {
+            const response = await getUploadStatus(currentSession.uploadId);
+
+            const uploadedParts = getUploadedParts(response);
+
+            uploadInfo.textContent =
+                "Upload ID: " + currentSession.uploadId +
+                "\nServer status: " + response.status +
+                "\nTotal parts: " + response.totalParts +
+                "\nParts found in R2: " + uploadedParts.length +
+                "\n\nStatus response:\n" +
+                JSON.stringify(response, null, 2);
+
+        } catch (error) {
+            log("Status check failed: " + error.message);
+        } finally {
+            setBusy(false);
+            updateSessionButtons();
+        }
+    });
+
+    // Restore the saved session when the page opens.
+    if (currentSession) {
+        updateSessionButtons();
+        log("Saved upload session found: " + currentSession.uploadId);
+    }
+</script>
+
+</body>
+</html>

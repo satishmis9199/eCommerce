@@ -600,7 +600,34 @@
   .icon-btn{width:32px;height:32px;}
   .menu-toggle-btn{width:34px;height:34px;}
 }
-        .feature-hidden{display:none !important;}
+        .mg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;padding:0 24px 24px}
+.mg-card{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.mg-card.off{opacity:.55}
+.mg-thumb{position:relative;aspect-ratio:4/3;background:var(--bg-secondary);display:grid;place-items:center;color:var(--text-muted);font-size:28px;overflow:hidden}
+.mg-thumb img,.mg-thumb video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mg-badge{position:absolute;top:8px;left:8px;z-index:1;background:rgba(0,0,0,.65);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px}
+.mg-meta{padding:10px 12px;display:flex;flex-direction:column;gap:3px;font-size:12.5px;flex:1;min-width:0}
+.mg-meta b{color:var(--text-primary);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mg-meta small{color:var(--text-muted)}
+.mg-acts{display:flex;gap:4px;padding:0 12px 12px;flex-wrap:wrap}
+.mg-acts .action-btn{padding:5px 9px;margin:0}
+.mg-drop{display:flex;flex-direction:column;align-items:center;gap:4px;padding:22px;border:2px dashed var(--border);border-radius:var(--radius);cursor:pointer;color:var(--text-secondary);text-align:center;transition:all .2s}
+.mg-drop:hover,.mg-drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.mg-drop i{font-size:26px;color:var(--accent)}
+.mg-drop small{color:var(--text-muted)}
+.mg-pick{display:flex;gap:12px;align-items:center;margin-top:10px}
+.mg-pick[hidden]{display:none}
+#mgPreview{width:84px;height:64px;border-radius:8px;overflow:hidden;background:var(--bg-secondary);flex-shrink:0;position:relative}
+#mgPreview img,#mgPreview video{width:100%;height:100%;object-fit:cover}
+#mgPreview .mg-thumb{height:100%;aspect-ratio:auto}
+.mg-pick-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+.mg-pick-info b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)}
+.mg-pick-info small{color:var(--text-muted)}
+.mg-bar{height:6px;background:var(--bg-input);border-radius:99px;overflow:hidden}
+.mg-bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.mg-or{display:block;margin:12px 0 6px;color:var(--text-muted)}
+#mgUrl{width:100%}
+.feature-hidden{display:none !important;}
     </style>
 </head>
 <body>
@@ -743,6 +770,7 @@
             </ul>
             <p class="menu-label">Account</p>
             <ul>
+                <li data-page="mediaGallery"><a href="#"><i class="fa-solid fa-photo-film"></i><span>Media Gallery</span></a></li>
                 <li data-page="shopHistory"><a href="#"><i class="fa-solid fa-clock-rotate-left"></i><span>Shop History</span></a></li>
                 <li data-page="settings"><a href="#" onclick="switchPage('settings')"><i
                         class="fa-solid fa-gear"></i><span>Settings</span></a></li>
@@ -1799,6 +1827,31 @@
             </section>
 
             <!-- ================= SHOP HISTORY ================= -->
+            <section class="page-section" id="page-mediaGallery">
+                <div class="section-header fade-up">
+                    <div>
+                        <div class="breadcrumb"><span>Home</span><i class="fa-solid fa-chevron-right"></i><span>Media Gallery</span></div>
+                        <h1>Media Gallery</h1>
+                        <p>Photos and videos shown on your store's gallery page.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="primary-btn" onclick="openMgModal()"><i class="fa-solid fa-plus"></i>Add Media</button>
+                    </div>
+                </div>
+                <div class="table-card fade-up fade-up-1">
+                    <div class="card-header"><div><h2>All Media</h2><p id="mgCount">Loading...</p></div></div>
+                    <div class="table-actions">
+                        <input type="text" id="mgSearch" placeholder="Search media..." oninput="renderMg()">
+                        <select id="mgType" onchange="renderMg()">
+                            <option value="all">All types</option>
+                            <option value="IMAGE">Photos</option>
+                            <option value="VIDEO">Videos</option>
+                        </select>
+                    </div>
+                    <div class="mg-grid" id="mgGrid"></div>
+                </div>
+            </section>
+
             <section class="page-section" id="page-shopHistory">
                 <div class="section-header fade-up">
                     <div>
@@ -2397,6 +2450,45 @@
 </div>
 
 <!-- Confirm Modal -->
+<div class="modal-overlay" id="mgModal">
+    <div class="modal large">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-photo-film"></i><span id="mgModalTitle">Add Media</span></h2>
+            <button class="modal-close-btn" onclick="closeMgModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Photo or video <span style="color:red;">*</span></label>
+                <label class="mg-drop" id="mgDrop" for="mgFileInput">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <b>Choose a file or drop it here</b>
+                    <small>JPG, PNG, WebP, GIF up to 10 MB · MP4, WebM, MOV up to 500 MB</small>
+                </label>
+                <input id="mgFileInput" type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime">
+                <div class="mg-pick" id="mgPickRow" hidden>
+                    <div id="mgPreview"></div>
+                    <div class="mg-pick-info">
+                        <b id="mgFileName"></b><small id="mgFileMeta"></small>
+                        <div class="mg-bar"><i id="mgBar"></i></div><small id="mgState"></small>
+                    </div>
+                </div>
+                <small class="mg-or">or paste a link (image, video, YouTube or Vimeo)</small>
+                <input id="mgUrl" type="text" placeholder="https://...">
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Title</label><input id="mgTitle" type="text" maxlength="150" placeholder="Store tour"></div>
+                <div class="form-group"><label>Category</label><input id="mgCategory" type="text" maxlength="60" placeholder="e.g. Store, Products, Events"></div>
+            </div>
+            <div class="form-group"><label>Caption</label><textarea id="mgCaption" rows="2" maxlength="500" placeholder="Shown with the photo or video"></textarea></div>
+            <div class="form-group"><label>Alt text (describes the media for screen readers)</label><input id="mgAlt" type="text" maxlength="100"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" onclick="closeMgModal()">Cancel</button>
+            <button class="primary-btn" id="mgSaveBtn" onclick="saveMg()"><i class="fa-solid fa-floppy-disk"></i>&nbsp;Save</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="confirmModal">
     <div class="modal">
         <div class="modal-header"><h2><i class="fa-solid fa-circle-question"></i>Confirm Action</h2>
@@ -7090,6 +7182,10 @@ if (page === 'sponsoredAds') {
         loadTickets();
     }
 
+    if (page === 'mediaGallery') {
+        loadMediaGallery();
+    }
+
     if (page === 'shopHistory') {
         loadShopHistory();
     }
@@ -8581,8 +8677,8 @@ function renderProducts(list = productList) {
       btn.onclick = () => { fn(); closeModal('confirmModal'); };
       openModal('confirmModal');
     }
-    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('open'); }));
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); });
+    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', (e) => { if (e.target !== m) return; if (m.id === 'mgModal') { closeMgModal(); return; } m.classList.remove('open'); }));
+    document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; [...document.querySelectorAll('.modal-overlay.open')].forEach(m => { if (m.id === 'mgModal') closeMgModal(); else m.classList.remove('open'); }); });
 
     /* ============================================================
        LOGOUT
@@ -9140,6 +9236,8 @@ function renderProducts(list = productList) {
         SUPPORT_TICKETS:      { pages: ['tickets'],         selectors: [] },
         SETTINGS:             { pages: ['settings'],        selectors: [] },
         SHOP_HISTORY:         { pages: ['shopHistory'],     selectors: [] },
+        // ---- Media Gallery (photos & videos) ----
+        MEDIA_GALLERY:        { pages: ['mediaGallery'],    selectors: [] },
         // ---- sections inside the Overview page ----
         SALES_REPORT:         { pages: [], selectors: ['#salesReportSection'] },
         ANALYTICS:            { pages: [], selectors: ['.analytics-section'] },
@@ -10378,6 +10476,314 @@ function escapeHtmlSafe(str){
   return d.innerHTML;
 }
 
+
+/* ============================================================
+   MEDIA GALLERY  (plan feature MEDIA_GALLERY)
+   CRUD:    /vendor/s11/v1/gallery   (GET, POST, PUT /{id}, DELETE /{id}, PATCH /status, PATCH /reorder)
+   Uploads: /api/uploads/*           (R2 multipart: initiate -> part url -> PUT to R2 -> report -> complete)
+============================================================ */
+const MG_API = '/vendor/s11/v1/gallery', MG_UP = '/api/uploads';
+const MG_MAX = { image: 10 * 1048576, video: 500 * 1048576 }, MG_PART = 8 * 1048576, MG_PARALLEL = 3;
+let mgList = [], mgEditId = null, mgSelectedFile = null, mgBusy = false, mgCancel = false, mgUploadId = null;
+const $mg = id => document.getElementById(id);
+const mgLog = (...a) => console.log('[MediaGallery]', ...a);
+const mgIsVideoUrl = u => /\.(mp4|webm|mov|m3u8)(\?|#|$)/i.test(u) || /(youtube\.com|youtu\.be|vimeo\.com)\//i.test(u);
+
+function mgSetState(text, isError) {
+    const el = $mg('mgState');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = isError ? 'var(--red)' : '';
+}
+
+// Spring Security CSRF support (meta tags or XSRF-TOKEN cookie). Harmless when CSRF is disabled.
+function mgCsrfHeaders() {
+    const meta = n => { const e = document.querySelector('meta[name="' + n + '"]'); return e ? e.getAttribute('content') : null; };
+    const token = meta('_csrf') || meta('csrf-token');
+    if (token) return { [meta('_csrf_header') || 'X-CSRF-TOKEN']: token };
+    const m = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+    return m ? { 'X-XSRF-TOKEN': decodeURIComponent(m[1]) } : {};
+}
+
+async function mgJson(url, opt = {}) {
+    const method = (opt.method || 'GET').toUpperCase();
+    const headers = Object.assign(
+        { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        opt.body ? { 'Content-Type': 'application/json' } : {},
+        method !== 'GET' ? mgCsrfHeaders() : {},
+        opt.headers || {}
+    );
+    mgLog('->', method, url);
+    let r;
+    try {
+        r = await fetch(url, Object.assign({}, opt, { credentials: 'include', headers }));
+    } catch (e) {
+        throw new Error('Server tak request nahi pahunchi. Internet / server check karo.');
+    }
+    const ct = (r.headers.get('Content-Type') || '').toLowerCase();
+    const text = await r.text();
+    let d = {};
+    if (text) { try { d = JSON.parse(text); } catch (e) { d = {}; } }
+    mgLog('<-', r.status, url, d);
+
+    if (r.status === 401 || (r.redirected && /login/i.test(r.url)) || (r.ok && ct.includes('text/html'))) {
+        throw new Error('Session expire ho gaya. Page refresh karke dobara login karo.');
+    }
+    if (r.status === 403) {
+        throw new Error(d.message || 'Access denied (403). Backend me /api/uploads/** ke liye role / CSRF rules check karo.');
+    }
+    if (!r.ok || d.success === false) {
+        throw new Error(d.message || d.error || ('Request failed (' + r.status + ')'));
+    }
+    return d;
+}
+
+async function loadMediaGallery() {
+    try { const d = await mgJson(MG_API); mgList = d.data || d.items || []; renderMg(); }
+    catch (e) { $mg('mgCount').textContent = 'Could not load media'; showToast('error', 'Media Gallery', e.message); }
+}
+
+const mgYtId = u => { const m = (u || '').match(/youtu\.be\/([\w-]{6,})/) || (u || '').match(/youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)([\w-]{6,})/); return m ? m[1] : null; };
+const mgYtThumb = u => { const id = mgYtId(u); return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : null; };
+
+function mgThumb(it) {
+    const v = it.mediaType === 'VIDEO', src = getImageUrl(it.mediaUrl), th = it.thumbnailUrl ? getImageUrl(it.thumbnailUrl) : '';
+    let inner;
+    if (!v) inner = `<img src="${escapeHtml(src)}" alt="${escapeHtml(it.altText || it.title || '')}" loading="lazy">`;
+    else if (th) inner = `<img src="${escapeHtml(th)}" alt="" loading="lazy">`;
+    else if (mgYtThumb(it.mediaUrl)) inner = `<img src="${escapeHtml(mgYtThumb(it.mediaUrl))}" alt="" loading="lazy">`;
+    else if (/\.(mp4|webm|mov)(\?|#|$)/i.test(src)) inner = `<video src="${escapeHtml(src)}#t=0.5" preload="metadata" muted playsinline></video>`;
+    else inner = '<i class="fa-solid fa-film"></i>';
+    return `<div class="mg-thumb"><span class="mg-badge">${v ? 'VIDEO' : 'PHOTO'}</span>${inner}</div>`;
+}
+
+function renderMg() {
+    const q = ($mg('mgSearch').value || '').toLowerCase(), t = $mg('mgType').value;
+    const list = mgList.filter(i => (t === 'all' || i.mediaType === t) && ((i.title || '') + ' ' + (i.category || '') + ' ' + (i.caption || '')).toLowerCase().includes(q));
+    $mg('mgCount').textContent = `${list.length} item(s) found`;
+    $mg('mgGrid').innerHTML = list.length ? list.map(i => `<div class="mg-card${i.active ? '' : ' off'}">${mgThumb(i)}
+        <div class="mg-meta"><b>${escapeHtml(i.title || 'Untitled')}</b><small>${escapeHtml(i.category || 'No category')} · <span class="status ${i.active ? 'active' : 'inactive'}">${i.active ? 'Visible' : 'Hidden'}</span></small></div>
+        <div class="mg-acts">
+            <button class="action-btn" title="Move earlier" onclick="mgMove(${i.id},-1)"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="action-btn" title="Move later" onclick="mgMove(${i.id},1)"><i class="fa-solid fa-arrow-right"></i></button>
+            <button class="action-btn" title="Edit" onclick="openMgModal(${i.id})"><i class="fa-solid fa-pen"></i></button>
+            <button class="action-btn success" title="Show / hide" onclick="mgToggle(${i.id})"><i class="fa-solid fa-power-off"></i></button>
+            <button class="action-btn danger" title="Delete" onclick="mgDelete(${i.id})"><i class="fa-solid fa-trash"></i></button>
+        </div></div>`).join('')
+        : `<div style="grid-column:1/-1;padding:50px;text-align:center;color:var(--text-muted)"><i class="fa-solid fa-photo-film" style="font-size:48px;margin-bottom:12px"></i><h3 style="color:var(--text-primary);margin-bottom:6px">No media yet</h3><p>Add photos and videos for your store gallery.</p></div>`;
+}
+
+async function mgMove(id, d) {
+    const i = mgList.findIndex(x => x.id === id), j = i + d;
+    if (i < 0 || j < 0 || j >= mgList.length) return;
+    [mgList[i], mgList[j]] = [mgList[j], mgList[i]]; renderMg();
+    try { await mgJson(MG_API + '/reorder', { method: 'PATCH', body: JSON.stringify({ orderedIds: mgList.map(x => x.id) }) }); }
+    catch (e) { showToast('error', 'Media Gallery', e.message); loadMediaGallery(); }
+}
+
+function mgToggle(id) {
+    const m = mgList.find(x => x.id === id); if (!m) return; const a = !m.active;
+    confirmAction(`${a ? 'Show' : 'Hide'} "${m.title || 'this item'}" on the gallery?`, async () => {
+        try { await mgJson(MG_API + '/status', { method: 'PATCH', body: JSON.stringify({ id, active: a }) }); showToast('success', 'Media Gallery', a ? 'Item is now visible.' : 'Item is now hidden.'); loadMediaGallery(); }
+        catch (e) { showToast('error', 'Media Gallery', e.message); }
+    });
+}
+
+function mgDelete(id) {
+    const m = mgList.find(x => x.id === id);
+    confirmAction(`Delete "${(m && m.title) || 'this item'}"?`, async () => {
+        try { await mgJson(MG_API + '/' + id, { method: 'DELETE' }); showToast('success', 'Media Gallery', 'Item deleted.'); loadMediaGallery(); }
+        catch (e) { showToast('error', 'Media Gallery', e.message); }
+    });
+}
+
+let mgUp = null;        // current upload: { file, cancel, uploadId, done, error, key, promise }
+let mgSaving = false;
+
+const mgIsUploading = () => !!(mgUp && !mgUp.done && !mgUp.error && !mgUp.cancel);
+
+function mgAbortUpload() {
+    if (!mgUp) return;
+    const st = mgUp; mgUp = null;
+    st.cancel = true;
+    if (st.uploadId && !st.done) mgJson(MG_UP + '/' + st.uploadId, { method: 'DELETE' }).catch(() => {});
+}
+
+function mgReset() {
+    mgAbortUpload();
+    mgSelectedFile = null; mgSaving = false;
+    ['mgFileInput', 'mgUrl', 'mgTitle', 'mgCategory', 'mgCaption', 'mgAlt'].forEach(k => { const el = $mg(k); if (el) el.value = ''; });
+    $mg('mgPickRow').hidden = true; $mg('mgBar').style.width = '0'; mgSetState('');
+    $mg('mgSaveBtn').disabled = false;
+}
+
+function openMgModal(id) {
+    mgReset(); mgEditId = typeof id === 'number' ? id : null;
+    const m = mgEditId !== null ? mgList.find(x => x.id === mgEditId) : null;
+    $mg('mgModalTitle').textContent = m ? 'Edit Media' : 'Add Media';
+    if (m) {
+        $mg('mgTitle').value = m.title || ''; $mg('mgCategory').value = m.category || '';
+        $mg('mgCaption').value = m.caption || ''; $mg('mgAlt').value = m.altText || '';
+        $mg('mgPickRow').hidden = false; $mg('mgPreview').innerHTML = mgThumb(m);
+        $mg('mgFileName').textContent = 'Current media'; $mg('mgFileMeta').textContent = 'Choose a new file or link to replace it';
+    }
+    openModal('mgModal');
+}
+
+// Used by Cancel / X button, overlay click and Escape. Asks before killing a running upload / save.
+function closeMgModal() {
+    if (mgSaving || mgIsUploading()) {
+        confirmAction('Upload chal raha hai. Cancel karna hai?', () => { mgAbortUpload(); mgSaving = false; closeModal('mgModal'); });
+        return;
+    }
+    closeModal('mgModal');
+}
+
+function mgSelectFile(f) {
+    if (!f) return;
+    mgLog('file selected', f.name, f.type, f.size);
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    const vidExt = ['mp4', 'webm', 'mov'].includes(ext), imgExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+    const v = f.type.startsWith('video/') || (!f.type && vidExt), img = f.type.startsWith('image/') || (!f.type && imgExt);
+    if (!v && !img) { showToast('error', 'Media Gallery', 'Sirf photo (JPG, PNG, WebP, GIF) ya video (MP4, WebM, MOV) choose karo.'); return; }
+    if (f.size > (v ? MG_MAX.video : MG_MAX.image)) { showToast('error', 'Media Gallery', `${v ? 'Videos' : 'Photos'} can be at most ${v ? '500 MB' : '10 MB'}.`); return; }
+    mgSelectedFile = f; mgSelectedFile._isVideo = v;
+    $mg('mgUrl').value = ''; $mg('mgPickRow').hidden = false;
+    $mg('mgFileName').textContent = f.name; $mg('mgFileMeta').textContent = (v ? 'Video' : 'Photo') + ' · ' + (f.size / 1048576).toFixed(1) + ' MB';
+    const u = URL.createObjectURL(f);
+    $mg('mgPreview').innerHTML = v ? `<video src="${u}#t=0.5" muted preload="metadata"></video>` : `<img src="${u}" alt="">`;
+    mgStartUpload(f);          // upload starts immediately on select
+}
+
+function mgOnUrlInput() {
+    if ($mg('mgUrl').value.trim()) { mgAbortUpload(); mgSelectedFile = null; $mg('mgFileInput').value = ''; $mg('mgPickRow').hidden = true; mgSetState(''); }
+}
+
+const mgPut = (url, blob, prog) => new Promise((res, rej) => {
+    if (!url) return rej(new Error('Backend ne part upload URL nahi diya.'));
+    const x = new XMLHttpRequest(); x.open('PUT', url);
+    x.upload.onprogress = e => e.lengthComputable && prog(e.loaded);
+    x.onload = () => {
+        if (x.status < 200 || x.status > 299) return rej(new Error('Part upload failed (' + x.status + ')'));
+        const tag = x.getResponseHeader('ETag');
+        tag ? res(tag) : rej(new Error('ETag nahi mila. R2 bucket CORS me ExposeHeaders: ["ETag"] add karo.'));
+    };
+    x.onerror = () => rej(new Error('R2 par upload fail hua. R2 bucket CORS me is site ka origin aur PUT method allow karo.'));
+    x.send(blob);
+});
+
+// Multipart upload against UploadController. Resolves with the stored objectKey.
+async function mgUpload(st, onProgress) {
+    const file = st.file;
+    mgLog('starting upload', file.name, file.size);
+    const init = await mgJson(MG_UP + '/initiate', { method: 'POST', body: JSON.stringify({ fileName: file.name, fileSize: file.size }) });
+    const id = init.uploadId ?? init.id ?? init.sessionId;
+    if (!id) throw new Error('Upload start nahi hua: backend ne uploadId nahi diya. Response console me dekho.');
+    st.uploadId = id;
+    if (st.cancel) { mgJson(MG_UP + '/' + id, { method: 'DELETE' }).catch(() => {}); throw new Error('Upload cancelled.'); }
+    const size = init.partSize ?? init.chunkSize ?? MG_PART;
+    const total = init.totalParts ?? init.partCount ?? Math.max(1, Math.ceil(file.size / size));
+    const done = new Set((init.completedParts || init.uploadedParts || []).map(p => +(p.partNumber ?? p)));
+    const sent = new Array(total).fill(0); let next = 1;
+    const tick = () => onProgress(Math.min(1, sent.reduce((a, b) => a + b, 0) / file.size));
+    const worker = async () => {
+        while (!st.cancel) {
+            const n = next++; if (n > total) return;
+            const blob = file.slice((n - 1) * size, Math.min(n * size, file.size));
+            if (done.has(n)) { sent[n - 1] = blob.size; tick(); continue; }
+            for (let tries = 1; ; tries++) {
+                try {
+                    const t0 = Date.now();
+                    const u = await mgJson(`${MG_UP}/${id}/parts/${n}/url`, { method: 'POST' });
+                    const etag = await mgPut(u.url ?? u.presignedUrl ?? u.uploadUrl ?? u.signedUrl, blob, b => { sent[n - 1] = b; tick(); });
+                    await mgJson(`${MG_UP}/${id}/parts/${n}/report`, { method: 'POST', body: JSON.stringify({ eTag: etag, size: blob.size, attemptNumber: tries, durationMs: Date.now() - t0 }) });
+                    sent[n - 1] = blob.size; tick(); break;
+                } catch (e) {
+                    if (st.cancel) return; if (tries >= 3) throw e;
+                    mgLog('part', n, 'retry', tries, e.message);
+                    await new Promise(r => setTimeout(r, 800 * tries));
+                }
+            }
+        }
+    };
+    await Promise.all(Array.from({ length: Math.min(MG_PARALLEL, total) }, worker));
+    if (st.cancel) throw new Error('Upload cancelled.');
+    const c = await mgJson(`${MG_UP}/${id}/complete`, { method: 'POST' });
+    const out = c.objectKey ?? c.publicUrl ?? c.url ?? c.fileUrl ?? c.key ?? c.path ?? c.fileKey ?? init.objectKey;
+    if (!out) throw new Error('Upload ho gaya par backend ne file ka location nahi diya. Response console me dekho.');
+    return out;
+}
+
+function mgStartUpload(file) {
+    mgAbortUpload();
+    const st = { file, cancel: false, uploadId: null, done: false, error: null, key: null, promise: null };
+    mgUp = st;
+    $mg('mgBar').style.width = '0'; mgSetState('Uploading 0%');
+    st.promise = mgUpload(st, p => {
+        if (mgUp !== st) return;
+        const n = Math.round(p * 100); $mg('mgBar').style.width = n + '%'; mgSetState('Uploading ' + n + '%');
+    }).then(key => {
+        st.key = key; st.done = true;
+        if (mgUp === st) { $mg('mgBar').style.width = '100%'; mgSetState('Uploaded ✓  Ab Save dabao'); }
+        return key;
+    }).catch(e => {
+        st.error = e;
+        if (st.uploadId && !st.cancel) mgJson(MG_UP + '/' + st.uploadId, { method: 'DELETE' }).catch(() => {});
+        if (!st.cancel && mgUp === st) { mgSetState('Upload failed: ' + e.message, true); showToast('error', 'Media Gallery', e.message); }
+        throw e;
+    });
+    st.promise.catch(() => {});
+    return st;
+}
+
+async function saveMg() {
+    mgLog('Save clicked', { saving: mgSaving, file: mgSelectedFile ? mgSelectedFile.name : null, editing: mgEditId });
+    if (mgSaving) { showToast('info', 'Media Gallery', 'Save already chal raha hai.'); return; }
+    const url = $mg('mgUrl').value.trim(), m = mgEditId !== null ? mgList.find(x => x.id === mgEditId) : null;
+    if (!mgSelectedFile && !url && !m) { showToast('warning', 'Media Gallery', 'Pehle file choose karo ya link paste karo.'); return; }
+    if (url && !/^https:\/\//i.test(url)) { showToast('warning', 'Media Gallery', 'Links must start with https://'); return; }
+    const btn = $mg('mgSaveBtn'), html = btn.innerHTML;
+    mgSaving = true; btn.disabled = true;
+    try {
+        let mediaUrl = m ? m.mediaUrl : null, mediaType = m ? m.mediaType : null, thumb = m ? m.thumbnailUrl : null;
+        if (mgSelectedFile) {
+            if (!mgUp || mgUp.file !== mgSelectedFile || mgUp.error) mgStartUpload(mgSelectedFile);   // (re)try
+            if (!mgUp.done) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Uploading...';
+            mediaUrl = await mgUp.promise;
+            mediaType = mgSelectedFile._isVideo ? 'VIDEO' : 'IMAGE'; thumb = null;
+        } else if (url) { mediaUrl = url; mediaType = mgIsVideoUrl(url) ? 'VIDEO' : 'IMAGE'; thumb = mgYtThumb(url); }
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Saving...';
+        const v = k => $mg(k).value.trim() || null;
+        const body = { mediaType, mediaUrl, thumbnailUrl: thumb, title: v('mgTitle'), caption: v('mgCaption'), altText: v('mgAlt'), category: v('mgCategory') };
+        const r = await mgJson(m ? MG_API + '/' + m.id : MG_API, { method: m ? 'PUT' : 'POST', body: JSON.stringify(body) });
+        showToast('success', 'Media Gallery', r.message || 'Saved successfully.');
+        mgSaving = false; closeModal('mgModal'); mgReset(); loadMediaGallery();
+    } catch (e) {
+        console.error('[MediaGallery] upload/save failed', e);
+        mgSetState('Failed: ' + e.message, true);
+        showToast('error', 'Media Gallery', e.message);
+    } finally { mgSaving = false; btn.disabled = false; btn.innerHTML = html; }
+}
+
+// Wire events in JS (no inline handlers / no id-vs-function name clashes).
+(() => {
+    const drop = $mg('mgDrop'), input = $mg('mgFileInput'), url = $mg('mgUrl'), save = $mg('mgSaveBtn');
+    if (input) input.addEventListener('change', () => { mgSelectFile(input.files && input.files[0]); });
+    if (url) url.addEventListener('input', mgOnUrlInput);
+    if (drop) {
+        ['dragenter', 'dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+        ['dragleave', 'drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+        drop.addEventListener('drop', ev => mgSelectFile(ev.dataTransfer.files[0]));
+    }
+    if (save) {
+        save.removeAttribute('onclick');
+        save.addEventListener('click', ev => {
+            ev.preventDefault();
+            mgLog('Save button pressed');
+            Promise.resolve().then(saveMg).catch(e => { console.error(e); showToast('error', 'Media Gallery', e.message || String(e)); });
+        });
+    }
+})();
 </script>
 </body>
 </html>

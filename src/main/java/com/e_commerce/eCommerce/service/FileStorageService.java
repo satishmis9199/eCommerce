@@ -28,12 +28,8 @@ public class FileStorageService {
         try {
 
             String original = file.getOriginalFilename();
-            logger.info("Original FIle Name {}", original);
-
             String extension = "";
             int size = Math.toIntExact(file.getSize());
-            logger.info("Size Of Uploaded File :: " + size);
-
             if (original != null && original.contains(".")) {
                 extension = original.substring(original.lastIndexOf("."));
             }

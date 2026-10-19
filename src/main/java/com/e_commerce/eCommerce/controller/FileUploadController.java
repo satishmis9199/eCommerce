@@ -28,11 +28,7 @@ public class FileUploadController {
             @RequestParam("file") MultipartFile file) {
         UploadResponseDTO dto = new UploadResponseDTO();
         try {
-            logger.info("Inside Profile Update");
-
             String url = storageService.upload(file, "profile");
-
-
             dto.setSuccess(true);
             dto.setMessage("Profile Image Uploaded Successfully");
 
