@@ -166,7 +166,7 @@ public class PasswordResetExceptionHandler {
             AccessDeniedException ex) {
 
         ModelAndView modelAndView =
-                new ModelAndView("access-denied");
+                new ModelAndView("Access-denied");
 
         modelAndView.addObject(
                 "message",
