@@ -137,19 +137,44 @@
           from{transform:translate3d(0,0,0) scale(1);}
           to{transform:translate3d(-60px,40px,0) scale(1.18);}
         }
-        /* right-side media (banner image + optional video), fading into the dark left */
+        /* =====================================================================
+           HERO — banner is the FULL background (whole image always visible, never
+           cropped). Text sits on top. A blurred copy of the banner fills any
+           leftover space so wide / tall screens never show ugly bars.
+           Mobile: banner on top at natural height, fading into the text below.
+        ===================================================================== */
         .hero-bg,.hero-video{
-          position:absolute;top:0;right:0;bottom:0;width:72%;
-          -webkit-mask-image:linear-gradient(to left,#000 35%,transparent 100%);
-                  mask-image:linear-gradient(to left,#000 35%,transparent 100%);
+          position:absolute;inset:0;width:100%;height:100%;
+          -webkit-mask-image:none;mask-image:none;animation:none;
         }
-        .hero-bg{background-size:cover;background-position:center;opacity:0;transition:opacity 1s ease;
-                 animation:kenburns 26s ease-in-out infinite alternate;}
-        .hero-bg.show{opacity:.8;}
-        .hero-bg::after{display:none;}
-        .hero-video{object-fit:cover;opacity:0;transition:opacity 1.2s ease;}
+        .hero-bg{display:none;background:var(--hero-bg);overflow:hidden;}
+        .hero-video{z-index:1;object-fit:cover;opacity:0;transition:opacity 1.2s ease;}
         .hero-video.show{opacity:.85;}
-        @keyframes kenburns{from{transform:scale(1);}to{transform:scale(1.07);}}
+
+        /* full-screen hero: fills the whole viewport under the header */
+        .hero.has-banner{display:grid;min-height:max(580px,calc(100vh - 67px));min-height:max(580px,calc(100svh - 67px));}
+        .hero.has-banner .hero-bg{
+          display:block;grid-area:1/1;position:relative;align-self:stretch;z-index:0;
+          animation:bgIn .9s ease both;
+        }
+        @keyframes bgIn{from{opacity:0;}to{opacity:1;}}
+        .hero-bg::before{ /* blurred copy fills any side/top bars */
+          content:"";position:absolute;inset:-40px;background:var(--bn) center/cover no-repeat;
+          filter:blur(30px) brightness(.5) saturate(1.1);
+        }
+        .hero-bg img{
+          position:absolute;inset:0;display:block;width:100%;height:100%;
+          object-fit:contain;object-position:center; /* JS switches to "cover" when it would crop <18% */
+        }
+        .hero-bg::after{ /* readability shade behind the text (left side) */
+          content:"";position:absolute;inset:0;pointer-events:none;
+          background:linear-gradient(90deg,rgba(5,7,10,.88) 0%,rgba(5,7,10,.62) 30%,rgba(5,7,10,.12) 58%,transparent 75%);
+        }
+        .hero.has-banner .hero-inner{
+          grid-area:1/1;position:relative;z-index:3;align-self:center;justify-self:center;
+          width:100%;max-width:1180px;margin:0;padding:56px 46% 72px 24px;
+        }
+        .hero.has-banner h1{font-size:clamp(30px,3.6vw,56px);}
         .hero::after{ /* bottom fade into next section */
           content:"";position:absolute;left:0;right:0;bottom:0;height:120px;pointer-events:none;
           background:linear-gradient(to bottom,transparent,rgba(5,7,10,.65));
@@ -200,12 +225,21 @@
           .hero-glow i,.hero-bg{animation:none;}
           .hero-inner > *{opacity:1;transform:none;animation:none;}
         }
-        @media (max-width:760px){
-          .hero{min-height:auto;}
-          .hero-bg,.hero-video{width:100%;-webkit-mask-image:linear-gradient(to bottom,#000 0%,transparent 85%);mask-image:linear-gradient(to bottom,#000 0%,transparent 85%);}
-          .hero-bg.show{opacity:.45;} .hero-video.show{opacity:.5;}
-          .hero-inner{padding:52px 18px 64px;}
+        @media (max-width:900px){
+          .hero.has-banner{display:block;min-height:calc(100vh - 60px);min-height:calc(100svh - 60px);}
+          .hero.has-banner .hero-bg{display:block;position:relative;}
+          .hero-bg::before{display:none;}
+          .hero-bg img{position:relative;inset:auto;height:auto;object-fit:contain;}
+          .hero-bg::after{background:linear-gradient(to bottom,transparent 50%,var(--hero-bg) 100%);}
+          .hero.has-banner .hero-inner{
+            position:relative;max-width:none;margin:-44px 0 0;padding:0 18px 56px;
+          }
+          .hero:not(.has-banner){min-height:auto;}
+          .hero:not(.has-banner) .hero-inner{padding:52px 18px 64px;}
+          .hero.has-banner h1{font-size:clamp(28px,8vw,40px);}
           .hero .lede{font-size:15px;}
+          .hero-ctas{gap:10px;}
+          .hero-ctas .btn{flex:1 1 150px;justify-content:center;}
           .hero-stats{gap:18px 30px;margin-top:40px;}
           .stat b{font-size:20px;} .stat span{font-size:13.5px;}
         }
@@ -406,7 +440,7 @@
 <!-- ================= HERO (only content on this landing page) ================= -->
 <section class="hero" id="top">
     <div class="hero-glow" aria-hidden="true"><i></i><i></i></div>
-    <div class="hero-bg" id="heroBg"></div>
+    <div class="hero-bg" id="heroBg"><img id="heroBgImg" alt="" decoding="async"></div>
     <video class="hero-video" id="heroVideo" muted loop playsinline preload="metadata" aria-hidden="true"></video>
     <div class="container hero-inner">
         <span class="hero-eyebrow skel" id="heroEyebrow" style="width:150px;">Loading</span>
@@ -582,6 +616,20 @@
       }
       renderStats();
 
+      // Full-screen hero: use "cover" when the banner barely needs cropping,
+      // otherwise "contain" (whole image visible, blurred copy fills the rest).
+      function fitHeroBanner(){
+        const img = document.getElementById("heroBgImg");
+        const hero = document.getElementById("top");
+        if (!img || !img.naturalWidth || !hero.classList.contains("has-banner")) return;
+        if (!window.matchMedia("(min-width:901px)").matches){ img.style.objectFit = ""; return; }
+        const box = hero.getBoundingClientRect();
+        const boxR = box.width / box.height, imgR = img.naturalWidth / img.naturalHeight;
+        const crop = 1 - Math.min(boxR, imgR) / Math.max(boxR, imgR);
+        img.style.objectFit = crop <= 0.18 ? "cover" : "contain";
+      }
+      window.addEventListener("resize", fitHeroBanner);
+
       function setupHeroVideo(url){
         const v = document.getElementById("heroVideo");
         if (!url || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -680,8 +728,16 @@
         // --- Hero ---
         const heroBg = document.getElementById("heroBg");
         if (vendor.bannerUrl){
-          heroBg.style.backgroundImage = `url('${getImageUrl(vendor.bannerUrl)}')`;
-          heroBg.classList.add("show");
+          const heroImg = document.getElementById("heroBgImg");
+          heroImg.alt = vendor.storeName ? `${vendor.storeName} banner` : "Store banner";
+          heroImg.onload = function(){
+            heroBg.style.setProperty("--bn", 'url("' + heroImg.src + '")');
+            document.getElementById("top").classList.add("has-banner");
+            heroBg.classList.add("show");
+            requestAnimationFrame(fitHeroBanner);
+          };
+          heroImg.onerror = function(){ heroBg.remove(); };
+          heroImg.src = getImageUrl(vendor.bannerUrl);
         }
 
         setupHeroVideo(vendor.heroVideoUrl || HERO_VIDEO_URL);
