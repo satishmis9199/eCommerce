@@ -49,7 +49,6 @@ public class DashBoardService {
             throw new RuntimeException("Branding data Not Available");
         }
         Vendor v2 = vendor.get();
-        log.error(String.valueOf(v2.getId()));
         Optional<Plan> plan=planRepository.findById(v2.getPlanId());
         if(plan.isEmpty()){
             vendorProfileDTO.setSubscriptionPlan("Not Availble");
